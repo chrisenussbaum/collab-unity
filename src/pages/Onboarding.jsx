@@ -1,29 +1,45 @@
-
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Lightbulb, Loader2, Upload, Camera } from "lucide-react";
+import { Lightbulb, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
-import PostOnboardingDialog from "../components/PostOnboardingDialog";
+import { motion, AnimatePresence } from "framer-motion";
+
+import OnboardingStep1 from "@/components/onboarding/OnboardingStep1";
+import OnboardingStep2 from "@/components/onboarding/OnboardingStep2";
+import OnboardingStep3 from "@/components/onboarding/OnboardingStep3";
+import OnboardingStep4 from "@/components/onboarding/OnboardingStep4";
+
+const STEP_TITLES = [
+  { title: "Create Your Profile", description: "Let's start with the basics" },
+  { title: "Skills & Interests", description: "Help us understand what you bring to the table" },
+  { title: "Project Ideas", description: "AI-generated ideas based on your profile" },
+  { title: "Find Collaborators", description: "Connect with like-minded creators" }
+];
 
 export default function Onboarding({ currentUser }) {
   const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  // Step 1 state
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [profileImage, setProfileImage] = useState("");
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [usernameError, setUsernameError] = useState("");
-  const [showPostOnboardingDialog, setShowPostOnboardingDialog] = useState(false);
-  const [completedUser, setCompletedUser] = useState(null);
-  const profileImageInputRef = useRef(null);
+
+  // Step 2 state
+  const [skills, setSkills] = useState([]);
+  const [interests, setInterests] = useState([]);
+  const [bio, setBio] = useState("");
+  const [location, setLocation] = useState("");
+
+  // Step 3 state
+  const [selectedIdea, setSelectedIdea] = useState(null);
 
   useEffect(() => {
     if (!currentUser) {
@@ -31,15 +47,19 @@ export default function Onboarding({ currentUser }) {
       return;
     }
 
-    if (currentUser.has_completed_onboarding) {
+    if (currentUser.has_completed_onboarding && currentUser.profile_image) {
       navigate(createPageUrl("Feed"));
       return;
     }
 
-    // Pre-fill with existing data if available
+    // Pre-fill with existing data
     if (currentUser.username) setUsername(currentUser.username);
     if (currentUser.full_name) setFullName(currentUser.full_name);
     if (currentUser.profile_image) setProfileImage(currentUser.profile_image);
+    if (currentUser.skills) setSkills(currentUser.skills);
+    if (currentUser.interests) setInterests(currentUser.interests);
+    if (currentUser.bio) setBio(currentUser.bio);
+    if (currentUser.location) setLocation(currentUser.location);
   }, [currentUser, navigate]);
 
   const checkUsernameAvailability = async (usernameToCheck) => {
@@ -48,6 +68,7 @@ export default function Onboarding({ currentUser }) {
       return { available: true };
     }
 
+    setIsCheckingUsername(true);
     try {
       const response = await base44.functions.invoke('checkUsernameAvailability', {
         username: usernameToCheck
@@ -65,79 +86,92 @@ export default function Onboarding({ currentUser }) {
       console.error("Error checking username:", error);
       setUsernameError("Error checking username availability.");
       return { available: false, error: "Error checking username availability." };
+    } finally {
+      setIsCheckingUsername(false);
     }
   };
 
-  const handleImageUpload = async (e) => {
+  const handleImageUpload = async (e, setImage) => {
     const file = e.target.files[0];
     if (!file) return;
 
     setIsUploadingImage(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setProfileImage(file_url);
-      toast.success("Profile photo uploaded successfully!");
+      setImage(file_url);
+      toast.success("Photo uploaded successfully!");
     } catch (error) {
       console.error("Error uploading image:", error);
-      toast.error("Failed to upload profile photo. Please try again.");
+      toast.error("Failed to upload photo. Please try again.");
     } finally {
       setIsUploadingImage(false);
-      if (profileImageInputRef.current) {
-        profileImageInputRef.current.value = '';
-      }
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!username.trim()) {
-      toast.error("Please enter a username.");
+  const handleStep1Next = async () => {
+    const { available, error } = await checkUsernameAvailability(username);
+    if (!available) {
+      toast.error(error || "Please choose a different username.");
       return;
     }
-    if (!fullName.trim()) {
-      toast.error("Please enter your full name.");
-      return;
-    }
-    if (!profileImage) {
-      toast.error("Please upload a profile photo.");
-      return;
-    }
+    setCurrentStep(2);
+  };
 
+  const handleStep2Next = () => {
+    setCurrentStep(3);
+  };
+
+  const handleStep3Next = () => {
+    setCurrentStep(4);
+  };
+
+  const handleComplete = async () => {
     setIsSubmitting(true);
-    setIsCheckingUsername(true);
-
     try {
-      // Validate username
+      // Final username check
       const { available, error } = await checkUsernameAvailability(username);
-      setIsCheckingUsername(false);
-
       if (!available) {
-        toast.error(error || "This username is already taken. Please choose another one.");
+        toast.error(error || "Username is no longer available.");
+        setCurrentStep(1);
         setIsSubmitting(false);
         return;
       }
 
-      // Update user profile
-      await base44.auth.updateMe({
+      // Build update data
+      const updateData = {
         username: username.toLowerCase().trim(),
         full_name: fullName.trim(),
         profile_image: profileImage,
+        skills,
+        interests,
         has_completed_onboarding: true
-      });
+      };
 
-      // Fetch the updated user to pass to dialog
-      const updatedUser = await base44.auth.me();
-      setCompletedUser(updatedUser);
+      if (bio.trim()) updateData.bio = bio.trim();
+      if (location.trim()) updateData.location = location.trim();
+
+      await base44.auth.updateMe(updateData);
 
       toast.success("Welcome to Collab Unity! 🎉");
-      setShowPostOnboardingDialog(true);
+
+      // Navigate based on whether they selected a project idea
+      if (selectedIdea) {
+        // Navigate to create project with pre-filled data
+        const params = new URLSearchParams({
+          fromOnboarding: 'true',
+          title: selectedIdea.title,
+          description: selectedIdea.description,
+          skills: JSON.stringify(selectedIdea.skills_needed || [])
+        });
+        navigate(`${createPageUrl("CreateProject")}?${params.toString()}`);
+      } else {
+        navigate(createPageUrl("Feed"));
+      }
     } catch (error) {
       console.error("Error completing onboarding:", error);
-      toast.error("Failed to complete onboarding. Please try again.");
+      toast.error("Failed to complete setup. Please try again.");
     } finally {
       setIsSubmitting(false);
-      setIsCheckingUsername(false);
     }
   };
 
@@ -149,161 +183,120 @@ export default function Onboarding({ currentUser }) {
     );
   }
 
+  const stepInfo = STEP_TITLES[currentStep - 1];
+
   return (
-    <>
-      <PostOnboardingDialog 
-        isOpen={showPostOnboardingDialog}
-        onClose={() => setShowPostOnboardingDialog(false)}
-        currentUser={completedUser}
-      />
-
-      <input
-        type="file"
-        accept="image/png, image/jpeg, image/jpg"
-        ref={profileImageInputRef}
-        onChange={handleImageUpload}
-        className="hidden"
-      />
-
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
-              <Lightbulb className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-              Welcome to Collab Unity
-            </h1>
-            <p className="text-gray-600">
-              Let's get you set up in just a few seconds
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-lg"
+      >
+        {/* Header */}
+        <div className="text-center mb-6">
+          <div className="w-14 h-14 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
+            <Lightbulb className="w-7 h-7 text-white" />
           </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
+            Welcome to Collab Unity
+          </h1>
+          <p className="text-gray-600 text-sm">
+            Let's get you set up in a few quick steps
+          </p>
+        </div>
 
-          <Card className="cu-card">
-            <CardHeader>
-              <CardTitle>Create Your Profile</CardTitle>
-              <CardDescription>
-                Complete these required fields to get started
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Profile Photo */}
-                <div>
-                  <Label className="text-base font-medium mb-2 block">
-                    Profile Photo <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="flex flex-col items-center space-y-3">
-                    <div
-                      onClick={() => !isUploadingImage && profileImageInputRef.current.click()}
-                      className="cursor-pointer w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300 hover:border-purple-400 transition-colors overflow-hidden"
-                    >
-                      {isUploadingImage ? (
-                        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
-                      ) : profileImage ? (
-                        <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
-                      ) : (
-                        <Camera className="w-12 h-12 text-gray-400" />
-                      )}
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => profileImageInputRef.current.click()}
-                      disabled={isUploadingImage}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      {profileImage ? 'Change Photo' : 'Upload Photo'}
-                    </Button>
-                    <p className="text-xs text-gray-500 text-center">
-                      Click to upload a profile photo
-                    </p>
-                  </div>
-                </div>
+        {/* Step Indicator */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          {[1, 2, 3, 4].map((step) => (
+            <div
+              key={step}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                step === currentStep
+                  ? 'w-8 bg-purple-600'
+                  : step < currentStep
+                  ? 'w-2 bg-purple-400'
+                  : 'w-2 bg-gray-300'
+              }`}
+            />
+          ))}
+        </div>
 
-                {/* Username */}
-                <div>
-                  <Label htmlFor="username" className="text-base font-medium mb-2 block">
-                    Username <span className="text-red-500">*</span>
-                  </Label>
-                  <p className="text-sm text-gray-500 mb-3">
-                    This will be part of your profile URL (e.g., collabunity.app/@{username || 'yourname'})
-                  </p>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500">@</span>
-                    </div>
-                    <Input
-                      id="username"
-                      placeholder="yourname"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
-                      maxLength={30}
-                      className={`pl-7 ${usernameError ? 'border-red-500' : ''}`}
-                      disabled={isSubmitting || isCheckingUsername}
-                      autoCapitalize="off"
-                      autoCorrect="off"
-                      required
-                    />
-                  </div>
-                  {isCheckingUsername && (
-                    <p className="text-xs text-gray-500 mt-1">Checking availability...</p>
-                  )}
-                  {usernameError && (
-                    <p className="text-xs text-red-600 mt-1">{usernameError}</p>
-                  )}
-                  {username && !usernameError && !isCheckingUsername && username !== currentUser?.username && (
-                    <p className="text-xs text-green-600 mt-1">✓ Username is available</p>
-                  )}
-                  <p className="text-xs text-gray-400 mt-1">
-                    3-30 characters: letters, numbers, hyphens, and underscores only
-                  </p>
-                </div>
+        <Card className="cu-card">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg">{stepInfo.title}</CardTitle>
+            <CardDescription>{stepInfo.description}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AnimatePresence mode="wait">
+              {currentStep === 1 && (
+                <OnboardingStep1
+                  key="step1"
+                  username={username}
+                  setUsername={setUsername}
+                  fullName={fullName}
+                  setFullName={setFullName}
+                  profileImage={profileImage}
+                  setProfileImage={setProfileImage}
+                  usernameError={usernameError}
+                  isCheckingUsername={isCheckingUsername}
+                  isUploadingImage={isUploadingImage}
+                  onImageUpload={handleImageUpload}
+                  onNext={handleStep1Next}
+                  isSubmitting={isSubmitting}
+                  currentUser={currentUser}
+                />
+              )}
 
-                {/* Full Name */}
-                <div>
-                  <Label htmlFor="fullName" className="text-base font-medium mb-2 block">
-                    Full Name <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="fullName"
-                    placeholder="John Doe"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    disabled={isSubmitting || isCheckingUsername}
-                    required
-                  />
-                </div>
+              {currentStep === 2 && (
+                <OnboardingStep2
+                  key="step2"
+                  skills={skills}
+                  setSkills={setSkills}
+                  interests={interests}
+                  setInterests={setInterests}
+                  bio={bio}
+                  setBio={setBio}
+                  location={location}
+                  setLocation={setLocation}
+                  onNext={handleStep2Next}
+                  onBack={() => setCurrentStep(1)}
+                  isSubmitting={isSubmitting}
+                />
+              )}
 
-                <Button
-                  type="submit"
-                  className="cu-button w-full"
-                  disabled={isSubmitting || isCheckingUsername || !username.trim() || !fullName.trim() || !profileImage || !!usernameError}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Completing Setup...
-                    </>
-                  ) : (
-                    'Complete Setup'
-                  )}
-                </Button>
+              {currentStep === 3 && (
+                <OnboardingStep3
+                  key="step3"
+                  skills={skills}
+                  interests={interests}
+                  onNext={handleStep3Next}
+                  onBack={() => setCurrentStep(2)}
+                  onSelectIdea={setSelectedIdea}
+                  selectedIdea={selectedIdea}
+                  isSubmitting={isSubmitting}
+                />
+              )}
 
-                <p className="text-xs text-center text-gray-500">
-                  You can add more details to your profile later from your profile settings
-                </p>
-              </form>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    </>
+              {currentStep === 4 && (
+                <OnboardingStep4
+                  key="step4"
+                  skills={skills}
+                  interests={interests}
+                  selectedIdea={selectedIdea}
+                  onBack={() => setCurrentStep(3)}
+                  onComplete={handleComplete}
+                  isSubmitting={isSubmitting}
+                />
+              )}
+            </AnimatePresence>
+          </CardContent>
+        </Card>
+
+        <p className="text-xs text-center text-gray-500 mt-4">
+          Step {currentStep} of 4
+        </p>
+      </motion.div>
+    </div>
   );
 }
