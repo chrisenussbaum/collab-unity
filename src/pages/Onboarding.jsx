@@ -3,43 +3,47 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Lightbulb, Loader2 } from "lucide-react";
+import { Lightbulb, Loader2, User, Sparkles, Users, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import PostOnboardingDialog from "../components/PostOnboardingDialog";
+import OnboardingStep1 from "../components/onboarding/OnboardingStep1";
+import OnboardingStep2 from "../components/onboarding/OnboardingStep2";
+import OnboardingStep3 from "../components/onboarding/OnboardingStep3";
+import OnboardingStep4 from "../components/onboarding/OnboardingStep4";
 
-import OnboardingStep1 from "@/components/onboarding/OnboardingStep1";
-import OnboardingStep2 from "@/components/onboarding/OnboardingStep2";
-import OnboardingStep3 from "@/components/onboarding/OnboardingStep3";
-import OnboardingStep4 from "@/components/onboarding/OnboardingStep4";
-
-const STEP_TITLES = [
-  { title: "Create Your Profile", description: "Let's start with the basics" },
-  { title: "Skills & Interests", description: "Help us understand what you bring to the table" },
-  { title: "Project Ideas", description: "AI-generated ideas based on your profile" },
-  { title: "Find Collaborators", description: "Connect with like-minded creators" }
+const STEPS = [
+  { id: 1, title: "Profile", icon: User },
+  { id: 2, title: "Skills", icon: Sparkles },
+  { id: 3, title: "Ideas", icon: Lightbulb },
+  { id: 4, title: "Connect", icon: Users }
 ];
 
 export default function Onboarding({ currentUser }) {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
-
+  
   // Step 1 state
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [profileImage, setProfileImage] = useState("");
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameError, setUsernameError] = useState("");
-
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  
   // Step 2 state
   const [skills, setSkills] = useState([]);
   const [interests, setInterests] = useState([]);
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
-
+  
   // Step 3 state
   const [selectedIdea, setSelectedIdea] = useState(null);
+  
+  // General state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPostOnboardingDialog, setShowPostOnboardingDialog] = useState(false);
+  const [completedUser, setCompletedUser] = useState(null);
 
   useEffect(() => {
     if (!currentUser) {
@@ -68,7 +72,6 @@ export default function Onboarding({ currentUser }) {
       return { available: true };
     }
 
-    setIsCheckingUsername(true);
     try {
       const response = await base44.functions.invoke('checkUsernameAvailability', {
         username: usernameToCheck
@@ -86,8 +89,6 @@ export default function Onboarding({ currentUser }) {
       console.error("Error checking username:", error);
       setUsernameError("Error checking username availability.");
       return { available: false, error: "Error checking username availability." };
-    } finally {
-      setIsCheckingUsername(false);
     }
   };
 
@@ -109,11 +110,15 @@ export default function Onboarding({ currentUser }) {
   };
 
   const handleStep1Next = async () => {
+    setIsCheckingUsername(true);
     const { available, error } = await checkUsernameAvailability(username);
+    setIsCheckingUsername(false);
+    
     if (!available) {
-      toast.error(error || "Please choose a different username.");
+      toast.error(error || "Username not available");
       return;
     }
+    
     setCurrentStep(2);
   };
 
@@ -127,46 +132,58 @@ export default function Onboarding({ currentUser }) {
 
   const handleComplete = async () => {
     setIsSubmitting(true);
+
     try {
       // Final username check
       const { available, error } = await checkUsernameAvailability(username);
       if (!available) {
-        toast.error(error || "Username is no longer available.");
-        setCurrentStep(1);
+        toast.error(error || "Username not available");
         setIsSubmitting(false);
         return;
       }
 
-      // Build update data
-      const updateData = {
+      // Update user profile with all collected data
+      await base44.auth.updateMe({
         username: username.toLowerCase().trim(),
         full_name: fullName.trim(),
         profile_image: profileImage,
-        skills,
-        interests,
+        skills: skills,
+        interests: interests,
+        bio: bio.trim(),
+        location: location.trim(),
         has_completed_onboarding: true
-      };
+      });
 
-      if (bio.trim()) updateData.bio = bio.trim();
-      if (location.trim()) updateData.location = location.trim();
+      // If user selected a project idea, create it
+      if (selectedIdea) {
+        try {
+          await base44.entities.Project.create({
+            title: selectedIdea.title,
+            description: selectedIdea.description,
+            project_type: selectedIdea.project_type || "Collaborative",
+            skills_needed: selectedIdea.skills_needed || [],
+            tools_needed: [],
+            collaborator_emails: [currentUser.email],
+            current_collaborators_count: 1,
+            status: "seeking_collaborators",
+            is_visible_on_feed: false,
+            classification: "hobby",
+            industry: "technology",
+            area_of_interest: interests[0] || "General",
+            location: location || "Remote"
+          });
+          toast.success("Project created from your selected idea!");
+        } catch (projectError) {
+          console.error("Error creating project:", projectError);
+          // Don't fail the whole onboarding if project creation fails
+        }
+      }
 
-      await base44.auth.updateMe(updateData);
+      const updatedUser = await base44.auth.me();
+      setCompletedUser(updatedUser);
 
       toast.success("Welcome to Collab Unity! 🎉");
-
-      // Navigate based on whether they selected a project idea
-      if (selectedIdea) {
-        // Navigate to create project with pre-filled data
-        const params = new URLSearchParams({
-          fromOnboarding: 'true',
-          title: selectedIdea.title,
-          description: selectedIdea.description,
-          skills: JSON.stringify(selectedIdea.skills_needed || [])
-        });
-        navigate(`${createPageUrl("CreateProject")}?${params.toString()}`);
-      } else {
-        navigate(createPageUrl("Feed"));
-      }
+      setShowPostOnboardingDialog(true);
     } catch (error) {
       console.error("Error completing onboarding:", error);
       toast.error("Failed to complete setup. Please try again.");
@@ -183,120 +200,170 @@ export default function Onboarding({ currentUser }) {
     );
   }
 
-  const stepInfo = STEP_TITLES[currentStep - 1];
+  const getStepTitle = () => {
+    switch (currentStep) {
+      case 1: return "Create Your Profile";
+      case 2: return "Tell Us About You";
+      case 3: return "Project Ideas for You";
+      case 4: return "Find Collaborators";
+      default: return "Welcome";
+    }
+  };
+
+  const getStepDescription = () => {
+    switch (currentStep) {
+      case 1: return "Let's start with the basics";
+      case 2: return "Help us personalize your experience";
+      case 3: return "AI-powered suggestions based on your skills";
+      case 4: return "People you might want to work with";
+      default: return "";
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-lg"
-      >
-        {/* Header */}
-        <div className="text-center mb-6">
-          <div className="w-14 h-14 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
-            <Lightbulb className="w-7 h-7 text-white" />
+    <>
+      <PostOnboardingDialog 
+        isOpen={showPostOnboardingDialog}
+        onClose={() => setShowPostOnboardingDialog(false)}
+        currentUser={completedUser}
+      />
+
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-lg"
+        >
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="w-14 h-14 cu-gradient rounded-full flex items-center justify-center mx-auto mb-3">
+              <Lightbulb className="w-7 h-7 text-white" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
+              Welcome to Collab Unity
+            </h1>
+            <p className="text-gray-600 text-sm">
+              Let's get you set up in a few steps
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
-            Welcome to Collab Unity
-          </h1>
-          <p className="text-gray-600 text-sm">
-            Let's get you set up in a few quick steps
+
+          {/* Progress Steps */}
+          <div className="flex justify-center mb-6">
+            <div className="flex items-center space-x-2">
+              {STEPS.map((step, index) => {
+                const StepIcon = step.icon;
+                const isCompleted = currentStep > step.id;
+                const isCurrent = currentStep === step.id;
+                
+                return (
+                  <React.Fragment key={step.id}>
+                    <div className="flex flex-col items-center">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                          isCompleted
+                            ? 'bg-green-500 text-white'
+                            : isCurrent
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-gray-200 text-gray-400'
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <CheckCircle className="w-5 h-5" />
+                        ) : (
+                          <StepIcon className="w-5 h-5" />
+                        )}
+                      </div>
+                      <span className={`text-xs mt-1 ${isCurrent ? 'text-purple-600 font-medium' : 'text-gray-400'}`}>
+                        {step.title}
+                      </span>
+                    </div>
+                    {index < STEPS.length - 1 && (
+                      <div className={`w-8 h-0.5 mb-5 ${currentStep > step.id ? 'bg-green-500' : 'bg-gray-200'}`} />
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Card */}
+          <Card className="cu-card">
+            <CardHeader className="pb-4">
+              <CardTitle>{getStepTitle()}</CardTitle>
+              <CardDescription>{getStepDescription()}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AnimatePresence mode="wait">
+                {currentStep === 1 && (
+                  <OnboardingStep1
+                    key="step1"
+                    username={username}
+                    setUsername={setUsername}
+                    fullName={fullName}
+                    setFullName={setFullName}
+                    profileImage={profileImage}
+                    setProfileImage={setProfileImage}
+                    usernameError={usernameError}
+                    isCheckingUsername={isCheckingUsername}
+                    isUploadingImage={isUploadingImage}
+                    onImageUpload={handleImageUpload}
+                    onNext={handleStep1Next}
+                    isSubmitting={isSubmitting}
+                    currentUser={currentUser}
+                  />
+                )}
+
+                {currentStep === 2 && (
+                  <OnboardingStep2
+                    key="step2"
+                    skills={skills}
+                    setSkills={setSkills}
+                    interests={interests}
+                    setInterests={setInterests}
+                    bio={bio}
+                    setBio={setBio}
+                    location={location}
+                    setLocation={setLocation}
+                    onNext={handleStep2Next}
+                    onBack={() => setCurrentStep(1)}
+                    isSubmitting={isSubmitting}
+                  />
+                )}
+
+                {currentStep === 3 && (
+                  <OnboardingStep3
+                    key="step3"
+                    skills={skills}
+                    interests={interests}
+                    onNext={handleStep3Next}
+                    onBack={() => setCurrentStep(2)}
+                    onSelectIdea={setSelectedIdea}
+                    selectedIdea={selectedIdea}
+                    isSubmitting={isSubmitting}
+                  />
+                )}
+
+                {currentStep === 4 && (
+                  <OnboardingStep4
+                    key="step4"
+                    skills={skills}
+                    interests={interests}
+                    selectedIdea={selectedIdea}
+                    onBack={() => setCurrentStep(3)}
+                    onComplete={handleComplete}
+                    isSubmitting={isSubmitting}
+                  />
+                )}
+              </AnimatePresence>
+            </CardContent>
+          </Card>
+
+          <p className="text-xs text-center text-gray-500 mt-4">
+            You can always update your profile and preferences later
           </p>
-        </div>
-
-        {/* Step Indicator */}
-        <div className="flex items-center justify-center gap-2 mb-6">
-          {[1, 2, 3, 4].map((step) => (
-            <div
-              key={step}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                step === currentStep
-                  ? 'w-8 bg-purple-600'
-                  : step < currentStep
-                  ? 'w-2 bg-purple-400'
-                  : 'w-2 bg-gray-300'
-              }`}
-            />
-          ))}
-        </div>
-
-        <Card className="cu-card">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">{stepInfo.title}</CardTitle>
-            <CardDescription>{stepInfo.description}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AnimatePresence mode="wait">
-              {currentStep === 1 && (
-                <OnboardingStep1
-                  key="step1"
-                  username={username}
-                  setUsername={setUsername}
-                  fullName={fullName}
-                  setFullName={setFullName}
-                  profileImage={profileImage}
-                  setProfileImage={setProfileImage}
-                  usernameError={usernameError}
-                  isCheckingUsername={isCheckingUsername}
-                  isUploadingImage={isUploadingImage}
-                  onImageUpload={handleImageUpload}
-                  onNext={handleStep1Next}
-                  isSubmitting={isSubmitting}
-                  currentUser={currentUser}
-                />
-              )}
-
-              {currentStep === 2 && (
-                <OnboardingStep2
-                  key="step2"
-                  skills={skills}
-                  setSkills={setSkills}
-                  interests={interests}
-                  setInterests={setInterests}
-                  bio={bio}
-                  setBio={setBio}
-                  location={location}
-                  setLocation={setLocation}
-                  onNext={handleStep2Next}
-                  onBack={() => setCurrentStep(1)}
-                  isSubmitting={isSubmitting}
-                />
-              )}
-
-              {currentStep === 3 && (
-                <OnboardingStep3
-                  key="step3"
-                  skills={skills}
-                  interests={interests}
-                  onNext={handleStep3Next}
-                  onBack={() => setCurrentStep(2)}
-                  onSelectIdea={setSelectedIdea}
-                  selectedIdea={selectedIdea}
-                  isSubmitting={isSubmitting}
-                />
-              )}
-
-              {currentStep === 4 && (
-                <OnboardingStep4
-                  key="step4"
-                  skills={skills}
-                  interests={interests}
-                  selectedIdea={selectedIdea}
-                  onBack={() => setCurrentStep(3)}
-                  onComplete={handleComplete}
-                  isSubmitting={isSubmitting}
-                />
-              )}
-            </AnimatePresence>
-          </CardContent>
-        </Card>
-
-        <p className="text-xs text-center text-gray-500 mt-4">
-          Step {currentStep} of 4
-        </p>
-      </motion.div>
-    </div>
+        </motion.div>
+      </div>
+    </>
   );
 }
