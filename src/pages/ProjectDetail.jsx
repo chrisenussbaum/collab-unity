@@ -1132,6 +1132,43 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
 
           {/* Main Content - 75% width for non-collaborators (9 cols), 50% for collaborators (6 cols) */}
           <main className={`${userCanContribute ? 'xl:col-span-6' : 'xl:col-span-9'} cu-content-grid space-y-4 sm:space-y-6`}>
+            {/* Project Visibility Toggle - Mobile/Tablet for project owner - ABOVE project details */}
+            {isOwner && (
+              <Card className="cu-card xl:hidden">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <div className="flex items-center space-x-2">
+                        {project.is_visible_on_feed ? (
+                          <Eye className="w-4 h-4 sm:w-5 h-5 mr-2 text-green-600 flex-shrink-0" />
+                        ) : (
+                          <EyeOff className="w-4 h-4 sm:w-5 h-5 text-gray-400 flex-shrink-0" />
+                        )}
+                        <div className="min-w-0">
+                          <Label htmlFor="visibility-toggle-mobile" className="text-sm font-medium cursor-pointer">
+                            {project.is_visible_on_feed ? 'Public on Feed' : 'Private Project'}
+                          </Label>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {project.is_visible_on_feed 
+                              ? 'Anyone can view and contribute' 
+                              : 'Only invited collaborators can view'
+                            }
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <Switch
+                      id="visibility-toggle-mobile"
+                      checked={project.is_visible_on_feed}
+                      onCheckedChange={handleToggleVisibility}
+                      disabled={isUpdatingVisibility}
+                      className="ml-3 flex-shrink-0"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
             {isOwner && <ProjectApplicationsManager project={project} onProjectUpdate={handleProjectUpdate} />}
             
             
