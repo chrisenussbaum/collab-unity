@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,22 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import TaskDetailModal from "./TaskDetailModal";
+
+// Retry logic for rate limiting
+const withRetry = async (apiCall, maxRetries = 3, baseDelay = 1000) => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await apiCall();
+    } catch (error) {
+      if (error.response?.status === 429 && attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+};
 
 const statusColumns = [
   { id: "todo", label: "To Do", color: "bg-gray-100" },
@@ -37,6 +53,8 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
     progress: 0
   });
 
+  const retryCountRef = useRef(0);
+
   const fetchTasks = useCallback(async () => {
     if (!project?.id) {
       setIsLoading(false);
@@ -45,11 +63,15 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
 
     setIsLoading(true);
     try {
-      const data = await Task.filter({ project_id: project.id }, '-created_date');
+      const data = await withRetry(() => Task.filter({ project_id: project.id }, '-created_date'));
       setTasks(Array.isArray(data) ? data : []);
+      retryCountRef.current = 0;
     } catch (error) {
       console.error("Error fetching tasks:", error);
-      toast.error("Failed to load tasks");
+      // Only show error toast if it's not a rate limit issue (those are retried silently)
+      if (error.response?.status !== 429) {
+        toast.error("Failed to load tasks");
+      }
       setTasks([]);
     } finally {
       setIsLoading(false);
