@@ -18,7 +18,6 @@ export default function PublicPageLayout({ children, currentLanguage, onLanguage
   const navTranslations = {
     en: {
       about: "About",
-      demos: "Demos",
       legal: "Legal",
       featureRequest: "Feature Request",
       testimonials: "Testimonials",
@@ -32,7 +31,6 @@ export default function PublicPageLayout({ children, currentLanguage, onLanguage
     },
     es: {
       about: "Acerca de",
-      demos: "Demos",
       legal: "Legal",
       featureRequest: "Solicitud de Función",
       testimonials: "Testimonios",
@@ -46,7 +44,6 @@ export default function PublicPageLayout({ children, currentLanguage, onLanguage
     },
     fr: {
       about: "À Propos",
-      demos: "Démos",
       legal: "Juridique",
       featureRequest: "Demande de Fonctionnalité",
       testimonials: "Témoignages",
@@ -81,11 +78,6 @@ export default function PublicPageLayout({ children, currentLanguage, onLanguage
               <Link to={createPageUrl("AboutUs")}>
                 <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
                   {t.about}
-                </Button>
-              </Link>
-              <Link to={createPageUrl("Demos")}>
-                <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
-                  {t.demos}
                 </Button>
               </Link>
               <Link to={createPageUrl("Testimonials")}>
