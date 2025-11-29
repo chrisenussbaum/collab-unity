@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -166,7 +165,6 @@ export default function EditProject({ currentUser, authIsLoading }) {
 
   const addLink = () => {
     if (formData.project_urls.length >= 10) {
-      toast.info("You've reached the 10-link limit.");
       return;
     }
     if (newLink) {
@@ -223,7 +221,6 @@ export default function EditProject({ currentUser, authIsLoading }) {
         }
       }
 
-      toast.success("Project updated successfully!");
       handleSafeNavigation();
     } catch (error) {
       console.error("Error saving project:", error);

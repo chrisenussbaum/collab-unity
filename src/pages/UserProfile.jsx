@@ -1035,7 +1035,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     }
 
     navigator.clipboard.writeText(url).then(() => {
-      toast.success("Profile link copied to clipboard!");
+      // Profile link copied
     }).catch(err => {
       toast.error("Failed to copy link.");
       console.error('Failed to copy: ', err);
@@ -1058,7 +1058,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     try {
       await User.updateMyUserData({ social_links: socialLinks });
       setProfileUser(prev => ({ ...prev, social_links: socialLinks }));
-      toast.success("Social links updated successfully!");
     } catch (error) {
       console.error("Error updating social links:", error);
       toast.error("Failed to update social links.");
@@ -1070,7 +1069,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     try {
       await User.updateMyUserData({ bio: newBio });
       setProfileUser(prev => ({ ...prev, bio: newBio }));
-      toast.success("Biography updated successfully!");
     } catch (error) {
       console.error("Error updating bio:", error);
       toast.error("Failed to update biography.");
@@ -1082,7 +1080,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     try {
       await User.updateMyUserData({ education: newEducation });
       setProfileUser(prev => ({ ...prev, education: newEducation }));
-      toast.success("Education updated successfully!");
     } catch (error) {
       console.error("Error updating education:", error);
       toast.error("Failed to update education.");
@@ -1094,7 +1091,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     try {
       await User.updateMyUserData({ awards_certifications: newAwards });
       setProfileUser(prev => ({ ...prev, awards_certifications: newAwards }));
-      toast.success("Awards & certifications updated successfully!");
     } catch (error) {
       console.error("Error updating awards:", error);
       toast.error("Failed to update awards.");
@@ -1113,7 +1109,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         linkedin_url: linkedinUrl,
         website_url: websiteUrl
       }));
-      toast.success("Web links updated successfully!");
     } catch (error) {
       console.error("Error updating web links:", error);
       toast.error("Failed to update web links.");
@@ -1125,7 +1120,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     try {
       await base44.auth.updateMe({ portfolio_items: newPortfolio });
       setProfileUser(prev => ({ ...prev, portfolio_items: newPortfolio }));
-      toast.success("Portfolio updated successfully!");
     } catch (error) {
       console.error("Error updating portfolio:", error);
       toast.error("Failed to update portfolio.");
@@ -1163,7 +1157,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         setCurrentUser(freshUser);
       }
 
-      toast.success("Resume uploaded successfully!");
+      // Resume uploaded
     } catch (error) {
       console.error("Error uploading resume:", error);
       toast.error("Failed to upload resume. Please try again.");
@@ -1187,7 +1181,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         setCurrentUser(freshUser);
       }
 
-      toast.success("Resume removed successfully!");
+      // Resume removed
     } catch (error) {
       console.error("Error removing resume:", error);
       toast.error("Failed to remove resume.");
@@ -1210,7 +1204,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         setCurrentUser(freshUser);
       }
       
-      toast.success("Profile photo updated!");
+      // Profile photo updated
     } catch (error) {
       console.error("Error uploading profile photo:", error);
       toast.error("Failed to upload profile photo.");
@@ -1238,7 +1232,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         setCurrentUser(freshUser);
       }
       
-      toast.success("Cover photo updated!");
+      // Cover photo updated
     } catch (error) {
       console.error("Error uploading cover photo:", error);
       toast.error("Failed to upload cover photo.");
@@ -1288,7 +1282,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
 
       setProfileUser(prev => ({ ...prev, ...updateData }));
 
-      toast.success(`${editingSection.charAt(0).toUpperCase() + editingSection.slice(1)} updated successfully!`);
       handleCloseEditModal();
     } catch (error) {
       console.error(`Error updating ${editingSection}:`, error);
@@ -1318,7 +1311,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         // Remove endorsement
         await base44.entities.SkillEndorsement.delete(existing.id);
         setSkillEndorsements(prev => prev.filter(e => e.id !== existing.id));
-        toast.success("Endorsement removed.");
       } else {
         // Add endorsement
         const newEndorsement = await base44.entities.SkillEndorsement.create({
@@ -1330,7 +1322,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         });
 
         setSkillEndorsements(prev => [...prev, newEndorsement]);
-        toast.success("Skill endorsed!");
 
         // Create notification - wrapped in try-catch to prevent blocking
         try {
@@ -1396,7 +1387,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
       if (review.is_public) {
         setCollaboratorReviews(prev => [review, ...prev]);
       }
-      toast.success("Review submitted successfully!");
 
       // Create notification - wrapped in try-catch to prevent blocking
       try {
@@ -1486,7 +1476,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
       window.URL.revokeObjectURL(url);
       a.remove();
       
-      toast.success("Resume generated successfully!");
+      // Resume generated
     } catch (error) {
       console.error("Error generating resume:", error);
       toast.error("Failed to generate resume. Please try again.");

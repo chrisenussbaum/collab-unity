@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -95,7 +94,7 @@ export default function CreateProject() {
           }
         }).catch(err => {
           console.error("Failed to fetch project template details:", err);
-          toast.warning("Could not load template learning resources.");
+          // Could not load template learning resources
         });
       }
 
@@ -207,7 +206,6 @@ export default function CreateProject() {
 
   const addLink = () => {
     if (formData.project_urls.length >= 10) {
-      toast.info("You've reached the 10-link limit.");
       return;
     }
     if (newLink && !formData.project_urls.includes(newLink)) {
@@ -284,7 +282,6 @@ export default function CreateProject() {
       }
 
       await Project.create(projectData); 
-      toast.success("Project created successfully!");
       navigate(createPageUrl("MyProjects"));
     } catch (error) {
       console.error("Error creating project:", error);

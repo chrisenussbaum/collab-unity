@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -76,7 +75,6 @@ export default function Onboarding({ currentUser }) {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setProfileImage(file_url);
-      toast.success("Profile photo uploaded successfully!");
     } catch (error) {
       console.error("Error uploading image:", error);
       toast.error("Failed to upload profile photo. Please try again.");
@@ -130,7 +128,6 @@ export default function Onboarding({ currentUser }) {
       const updatedUser = await base44.auth.me();
       setCompletedUser(updatedUser);
 
-      toast.success("Welcome to Collab Unity! 🎉");
       setShowPostOnboardingDialog(true);
     } catch (error) {
       console.error("Error completing onboarding:", error);

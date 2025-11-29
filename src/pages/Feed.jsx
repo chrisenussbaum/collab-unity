@@ -187,7 +187,6 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
 
   const handleApplaud = async () => {
     if (!currentUser) {
-      toast.info("Sign in to applaud this post!");
       return;
     }
     try {
@@ -266,7 +265,6 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
 
       await FeedPost.delete(post.id);
 
-      toast.success("Post deleted successfully!");
       setShowDeleteConfirm(false);
       if (onPostDeleted) onPostDeleted();
     } catch (error) {
@@ -700,7 +698,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
     e.stopPropagation();
 
     if (!currentUser) {
-      toast.info("Sign in to follow projects!");
       return;
     }
 
@@ -721,7 +718,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
         
         setIsFollowing(false);
         setFollowersCount(newCount);
-        toast.success("Unfollowed project!");
         
         if (onProjectUpdate) onProjectUpdate();
         
@@ -744,7 +740,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
         
         setIsFollowing(true);
         setFollowersCount(newCount);
-        toast.success("Now following project!");
         
         if (onProjectUpdate) onProjectUpdate();
         
@@ -783,7 +778,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
     const hasPaymentLink = project.paypal_link || project.venmo_link || project.cashapp_link;
     
     if (!hasPaymentLink) {
-      toast.info("This project hasn't set up funding options yet.");
       return;
     }
 
@@ -810,7 +804,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
 
   const handleApplaud = async () => {
     if (!currentUser) {
-      toast.info("Sign in to applaud this project!");
       return;
     }
 

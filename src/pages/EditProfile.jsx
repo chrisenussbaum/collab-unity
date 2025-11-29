@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -277,7 +276,6 @@ export default function EditProfile({ currentUser, authIsLoading }) {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       handleInputChange(field, file_url);
-      toast.success("Image uploaded successfully!");
     } catch (error) {
       console.error(`Error uploading ${field}:`, error);
       toast.error(`Failed to upload ${field}. Please try again.`);
@@ -314,7 +312,6 @@ export default function EditProfile({ currentUser, authIsLoading }) {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       handleInputChange("resume_url", file_url);
-      toast.success("Resume uploaded successfully! Don't forget to save your changes.");
     } catch (error) {
       console.error("Error uploading resume:", error);
       toast.error("Failed to upload resume. Please try again.");
@@ -328,7 +325,6 @@ export default function EditProfile({ currentUser, authIsLoading }) {
 
   const handleRemoveResume = () => {
     handleInputChange("resume_url", "");
-    toast.success("Resume removed! Don't forget to save your changes.");
   };
 
   const checkUsernameAvailability = async (username) => {
@@ -392,7 +388,6 @@ export default function EditProfile({ currentUser, authIsLoading }) {
     setIsSaving(true);
     try {
       await base44.auth.updateMe(formData);
-      toast.success("Profile saved successfully!");
       setOriginalProfileData(formData);
       setIsDirty(false);
       navigate(createPageUrl(formData.username ? `UserProfile?username=${formData.username}` : "UserProfile"));

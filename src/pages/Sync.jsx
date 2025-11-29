@@ -357,7 +357,6 @@ export default function Sync({ currentUser, authIsLoading }) {
 
       setShowDeleteConversationDialog(false);
       setConversationToDelete(null);
-      toast.success("Conversation deleted");
     } catch (error) {
       console.error("Error deleting conversation:", error);
       toast.error("Failed to delete conversation");

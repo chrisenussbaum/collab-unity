@@ -161,7 +161,6 @@ export default function MyProjects({ currentUser, authIsLoading }) {
       // Update local state to remove the deleted project
       setProjects(prevProjects => prevProjects.filter(p => p.id !== projectToDelete.id));
       
-      toast.success("Project deleted successfully!");
       setProjectToDelete(null);
     } catch (error) {
       console.error("Error deleting project:", error);
