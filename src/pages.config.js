@@ -21,7 +21,6 @@ import Sync from './pages/Sync';
 import Welcome from './pages/Welcome';
 import About from './pages/About';
 import Contact from './pages/Contact';
-import Demos from './pages/Demos';
 import SupportCU from './pages/SupportCU';
 import ReportBug from './pages/ReportBug';
 import FeatureRequest from './pages/FeatureRequest';
@@ -54,7 +53,6 @@ export const PAGES = {
     "Welcome": Welcome,
     "About": About,
     "Contact": Contact,
-    "Demos": Demos,
     "SupportCU": SupportCU,
     "ReportBug": ReportBug,
     "FeatureRequest": FeatureRequest,

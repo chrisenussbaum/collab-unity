@@ -455,8 +455,7 @@ const WorkspaceMockup = () => {
     { id: "ideate", icon: Lightbulb, label: "Ideate" },
     { id: "tasks", icon: CheckSquare, label: "Tasks" },
     { id: "tools", icon: Settings, label: "Tools" },
-    { id: "assets", icon: Folder, label: "Assets" },
-    { id: "thoughts", icon: FileText, label: "Thoughts" }
+    { id: "assets", icon: Folder, label: "Assets" }
   ];
 
   const tabContent = {
@@ -598,29 +597,6 @@ const WorkspaceMockup = () => {
               <p className="text-sm font-medium">brand-guidelines.pdf</p>
               <p className="text-xs text-gray-500">Updated last week</p>
             </div>
-          </div>
-        </div>
-      </div>
-    ),
-    thoughts: (
-      <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Team Thoughts</h3>
-        <p className="text-sm text-gray-600 mb-4">Capture and organize team notes</p>
-        <div className="space-y-3">
-          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-semibold text-purple-900">📝 Meeting Notes - Sprint 3</p>
-              <span className="text-xs text-purple-600">Pinned</span>
-            </div>
-            <p className="text-xs text-gray-600">Key decisions from our weekly standup...</p>
-          </div>
-          <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-            <p className="text-sm font-semibold text-gray-900 mb-2">💭 API Design Ideas</p>
-            <p className="text-xs text-gray-600">Exploring RESTful vs GraphQL approaches...</p>
-          </div>
-          <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-            <p className="text-sm font-semibold text-gray-900 mb-2">🔗 Research Links</p>
-            <p className="text-xs text-gray-600">Collection of useful resources...</p>
           </div>
         </div>
       </div>
@@ -830,7 +806,6 @@ const translations = {
     },
     nav: {
       about: "About",
-      demos: "Demos",
       legal: "Legal",
       featureRequest: "Feature Request",
       testimonials: "Testimonials",
@@ -873,7 +848,6 @@ const translations = {
     },
     nav: {
       about: "Acerca de",
-      demos: "Demos",
       legal: "Legal",
       featureRequest: "Solicitud de Función",
       testimonials: "Testimonios",
@@ -916,7 +890,6 @@ const translations = {
     },
     nav: {
       about: "À Propos",
-      demos: "Démos",
       legal: "Juridique",
       featureRequest: "Demande de Fonctionnalité",
       testimonials: "Témoignages",
@@ -1038,8 +1011,7 @@ export default function Welcome() {
         { icon: Lightbulb, label: "Ideate", desc: "Rich text planning" },
         { icon: CheckSquare, label: "Tasks", desc: "Track progress" },
         { icon: Settings, label: "Tools", desc: "Integrated links" },
-        { icon: Folder, label: "Assets", desc: "Manage files" },
-        { icon: FileText, label: "Thoughts", desc: "Team notes" }
+        { icon: Folder, label: "Assets", desc: "Manage files" }
       ],
       mockup: <WorkspaceMockup />
     },
@@ -1110,11 +1082,6 @@ export default function Welcome() {
                   {t.nav.about}
                 </Button>
               </Link>
-              <Link to={createPageUrl("Demos")}>
-                <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
-                  {t.nav.demos}
-                </Button>
-              </Link>
               <Link to={createPageUrl("Testimonials")}>
                 <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
                   {t.nav.testimonials}
@@ -1183,11 +1150,6 @@ export default function Welcome() {
               <Link to={createPageUrl("AboutUs")} onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-purple-600">
                   {t.nav.about}
-                </Button>
-              </Link>
-              <Link to={createPageUrl("Demos")} onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-purple-600">
-                  {t.nav.demos}
                 </Button>
               </Link>
               <Link to={createPageUrl("Testimonials")} onClick={() => setMobileMenuOpen(false)}>
