@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, CheckSquare, Wrench, FileStack, BookOpen, Activity, ClipboardList, Lightbulb, FileText, Code } from 'lucide-react';
+import { MessageSquare, CheckSquare, Wrench, FileStack, BookOpen, Activity, Lightbulb, FileText, Code } from 'lucide-react';
 import HorizontalScrollContainer from '@/components/HorizontalScrollContainer';
 import DiscussionBoard from './DiscussionBoard';
 import TaskBoard from './TaskBoard';
@@ -9,7 +9,7 @@ import ToolsHub from './ToolsHub';
 import AssetsTab from './AssetsTab';
 import ThoughtsTab from './ThoughtsTab';
 import ActivityTab from './ActivityTab';
-import ContributionsTab from './ContributionsTab';
+
 import IdeateTab from './IdeateTab';
 import IdeationToolsTab from './IdeationToolsTab';
 import { base44 } from "@/api/base44Client";
@@ -141,7 +141,7 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
     { value: "assets", icon: FileStack, label: "Assets", title: "Manage project files, assets, and links" },
     { value: "thoughts", icon: FileText, label: "Thoughts", title: "Share insights and reflections about the project" },
     { value: "ides", icon: Code, label: "IDEs", title: "Access integrated development environments for your project" },
-    { value: "contributions", icon: ClipboardList, label: "Contributions", title: "View individual contributions" },
+
     { value: "activity", icon: Activity, label: "Activity", title: "Project activity timeline and history" },
   ];
 
@@ -307,18 +307,6 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
                   isCollaborator={isCollaborator}
                   isProjectOwner={isProjectOwner}
                   projectOwnerName={projectOwnerName}
-                />
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="contributions" className="mt-0" forceMount={activeTab === "contributions"}>
-            {activeTab === "contributions" && (
-              <div className="w-full max-w-none">
-                <ContributionsTab
-                  project={project}
-                  currentUser={currentUser}
-                  collaborators={projectUsers}
                 />
               </div>
             )}
