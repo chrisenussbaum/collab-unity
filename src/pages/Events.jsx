@@ -355,7 +355,7 @@ export default function Events() {
                   </motion.div>
                 ))}
               </div>
-            </Card>
+            </motion.div>
           )}
 
           {/* CTA Section */}
