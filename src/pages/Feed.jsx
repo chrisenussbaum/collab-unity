@@ -589,6 +589,19 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
   const commentsRef = useRef(null);
   const [showAllLinksDialog, setShowAllLinksDialog] = useState(false);
 
+  // Initialize applaud state from projectApplauds prop
+  useEffect(() => {
+    const currentProjectApplauds = projectApplauds.filter(a => a.project_id === project.id);
+    setApplaudCount(currentProjectApplauds.length);
+    
+    if (currentUser) {
+      const userApplauded = currentProjectApplauds.some(applaud => applaud.user_email === currentUser.email);
+      setIsApplauded(userApplauded);
+    } else {
+      setIsApplauded(false);
+    }
+  }, [projectApplauds, project.id, currentUser]);
+
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editFormData, setEditFormData] = useState({
     title: project.title || '',
