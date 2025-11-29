@@ -35,14 +35,32 @@ export default function ThoughtsTab({ project, currentUser, isCollaborator, isPr
     }
   }, [project?.id, hasReadAccess]);
 
+  // Retry logic for rate limiting
+  const withRetry = async (apiCall, maxRetries = 5, baseDelay = 1500) => {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await apiCall();
+      } catch (error) {
+        if (error.response?.status === 429 && attempt < maxRetries - 1) {
+          const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        throw error;
+      }
+    }
+  };
+
   const loadThoughts = async () => {
     try {
       setIsLoading(true);
-      const projectThoughts = await Thought.filter({ project_id: project.id }, "-created_date");
+      const projectThoughts = await withRetry(() => Thought.filter({ project_id: project.id }, "-created_date"));
       setThoughts(Array.isArray(projectThoughts) ? projectThoughts : []);
     } catch (error) {
       console.error("Error loading thoughts:", error);
-      toast.error("Failed to load thoughts.");
+      if (error.response?.status !== 429) {
+        toast.error("Failed to load thoughts.");
+      }
       setThoughts([]);
     } finally {
       setIsLoading(false);

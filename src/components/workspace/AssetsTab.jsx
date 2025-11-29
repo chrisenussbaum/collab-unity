@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,6 +56,22 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
   const fileInputRef = useRef(null);
   const [selectedCategory, setSelectedCategory] = useState("all"); // New state for category filter
 
+  // Retry logic for rate limiting
+  const withRetry = async (apiCall, maxRetries = 5, baseDelay = 1500) => {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await apiCall();
+      } catch (error) {
+        if (error.response?.status === 429 && attempt < maxRetries - 1) {
+          const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        throw error;
+      }
+    }
+  };
+
   const fetchAssets = useCallback(async () => {
     if (!project?.id) {
       setIsLoading(false);
@@ -65,14 +80,16 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
 
     setIsLoading(true);
     try {
-      const data = await AssetVersion.filter({ project_id: project.id });
+      const data = await withRetry(() => AssetVersion.filter({ project_id: project.id }));
       const sortedAssets = (Array.isArray(data) ? data : []).sort((a, b) =>
         new Date(b.created_date) - new Date(a.created_date)
       );
       setAssets(sortedAssets);
     } catch (error) {
       console.error("Error fetching assets:", error);
-      toast.error("Failed to load assets");
+      if (error.response?.status !== 429) {
+        toast.error("Failed to load assets");
+      }
       setAssets([]);
     } finally {
       setIsLoading(false);
