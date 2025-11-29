@@ -57,8 +57,8 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
         const lastActive = new Date(p.last_active);
         const secondsSinceActive = (now - lastActive) / 1000;
         
-        // Only show users active in last 10 seconds
-        if (secondsSinceActive < 10 && p.viewing_section) {
+        // Only show users active in last 60 seconds
+        if (secondsSinceActive < 60 && p.viewing_section) {
           if (!presenceByTab[p.viewing_section]) {
             presenceByTab[p.viewing_section] = [];
           }
@@ -77,7 +77,7 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
     if (!currentUser || !project?.id) return;
 
     fetchTabPresence(); // Initial fetch
-    fetchPresenceIntervalRef.current = setInterval(fetchTabPresence, 2000); // Poll every 2 seconds
+    fetchPresenceIntervalRef.current = setInterval(fetchTabPresence, 20000); // Poll every 20 seconds
 
     return () => {
       if (fetchPresenceIntervalRef.current) {

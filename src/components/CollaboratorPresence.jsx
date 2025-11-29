@@ -118,13 +118,13 @@ export default function CollaboratorPresence({ projectId, currentUser }) {
         project_id: projectId
       });
 
-      // Filter out stale presences (older than 10 seconds) and current user
+      // Filter out stale presences (older than 60 seconds) and current user
       const now = new Date();
       const activePresences = allPresence.filter(p => {
         if (p.user_email === currentUser.email) return false;
         const lastActive = new Date(p.last_active);
         const secondsSinceActive = (now - lastActive) / 1000;
-        return secondsSinceActive < 10;
+        return secondsSinceActive < 60;
       });
 
       if (isMountedRef.current) {
@@ -154,7 +154,7 @@ export default function CollaboratorPresence({ projectId, currentUser }) {
   useEffect(() => {
     if (!currentUser || !projectId) return;
 
-    updateIntervalRef.current = setInterval(sendHeartbeat, 5000); // Every 5 seconds
+    updateIntervalRef.current = setInterval(sendHeartbeat, 30000); // Every 30 seconds
 
     return () => {
       if (updateIntervalRef.current) {
@@ -168,7 +168,7 @@ export default function CollaboratorPresence({ projectId, currentUser }) {
     if (!currentUser || !projectId) return;
 
     fetchActiveUsers(); // Initial fetch
-    fetchIntervalRef.current = setInterval(fetchActiveUsers, 2000); // Poll every 2 seconds
+    fetchIntervalRef.current = setInterval(fetchActiveUsers, 15000); // Poll every 15 seconds
 
     return () => {
       if (fetchIntervalRef.current) {
