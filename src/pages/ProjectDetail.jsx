@@ -1113,12 +1113,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                   onProjectUpdate={handleProjectUpdate}
                 />
                 <ContextualSearchAssistant project={project} />
-                <ProjectLearningResources
-                  project={project}
-                  onProjectUpdate={handleProjectUpdate}
-                  currentUser={currentUser}
-                  isCollaborator={userCanContribute}
-                />
                 <SocialsPanel
                   socialLinks={project.social_links || {}}
                   onUpdate={handleUpdateSocialLinks}
@@ -1642,12 +1636,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                   onProjectUpdate={handleProjectUpdate}
                 />
                 <ContextualSearchAssistant project={project} />
-                <ProjectLearningResources
-                  project={project}
-                  onProjectUpdate={handleProjectUpdate}
-                  currentUser={currentUser}
-                  isCollaborator={userCanContribute}
-                />
                 <CommunicationsPanel 
                   project={project}
                   isCollaborator={userCanContribute}
