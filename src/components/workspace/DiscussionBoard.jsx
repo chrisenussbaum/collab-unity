@@ -47,7 +47,7 @@ import {
 const createPageUrl = (path) => `/${path}`;
 
 // Utility function to handle rate limits with exponential backoff
-const withRetry = async (apiCall, maxRetries = 3, baseDelay = 1000) => {
+const withRetry = async (apiCall, maxRetries = 5, baseDelay = 1500) => {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await apiCall();
@@ -140,7 +140,10 @@ export default function DiscussionBoard({ project, currentUser, onProjectUpdate,
       setComments(sortedComments);
     } catch (error) {
       console.error("Error loading comments:", error);
-      toast.error("Failed to load discussion comments.");
+      // Only show error toast for non-rate-limit errors (rate limits are handled silently with retries)
+      if (error.response?.status !== 429) {
+        toast.error("Failed to load discussion comments.");
+      }
     } finally {
       setIsLoading(false);
     }
