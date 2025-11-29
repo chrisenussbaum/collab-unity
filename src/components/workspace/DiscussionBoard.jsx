@@ -366,7 +366,6 @@ export default function DiscussionBoard({ project, currentUser, onProjectUpdate,
       setFilteredUsers([]);
 
       loadComments();
-      toast.success("Comment posted successfully!");
 
       const notificationPromises = [];
 
@@ -468,7 +467,6 @@ export default function DiscussionBoard({ project, currentUser, onProjectUpdate,
       setFilteredUsers([]);
 
       loadComments();
-      toast.success("Reply posted successfully!");
 
       const notificationPromises = [];
 
@@ -551,7 +549,6 @@ export default function DiscussionBoard({ project, currentUser, onProjectUpdate,
     setIsSubmitting(true);
     try {
       await Comment.delete(deletingCommentId);
-      toast.success("Comment deleted successfully!");
       setDeletingCommentId(null);
       loadComments();
     } catch (error) {
@@ -570,7 +567,6 @@ export default function DiscussionBoard({ project, currentUser, onProjectUpdate,
     setIsSubmitting(true);
     try {
       await Comment.update(commentId, { content: editContent.trim() });
-      toast.success("Comment updated successfully!");
       setEditingComment(null);
       setEditContent("");
       loadComments();
@@ -590,7 +586,6 @@ export default function DiscussionBoard({ project, currentUser, onProjectUpdate,
     setIsPinningCommentItem(true);
     try {
       await Comment.update(comment.id, { is_pinned: !comment.is_pinned });
-      toast.success(`Comment ${comment.is_pinned ? "unpinned" : "pinned"} successfully!`);
       loadComments();
       if (onProjectUpdate) onProjectUpdate();
     } catch (error) {

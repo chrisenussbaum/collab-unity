@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -137,7 +136,6 @@ export default function ProjectMembershipManager({
         });
       }
 
-      // toast.success("You have left the project"); // Removed redundant success toast
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error("Error leaving project:", error);
@@ -194,7 +192,6 @@ export default function ProjectMembershipManager({
         }
       });
 
-      // toast.success(`${memberToRemove.full_name || memberToRemove.email} has been removed from the project`); // Removed redundant success toast
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error("Error removing member:", error);
@@ -289,8 +286,6 @@ export default function ProjectMembershipManager({
         // Don't fail the invitation if follower notifications fail
       }
 
-      // toast.success(`Invitation sent to ${selectedUser.full_name || selectedUser.email}`); // Removed redundant success toast
-      
       // Reset and close
       setShowInviteDialog(false);
       setSearchQuery("");

@@ -378,7 +378,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
     e.stopPropagation();
 
     if (!currentUser) {
-      toast.info("Sign in to follow projects!");
       return;
     }
 
@@ -396,7 +395,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
         });
         
         setCurrentUser(prev => ({ ...prev, followed_projects: updatedFollowed }));
-        toast.success("Unfollowed project!");
       } else {
         const updatedFollowed = [...(currentUser.followed_projects || []), projectId];
         await base44.auth.updateMe({ followed_projects: updatedFollowed });
@@ -404,7 +402,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
         setFollowedProjects(prev => new Set([...prev, projectId]));
         
         setCurrentUser(prev => ({ ...prev, followed_projects: updatedFollowed }));
-        toast.success("Now following project!");
       }
     } catch (error) {
       console.error("Error handling follow:", error);
@@ -417,7 +414,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
     e.stopPropagation();
 
     if (!currentUser) {
-      toast.info("Sign in to apply to projects!");
       return;
     }
 
@@ -448,7 +444,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
         }
         
         setCurrentUser(prev => ({ ...prev, interested_projects: updatedInterests }));
-        toast.success("Application withdrawn!");
       } catch (error) {
         console.error("Error withdrawing application:", error);
         toast.error("Failed to withdraw application.");
@@ -515,7 +510,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
       setShowApplicationDialog(false);
       setApplicationMessage("");
       setSelectedProjectForApplication(null);
-      toast.success("Application submitted!");
     } catch (error) {
       console.error("Error submitting application:", error);
       toast.error("Failed to submit application. Please try again.");

@@ -351,7 +351,6 @@ The tone should be professional but friendly, suitable for sharing with collabor
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    toast.success("Copied to clipboard!");
   };
 
   const handleCreateTasks = async () => {
@@ -382,7 +381,6 @@ The tone should be professional but friendly, suitable for sharing with collabor
         });
       }
 
-      toast.success(`Created ${tasks.length} tasks!`);
       setShowResultDialog(false);
       if (onTasksGenerated) onTasksGenerated();
     } catch (error) {

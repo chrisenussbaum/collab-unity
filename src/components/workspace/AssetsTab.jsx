@@ -231,7 +231,6 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
         metadata: { category: formData.category, resource_type: uploadType, asset_name: formData.asset_name, version_number: newAsset.version_number }
       });
 
-      toast.success(`${uploadType === 'file' ? 'File' : 'Link'} uploaded successfully!`);
       handleCloseUploadDialog();
       fetchAssets();
 
@@ -287,7 +286,6 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
         metadata: { asset_name: formData.asset_name, category: formData.category, tags: formData.tags, version_number: editingAsset.version_number }
       });
 
-      toast.success("Asset updated successfully!");
       handleCloseEditDialog();
       fetchAssets();
 
@@ -314,7 +312,6 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
         metadata: { asset_name: deletingAsset.asset_name, version_number: deletingAsset.version_number }
       });
 
-      toast.success("Asset deleted successfully!");
       setDeletingAsset(null); // Close the dialog
       fetchAssets();
 

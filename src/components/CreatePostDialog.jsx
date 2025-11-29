@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -259,7 +258,6 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
     setIsSubmitting(true);
     try {
       await FeedPost.create(postData);
-      toast.success("Post created successfully!");
       handleClose();
       if (onPostCreated) {
         onPostCreated();
