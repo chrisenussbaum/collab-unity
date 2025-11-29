@@ -1487,7 +1487,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
 
   const handleSyncUser = async () => {
     if (!propCurrentUser || !profileUser) {
-      toast.info("Please sign in to message users");
       return;
     }
 
