@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -17,6 +16,7 @@ import { ArrowLeft, Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, Upload
 import { motion } from "framer-motion";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import ArrayInputWithSearch from "@/components/ArrayInputWithSearch";
+import AIProjectAssistant from "@/components/AIProjectAssistant";
 
 const PROJECT_CLASSIFICATIONS = [
   { value: "educational", label: "Educational" },
@@ -641,8 +641,21 @@ export default function CreateProject() {
                     type="tools"
                   />
                   {errors.tools_needed && <p className="text-sm text-red-500 -mt-6">{errors.tools_needed}</p>}
-                </motion.div>
-              )}
+
+                  {/* AI Project Assistant */}
+                  <AIProjectAssistant
+                    projectTitle={formData.title}
+                    projectDescription={formData.description}
+                    projectType={formData.project_type}
+                    classification={formData.classification}
+                    industry={formData.industry}
+                    existingSkills={formData.skills_needed}
+                    existingTools={formData.tools_needed}
+                    onSkillsSuggested={(skill) => addToArray('skills_needed', skill)}
+                    onToolsSuggested={(tool) => addToArray('tools_needed', tool)}
+                  />
+                  </motion.div>
+                  )}
 
               <div className="flex justify-between pt-6 border-t">
                 <Button
