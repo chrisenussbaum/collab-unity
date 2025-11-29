@@ -47,7 +47,7 @@ import ProjectHighlights from "../components/project/ProjectHighlights";
 import ClickableImage from "../components/ClickableImage";
 import ProjectInstructions from "../components/ProjectInstructions";
 import ContextualSearchAssistant from "../components/workspace/ContextualSearchAssistant";
-import ProjectLearningResources from "../components/ProjectLearningResources";
+
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion"; // Added motion for banner animation
 
