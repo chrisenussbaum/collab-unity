@@ -75,11 +75,6 @@ export default function PublicPageLayout({ children, currentLanguage, onLanguage
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-1">
-              <Link to={createPageUrl("AboutUs")}>
-                <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
-                  {t.about}
-                </Button>
-              </Link>
               <Link to={createPageUrl("Testimonials")}>
                 <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
                   {t.testimonials}
