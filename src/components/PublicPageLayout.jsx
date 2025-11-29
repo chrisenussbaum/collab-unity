@@ -17,7 +17,7 @@ export default function PublicPageLayout({ children, currentLanguage, onLanguage
 
   const navTranslations = {
     en: {
-      about: "About",
+      events: "Events",
       legal: "Legal",
       featureRequest: "Feature Request",
       testimonials: "Testimonials",
@@ -30,7 +30,7 @@ export default function PublicPageLayout({ children, currentLanguage, onLanguage
       tagline: "Where Ideas Happen"
     },
     es: {
-      about: "Acerca de",
+      events: "Eventos",
       legal: "Legal",
       featureRequest: "Solicitud de Función",
       testimonials: "Testimonios",
@@ -43,7 +43,7 @@ export default function PublicPageLayout({ children, currentLanguage, onLanguage
       tagline: "Donde Suceden las Ideas"
     },
     fr: {
-      about: "À Propos",
+      events: "Événements",
       legal: "Juridique",
       featureRequest: "Demande de Fonctionnalité",
       testimonials: "Témoignages",
@@ -75,9 +75,9 @@ export default function PublicPageLayout({ children, currentLanguage, onLanguage
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-1">
-              <Link to={createPageUrl("AboutUs")}>
+              <Link to={createPageUrl("Events")}>
                 <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
-                  {t.about}
+                  {t.events}
                 </Button>
               </Link>
               <Link to={createPageUrl("Testimonials")}>
