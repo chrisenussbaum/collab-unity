@@ -25,7 +25,7 @@ import SupportCU from './pages/SupportCU';
 import ReportBug from './pages/ReportBug';
 import FeatureRequest from './pages/FeatureRequest';
 import Testimonials from './pages/Testimonials';
-import Events from './pages/Events';
+import AboutUs from './pages/AboutUs';
 import __Layout from './Layout.jsx';
 
 
@@ -57,7 +57,7 @@ export const PAGES = {
     "ReportBug": ReportBug,
     "FeatureRequest": FeatureRequest,
     "Testimonials": Testimonials,
-    "Events": Events,
+    "AboutUs": AboutUs,
 }
 
 export const pagesConfig = {
