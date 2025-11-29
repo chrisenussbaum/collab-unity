@@ -1171,18 +1171,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
             
             {isOwner && <ProjectApplicationsManager project={project} onProjectUpdate={handleProjectUpdate} />}
             
-            {/* AI Project Assistant - Mobile Only (above project details) */}
-            {userCanContribute && (
-              <div className="xl:hidden">
-                <AIProjectAssistant
-                  project={project}
-                  currentUser={currentUser}
-                  isCollaborator={userCanContribute}
-                  onTasksGenerated={handleProjectUpdate}
-                />
-              </div>
-            )}
-            
             <Card className="cu-card">
               <CardHeader className="p-4 sm:p-6">
                 <div className="flex items-start space-x-3 sm:space-x-4">
@@ -1283,6 +1271,18 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                 )}
               </CardContent>
             </Card>
+
+            {/* AI Project Assistant - Mobile Only (between project details and instructions) */}
+            {userCanContribute && (
+              <div className="xl:hidden">
+                <AIProjectAssistant
+                  project={project}
+                  currentUser={currentUser}
+                  isCollaborator={userCanContribute}
+                  onTasksGenerated={handleProjectUpdate}
+                />
+              </div>
+            )}
 
             {/* Project Instructions Section - Only show to collaborators */}
             {userCanContribute && (
