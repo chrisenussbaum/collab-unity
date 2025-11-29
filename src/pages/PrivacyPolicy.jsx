@@ -19,7 +19,7 @@ export default function PrivacyPolicy() {
       <header className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link to={createPageUrl("Feed")} className="flex items-center space-x-3">
+            <Link to={createPageUrl("Welcome")} className="flex items-center space-x-3">
               <img 
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg"
                 alt="Collab Unity"
