@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, ShieldCheck, User as UserIcon, Lightbulb, Settings, Compass, Search, MessageCircle, FileTextIcon, Loader2, Heart, Bug } from "lucide-react";
+import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, ShieldCheck, User as UserIcon, Lightbulb, Settings, Compass, Search, MessageCircle, Loader2, Heart, Bug } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import GlobalSearchBar from "./components/GlobalSearchBar";
 
@@ -1035,17 +1035,6 @@ export default function Layout({ children, currentPageName }) {
                           </DropdownMenuItem>
                         </>
                       )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link to={createPageUrl("TermsOfService")} className="flex items-center cursor-pointer">
-                          <FileTextIcon className="cu-icon-sm mr-2" /> Terms of Service
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to={createPageUrl("PrivacyPolicy")} className="flex items-center cursor-pointer">
-                          <FileTextIcon className="cu-icon-sm mr-2" /> Privacy Policy
-                        </Link>
-                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl("SupportCU")} className="flex items-center cursor-pointer">
