@@ -1077,11 +1077,6 @@ export default function Welcome() {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-1">
-              <Link to={createPageUrl("AboutUs")}>
-                <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
-                  {t.nav.about}
-                </Button>
-              </Link>
               <Link to={createPageUrl("Testimonials")}>
                 <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
                   {t.nav.testimonials}
@@ -1147,11 +1142,6 @@ export default function Welcome() {
           <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
           <div className="fixed top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-lg">
             <nav className="py-4 px-4 space-y-2">
-              <Link to={createPageUrl("AboutUs")} onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-purple-600">
-                  {t.nav.about}
-                </Button>
-              </Link>
               <Link to={createPageUrl("Testimonials")} onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-purple-600">
                   {t.nav.testimonials}
