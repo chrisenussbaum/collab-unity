@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Project, User, ProjectTemplate } from "@/entities/all";
+import { Project, User } from "@/entities/all";
 import { UploadFile } from "@/integrations/Core";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle }
@@ -12,10 +12,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon } from "lucide-react";
+import { ArrowLeft, Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Sparkles, Loader2, PenLine } from "lucide-react";
 import { motion } from "framer-motion";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import ArrayInputWithSearch from "@/components/ArrayInputWithSearch";
+import { generateProjectSuggestions } from "@/functions/generateProjectSuggestions";
 
 const PROJECT_CLASSIFICATIONS = [
   { value: "educational", label: "Educational" },
@@ -41,16 +42,14 @@ const PROJECT_INDUSTRIES = [
 
 export default function CreateProject() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const location = useLocation();
   const [currentUser, setCurrentUser] = useState(null);
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0); // 0 = initial choice, 1 = step 1, 2 = step 2
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
-  const [isFromTemplate, setIsFromTemplate] = useState(false);
-  const [selectedTemplateId, setSelectedTemplateId] = useState(null);
-  const [templateLearningResources, setTemplateLearningResources] = useState([]);
-  const [templateProjectInstructions, setTemplateProjectInstructions] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [projectIdea, setProjectIdea] = useState("");
+  const [isAIAssisted, setIsAIAssisted] = useState(false);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -64,7 +63,7 @@ export default function CreateProject() {
     skills_needed: [],
     tools_needed: [],
     logo_url: "",
-    is_visible_on_feed: false, // Changed to false - projects are private by default
+    is_visible_on_feed: false,
   });
 
   const [newLink, setNewLink] = useState("");
@@ -73,67 +72,7 @@ export default function CreateProject() {
   
   useEffect(() => {
     User.me().then(setCurrentUser).catch(() => navigate(createPageUrl("Discover")));
-
-    const fromTemplate = searchParams.get('fromTemplate');
-    if (fromTemplate === 'true') {
-      setIsFromTemplate(true);
-      const templateId = searchParams.get('templateId') || null;
-      const templateTitle = searchParams.get('title') || "";
-      const templateDescription = searchParams.get('description') || "";
-      const templateSkills = searchParams.get('skills');
-      const templateTools = searchParams.get('tools');
-
-      setSelectedTemplateId(templateId);
-
-      if (templateId) {
-        ProjectTemplate.filter({ id: templateId }).then(templates => {
-          if (templates && templates.length > 0) {
-            const template = templates[0];
-            setTemplateLearningResources(template.learning_resources || []);
-            setTemplateProjectInstructions(template.project_instructions || null);
-          }
-        }).catch(err => {
-          console.error("Failed to fetch project template details:", err);
-          // Could not load template learning resources
-        });
-      }
-
-      let skillsArray = [];
-      let toolsArray = [];
-
-      if (templateSkills) {
-        try {
-          skillsArray = JSON.parse(templateSkills);
-          if (!Array.isArray(skillsArray)) {
-            skillsArray = [];
-          }
-        } catch (error) {
-          console.error("Error parsing template skills:", error);
-          skillsArray = [];
-        }
-      }
-
-      if (templateTools) {
-        try {
-          toolsArray = JSON.parse(templateTools);
-          if (!Array.isArray(toolsArray)) {
-            toolsArray = [];
-          }
-        } catch (error) {
-          console.error("Error parsing template tools:", error);
-          toolsArray = [];
-        }
-      }
-
-      setFormData(prev => ({
-        ...prev,
-        title: templateTitle,
-        description: templateDescription,
-        skills_needed: skillsArray,
-        tools_needed: toolsArray
-      }));
-    }
-  }, [navigate, searchParams]);
+  }, [navigate]);
 
   const handleBackNavigation = () => {
     if (currentStep === 1) {
