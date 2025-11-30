@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Loader2, PenLine } from "lucide-react";
+import { Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Loader2, PenLine } from "lucide-react";
 import { motion } from "framer-motion";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import ArrayInputWithSearch from "@/components/ArrayInputWithSearch";
