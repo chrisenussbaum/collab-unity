@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Sparkles, Loader2, PenLine } from "lucide-react";
+import { ArrowLeft, Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Loader2, PenLine } from "lucide-react";
 import { motion } from "framer-motion";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import ArrayInputWithSearch from "@/components/ArrayInputWithSearch";
@@ -311,8 +311,8 @@ export default function CreateProject() {
                 {isAIAssisted && currentStep > 0 && (
                   <div className="flex items-center mt-2">
                     <Badge className="bg-purple-100 text-purple-800">
-                      <Sparkles className="w-3 h-3 mr-1" />
-                      AI-Assisted
+                      <Lightbulb className="w-3 h-3 mr-1" />
+                      Project Assistant
                     </Badge>
                   </div>
                 )}
@@ -354,11 +354,11 @@ export default function CreateProject() {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-4">
-                  {/* AI-Assisted Option */}
+                  {/* Assisted Option */}
                   <div className="space-y-4">
                     <div className="flex items-center space-x-2 mb-2">
-                      <Sparkles className="w-5 h-5 text-purple-600" />
-                      <Label className="text-lg font-semibold">Get AI Assistance</Label>
+                      <Lightbulb className="w-5 h-5 text-purple-600" />
+                      <Label className="text-lg font-semibold">Get Assistance</Label>
                     </div>
                     <Textarea
                       placeholder="Tell us about your project idea... For example: 'I want to create a mobile app that helps people track their daily water intake and reminds them to stay hydrated' or 'A community platform for local musicians to collaborate on songs'"
@@ -379,7 +379,6 @@ export default function CreateProject() {
                         </>
                       ) : (
                         <>
-                          <Sparkles className="w-5 h-5 mr-2" />
                           Generate Project Details
                         </>
                       )}
@@ -409,7 +408,7 @@ export default function CreateProject() {
             </motion.div>
           )}
 
-          {/* AI-Assisted Banner */}
+          {/* Assisted Banner */}
           {isAIAssisted && currentStep > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -420,10 +419,10 @@ export default function CreateProject() {
                 <CardContent className="p-4">
                   <div className="flex items-start space-x-3">
                     <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Sparkles className="w-4 h-4 text-white" />
+                      <Lightbulb className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-medium text-purple-900 mb-1">AI-Generated Suggestions Applied</h3>
+                      <h3 className="font-medium text-purple-900 mb-1">Project Assistant</h3>
                       <p className="text-sm text-purple-700">
                         We've pre-filled this form based on your project idea. Feel free to customize any details to match your specific needs.
                       </p>
