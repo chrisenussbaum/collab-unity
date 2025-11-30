@@ -628,7 +628,7 @@ The tone should be professional but friendly, suitable for sharing with collabor
               <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center mr-3">
                 <Bot className="w-4 h-4 text-white" />
               </div>
-              <span>AI Project Assistant</span>
+              <span>Project Assistant</span>
               <Badge className="ml-2 bg-purple-100 text-purple-700 text-xs">Beta</Badge>
             </CardTitle>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -637,7 +637,7 @@ The tone should be professional but friendly, suitable for sharing with collabor
           </div>
           {!isExpanded && (
             <p className="text-xs text-gray-500 mt-1 ml-11">
-              Get AI-powered help with planning, summaries, and updates
+              Get a head start with planning, summaries, and updates
             </p>
           )}
         </CardHeader>
