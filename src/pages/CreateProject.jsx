@@ -75,21 +75,74 @@ export default function CreateProject() {
   }, [navigate]);
 
   const handleBackNavigation = () => {
-    if (currentStep === 1) {
-      // On first step, navigate to the previous page in Collab Unity
-      // Check if there's a referrer from within the app
+    if (currentStep === 0) {
+      // On initial screen, navigate back
       const canGoBack = window.history.length > 1;
-      
       if (canGoBack) {
-        // Try to go back in history
         navigate(-1);
       } else {
-        // Fallback to Feed if no history
         navigate(createPageUrl("Feed"));
       }
+    } else if (currentStep === 1) {
+      // On step 1, go back to initial choice
+      setCurrentStep(0);
+      setErrors({});
     } else {
       // On other steps, go to previous step
       prevStep();
+    }
+  };
+
+  const handleStartFromScratch = () => {
+    setIsAIAssisted(false);
+    setFormData({
+      title: "",
+      description: "",
+      project_type: "",
+      classification: "",
+      industry: "", 
+      area_of_interest: "",
+      location: "", 
+      project_urls: [],
+      skills_needed: [],
+      tools_needed: [],
+      logo_url: "",
+      is_visible_on_feed: false,
+    });
+    setCurrentStep(1);
+  };
+
+  const handleGenerateProject = async () => {
+    if (!projectIdea.trim()) {
+      toast.error("Please describe your project idea first.");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const response = await generateProjectSuggestions({ projectIdea: projectIdea.trim() });
+      const suggestions = response.data;
+
+      if (suggestions) {
+        setFormData(prev => ({
+          ...prev,
+          title: suggestions.title || "",
+          description: suggestions.description || "",
+          project_type: suggestions.project_type || "",
+          classification: suggestions.classification || "",
+          industry: suggestions.industry || "",
+          area_of_interest: (suggestions.area_of_interest || "").substring(0, 20),
+          skills_needed: suggestions.skills_needed || [],
+          tools_needed: suggestions.tools_needed || [],
+        }));
+        setIsAIAssisted(true);
+        setCurrentStep(1);
+      }
+    } catch (error) {
+      console.error("Error generating project suggestions:", error);
+      toast.error("Failed to generate suggestions. Please try again or start from scratch.");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -195,31 +248,6 @@ export default function CreateProject() {
         current_collaborators_count: 1
       };
 
-      if (selectedTemplateId) {
-        projectData.template_id = selectedTemplateId;
-        
-        if (templateLearningResources.length > 0) {
-          projectData.learning_resources = templateLearningResources.map(url => {
-            let title = url;
-            try {
-              const urlObj = new URL(url);
-              title = urlObj.hostname.replace(/^www\./, '');
-            } catch (e) {
-              // Ignore invalid URLs, title remains full URL
-            }
-            return {
-              title: title,
-              url: url,
-              description: 'Resource from project template'
-            };
-          }).filter(r => r.url.startsWith('http://') || r.url.startsWith('https://'));
-        }
-        
-        if (templateProjectInstructions) {
-          projectData.project_instructions = templateProjectInstructions;
-        }
-      }
-
       await Project.create(projectData); 
       navigate(createPageUrl("MyProjects"));
     } catch (error) {
@@ -237,7 +265,11 @@ export default function CreateProject() {
   };
 
   const prevStep = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    } else if (currentStep === 1) {
+      setCurrentStep(0);
+    }
     setErrors({});
   };
   
@@ -269,40 +301,116 @@ export default function CreateProject() {
               </Button>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {isFromTemplate ? 'Create Project from Template' : 'Create New Project'}
+                  Create New Project
                 </h1>
                 <p className="text-gray-600 mt-1">
+                  {currentStep === 0 && 'Get started with your new project'}
                   {currentStep === 1 && 'Tell us about your project'}
                   {currentStep === 2 && 'Define your collaboration needs'}
                 </p>
-                {isFromTemplate && (
+                {isAIAssisted && currentStep > 0 && (
                   <div className="flex items-center mt-2">
                     <Badge className="bg-purple-100 text-purple-800">
-                      <Lightbulb className="w-3 h-3 mr-1" />
-                      Template Project
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      AI-Assisted
                     </Badge>
                   </div>
                 )}
               </div>
             </div>
             
-            <div className="hidden sm:flex items-center space-x-2">
-              {[1, 2].map((step) => (
-                <div
-                  key={step}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
-                    step <= currentStep
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-200 text-gray-500"
-                  } ${Object.keys(errors).length > 0 && currentStep === step ? 'border-2 border-red-300' : ''}`}
-                >
-                  {step}
-                </div>
-              ))}
-            </div>
+            {currentStep > 0 && (
+              <div className="hidden sm:flex items-center space-x-2">
+                {[1, 2].map((step) => (
+                  <div
+                    key={step}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
+                      step <= currentStep
+                        ? "bg-purple-600 text-white"
+                        : "bg-gray-200 text-gray-500"
+                    } ${Object.keys(errors).length > 0 && currentStep === step ? 'border-2 border-red-300' : ''}`}
+                  >
+                    {step}
+                  </div>
+                ))}
+              </div>
+            )}
           </motion.div>
 
-          {isFromTemplate && (
+          {/* Initial Choice Screen */}
+          {currentStep === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Card className="cu-card">
+                <CardHeader className="text-center pb-2">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Lightbulb className="w-8 h-8 text-white" />
+                  </div>
+                  <CardTitle className="text-2xl">How would you like to start?</CardTitle>
+                  <p className="text-gray-600 mt-2">
+                    Describe your project idea and let AI help you get started, or create everything from scratch.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-4">
+                  {/* AI-Assisted Option */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Sparkles className="w-5 h-5 text-purple-600" />
+                      <Label className="text-lg font-semibold">Get AI Assistance</Label>
+                    </div>
+                    <Textarea
+                      placeholder="Tell us about your project idea... For example: 'I want to create a mobile app that helps people track their daily water intake and reminds them to stay hydrated' or 'A community platform for local musicians to collaborate on songs'"
+                      value={projectIdea}
+                      onChange={(e) => setProjectIdea(e.target.value)}
+                      rows={5}
+                      className="resize-none text-base"
+                    />
+                    <Button
+                      onClick={handleGenerateProject}
+                      disabled={isGenerating || !projectIdea.trim()}
+                      className="w-full cu-button py-6 text-lg"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Generating Project Details...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-5 h-5 mr-2" />
+                          Generate Project Details
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-4 bg-white text-gray-500">or</span>
+                    </div>
+                  </div>
+
+                  {/* Start from Scratch Option */}
+                  <Button
+                    variant="outline"
+                    onClick={handleStartFromScratch}
+                    className="w-full py-6 text-lg border-2 hover:border-purple-300 hover:bg-purple-50"
+                  >
+                    <PenLine className="w-5 h-5 mr-2" />
+                    Start from Scratch
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* AI-Assisted Banner */}
+          {isAIAssisted && currentStep > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -312,33 +420,13 @@ export default function CreateProject() {
                 <CardContent className="p-4">
                   <div className="flex items-start space-x-3">
                     <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Lightbulb className="w-4 h-4 text-white" />
+                      <Sparkles className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-medium text-purple-900 mb-1">Project Template Applied</h3>
+                      <h3 className="font-medium text-purple-900 mb-1">AI-Generated Suggestions Applied</h3>
                       <p className="text-sm text-purple-700">
-                        We've pre-filled this form based on the template you selected. Feel free to customize any details to match your specific project needs.
+                        We've pre-filled this form based on your project idea. Feel free to customize any details to match your specific needs.
                       </p>
-                      {templateLearningResources.length > 0 && (
-                        <div className="mt-2 text-sm text-purple-700">
-                          <p className="font-semibold">Suggested Learning Resources:</p>
-                          <ul className="list-disc list-inside space-y-1">
-                            {templateLearningResources.map((resource, index) => (
-                              <li key={index}>
-                                <a href={resource} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">
-                                  {resource.length > 50 ? `${resource.substring(0, 47)}...` : resource}
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {templateProjectInstructions && (
-                        <div className="mt-2 text-sm text-purple-700">
-                          <p className="font-semibold">This template includes guided instructions!</p>
-                          <p>These will be available in your project's detail page after creation.</p>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -346,6 +434,7 @@ export default function CreateProject() {
             </motion.div>
           )}
 
+          {currentStep > 0 && (
           <Card className="cu-card">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -584,7 +673,6 @@ export default function CreateProject() {
                 <Button
                   variant="outline"
                   onClick={prevStep}
-                  disabled={currentStep === 1}
                 >
                   Previous
                 </Button>
@@ -605,13 +693,14 @@ export default function CreateProject() {
                     >
                       {isSubmitting ? "Creating Project..." : "Publish Project"}
                     </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </>
-  );
-}
+                    )}
+                    </div>
+                    </div>
+                    </CardContent>
+                    </Card>
+                    )}
+                    </div>
+                    </div>
+                    </>
+                    );
+                    }
