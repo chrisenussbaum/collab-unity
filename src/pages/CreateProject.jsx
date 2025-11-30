@@ -345,6 +345,11 @@ export default function CreateProject() {
             >
               <Card className="cu-card">
                 <CardHeader className="text-center pb-2">
+                  <img 
+                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/98181e664_collab-unity-lightbulb-assistant.png"
+                    alt="Project Assistant"
+                    className="w-20 h-20 mx-auto mb-4"
+                  />
                   <CardTitle className="text-2xl">How would you like to start?</CardTitle>
                   <p className="text-gray-600 mt-2">
                     Describe your project idea and let us help you get started, or start your project from scratch.
