@@ -283,8 +283,8 @@ export default function CreateProject() {
         className="hidden"
       />
 
-      <div className="min-h-screen bg-gray-50 py-4">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className={`min-h-screen bg-gray-50 ${currentStep === 0 ? 'flex items-center justify-center py-4' : 'py-4'}`}>
+        <div className={`w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 ${currentStep === 0 ? '' : ''}`}>
 
           {/* Initial Choice Screen */}
           {currentStep === 0 && (
