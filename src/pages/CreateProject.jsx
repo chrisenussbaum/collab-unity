@@ -283,59 +283,8 @@ export default function CreateProject() {
         className="hidden"
       />
 
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 py-4">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between mb-8"
-          >
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleBackNavigation}
-                className="rounded-full"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Create New Project
-                </h1>
-                <p className="text-gray-600 mt-1">
-                  {currentStep === 0 && 'Get started with your new project'}
-                  {currentStep === 1 && 'Tell us about your project'}
-                  {currentStep === 2 && 'Define your collaboration needs'}
-                </p>
-                {isAIAssisted && currentStep > 0 && (
-                  <div className="flex items-center mt-2">
-                    <Badge className="bg-purple-100 text-purple-800">
-                      <Lightbulb className="w-3 h-3 mr-1" />
-                      Project Assistant
-                    </Badge>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {currentStep > 0 && (
-              <div className="hidden sm:flex items-center space-x-2">
-                {[1, 2].map((step) => (
-                  <div
-                    key={step}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
-                      step <= currentStep
-                        ? "bg-purple-600 text-white"
-                        : "bg-gray-200 text-gray-500"
-                    } ${Object.keys(errors).length > 0 && currentStep === step ? 'border-2 border-red-300' : ''}`}
-                  >
-                    {step}
-                  </div>
-                ))}
-              </div>
-            )}
-          </motion.div>
 
           {/* Initial Choice Screen */}
           {currentStep === 0 && (
