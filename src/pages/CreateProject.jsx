@@ -345,21 +345,14 @@ export default function CreateProject() {
             >
               <Card className="cu-card">
                 <CardHeader className="text-center pb-2">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Lightbulb className="w-8 h-8 text-white" />
-                  </div>
                   <CardTitle className="text-2xl">How would you like to start?</CardTitle>
                   <p className="text-gray-600 mt-2">
-                    Describe your project idea and let AI help you get started, or create everything from scratch.
+                    Describe your project idea and let us help you get started, or start your project from scratch.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-4">
                   {/* Assisted Option */}
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Lightbulb className="w-5 h-5 text-purple-600" />
-                      <Label className="text-lg font-semibold">Get Assistance</Label>
-                    </div>
                     <Textarea
                       placeholder="Tell us about your project idea... For example: 'I want to create a mobile app that helps people track their daily water intake and reminds them to stay hydrated' or 'A community platform for local musicians to collaborate on songs'"
                       value={projectIdea}
