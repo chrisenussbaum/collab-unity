@@ -232,7 +232,7 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
           <TabsContent value="ideate" className="mt-0" forceMount={activeTab === "ideate"}>
             {activeTab === "ideate" && (
               <div className="w-full max-w-none">
-                <IdeateTab 
+                <IdeationHub 
                   project={project} 
                   currentUser={currentUser} 
                   isCollaborator={isCollaborator}
