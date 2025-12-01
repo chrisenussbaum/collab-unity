@@ -46,6 +46,7 @@ import ArrayInputWithSearch from "../components/ArrayInputWithSearch";
 import RecommendedCollaborators from "../components/RecommendedCollaborators";
 import PortfolioItem from "../components/portfolio/PortfolioItem";
 import EditPortfolioItemDialog from "../components/portfolio/EditPortfolioItemDialog";
+import GenerateResumeDialog from "../components/GenerateResumeDialog";
 
 const EditBioModal = ({ isOpen, onClose, bio, onSave }) => {
   const [editedBio, setEditedBio] = useState(bio || "");
@@ -646,7 +647,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
   const [isUploadingResume, setIsUploadingResume] = useState(false);
   const [isUploadingProfilePhoto, setIsUploadingProfilePhoto] = useState(false);
   const [isUploadingCoverPhoto, setIsUploadingCoverPhoto] = useState(false);
-  const [isDownloadingPDF, setIsDownloadingPDF] = useState(false); // Added state for PDF download
+  const [showGenerateResumeDialog, setShowGenerateResumeDialog] = useState(false);
   const resumeInputRef = useRef(null);
   const profilePhotoInputRef = useRef(null);
   const coverPhotoInputRef = useRef(null);
@@ -1456,33 +1457,12 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     );
   };
 
-  const handleDownloadProfile = async () => {
+  const handleOpenGenerateResume = () => {
     if (!profileUser || !username) {
       toast.error("Profile information not available for download.");
       return;
     }
-
-    setIsDownloadingPDF(true);
-    try {
-      const { data } = await generateProfilePDF({ username });
-      
-      const blob = new Blob([data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${profileUser.full_name || 'profile'}_Resume.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      a.remove();
-      
-      // Resume generated
-    } catch (error) {
-      console.error("Error generating resume:", error);
-      toast.error("Failed to generate resume. Please try again.");
-    } finally {
-      setIsDownloadingPDF(false);
-    }
+    setShowGenerateResumeDialog(true);
   };
 
   const handleSyncUser = async () => {
@@ -1624,6 +1604,13 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         onClose={() => setIsEditPortfolioOpen(false)}
         portfolioItems={profileUser?.portfolio_items}
         onSave={handleUpdatePortfolio}
+      />
+
+      <GenerateResumeDialog
+        isOpen={showGenerateResumeDialog}
+        onClose={() => setShowGenerateResumeDialog(false)}
+        profileUser={profileUser}
+        username={username}
       />
 
       <ImageModal
@@ -1986,19 +1973,14 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                               <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                               <span className="hidden xs:inline">Edit Profile</span>
                             </Button>
-                            <Button // Added Download Profile button
+                            <Button
                               variant="outline"
                               size="sm"
-                              onClick={handleDownloadProfile}
-                              disabled={isDownloadingPDF}
+                              onClick={handleOpenGenerateResume}
                               className="text-xs sm:text-sm px-3 sm:px-4"
                             >
-                              {isDownloadingPDF ? (
-                                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
-                              ) : (
-                                <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                              )}
-                              <span className="hidden xs:inline">{isDownloadingPDF ? "Generating..." : "Generate Resume"}</span>
+                              <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                              <span className="hidden xs:inline">Generate Resume</span>
                             </Button>
                             <Button
                               variant="outline"
