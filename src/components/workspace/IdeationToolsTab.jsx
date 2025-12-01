@@ -323,7 +323,6 @@ export default function IdeationToolsTab({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {ideTypes.map(ideType => {
                 const Icon = ideType.icon;
-                const isImplemented = ideType.type === 'document_editor' || ideType.type === 'code_playground' || ideType.type === 'presentation' || ideType.type === 'spreadsheet';
                 
                 return (
                   <div 
@@ -344,16 +343,11 @@ export default function IdeationToolsTab({
                         size="sm" 
                         variant="outline"
                         onClick={() => handleCreateClick(ideType)}
-                        className={`w-full ${isImplemented ? 'group-hover:bg-purple-50 group-hover:text-purple-700 group-hover:border-purple-300' : ''}`}
+                        className="w-full group-hover:bg-purple-50 group-hover:text-purple-700 group-hover:border-purple-300"
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Create New
                       </Button>
-                      {!isImplemented && (
-                        <Badge variant="secondary" className="mt-2 text-xs">
-                          Coming Soon
-                        </Badge>
-                      )}
                     </div>
                   </div>
                 );
