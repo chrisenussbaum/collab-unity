@@ -875,6 +875,15 @@ ${navigationScript}
             </div>
             
             <div className="flex items-center space-x-2">
+              {/* Collaborator Presence */}
+              <CodePlaygroundPresence 
+                collaborators={collaborators}
+                currentUser={currentUser}
+                activeFile={activeFiles[0]?.name}
+              />
+              
+              <div className="w-px h-5 bg-gray-200 mx-2" />
+              
               {!isReadOnly && lastSaved && <span className="text-xs text-gray-500 hidden md:inline">{getLastSavedText()}</span>}
               {!isReadOnly && hasUnsavedChanges && <Badge variant="outline" className="text-xs">Unsaved</Badge>}
               {isReadOnly && (
