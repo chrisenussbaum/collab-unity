@@ -1081,19 +1081,6 @@ ${navigationScript}
             </div>
           </div>
 
-          {/* Chat Sidebar */}
-          {showChat && !isReadOnly && (
-            <div className={`${layout === 'vertical' ? 'w-full h-48 border-t' : 'w-64 flex-shrink-0'}`}>
-              <CodePlaygroundChat
-                messages={chatMessages}
-                onSendMessage={handleSendChatMessage}
-                currentUser={currentUser}
-                collaborators={collaborators}
-                isMinimized={isChatMinimized}
-                onToggleMinimize={() => setIsChatMinimized(!isChatMinimized)}
-              />
-            </div>
-          )}
         </div>
       </div>
     </>
