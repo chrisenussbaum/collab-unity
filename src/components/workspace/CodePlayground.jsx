@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -18,12 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Code, Save, Trash2, Loader2, ArrowLeft, Play, Maximize2, Minimize2, Monitor, Smartphone, Upload, X, FileText, Image as ImageIcon, Video, Music, Archive, Plus, FileCode, ChevronLeft, ChevronRight, Columns2, Rows2, SplitSquareHorizontal, MessageCircle } from 'lucide-react';
+import { Trash2, ArrowLeft, Monitor, Smartphone, Upload, X, FileText, Image as ImageIcon, Video, Plus, FileCode, ChevronLeft, ChevronRight, Columns2, Rows2, Wand2 } from 'lucide-react';
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
-import CodePlaygroundChat from './CodePlaygroundChat';
 import CodePlaygroundPresence, { getUserColor } from './CodePlaygroundPresence';
-import CollaborativeCursor from './CollaborativeCursor';
+import MonacoEditor from './MonacoEditor';
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 
 const LANGUAGE_OPTIONS = [
