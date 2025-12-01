@@ -82,10 +82,7 @@ export default function CodePlayground({
             setActiveHtmlFile(firstHtml);
           }
         }
-        // Load chat messages if they exist
-        if (parsed.chatMessages && Array.isArray(parsed.chatMessages)) {
-          setChatMessages(parsed.chatMessages);
-        }
+
       } catch (error) {
         console.error("Error parsing saved code:", error);
         initializeDefaultFiles();
