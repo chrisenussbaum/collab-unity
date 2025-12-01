@@ -953,7 +953,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
               </TabsTrigger>
               <TabsTrigger value="people" className="text-sm sm:text-base">
                 <Users className="w-4 h-4 mr-2" />
-                People
+                Collaborators
               </TabsTrigger>
             </TabsList>
 
