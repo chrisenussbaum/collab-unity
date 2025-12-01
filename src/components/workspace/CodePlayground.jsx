@@ -830,17 +830,6 @@ ${navigationScript}
                 <Badge className="bg-blue-100 text-blue-700">Read Only</Badge>
               )}
 
-              {/* Chat Toggle */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowChat(!showChat)}
-                title={showChat ? 'Hide chat' : 'Show chat'}
-                className={showChat ? 'bg-purple-50 text-purple-600' : ''}
-              >
-                <MessageCircle className="w-4 h-4" />
-              </Button>
-
               {/* Layout Toggle */}
               <Button
                 variant="ghost"
