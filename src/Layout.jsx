@@ -311,8 +311,8 @@ export default function Layout({ children, currentPageName }) {
     );
   }
 
-  // If on Welcome or Onboarding page, render without the main layout
-  if (location.pathname === createPageUrl("Welcome") || location.pathname === createPageUrl("Onboarding")) {
+  // If on Welcome page, render without the main layout (no currentUser needed)
+  if (location.pathname === createPageUrl("Welcome")) {
     return (
       <>
         <Toaster 
@@ -328,6 +328,27 @@ export default function Layout({ children, currentPageName }) {
           }}
         />
         {children}
+      </>
+    );
+  }
+
+  // If on Onboarding page, render without header/nav but WITH currentUser prop
+  if (location.pathname === createPageUrl("Onboarding")) {
+    return (
+      <>
+        <Toaster 
+          position="top-right" 
+          richColors 
+          toastOptions={{
+            style: {
+              opacity: 0.95,
+              backdropFilter: 'blur(8px)',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              border: '1px solid rgba(0, 0, 0, 0.1)',
+            }
+          }}
+        />
+        {React.cloneElement(children, { currentUser, authIsLoading: isLoading })}
       </>
     );
   }
