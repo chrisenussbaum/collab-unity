@@ -108,16 +108,7 @@ export default function IdeationToolsTab({
 
     setIsCreating(true);
     try {
-      let defaultContent = '';
-      if (selectedIdeType.type === 'document_editor') {
-        defaultContent = '';
-      } else if (selectedIdeType.type === 'code_playground') {
-        defaultContent = JSON.stringify({ html: '', css: '', js: '' });
-      } else if (selectedIdeType.type === 'presentation') {
-        defaultContent = JSON.stringify({ slides: [{ id: Date.now(), background: '#ffffff', elements: [] }] });
-      } else if (selectedIdeType.type === 'spreadsheet') {
-        defaultContent = JSON.stringify({ grid: [], colWidths: [] });
-      }
+      const defaultContent = JSON.stringify({ html: '', css: '', js: '' });
 
       const newItem = await base44.entities.ProjectIDE.create({
         project_id: project.id,
@@ -131,16 +122,7 @@ export default function IdeationToolsTab({
       setIdeInstances(prev => [newItem, ...prev]);
       setShowCreateDialog(false);
       setNewDocTitle('');
-      
-      if (selectedIdeType.type === 'document_editor') {
-        setActiveDocument(newItem);
-      } else if (selectedIdeType.type === 'code_playground') {
-        setActiveCodeProject(newItem);
-      } else if (selectedIdeType.type === 'presentation') {
-        setActivePresentation(newItem);
-      } else if (selectedIdeType.type === 'spreadsheet') {
-        setActiveSpreadsheet(newItem);
-      }
+      setActiveCodeProject(newItem);
       
       toast.success(`${selectedIdeType.label} created successfully`);
     } catch (error) {
