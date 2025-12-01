@@ -752,7 +752,7 @@ export default function Sync({ currentUser, authIsLoading }) {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
-                placeholder="Search people..."
+                placeholder="Search collaborators..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -768,7 +768,7 @@ export default function Sync({ currentUser, authIsLoading }) {
               ) : filteredUsers.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="w-12 h-12 mx-auto text-gray-300 mb-2" />
-                  <p className="text-sm text-gray-500">No people found</p>
+                  <p className="text-sm text-gray-500">No collaborators found</p>
                 </div>
               ) : (
                 <div className="space-y-2">
