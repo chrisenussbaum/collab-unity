@@ -172,19 +172,6 @@ export default function IdeationToolsTab({
     );
   }
 
-  // If a document is active, show the full-screen editor
-  if (activeDocument) {
-    return (
-      <DocumentEditor
-        document={activeDocument}
-        project={project}
-        currentUser={currentUser}
-        onClose={handleCloseDocument}
-        onSave={handleDocumentSave}
-      />
-    );
-  }
-
   // If a code project is active, show the full-screen code playground
   if (activeCodeProject) {
     return (
@@ -194,32 +181,6 @@ export default function IdeationToolsTab({
         currentUser={currentUser}
         onClose={handleCloseCodeProject}
         onSave={handleCodeProjectSave}
-      />
-    );
-  }
-
-  // If a presentation is active, show the full-screen presentation editor
-  if (activePresentation) {
-    return (
-      <PresentationEditor
-        codeProject={activePresentation}
-        project={project}
-        currentUser={currentUser}
-        onClose={handleClosePresentation}
-        onSave={handlePresentationSave}
-      />
-    );
-  }
-
-  // If a spreadsheet is active, show the full-screen spreadsheet editor
-  if (activeSpreadsheet) {
-    return (
-      <SpreadsheetEditor
-        codeProject={activeSpreadsheet}
-        project={project}
-        currentUser={currentUser}
-        onClose={handleCloseSpreadsheet}
-        onSave={handleSpreadsheetSave}
       />
     );
   }
