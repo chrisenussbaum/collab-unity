@@ -442,7 +442,7 @@ export default function EditProject({ currentUser, authIsLoading }) {
 
               <div className="space-y-3">
                 <Label className="text-sm font-medium">
-                  Published Project URL(s) (Optional)
+                  Project Showcase Links (Optional)
                 </Label>
                 {(formData.project_urls || []).length > 0 && (
                   <div className="flex flex-col gap-2 p-3 border rounded-lg bg-gray-50/50">

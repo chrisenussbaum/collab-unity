@@ -1314,7 +1314,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                 <CardHeader>
                   <CardTitle className="flex items-center text-base sm:text-lg">
                     <LinkIcon className="w-5 h-5 mr-2 text-purple-600" />
-                    Published Projects
+                    Showcase
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">

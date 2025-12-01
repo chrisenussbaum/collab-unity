@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -120,7 +119,7 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center text-base sm:text-lg">
               <LinkIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-600" />
-              Published Projects
+              Showcase Links
             </CardTitle>
             {isOwner && (
               <Button
@@ -180,7 +179,7 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
       <Dialog open={isEditModalOpen} onOpenChange={(open) => !open && handleCancel()}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Manage Feed Project Links</DialogTitle>
+            <DialogTitle>Manage Feed Showcase Links</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
@@ -190,7 +189,7 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="new-link">Add New Link</Label>
+              <Label htmlFor="new-link">Add Showcase Link</Label>
               <div className="flex gap-2">
                 <Input
                   id="new-link"
