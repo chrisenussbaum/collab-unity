@@ -93,7 +93,7 @@ export default function IdeationToolsTab({
 
   const handleCreateClick = (ideType) => {
     setSelectedIdeType(ideType);
-    if (ideType.type === 'document_editor' || ideType.type === 'code_playground' || ideType.type === 'presentation' || ideType.type === 'spreadsheet') {
+    if (ideType.type === 'code_playground') {
       setShowCreateDialog(true);
     } else {
       toast.info(`${ideType.label} coming soon!`);
