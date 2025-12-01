@@ -1326,7 +1326,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                     className="flex-1 text-xs sm:text-sm px-2 sm:px-4"
                   >
                     <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">Published{hasMultipleLinks && ` (${project.project_urls.length})`}</span>
+                    <span className="truncate">Showcase{hasMultipleLinks && ` (${project.project_urls.length})`}</span>
                   </Button>
                 )}
                 {hasIDEs && (
@@ -1384,7 +1384,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                               <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
                                 <Badge className="bg-green-100 text-green-700 flex items-center gap-1">
                                   <LinkIcon className="w-3 h-3" />
-                                  Published
+                                  Showcase
                                 </Badge>
                                 <img 
                                   src={getFaviconUrl(url)} 
@@ -1421,7 +1421,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                                         e.currentTarget.parentNode.appendChild(fallback.firstChild);
                                       }}
                                     />
-                                    <p className="text-xs font-semibold text-gray-800">Published Project</p>
+                                    <p className="text-xs font-semibold text-gray-800">Showcase</p>
                                     <p className="text-[10px] text-gray-500 mt-1">Click to visit</p>
                                   </div>
                                 </div>
@@ -1444,7 +1444,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                         className="w-full"
                       >
                         <LinkIcon className="w-4 h-4 mr-2" />
-                        View All {project.project_urls.length} Published Links
+                        View All {project.project_urls.length} Showcase Links
                       </Button>
                     )}
                   </div>
@@ -1498,7 +1498,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                                     e.currentTarget.parentNode.appendChild(fallback.firstChild);
                                   }}
                                 />
-                                <p className="text-sm font-semibold text-gray-800">Published Project</p>
+                                <p className="text-sm font-semibold text-gray-800">Showcase</p>
                                 <p className="text-xs text-gray-500 mt-1">Click to visit</p>
                               </div>
                             </div>
