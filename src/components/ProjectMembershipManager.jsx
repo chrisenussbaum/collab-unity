@@ -340,7 +340,7 @@ export default function ProjectMembershipManager({
               Invite Collaborator
             </DialogTitle>
             <DialogDescription>
-              Search for people to invite to your project
+              Search for collaborators to invite to your project
             </DialogDescription>
           </DialogHeader>
 
