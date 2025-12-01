@@ -1039,33 +1039,69 @@ ${navigationScript}
                   </div>
                 </div>
               ) : (
-                activeFiles.map((file, index) => (
-                  <div key={file.id} className={`flex-1 flex flex-col ${index > 0 ? 'border-l' : ''}`}>
-                    <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b flex-shrink-0">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-xs font-medium truncate">{file.name}</span>
-                        <Badge className="text-xs flex-shrink-0">{LANGUAGE_OPTIONS.find(l => l.value === file.language)?.label}</Badge>
+                activeFiles.map((file, index) => {
+                  // Find collaborators editing this file
+                  const editingCollabs = remoteCursors.filter(c => c.fileId === file.id);
+                  
+                  return (
+                    <div key={file.id} className={`flex-1 flex flex-col ${index > 0 ? 'border-l' : ''}`}>
+                      <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-b flex-shrink-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-xs font-medium truncate">{file.name}</span>
+                          <Badge className="text-xs flex-shrink-0">{LANGUAGE_OPTIONS.find(l => l.value === file.language)?.label}</Badge>
+                          {/* Show who's editing this file */}
+                          {editingCollabs.length > 0 && (
+                            <div className="flex items-center -space-x-1">
+                              {editingCollabs.slice(0, 3).map(collab => (
+                                <div 
+                                  key={collab.email}
+                                  className="w-4 h-4 rounded-full text-[8px] flex items-center justify-center"
+                                  style={{ 
+                                    backgroundColor: getUserColor(collab.email).bg,
+                                    color: getUserColor(collab.email).text
+                                  }}
+                                  title={`${collab.name || collab.email} is editing`}
+                                >
+                                  {(collab.name || collab.email)?.[0]}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {!isReadOnly && activeFiles.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 flex-shrink-0"
+                            onClick={() => handleCloseEditor(file.id)}
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        )}
                       </div>
-                      {!isReadOnly && activeFiles.length > 1 && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5 flex-shrink-0"
-                          onClick={() => handleCloseEditor(file.id)}
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
-                      )}
+                      <div className="relative flex-1">
+                        <Textarea
+                          ref={el => editorRefs.current[file.id] = el}
+                          value={file.code}
+                          onChange={(e) => handleCodeChange(file.id, e.target.value)}
+                          onSelect={(e) => handleCursorMove(file.id, e)}
+                          onClick={(e) => handleCursorMove(file.id, e)}
+                          onKeyUp={(e) => handleCursorMove(file.id, e)}
+                          className="absolute inset-0 font-mono text-xs resize-none border-0 focus-visible:ring-0 rounded-none"
+                          spellCheck="false"
+                          readOnly={isReadOnly}
+                        />
+                        {/* Remote cursors overlay */}
+                        <CollaborativeCursor
+                          cursors={remoteCursors}
+                          currentUser={currentUser}
+                          containerRef={{ current: editorRefs.current[file.id] }}
+                          fileId={file.id}
+                        />
+                      </div>
                     </div>
-                    <Textarea
-                      value={file.code}
-                      onChange={(e) => handleCodeChange(file.id, e.target.value)}
-                      className="flex-1 font-mono text-xs resize-none border-0 focus-visible:ring-0 rounded-none"
-                      spellCheck="false"
-                      readOnly={isReadOnly}
-                    />
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
