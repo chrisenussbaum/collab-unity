@@ -10,7 +10,7 @@ import AssetsTab from './AssetsTab';
 
 import ActivityTab from './ActivityTab';
 
-import IdeateTab from './IdeateTab';
+import IdeationHub from './ideation/IdeationHub';
 import IdeationToolsTab from './IdeationToolsTab';
 import { base44 } from "@/api/base44Client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
