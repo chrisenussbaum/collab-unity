@@ -293,6 +293,7 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
         {IDEATION_TOOLS.map(tool => {
           const Icon = tool.icon;
           const instanceCount = tool.isBuiltIn ? null : toolInstances.filter(i => i.ide_type === `ideation_${tool.type}`).length;
+          const showSavedBadge = tool.isBuiltIn ? hasNotesSaved : (instanceCount !== null && instanceCount > 0);
           
           return (
             <div
@@ -304,9 +305,9 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
                 <div className={`w-12 h-12 ${tool.iconBg} rounded-lg flex items-center justify-center mb-3`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
-                {instanceCount !== null && instanceCount > 0 && (
+                {showSavedBadge && (
                   <Badge variant="secondary" className="text-xs">
-                    {instanceCount} saved
+                    {tool.isBuiltIn ? 'saved' : `${instanceCount} saved`}
                   </Badge>
                 )}
               </div>
