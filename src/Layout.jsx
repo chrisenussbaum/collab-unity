@@ -240,9 +240,9 @@ export default function Layout({ children, currentPageName }) {
         setCurrentUser(user);
         setAuthChecked(true);
 
-        // Redirect to onboarding if user hasn't completed it, or is missing required profile fields
-        const needsOnboarding = !user.has_completed_onboarding || !user.profile_image || !user.username || !user.accepted_terms;
-        if (needsOnboarding && location.pathname !== createPageUrl("Onboarding")) {
+        // Only redirect to onboarding if user hasn't completed it AND is not already on onboarding page
+        // Also redirect if profile_image is missing, even if onboarding flag is true
+        if ((!user.has_completed_onboarding || !user.profile_image) && location.pathname !== createPageUrl("Onboarding")) {
           setHasNavigated(true);
           navigate(createPageUrl("Onboarding"), { replace: true });
           return;
