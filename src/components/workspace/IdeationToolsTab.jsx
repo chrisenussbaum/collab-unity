@@ -315,7 +315,7 @@ export default function IdeationToolsTab({
             <CardTitle className="flex items-center justify-between">
               <span>Available IDEs</span>
               <Badge variant="secondary">
-                {ideTypes.length} Tools
+                {ideTypes.length} Tool{ideTypes.length !== 1 ? 's' : ''}
               </Badge>
             </CardTitle>
           </CardHeader>
