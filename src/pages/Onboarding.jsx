@@ -14,6 +14,7 @@ import PostOnboardingDialog from "../components/PostOnboardingDialog";
 
 export default function Onboarding({ currentUser }) {
   const navigate = useNavigate();
+  const [step, setStep] = useState(1); // 1 = profile, 2 = terms
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [profileImage, setProfileImage] = useState("");
@@ -23,6 +24,10 @@ export default function Onboarding({ currentUser }) {
   const [usernameError, setUsernameError] = useState("");
   const [showPostOnboardingDialog, setShowPostOnboardingDialog] = useState(false);
   const [completedUser, setCompletedUser] = useState(null);
+  const [hasScrolledTerms, setHasScrolledTerms] = useState(false);
+  const [hasScrolledPrivacy, setHasScrolledPrivacy] = useState(false);
+  const termsScrollRef = useRef(null);
+  const privacyScrollRef = useRef(null);
   const profileImageInputRef = useRef(null);
 
   useEffect(() => {
