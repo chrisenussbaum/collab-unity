@@ -692,7 +692,7 @@ ${navigationScript}
 
     setIsSaving(true);
     try {
-      const codeContent = JSON.stringify({ files });
+      const codeContent = JSON.stringify({ files, chatMessages });
 
       const codeData = {
         project_id: project.id,
