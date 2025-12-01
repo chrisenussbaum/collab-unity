@@ -1415,7 +1415,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                 <div className="relative mb-4">
                   <Input
                     type="text"
-                    placeholder="Search people by name, skills, or interests..."
+                    placeholder="Search collaborators by name, skills, or interests..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
