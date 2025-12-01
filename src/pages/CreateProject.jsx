@@ -562,7 +562,7 @@ export default function CreateProject() {
 
                   <div className="space-y-3">
                     <Label className="text-sm font-medium">
-                      Project Links (Optional)
+                      Published Project URL(s) (Optional)
                     </Label>
                     {formData.project_urls.length > 0 && (
                       <div className="flex flex-col gap-2 p-3 border rounded-lg bg-gray-50/50">
@@ -581,7 +581,7 @@ export default function CreateProject() {
                     )}
                     <div className="flex space-x-2">
                       <Input
-                        placeholder="https://github.com/your-repo..."
+                        placeholder="https://yourproject.com..."
                         value={newLink}
                         onChange={(e) => setNewLink(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addLink())}
@@ -589,7 +589,7 @@ export default function CreateProject() {
                       <Button type="button" variant="outline" onClick={addLink} disabled={!newLink}><Plus className="w-4 h-4"/></Button>
                     </div>
                     <p className="text-xs text-gray-500 text-center">
-                      Add links to your project's repository, live demo, or other relevant resources. (Max 10 links)
+                      Add URLs to your published/live project. For repositories, documents, and other resources, use the Assets tab after creating the project. (Max 10 URLs)
                     </p>
                   </div>
 
