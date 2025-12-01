@@ -60,12 +60,8 @@ export default function CodePlayground({
   const [previewMode, setPreviewMode] = useState('desktop');
   const [layout, setLayout] = useState('horizontal');
   const [isFilesSidebarCollapsed, setIsFilesSidebarCollapsed] = useState(false);
-  const [isChatMinimized, setIsChatMinimized] = useState(false);
-  const [showChat, setShowChat] = useState(true);
-  
   // Collaboration state
   const [collaborators, setCollaborators] = useState([]);
-  const [chatMessages, setChatMessages] = useState([]);
   const [remoteCursors, setRemoteCursors] = useState([]);
   const [pollingInterval, setPollingInterval] = useState(null);
   
@@ -73,7 +69,6 @@ export default function CodePlayground({
   const autoSaveTimerRef = useRef(null);
   const updateTimerRef = useRef(null);
   const fileInputRef = useRef(null);
-  const editorRefs = useRef({});
 
   useEffect(() => {
     if (codeProject?.content) {
