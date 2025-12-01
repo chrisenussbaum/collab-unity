@@ -65,6 +65,7 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
   const [activeToolInstance, setActiveToolInstance] = useState(null);
   const [toolInstances, setToolInstances] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasNotesSaved, setHasNotesSaved] = useState(false);
 
   useEffect(() => {
     loadToolInstances();
