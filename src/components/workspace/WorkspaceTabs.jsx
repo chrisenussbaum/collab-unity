@@ -205,7 +205,7 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
           </div>
           
           <div className="hidden lg:block bg-gray-100 rounded-lg p-1">
-            <TabsList className="w-full flex justify-around h-auto p-0 bg-transparent">
+            <TabsList className="w-full grid grid-cols-7 h-auto p-0 bg-transparent">
               {renderTabs()}
             </TabsList>
           </div>
