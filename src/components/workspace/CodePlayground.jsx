@@ -997,34 +997,42 @@ ${navigationScript}
                             </div>
                           )}
                         </div>
-                        {!isReadOnly && activeFiles.length > 1 && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-5 w-5 flex-shrink-0"
-                            onClick={() => handleCloseEditor(file.id)}
-                          >
-                            <X className="w-3 h-3" />
-                          </Button>
-                        )}
+                        <div className="flex items-center gap-1">
+                          {!isReadOnly && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 flex-shrink-0"
+                              onClick={() => {
+                                const event = new CustomEvent('monaco-format');
+                                window.dispatchEvent(event);
+                              }}
+                              title="Format code (Shift+Alt+F)"
+                            >
+                              <Wand2 className="w-3 h-3" />
+                            </Button>
+                          )}
+                          {!isReadOnly && activeFiles.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-5 w-5 flex-shrink-0"
+                              onClick={() => handleCloseEditor(file.id)}
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                      <div className="relative flex-1">
-                        <Textarea
-                          ref={el => editorRefs.current[file.id] = el}
+                      <div className="flex-1 overflow-hidden">
+                        <MonacoEditor
                           value={file.code}
-                          onChange={(e) => handleCodeChange(file.id, e.target.value)}
-                          onSelect={(e) => handleCursorMove(file.id, e)}
-                          onClick={(e) => handleCursorMove(file.id, e)}
-                          onKeyUp={(e) => handleCursorMove(file.id, e)}
-                          className="absolute inset-0 font-mono text-xs resize-none border-0 focus-visible:ring-0 rounded-none"
-                          spellCheck="false"
+                          language={file.language}
+                          onChange={(newCode) => handleCodeChange(file.id, newCode)}
                           readOnly={isReadOnly}
-                        />
-                        {/* Remote cursors overlay */}
-                        <CollaborativeCursor
-                          cursors={remoteCursors}
-                          currentUser={currentUser}
-                          containerRef={{ current: editorRefs.current[file.id] }}
+                          height="100%"
+                          onCursorChange={handleCursorChange}
+                          remoteCursors={remoteCursors}
                           fileId={file.id}
                         />
                       </div>
