@@ -1,5 +1,4 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
   Dialog,
@@ -14,7 +13,11 @@ import { User, Compass, Plus, LayoutGrid } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function PostOnboardingDialog({ isOpen, onClose, currentUser }) {
-  const navigate = useNavigate();
+  // Force a full page reload to ensure Layout fetches updated user data
+  const handleNavigation = (path) => {
+    onClose();
+    window.location.href = path;
+  };
 
   const options = [
     {
@@ -22,40 +25,28 @@ export default function PostOnboardingDialog({ isOpen, onClose, currentUser }) {
       title: "Complete Profile Setup",
       description: "Add more details to help others discover you",
       color: "from-purple-500 to-indigo-600",
-      action: () => {
-        onClose();
-        navigate(createPageUrl(`UserProfile?username=${currentUser?.username || ''}`));
-      }
+      action: () => handleNavigation(createPageUrl(`UserProfile?username=${currentUser?.username || ''}`))
     },
     {
       icon: Compass,
       title: "Join & Discover Projects",
       description: "Find exciting projects looking for collaborators",
       color: "from-blue-500 to-cyan-600",
-      action: () => {
-        onClose();
-        navigate(createPageUrl("Discover"));
-      }
+      action: () => handleNavigation(createPageUrl("Discover"))
     },
     {
       icon: Plus,
       title: "Start a Project",
       description: "Create your own project and invite others",
       color: "from-green-500 to-emerald-600",
-      action: () => {
-        onClose();
-        navigate(createPageUrl("CreateProject"));
-      }
+      action: () => handleNavigation(createPageUrl("CreateProject"))
     },
     {
       icon: LayoutGrid,
       title: "Explore Projects",
       description: "See what the community is working on",
       color: "from-orange-500 to-red-600",
-      action: () => {
-        onClose();
-        navigate(createPageUrl("Feed"));
-      }
+      action: () => handleNavigation(createPageUrl("Feed"))
     }
   ];
 

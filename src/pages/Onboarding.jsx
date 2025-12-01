@@ -7,28 +7,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Lightbulb, Loader2, Upload, Camera, CheckCircle, XCircle, FileText, Shield, ArrowLeft } from "lucide-react";
+import { Lightbulb, Loader2, Upload, Camera, CheckCircle, XCircle, FileText, Shield, ArrowLeft, Cookie, Image } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PostOnboardingDialog from "../components/PostOnboardingDialog";
 
 export default function Onboarding({ currentUser }) {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1 = profile, 2 = terms
+  const [step, setStep] = useState(1); // 1 = profile, 2 = terms, 3 = cookies
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [profileImage, setProfileImage] = useState("");
+  const [coverImage, setCoverImage] = useState("");
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [usernameError, setUsernameError] = useState("");
   const [showPostOnboardingDialog, setShowPostOnboardingDialog] = useState(false);
   const [completedUser, setCompletedUser] = useState(null);
   const [hasScrolledTerms, setHasScrolledTerms] = useState(false);
   const [hasScrolledPrivacy, setHasScrolledPrivacy] = useState(false);
+  const [hasScrolledCookies, setHasScrolledCookies] = useState(false);
   const termsScrollRef = useRef(null);
   const privacyScrollRef = useRef(null);
   const profileImageInputRef = useRef(null);
+  const coverImageInputRef = useRef(null);
 
   useEffect(() => {
     if (!currentUser) {
@@ -45,6 +49,7 @@ export default function Onboarding({ currentUser }) {
     if (currentUser.username) setUsername(currentUser.username);
     if (currentUser.full_name) setFullName(currentUser.full_name);
     if (currentUser.profile_image) setProfileImage(currentUser.profile_image);
+    if (currentUser.cover_image) setCoverImage(currentUser.cover_image);
   }, [currentUser, navigate]);
 
   const checkUsernameAvailability = async (usernameToCheck) => {
@@ -92,6 +97,25 @@ export default function Onboarding({ currentUser }) {
     }
   };
 
+  const handleCoverUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploadingCover(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setCoverImage(file_url);
+    } catch (error) {
+      console.error("Error uploading cover:", error);
+      toast.error("Failed to upload cover photo. Please try again.");
+    } finally {
+      setIsUploadingCover(false);
+      if (coverImageInputRef.current) {
+        coverImageInputRef.current.value = '';
+      }
+    }
+  };
+
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     
@@ -105,6 +129,10 @@ export default function Onboarding({ currentUser }) {
     }
     if (!profileImage) {
       toast.error("Please upload a profile photo.");
+      return;
+    }
+    if (!coverImage) {
+      toast.error("Please upload a cover photo.");
       return;
     }
 
@@ -131,17 +159,25 @@ export default function Onboarding({ currentUser }) {
   };
 
   const handleAcceptTerms = async () => {
+    // Move to cookies step
+    setStep(3);
+  };
+
+  const handleCookiesChoice = async (accepted) => {
     setIsSubmitting(true);
 
     try {
-      // Update user profile with all data and terms acceptance
+      // Update user profile with all data, terms acceptance, and cookie choice
       await base44.auth.updateMe({
         username: username.toLowerCase().trim(),
         full_name: fullName.trim(),
         profile_image: profileImage,
+        cover_image: coverImage,
         has_completed_onboarding: true,
         accepted_terms: true,
-        terms_accepted_at: new Date().toISOString()
+        terms_accepted_at: new Date().toISOString(),
+        accepted_cookies: accepted,
+        cookies_accepted_at: new Date().toISOString()
       });
 
       // Fetch the updated user to pass to dialog
@@ -187,6 +223,14 @@ export default function Onboarding({ currentUser }) {
     }
   };
 
+  const handleCookiesScroll = (e) => {
+    const element = e.target;
+    const scrolledToBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 50;
+    if (scrolledToBottom) {
+      setHasScrolledCookies(true);
+    }
+  };
+
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -208,6 +252,13 @@ export default function Onboarding({ currentUser }) {
         accept="image/png, image/jpeg, image/jpg"
         ref={profileImageInputRef}
         onChange={handleImageUpload}
+        className="hidden"
+      />
+      <input
+        type="file"
+        accept="image/png, image/jpeg, image/jpg"
+        ref={coverImageInputRef}
+        onChange={handleCoverUpload}
         className="hidden"
       />
 
@@ -331,10 +382,47 @@ export default function Onboarding({ currentUser }) {
                       />
                     </div>
 
+                    {/* Cover Photo */}
+                    <div>
+                      <Label className="text-base font-medium mb-2 block">
+                        Cover Photo <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="flex flex-col items-center space-y-3">
+                        <div
+                          onClick={() => !isUploadingCover && coverImageInputRef.current.click()}
+                          className="cursor-pointer w-full h-24 rounded-lg bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300 hover:border-purple-400 transition-colors overflow-hidden"
+                        >
+                          {isUploadingCover ? (
+                            <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+                          ) : coverImage ? (
+                            <img src={coverImage} alt="Cover" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="flex flex-col items-center">
+                              <Image className="w-8 h-8 text-gray-400" />
+                              <span className="text-xs text-gray-500 mt-1">Click to upload</span>
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => coverImageInputRef.current.click()}
+                          disabled={isUploadingCover}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          {coverImage ? 'Change Cover' : 'Upload Cover'}
+                        </Button>
+                        <p className="text-xs text-gray-500 text-center">
+                          This will appear at the top of your profile
+                        </p>
+                      </div>
+                    </div>
+
                     <Button
                       type="submit"
                       className="cu-button w-full"
-                      disabled={isCheckingUsername || !username.trim() || !fullName.trim() || !profileImage || !!usernameError}
+                      disabled={isCheckingUsername || !username.trim() || !fullName.trim() || !profileImage || !coverImage || !!usernameError}
                     >
                       {isCheckingUsername ? (
                         <>
@@ -612,6 +700,179 @@ export default function Onboarding({ currentUser }) {
                   </p>
                 )}
               </div>
+            </motion.div>
+          )}
+
+          {step === 3 && (
+            <motion.div
+              key="cookies-step"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="w-full max-w-2xl"
+            >
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Cookie className="w-8 h-8 text-white" />
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                  Cookie Preferences
+                </h1>
+                <p className="text-gray-600">
+                  We use cookies to enhance your experience. Please review our cookie policy.
+                </p>
+              </div>
+
+              <Card className="cu-card">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Cookie className="w-5 h-5 text-purple-600" />
+                      <CardTitle className="text-lg">How We Use Cookies</CardTitle>
+                    </div>
+                    {hasScrolledCookies && (
+                      <div className="flex items-center text-green-600 text-sm">
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Read
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea 
+                    className="h-64 w-full rounded-md border p-4 bg-gray-50"
+                    onScrollCapture={handleCookiesScroll}
+                  >
+                    <div className="text-sm text-gray-700 space-y-4">
+                      <p className="font-semibold">Cookie Policy - Last Updated: December 1, 2024</p>
+
+                      <div>
+                        <h3 className="font-semibold mb-1">What Are Cookies?</h3>
+                        <p>Cookies are small text files that are stored on your device when you visit our platform. They help us provide you with a better experience by remembering your preferences and understanding how you use our service.</p>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold mb-1">Essential Cookies</h3>
+                        <p>These cookies are necessary for the platform to function properly. They enable core functionality such as:</p>
+                        <ul className="list-disc pl-5 mt-1 space-y-1">
+                          <li>Keeping you signed in to your account</li>
+                          <li>Remembering your security preferences</li>
+                          <li>Ensuring the platform works correctly</li>
+                        </ul>
+                        <p className="mt-2 text-xs text-gray-500">Essential cookies cannot be disabled as they are required for the platform to operate.</p>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold mb-1">Performance & Analytics Cookies</h3>
+                        <p>These cookies help us understand how you interact with our platform:</p>
+                        <ul className="list-disc pl-5 mt-1 space-y-1">
+                          <li>Which pages you visit most often</li>
+                          <li>How you navigate through the platform</li>
+                          <li>Any errors you might encounter</li>
+                        </ul>
+                        <p className="mt-2 text-xs text-gray-500">This information helps us improve our service and fix issues.</p>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold mb-1">Functionality Cookies</h3>
+                        <p>These cookies remember your preferences:</p>
+                        <ul className="list-disc pl-5 mt-1 space-y-1">
+                          <li>Your language and region settings</li>
+                          <li>Your display preferences</li>
+                          <li>Recently viewed projects</li>
+                        </ul>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold mb-1">Your Choices</h3>
+                        <p><strong>Accept:</strong> You consent to all cookies described above, including analytics and functionality cookies. This helps us improve your experience.</p>
+                        <p className="mt-2"><strong>Decline:</strong> Only essential cookies will be used. Some features may be limited, but the core platform will still work.</p>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold mb-1">Managing Cookies</h3>
+                        <p>You can change your cookie preferences at any time through your browser settings. Most browsers allow you to:</p>
+                        <ul className="list-disc pl-5 mt-1 space-y-1">
+                          <li>See what cookies are stored on your device</li>
+                          <li>Delete all or specific cookies</li>
+                          <li>Block cookies from specific websites</li>
+                        </ul>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold mb-1">Third-Party Cookies</h3>
+                        <p>Some cookies may be set by third-party services we use:</p>
+                        <ul className="list-disc pl-5 mt-1 space-y-1">
+                          <li>Authentication providers (for secure login)</li>
+                          <li>Analytics services (to understand usage patterns)</li>
+                          <li>Content delivery networks (to serve content faster)</li>
+                        </ul>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold mb-1">Contact Us</h3>
+                        <p>If you have questions about our use of cookies, please contact us at collabunity@collabunity.io.</p>
+                      </div>
+                    </div>
+                  </ScrollArea>
+                  {!hasScrolledCookies && (
+                    <p className="text-xs text-amber-600 mt-2 flex items-center">
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      Please scroll to read the entire document
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setStep(2)}
+                  className="sm:flex-1"
+                  disabled={isSubmitting}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleCookiesChoice(false)}
+                  className="sm:flex-1"
+                  disabled={isSubmitting || !hasScrolledCookies}
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <XCircle className="w-4 h-4 mr-2" />
+                  )}
+                  Decline Optional
+                </Button>
+                <Button
+                  onClick={() => handleCookiesChoice(true)}
+                  className="cu-button sm:flex-1"
+                  disabled={isSubmitting || !hasScrolledCookies}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Accept All
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {!hasScrolledCookies && (
+                <p className="text-xs text-center text-gray-500 mt-4">
+                  Please scroll through the cookie policy to make your choice
+                </p>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
