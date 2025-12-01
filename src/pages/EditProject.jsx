@@ -469,7 +469,7 @@ export default function EditProject({ currentUser, authIsLoading }) {
                   <Button type="button" variant="outline" onClick={addLink} disabled={!newLink}><Plus className="w-4 h-4"/></Button>
                 </div>
                 <p className="text-xs text-gray-500 text-center">
-                  Add URLs to your published/live project. For repositories, documents, and other resources, use the Assets tab after creating the project. (Max 10 URLs)
+                  Add links to showcase/demo the current state of your project. For repositories, documents, and other resources, use the Assets tab after creating the project. (Max 10 URLs)
                 </p>
               </div>
             </CardContent>
