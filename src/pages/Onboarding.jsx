@@ -92,7 +92,7 @@ export default function Onboarding({ currentUser }) {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleProfileSubmit = async (e) => {
     e.preventDefault();
     
     if (!username.trim()) {
@@ -108,7 +108,6 @@ export default function Onboarding({ currentUser }) {
       return;
     }
 
-    setIsSubmitting(true);
     setIsCheckingUsername(true);
 
     try {
@@ -118,16 +117,31 @@ export default function Onboarding({ currentUser }) {
 
       if (!available) {
         toast.error(error || "This username is already taken. Please choose another one.");
-        setIsSubmitting(false);
         return;
       }
 
-      // Update user profile
+      // Move to terms step
+      setStep(2);
+    } catch (error) {
+      console.error("Error checking username:", error);
+      toast.error("Failed to verify username. Please try again.");
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  };
+
+  const handleAcceptTerms = async () => {
+    setIsSubmitting(true);
+
+    try {
+      // Update user profile with all data and terms acceptance
       await base44.auth.updateMe({
         username: username.toLowerCase().trim(),
         full_name: fullName.trim(),
         profile_image: profileImage,
-        has_completed_onboarding: true
+        has_completed_onboarding: true,
+        accepted_terms: true,
+        terms_accepted_at: new Date().toISOString()
       });
 
       // Fetch the updated user to pass to dialog
@@ -140,7 +154,36 @@ export default function Onboarding({ currentUser }) {
       toast.error("Failed to complete onboarding. Please try again.");
     } finally {
       setIsSubmitting(false);
-      setIsCheckingUsername(false);
+    }
+  };
+
+  const handleDeclineTerms = async () => {
+    // Log the decline and redirect to welcome page
+    try {
+      await base44.auth.updateMe({
+        accepted_terms: false
+      });
+    } catch (error) {
+      console.error("Error logging terms decline:", error);
+    }
+    
+    // Logout and redirect
+    await base44.auth.logout(createPageUrl("Welcome"));
+  };
+
+  const handleTermsScroll = (e) => {
+    const element = e.target;
+    const scrolledToBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 50;
+    if (scrolledToBottom) {
+      setHasScrolledTerms(true);
+    }
+  };
+
+  const handlePrivacyScroll = (e) => {
+    const element = e.target;
+    const scrolledToBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 50;
+    if (scrolledToBottom) {
+      setHasScrolledPrivacy(true);
     }
   };
 
