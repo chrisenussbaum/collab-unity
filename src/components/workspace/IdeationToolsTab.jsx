@@ -134,23 +134,10 @@ export default function IdeationToolsTab({
   };
 
   const handleItemClick = (item) => {
-    if (item.ide_type === 'document_editor') {
-      setActiveDocument(item);
-    } else if (item.ide_type === 'code_playground') {
+    if (item.ide_type === 'code_playground') {
       setActiveCodeProject(item);
-    } else if (item.ide_type === 'presentation') {
-      setActivePresentation(item);
-    } else if (item.ide_type === 'spreadsheet') {
-      setActiveSpreadsheet(item);
     } else {
       toast.info(`${getIdeTypeInfo(item.ide_type).label} viewer coming soon!`);
-    }
-  };
-
-  const handleCloseDocument = (shouldRefresh) => {
-    setActiveDocument(null);
-    if (shouldRefresh) {
-      loadIdeInstances();
     }
   };
 
@@ -161,47 +148,12 @@ export default function IdeationToolsTab({
     }
   };
 
-  const handleDocumentSave = (savedDoc) => {
-    // Update the document in the list if it's new
-    setIdeInstances(prev => {
-      const exists = prev.find(d => d.id === savedDoc.id);
-      if (exists) return prev; // If it exists, it means we're editing an existing one, which is already reflected in the list by reference. No need to add.
-      return [savedDoc, ...prev]; // If it was a newly created one which then got saved for the first time
-    });
-  };
-
   const handleCodeProjectSave = (savedCode) => {
     setIdeInstances(prev => {
       const exists = prev.find(d => d.id === savedCode.id);
       if (exists) return prev;
       return [savedCode, ...prev];
     });
-  };
-
-  const handlePresentationSave = (savedPresentation) => {
-    setIdeInstances(prev => {
-      const exists = prev.find(d => d.id === savedPresentation.id);
-      if (exists) return prev;
-      return [savedPresentation, ...prev];
-    });
-  };
-
-  const handleSpreadsheetSave = (savedSpreadsheet) => {
-    setIdeInstances(prev => {
-      const exists = prev.find(d => d.id === savedSpreadsheet.id);
-      if (exists) return prev;
-      return [savedSpreadsheet, ...prev];
-    });
-  };
-
-  const handleClosePresentation = (shouldRefresh) => {
-    setActivePresentation(null);
-    if (shouldRefresh) loadIdeInstances();
-  };
-
-  const handleCloseSpreadsheet = (shouldRefresh) => {
-    setActiveSpreadsheet(null);
-    if (shouldRefresh) loadIdeInstances();
   };
 
   if (!isCollaborator) {
