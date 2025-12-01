@@ -215,7 +215,6 @@ export default function CodePlayground({
       const updatedContent = JSON.stringify({
         ...currentContent,
         files,
-        chatMessages,
         presence: updatedPresence
       });
       
