@@ -12,7 +12,7 @@ const promotionCategories = [
   {
     icon: Building,
     title: "For Businesses",
-    description: "Reach a targeted audience of innovators, tech talent, and potential partners. Showcase your brand, products, and services to the right people.",
+    description: "Reach a targeted audience of innovators, tech talent, and potential partners. Showcase your brand, products, and services to the right collaborators.",
     cta: "Promote Your Business",
     color: "purple",
     benefits: ["Targeted Reach", "Brand Visibility", "Lead Generation"]
