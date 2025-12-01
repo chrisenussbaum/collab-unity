@@ -42,10 +42,7 @@ export default function IdeationToolsTab({
   const [selectedIdeType, setSelectedIdeType] = useState(null);
   const [newDocTitle, setNewDocTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const [activeDocument, setActiveDocument] = useState(null);
   const [activeCodeProject, setActiveCodeProject] = useState(null);
-  const [activePresentation, setActivePresentation] = useState(null);
-  const [activeSpreadsheet, setActiveSpreadsheet] = useState(null);
 
   // Utility function to handle rate limits with exponential backoff
   const withRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
