@@ -1354,7 +1354,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                                       className="w-10 h-10 mx-auto mb-2" 
                                       onError={(e) => e.currentTarget.style.display = 'none'} 
                                     />
-                                    <p className="font-semibold text-sm text-gray-800">Live Preview</p>
+                                    <p className="font-semibold text-sm text-gray-800">Showcase</p>
                                     <p className="text-xs text-gray-500 mt-1">Click to visit</p>
                                   </div>
                                   <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
