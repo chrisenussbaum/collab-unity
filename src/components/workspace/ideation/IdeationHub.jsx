@@ -69,7 +69,14 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
 
   useEffect(() => {
     loadToolInstances();
+    checkNotesSaved();
   }, [project.id]);
+
+  const checkNotesSaved = () => {
+    // Check if project has saved notes
+    const hasNotes = project?.project_ideation && project.project_ideation.trim() !== '' && project.project_ideation !== '<p><br></p>';
+    setHasNotesSaved(hasNotes);
+  };
 
   const loadToolInstances = async () => {
     setIsLoading(true);
