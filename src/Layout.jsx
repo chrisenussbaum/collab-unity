@@ -241,18 +241,8 @@ export default function Layout({ children, currentPageName }) {
         setAuthChecked(true);
 
         // Redirect to onboarding if user hasn't completed it, or is missing required profile fields
-        const needsOnboarding = !user.has_completed_onboarding || !user.profile_image || !user.username || user.accepted_terms !== true;
-
-        // Check if on a public route that doesn't require onboarding
-        const isOnPublicRoute = publicRoutes.some(route => location.pathname.startsWith(route));
-
-        if (needsOnboarding && location.pathname !== createPageUrl("Onboarding") && !isOnPublicRoute) {
-          console.log("Redirecting to onboarding - missing required fields:", {
-            has_completed_onboarding: user.has_completed_onboarding,
-            profile_image: !!user.profile_image,
-            username: !!user.username,
-            accepted_terms: user.accepted_terms
-          });
+        const needsOnboarding = !user.has_completed_onboarding || !user.profile_image || !user.username || !user.accepted_terms;
+        if (needsOnboarding && location.pathname !== createPageUrl("Onboarding")) {
           setHasNavigated(true);
           navigate(createPageUrl("Onboarding"), { replace: true });
           return;
