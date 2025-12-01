@@ -918,9 +918,6 @@ export default function DiscussionBoard({ project, currentUser, onProjectUpdate,
                 </div>
 
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ml-[4.5rem] -mt-1">
-                    <p className="text-xs text-gray-500">
-                        <strong>Tip:</strong> Type @ to mention a team member • Press Ctrl+Enter to post
-                    </p>
                     <Button
                         onClick={handlePostComment}
                         disabled={!newComment.trim() || isSubmitting}
