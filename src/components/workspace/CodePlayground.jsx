@@ -227,57 +227,8 @@ export default function CodePlayground({
     }
   };
 
-  const handleSendChatMessage = async (content) => {
-    const newMessage = {
-      id: `${Date.now()}-${currentUser?.email}`,
-      sender_email: currentUser?.email,
-      content,
-      timestamp: new Date().toISOString()
-    };
-    
-    setChatMessages(prev => [...prev, newMessage]);
-    setHasUnsavedChanges(true);
-    
-    // Immediately save to sync with others
-    try {
-      const currentContent = codeProject?.content ? JSON.parse(codeProject.content) : {};
-      const updatedContent = JSON.stringify({
-        ...currentContent,
-        files,
-        chatMessages: [...chatMessages, newMessage],
-        presence: currentContent.presence || []
-      });
-      
-      await base44.entities.ProjectIDE.update(codeProject.id, {
-        content: updatedContent,
-        last_modified_by: currentUser.email
-      });
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
-  };
-
-  const handleCursorMove = useCallback((fileId, event) => {
+  const handleCursorChange = useCallback((cursorData) => {
     if (!codeProject?.id || isReadOnly) return;
-    
-    const textarea = event.target;
-    const cursorPos = textarea.selectionStart;
-    const textBeforeCursor = textarea.value.substring(0, cursorPos);
-    const lines = textBeforeCursor.split('\n');
-    const line = lines.length;
-    const column = lines[lines.length - 1].length;
-    
-    // Calculate approximate pixel position
-    const lineHeight = 18; // Approximate line height
-    const charWidth = 7.8; // Approximate character width for monospace
-    
-    const cursorData = {
-      fileId,
-      line,
-      column,
-      x: column * charWidth,
-      y: (line - 1) * lineHeight
-    };
     
     // Debounced cursor update
     if (updateTimerRef.current) {
@@ -315,8 +266,18 @@ export default function CodePlayground({
       } catch (error) {
         // Silently fail cursor updates
       }
-    }, 100);
+    }, 200);
   }, [codeProject, currentUser, activeFiles, isReadOnly]);
+
+  // Handle Monaco save shortcut
+  useEffect(() => {
+    const handleMonacoSave = () => {
+      handleSave(false);
+    };
+    
+    window.addEventListener('monaco-save', handleMonacoSave);
+    return () => window.removeEventListener('monaco-save', handleMonacoSave);
+  }, [files, title]);
 
   const initializeDefaultFiles = () => {
     const defaultFiles = [
