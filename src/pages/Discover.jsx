@@ -1503,7 +1503,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
 
               {isLoadingUsers ? (
                 <div className="text-center py-16">
-                  <p className="cu-text-responsive-sm text-gray-500">Loading people...</p>
+                  <p className="cu-text-responsive-sm text-gray-500">Loading collaborators...</p>
                 </div>
               ) : filteredUsers.length === 0 ? (
                 <div className="text-center py-16">
