@@ -142,15 +142,6 @@ export default function CodePlayground({
                 }
               }
               
-              // Always sync chat messages
-              if (parsed.chatMessages) {
-                setChatMessages(prev => {
-                  const newMessages = parsed.chatMessages.filter(
-                    msg => !prev.some(p => p.id === msg.id)
-                  );
-                  return [...prev, ...newMessages];
-                });
-              }
               
               // Update collaborator presence
               if (parsed.presence) {
