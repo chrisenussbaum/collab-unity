@@ -311,8 +311,8 @@ export default function Layout({ children, currentPageName }) {
     );
   }
 
-  // If on Welcome page or Onboarding page, render without the main layout
-  if (location.pathname === createPageUrl("Welcome") || location.pathname === createPageUrl("Onboarding")) {
+  // If on Welcome page, render it without the main layout
+  if (location.pathname === createPageUrl("Welcome")) {
     return (
       <>
         <Toaster 
