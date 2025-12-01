@@ -12,24 +12,12 @@ import {
 } from "@/components/ui/dialog";
 import { 
   Code, 
-  FileText, 
-  Video, 
-  Music, 
-  Shirt, 
-  Palette, 
-  Box, 
-  Presentation, 
-  Table,
   Plus,
-  Loader2,
-  ExternalLink
+  Loader2
 } from 'lucide-react';
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
-import DocumentEditor from './DocumentEditor';
 import CodePlayground from './CodePlayground';
-import PresentationEditor from './PresentationEditor';
-import SpreadsheetEditor from './SpreadsheetEditor';
 
 const ideTypes = [
   {
@@ -38,62 +26,6 @@ const ideTypes = [
     icon: Code,
     color: 'bg-blue-100 text-blue-700',
     description: 'Write and test HTML, CSS, and JavaScript code'
-  },
-  {
-    type: 'document_editor',
-    label: 'Document Editor',
-    icon: FileText,
-    color: 'bg-purple-100 text-purple-700',
-    description: 'Create and edit rich text documents'
-  },
-  {
-    type: 'video_editor',
-    label: 'Video Editor',
-    icon: Video,
-    color: 'bg-red-100 text-red-700',
-    description: 'Edit and produce video content'
-  },
-  {
-    type: 'audio_editor',
-    label: 'Audio Editor',
-    icon: Music,
-    color: 'bg-green-100 text-green-700',
-    description: 'Mix and edit audio tracks'
-  },
-  {
-    type: 'apparel_design',
-    label: 'Apparel Design',
-    icon: Shirt,
-    color: 'bg-pink-100 text-pink-700',
-    description: 'Design custom clothing and merchandise'
-  },
-  {
-    type: 'graphic_design',
-    label: 'Graphic Design',
-    icon: Palette,
-    color: 'bg-yellow-100 text-yellow-700',
-    description: 'Create graphics and visual designs'
-  },
-  {
-    type: '3d_modeling',
-    label: '3D Modeling',
-    icon: Box,
-    color: 'bg-indigo-100 text-indigo-700',
-    description: 'Build and render 3D models'
-  },
-  {
-    type: 'presentation',
-    label: 'Presentation',
-    icon: Presentation,
-    color: 'bg-orange-100 text-orange-700',
-    description: 'Create slides and presentations'
-  },
-  {
-    type: 'spreadsheet',
-    label: 'Spreadsheet',
-    icon: Table,
-    color: 'bg-teal-100 text-teal-700',
-    description: 'Work with data in spreadsheets'
   }
 ];
 
