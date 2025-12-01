@@ -28,6 +28,8 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import DocumentEditor from './DocumentEditor';
 import CodePlayground from './CodePlayground';
+import PresentationEditor from './PresentationEditor';
+import SpreadsheetEditor from './SpreadsheetEditor';
 
 const ideTypes = [
   {
@@ -110,6 +112,8 @@ export default function IdeationToolsTab({
   const [isCreating, setIsCreating] = useState(false);
   const [activeDocument, setActiveDocument] = useState(null);
   const [activeCodeProject, setActiveCodeProject] = useState(null);
+  const [activePresentation, setActivePresentation] = useState(null);
+  const [activeSpreadsheet, setActiveSpreadsheet] = useState(null);
 
   // Utility function to handle rate limits with exponential backoff
   const withRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
@@ -160,7 +164,7 @@ export default function IdeationToolsTab({
 
   const handleCreateClick = (ideType) => {
     setSelectedIdeType(ideType);
-    if (ideType.type === 'document_editor' || ideType.type === 'code_playground') {
+    if (ideType.type === 'document_editor' || ideType.type === 'code_playground' || ideType.type === 'presentation' || ideType.type === 'spreadsheet') {
       setShowCreateDialog(true);
     } else {
       toast.info(`${ideType.label} coming soon!`);
@@ -175,11 +179,22 @@ export default function IdeationToolsTab({
 
     setIsCreating(true);
     try {
+      let defaultContent = '';
+      if (selectedIdeType.type === 'document_editor') {
+        defaultContent = '';
+      } else if (selectedIdeType.type === 'code_playground') {
+        defaultContent = JSON.stringify({ html: '', css: '', js: '' });
+      } else if (selectedIdeType.type === 'presentation') {
+        defaultContent = JSON.stringify({ slides: [{ id: Date.now(), background: '#ffffff', elements: [] }] });
+      } else if (selectedIdeType.type === 'spreadsheet') {
+        defaultContent = JSON.stringify({ grid: [], colWidths: [] });
+      }
+
       const newItem = await base44.entities.ProjectIDE.create({
         project_id: project.id,
         ide_type: selectedIdeType.type,
         title: newDocTitle.trim(),
-        content: selectedIdeType.type === 'document_editor' ? '' : JSON.stringify({ html: '', css: '', js: '' }),
+        content: defaultContent,
         last_modified_by: currentUser.email,
         is_active: true
       });
@@ -192,6 +207,10 @@ export default function IdeationToolsTab({
         setActiveDocument(newItem);
       } else if (selectedIdeType.type === 'code_playground') {
         setActiveCodeProject(newItem);
+      } else if (selectedIdeType.type === 'presentation') {
+        setActivePresentation(newItem);
+      } else if (selectedIdeType.type === 'spreadsheet') {
+        setActiveSpreadsheet(newItem);
       }
       
       toast.success(`${selectedIdeType.label} created successfully`);
@@ -208,6 +227,10 @@ export default function IdeationToolsTab({
       setActiveDocument(item);
     } else if (item.ide_type === 'code_playground') {
       setActiveCodeProject(item);
+    } else if (item.ide_type === 'presentation') {
+      setActivePresentation(item);
+    } else if (item.ide_type === 'spreadsheet') {
+      setActiveSpreadsheet(item);
     } else {
       toast.info(`${getIdeTypeInfo(item.ide_type).label} viewer coming soon!`);
     }
@@ -237,12 +260,37 @@ export default function IdeationToolsTab({
   };
 
   const handleCodeProjectSave = (savedCode) => {
-    // Update the code project in the list if it's new
     setIdeInstances(prev => {
       const exists = prev.find(d => d.id === savedCode.id);
-      if (exists) return prev; // If it exists, it means we're editing an existing one, which is already reflected in the list by reference. No need to add.
-      return [savedCode, ...prev]; // If it was a newly created one which then got saved for the first time
+      if (exists) return prev;
+      return [savedCode, ...prev];
     });
+  };
+
+  const handlePresentationSave = (savedPresentation) => {
+    setIdeInstances(prev => {
+      const exists = prev.find(d => d.id === savedPresentation.id);
+      if (exists) return prev;
+      return [savedPresentation, ...prev];
+    });
+  };
+
+  const handleSpreadsheetSave = (savedSpreadsheet) => {
+    setIdeInstances(prev => {
+      const exists = prev.find(d => d.id === savedSpreadsheet.id);
+      if (exists) return prev;
+      return [savedSpreadsheet, ...prev];
+    });
+  };
+
+  const handleClosePresentation = (shouldRefresh) => {
+    setActivePresentation(null);
+    if (shouldRefresh) loadIdeInstances();
+  };
+
+  const handleCloseSpreadsheet = (shouldRefresh) => {
+    setActiveSpreadsheet(null);
+    if (shouldRefresh) loadIdeInstances();
   };
 
   if (!isCollaborator) {
@@ -283,6 +331,32 @@ export default function IdeationToolsTab({
         currentUser={currentUser}
         onClose={handleCloseCodeProject}
         onSave={handleCodeProjectSave}
+      />
+    );
+  }
+
+  // If a presentation is active, show the full-screen presentation editor
+  if (activePresentation) {
+    return (
+      <PresentationEditor
+        codeProject={activePresentation}
+        project={project}
+        currentUser={currentUser}
+        onClose={handleClosePresentation}
+        onSave={handlePresentationSave}
+      />
+    );
+  }
+
+  // If a spreadsheet is active, show the full-screen spreadsheet editor
+  if (activeSpreadsheet) {
+    return (
+      <SpreadsheetEditor
+        codeProject={activeSpreadsheet}
+        project={project}
+        currentUser={currentUser}
+        onClose={handleCloseSpreadsheet}
+        onSave={handleSpreadsheetSave}
       />
     );
   }
@@ -425,7 +499,7 @@ export default function IdeationToolsTab({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {ideTypes.map(ideType => {
                 const Icon = ideType.icon;
-                const isImplemented = ideType.type === 'document_editor' || ideType.type === 'code_playground';
+                const isImplemented = ideType.type === 'document_editor' || ideType.type === 'code_playground' || ideType.type === 'presentation' || ideType.type === 'spreadsheet';
                 
                 return (
                   <div 
