@@ -212,143 +212,409 @@ export default function Onboarding({ currentUser }) {
       />
 
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
-              <Lightbulb className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-              Welcome to Collab Unity
-            </h1>
-            <p className="text-gray-600">
-              Let's get you set up in just a few seconds
-            </p>
-          </div>
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <motion.div
+              key="profile-step"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="w-full max-w-md"
+            >
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Lightbulb className="w-8 h-8 text-white" />
+                </div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+                  Welcome to Collab Unity
+                </h1>
+                <p className="text-gray-600">
+                  Let's get you set up in just a few seconds
+                </p>
+              </div>
 
-          <Card className="cu-card">
-            <CardHeader>
-              <CardTitle>Create Your Profile</CardTitle>
-              <CardDescription>
-                Complete these required fields to get started
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Profile Photo */}
-                <div>
-                  <Label className="text-base font-medium mb-2 block">
-                    Profile Photo <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="flex flex-col items-center space-y-3">
-                    <div
-                      onClick={() => !isUploadingImage && profileImageInputRef.current.click()}
-                      className="cursor-pointer w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300 hover:border-purple-400 transition-colors overflow-hidden"
+              <Card className="cu-card">
+                <CardHeader>
+                  <CardTitle>Create Your Profile</CardTitle>
+                  <CardDescription>
+                    Complete these required fields to get started
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleProfileSubmit} className="space-y-6">
+                    {/* Profile Photo */}
+                    <div>
+                      <Label className="text-base font-medium mb-2 block">
+                        Profile Photo <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="flex flex-col items-center space-y-3">
+                        <div
+                          onClick={() => !isUploadingImage && profileImageInputRef.current.click()}
+                          className="cursor-pointer w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300 hover:border-purple-400 transition-colors overflow-hidden"
+                        >
+                          {isUploadingImage ? (
+                            <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+                          ) : profileImage ? (
+                            <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                          ) : (
+                            <Camera className="w-12 h-12 text-gray-400" />
+                          )}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => profileImageInputRef.current.click()}
+                          disabled={isUploadingImage}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          {profileImage ? 'Change Photo' : 'Upload Photo'}
+                        </Button>
+                        <p className="text-xs text-gray-500 text-center">
+                          Click to upload a profile photo
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Username */}
+                    <div>
+                      <Label htmlFor="username" className="text-base font-medium mb-2 block">
+                        Username <span className="text-red-500">*</span>
+                      </Label>
+                      <p className="text-sm text-gray-500 mb-3">
+                        This will be part of your profile URL (e.g., collabunity.app/@{username || 'yourname'})
+                      </p>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <span className="text-gray-500">@</span>
+                        </div>
+                        <Input
+                          id="username"
+                          placeholder="yourname"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+                          maxLength={30}
+                          className={`pl-7 ${usernameError ? 'border-red-500' : ''}`}
+                          disabled={isCheckingUsername}
+                          autoCapitalize="off"
+                          autoCorrect="off"
+                          required
+                        />
+                      </div>
+                      {isCheckingUsername && (
+                        <p className="text-xs text-gray-500 mt-1">Checking availability...</p>
+                      )}
+                      {usernameError && (
+                        <p className="text-xs text-red-600 mt-1">{usernameError}</p>
+                      )}
+                      {username && !usernameError && !isCheckingUsername && username !== currentUser?.username && (
+                        <p className="text-xs text-green-600 mt-1">✓ Username is available</p>
+                      )}
+                      <p className="text-xs text-gray-400 mt-1">
+                        3-30 characters: letters, numbers, hyphens, and underscores only
+                      </p>
+                    </div>
+
+                    {/* Full Name */}
+                    <div>
+                      <Label htmlFor="fullName" className="text-base font-medium mb-2 block">
+                        Full Name <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="fullName"
+                        placeholder="John Doe"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        disabled={isCheckingUsername}
+                        required
+                      />
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="cu-button w-full"
+                      disabled={isCheckingUsername || !username.trim() || !fullName.trim() || !profileImage || !!usernameError}
                     >
-                      {isUploadingImage ? (
-                        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
-                      ) : profileImage ? (
-                        <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                      {isCheckingUsername ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Checking...
+                        </>
                       ) : (
-                        <Camera className="w-12 h-12 text-gray-400" />
+                        'Continue'
+                      )}
+                    </Button>
+
+                    <p className="text-xs text-center text-gray-500">
+                      You can add more details to your profile later from your profile settings
+                    </p>
+                  </form>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {step === 2 && (
+            <motion.div
+              key="terms-step"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="w-full max-w-2xl"
+            >
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Shield className="w-8 h-8 text-white" />
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                  Review Our Terms
+                </h1>
+                <p className="text-gray-600">
+                  Please review and accept our Terms of Service and Privacy Policy to continue
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {/* Terms of Service */}
+                <Card className="cu-card">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <FileText className="w-5 h-5 text-purple-600" />
+                        <CardTitle className="text-lg">Terms of Service</CardTitle>
+                      </div>
+                      {hasScrolledTerms && (
+                        <div className="flex items-center text-green-600 text-sm">
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Read
+                        </div>
                       )}
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => profileImageInputRef.current.click()}
-                      disabled={isUploadingImage}
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea 
+                      className="h-48 w-full rounded-md border p-4 bg-gray-50"
+                      onScrollCapture={handleTermsScroll}
                     >
-                      <Upload className="w-4 h-4 mr-2" />
-                      {profileImage ? 'Change Photo' : 'Upload Photo'}
-                    </Button>
-                    <p className="text-xs text-gray-500 text-center">
-                      Click to upload a profile photo
-                    </p>
-                  </div>
-                </div>
+                      <div className="text-sm text-gray-700 space-y-4">
+                        <p className="font-semibold">Last Updated: December 1, 2024</p>
+                        
+                        <div>
+                          <h3 className="font-semibold mb-1">1. Introduction</h3>
+                          <p>Welcome to Collab Unity ("we," "our," or "us"). By accessing or using our platform at collabunity.io (the "Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service.</p>
+                        </div>
 
-                {/* Username */}
-                <div>
-                  <Label htmlFor="username" className="text-base font-medium mb-2 block">
-                    Username <span className="text-red-500">*</span>
-                  </Label>
-                  <p className="text-sm text-gray-500 mb-3">
-                    This will be part of your profile URL (e.g., collabunity.app/@{username || 'yourname'})
-                  </p>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500">@</span>
+                        <div>
+                          <h3 className="font-semibold mb-1">2. Eligibility</h3>
+                          <p>You must be at least 13 years old to use Collab Unity. If you are under 18, you represent that you have your parent or guardian's permission to use the Service.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">3. Account Registration</h3>
+                          <p>When you create an account, you must provide accurate and complete information. You are responsible for maintaining the security of your account and password. You agree to notify us immediately of any unauthorized use of your account.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">4. User Conduct</h3>
+                          <p>You agree not to: (a) violate any laws or regulations; (b) post false, misleading, or fraudulent content; (c) harass, abuse, or threaten other users; (d) infringe on intellectual property rights; (e) upload malware or harmful code; (f) attempt to gain unauthorized access to our systems; (g) use the Service for any illegal or unauthorized purpose.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">5. Content Ownership</h3>
+                          <p>You retain ownership of content you create and post on Collab Unity. By posting content, you grant us a non-exclusive, worldwide, royalty-free license to use, display, and distribute your content in connection with the Service.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">6. Collaboration Projects</h3>
+                          <p>When you join or create collaborative projects, you agree to act in good faith with other collaborators. Disputes between collaborators should be resolved between the parties involved. Collab Unity is not responsible for the outcome of collaborations.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">7. Intellectual Property</h3>
+                          <p>Project owners and collaborators should establish clear agreements regarding intellectual property rights for collaborative work. Collab Unity does not claim ownership over projects created using our platform.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">8. Termination</h3>
+                          <p>We may terminate or suspend your account at any time for violations of these Terms or for any other reason at our discretion. Upon termination, your right to use the Service will immediately cease.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">9. Disclaimer of Warranties</h3>
+                          <p>THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND. WE DO NOT GUARANTEE THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION ON THE SERVICE.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">10. Limitation of Liability</h3>
+                          <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, COLLAB UNITY SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE SERVICE.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">11. Changes to Terms</h3>
+                          <p>We may update these Terms from time to time. We will notify you of significant changes by posting a notice on our Service. Your continued use of the Service after changes constitutes acceptance of the new Terms.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">12. Contact</h3>
+                          <p>For questions about these Terms, please contact us at collabunity@collabunity.io.</p>
+                        </div>
+                      </div>
+                    </ScrollArea>
+                    {!hasScrolledTerms && (
+                      <p className="text-xs text-amber-600 mt-2 flex items-center">
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        Please scroll to read the entire document
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Privacy Policy */}
+                <Card className="cu-card">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Shield className="w-5 h-5 text-purple-600" />
+                        <CardTitle className="text-lg">Privacy Policy</CardTitle>
+                      </div>
+                      {hasScrolledPrivacy && (
+                        <div className="flex items-center text-green-600 text-sm">
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Read
+                        </div>
+                      )}
                     </div>
-                    <Input
-                      id="username"
-                      placeholder="yourname"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
-                      maxLength={30}
-                      className={`pl-7 ${usernameError ? 'border-red-500' : ''}`}
-                      disabled={isSubmitting || isCheckingUsername}
-                      autoCapitalize="off"
-                      autoCorrect="off"
-                      required
-                    />
-                  </div>
-                  {isCheckingUsername && (
-                    <p className="text-xs text-gray-500 mt-1">Checking availability...</p>
-                  )}
-                  {usernameError && (
-                    <p className="text-xs text-red-600 mt-1">{usernameError}</p>
-                  )}
-                  {username && !usernameError && !isCheckingUsername && username !== currentUser?.username && (
-                    <p className="text-xs text-green-600 mt-1">✓ Username is available</p>
-                  )}
-                  <p className="text-xs text-gray-400 mt-1">
-                    3-30 characters: letters, numbers, hyphens, and underscores only
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea 
+                      className="h-48 w-full rounded-md border p-4 bg-gray-50"
+                      onScrollCapture={handlePrivacyScroll}
+                    >
+                      <div className="text-sm text-gray-700 space-y-4">
+                        <p className="font-semibold">Last Updated: December 1, 2024</p>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">1. Introduction</h3>
+                          <p>Collab Unity ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform at collabunity.io.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">2. Information We Collect</h3>
+                          <p><strong>Personal Information:</strong> Name, email address, profile photo, username, and any other information you provide.</p>
+                          <p><strong>Usage Data:</strong> Information about how you use our Service, including pages visited, features used, and time spent.</p>
+                          <p><strong>Device Information:</strong> Browser type, operating system, and device identifiers.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">3. How We Use Your Information</h3>
+                          <p>We use your information to: (a) provide and maintain our Service; (b) personalize your experience; (c) communicate with you; (d) improve our Service; (e) ensure security and prevent fraud; (f) comply with legal obligations.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">4. Information Sharing</h3>
+                          <p>We may share your information with: (a) other users as part of your public profile; (b) service providers who assist in operating our platform; (c) legal authorities when required by law; (d) in connection with a merger or acquisition.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">5. Data Security</h3>
+                          <p>We implement appropriate technical and organizational measures to protect your personal information. However, no method of transmission over the Internet is 100% secure.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">6. Your Rights</h3>
+                          <p>You have the right to: (a) access your personal data; (b) correct inaccurate data; (c) delete your data; (d) object to processing; (e) data portability; (f) withdraw consent.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">7. Cookies</h3>
+                          <p>We use cookies and similar technologies to enhance your experience, analyze usage, and personalize content. You can control cookies through your browser settings.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">8. Children's Privacy</h3>
+                          <p>Our Service is not intended for children under 13. We do not knowingly collect personal information from children under 13.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">9. International Data Transfers</h3>
+                          <p>Your information may be transferred to and processed in countries other than your own. We ensure appropriate safeguards are in place for such transfers.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">10. Data Retention</h3>
+                          <p>We retain your personal information for as long as necessary to provide our Service and fulfill the purposes described in this Policy, unless a longer retention period is required by law.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">11. Changes to This Policy</h3>
+                          <p>We may update this Privacy Policy from time to time. We will notify you of significant changes by posting a notice on our Service.</p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-1">12. Contact Us</h3>
+                          <p>For questions about this Privacy Policy, please contact us at collabunity@collabunity.io.</p>
+                        </div>
+                      </div>
+                    </ScrollArea>
+                    {!hasScrolledPrivacy && (
+                      <p className="text-xs text-amber-600 mt-2 flex items-center">
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        Please scroll to read the entire document
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setStep(1)}
+                    className="sm:flex-1"
+                    disabled={isSubmitting}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleDeclineTerms}
+                    className="sm:flex-1 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                    disabled={isSubmitting}
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Decline
+                  </Button>
+                  <Button
+                    onClick={handleAcceptTerms}
+                    className="cu-button sm:flex-1"
+                    disabled={isSubmitting || !hasScrolledTerms || !hasScrolledPrivacy}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Creating Account...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Accept & Continue
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {(!hasScrolledTerms || !hasScrolledPrivacy) && (
+                  <p className="text-xs text-center text-gray-500">
+                    Please scroll through both documents to enable the Accept button
                   </p>
-                </div>
-
-                {/* Full Name */}
-                <div>
-                  <Label htmlFor="fullName" className="text-base font-medium mb-2 block">
-                    Full Name <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="fullName"
-                    placeholder="John Doe"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    disabled={isSubmitting || isCheckingUsername}
-                    required
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  className="cu-button w-full"
-                  disabled={isSubmitting || isCheckingUsername || !username.trim() || !fullName.trim() || !profileImage || !!usernameError}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Completing Setup...
-                    </>
-                  ) : (
-                    'Complete Setup'
-                  )}
-                </Button>
-
-                <p className="text-xs text-center text-gray-500">
-                  You can add more details to your profile later from your profile settings
-                </p>
-              </form>
-            </CardContent>
-          </Card>
-        </motion.div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </>
   );
