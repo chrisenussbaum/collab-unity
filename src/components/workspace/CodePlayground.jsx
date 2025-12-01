@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,9 +18,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Code, Save, Trash2, Loader2, ArrowLeft, Play, Maximize2, Minimize2, Monitor, Smartphone, Upload, X, FileText, Image as ImageIcon, Video, Music, Archive, Plus, FileCode, ChevronLeft, ChevronRight, Columns2, Rows2, SplitSquareHorizontal } from 'lucide-react';
+import { Code, Save, Trash2, Loader2, ArrowLeft, Play, Maximize2, Minimize2, Monitor, Smartphone, Upload, X, FileText, Image as ImageIcon, Video, Music, Archive, Plus, FileCode, ChevronLeft, ChevronRight, Columns2, Rows2, SplitSquareHorizontal, MessageCircle } from 'lucide-react';
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import CodePlaygroundChat from './CodePlaygroundChat';
+import CodePlaygroundPresence, { getUserColor } from './CodePlaygroundPresence';
+import CollaborativeCursor from './CollaborativeCursor';
+import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 
 const LANGUAGE_OPTIONS = [
   { value: 'html', label: 'HTML', color: 'orange', ext: 'html', defaultCode: '<!DOCTYPE html>\n<html>\n<head>\n  <title>My Page</title>\n</head>\n<body>\n  <h1>Hello World!</h1>\n</body>\n</html>' },
