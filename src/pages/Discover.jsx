@@ -1509,7 +1509,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                 <div className="text-center py-16">
                   <Users className="w-16 h-16 mx-auto text-gray-300 mb-4" />
                   <h3 className="cu-text-responsive-lg font-semibold text-gray-900 mb-2">
-                    {hasActiveFilters ? "No matching people found" : "No people available"}
+                    {hasActiveFilters ? "No matching collaborators found" : "No collaborators available"}
                   </h3>
                   <p className="text-gray-600 cu-text-responsive-sm mb-4">
                     {hasActiveFilters 
