@@ -982,7 +982,7 @@ export default function Welcome() {
       color: "blue",
       demoElements: [
         { icon: Search, label: "Browse Projects", desc: "Click cards to view" },
-        { icon: Users, label: "Find People", desc: "Connect with creators" },
+        { icon: Users, label: "Find Collaborators", desc: "Connect with creators" },
         { icon: Settings, label: "Smart Filters", desc: "Match by skills & interests" },
         { icon: Briefcase, label: "Quick Apply", desc: "Send custom message" }
       ],
