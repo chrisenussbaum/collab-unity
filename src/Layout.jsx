@@ -227,6 +227,23 @@ export default function Layout({ children, currentPageName }) {
     const loadUserAndHandleRedirects = async () => {
       setIsLoading(true);
       try {
+        // First check if user is authenticated before making the API call
+        const isAuthenticated = await base44.auth.isAuthenticated();
+        
+        if (!isAuthenticated) {
+          console.log("User not authenticated (checked via isAuthenticated)");
+          setCurrentUser(null);
+          setAuthChecked(true);
+          
+          // Only redirect to Welcome if user is trying to access a protected route
+          // AND is not already on a public route
+          if (!isPublicRoute && !location.pathname.startsWith(createPageUrl("Welcome"))) {
+            setHasNavigated(true);
+            navigate(createPageUrl("Welcome"), { replace: true });
+          }
+          return;
+        }
+        
         const user = await User.me();
 
         // Update last visit timestamp
@@ -254,10 +271,14 @@ export default function Layout({ children, currentPageName }) {
         setAuthChecked(true);
         
         // Only redirect to Welcome if user is trying to access a protected route
-        // AND is not already on a public route
-        if (!isPublicRoute && !location.pathname.startsWith(createPageUrl("Welcome"))) {
+        // AND is not already on a public route AND not already on Welcome page
+        const currentPath = location.pathname;
+        const welcomePath = createPageUrl("Welcome");
+        const isOnPublicPage = isPublicRoute || currentPath === welcomePath || currentPath.startsWith(welcomePath);
+        
+        if (!isOnPublicPage) {
           setHasNavigated(true);
-          navigate(createPageUrl("Welcome"), { replace: true });
+          navigate(welcomePath, { replace: true });
         }
       } finally {
         setIsLoading(false);
