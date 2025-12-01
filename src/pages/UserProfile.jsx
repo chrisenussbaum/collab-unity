@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { User, Project, SkillEndorsement, CollaboratorReview, Notification } from "@/entities/all";
 import { getUserByUsername } from "@/functions/getUserByUsername";
-import { generateProfilePDF } from "@/functions/generateProfilePDF"; // Added import
+
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
