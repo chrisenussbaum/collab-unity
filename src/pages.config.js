@@ -26,7 +26,6 @@ import ReportBug from './pages/ReportBug';
 import FeatureRequest from './pages/FeatureRequest';
 import Testimonials from './pages/Testimonials';
 import AboutUs from './pages/AboutUs';
-import ExecutiveSummary from './pages/ExecutiveSummary';
 import __Layout from './Layout.jsx';
 
 
@@ -59,7 +58,6 @@ export const PAGES = {
     "FeatureRequest": FeatureRequest,
     "Testimonials": Testimonials,
     "AboutUs": AboutUs,
-    "ExecutiveSummary": ExecutiveSummary,
 }
 
 export const pagesConfig = {
