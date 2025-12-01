@@ -90,6 +90,10 @@ export default function CodePlayground({
             setActiveHtmlFile(firstHtml);
           }
         }
+        // Load chat messages if they exist
+        if (parsed.chatMessages && Array.isArray(parsed.chatMessages)) {
+          setChatMessages(parsed.chatMessages);
+        }
       } catch (error) {
         console.error("Error parsing saved code:", error);
         initializeDefaultFiles();
@@ -98,6 +102,242 @@ export default function CodePlayground({
       initializeDefaultFiles();
     }
   }, [codeProject]);
+
+  // Initialize collaborators from project
+  useEffect(() => {
+    const loadCollaborators = async () => {
+      if (!project?.collaborator_emails || project.collaborator_emails.length === 0) return;
+      
+      try {
+        const { data: profiles } = await getPublicUserProfiles({ 
+          emails: project.collaborator_emails 
+        });
+        
+        const collabsWithStatus = (profiles || []).map(profile => ({
+          ...profile,
+          isOnline: profile.email === currentUser?.email, // Only current user is initially online
+          activeFile: null
+        }));
+        
+        setCollaborators(collabsWithStatus);
+      } catch (error) {
+        console.error("Error loading collaborators:", error);
+      }
+    };
+    
+    loadCollaborators();
+  }, [project?.collaborator_emails, currentUser?.email]);
+
+  // Polling for real-time updates (simulated - in production use WebSocket)
+  useEffect(() => {
+    if (!codeProject?.id || isReadOnly) return;
+
+    const pollForUpdates = async () => {
+      try {
+        const latestProject = await base44.entities.ProjectIDE.filter({ id: codeProject.id });
+        if (latestProject && latestProject.length > 0) {
+          const latest = latestProject[0];
+          
+          // Check if someone else updated the content
+          if (latest.last_modified_by !== currentUser?.email && 
+              latest.updated_date !== lastSaved) {
+            try {
+              const parsed = JSON.parse(latest.content);
+              
+              // Merge remote changes - simple last-write-wins for now
+              // In production, use operational transformation or CRDT
+              if (parsed.files) {
+                // Only update if we don't have unsaved changes
+                if (!hasUnsavedChanges) {
+                  setFiles(parsed.files);
+                }
+              }
+              
+              // Always sync chat messages
+              if (parsed.chatMessages) {
+                setChatMessages(prev => {
+                  const newMessages = parsed.chatMessages.filter(
+                    msg => !prev.some(p => p.id === msg.id)
+                  );
+                  return [...prev, ...newMessages];
+                });
+              }
+              
+              // Update collaborator presence
+              if (parsed.presence) {
+                setCollaborators(prev => prev.map(collab => ({
+                  ...collab,
+                  isOnline: parsed.presence.some(p => p.email === collab.email),
+                  activeFile: parsed.presence.find(p => p.email === collab.email)?.activeFile
+                })));
+                
+                // Update remote cursors
+                setRemoteCursors(parsed.presence
+                  .filter(p => p.email !== currentUser?.email && p.cursor)
+                  .map(p => ({
+                    email: p.email,
+                    name: collaborators.find(c => c.email === p.email)?.full_name,
+                    ...p.cursor
+                  }))
+                );
+              }
+            } catch (e) {
+              console.error("Error parsing remote content:", e);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error polling for updates:", error);
+      }
+    };
+
+    // Poll every 3 seconds
+    const interval = setInterval(pollForUpdates, 3000);
+    setPollingInterval(interval);
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [codeProject?.id, currentUser?.email, isReadOnly, lastSaved, hasUnsavedChanges]);
+
+  // Broadcast presence when active file changes
+  useEffect(() => {
+    if (!codeProject?.id || isReadOnly) return;
+    
+    broadcastPresence();
+  }, [activeFiles, codeProject?.id]);
+
+  const broadcastPresence = async () => {
+    if (!codeProject?.id || isReadOnly) return;
+    
+    try {
+      const currentContent = codeProject.content ? JSON.parse(codeProject.content) : {};
+      const presence = currentContent.presence || [];
+      
+      // Update or add current user's presence
+      const myPresence = {
+        email: currentUser?.email,
+        activeFile: activeFiles[0]?.name,
+        lastSeen: new Date().toISOString(),
+        cursor: null // Will be updated on cursor move
+      };
+      
+      const updatedPresence = [
+        ...presence.filter(p => p.email !== currentUser?.email),
+        myPresence
+      ].filter(p => {
+        // Remove stale presence (> 30 seconds old)
+        const lastSeen = new Date(p.lastSeen);
+        return (Date.now() - lastSeen.getTime()) < 30000;
+      });
+      
+      // Save presence without triggering full save
+      const updatedContent = JSON.stringify({
+        ...currentContent,
+        files,
+        chatMessages,
+        presence: updatedPresence
+      });
+      
+      await base44.entities.ProjectIDE.update(codeProject.id, {
+        content: updatedContent,
+        last_modified_by: currentUser.email
+      });
+    } catch (error) {
+      console.error("Error broadcasting presence:", error);
+    }
+  };
+
+  const handleSendChatMessage = async (content) => {
+    const newMessage = {
+      id: `${Date.now()}-${currentUser?.email}`,
+      sender_email: currentUser?.email,
+      content,
+      timestamp: new Date().toISOString()
+    };
+    
+    setChatMessages(prev => [...prev, newMessage]);
+    setHasUnsavedChanges(true);
+    
+    // Immediately save to sync with others
+    try {
+      const currentContent = codeProject?.content ? JSON.parse(codeProject.content) : {};
+      const updatedContent = JSON.stringify({
+        ...currentContent,
+        files,
+        chatMessages: [...chatMessages, newMessage],
+        presence: currentContent.presence || []
+      });
+      
+      await base44.entities.ProjectIDE.update(codeProject.id, {
+        content: updatedContent,
+        last_modified_by: currentUser.email
+      });
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  };
+
+  const handleCursorMove = useCallback((fileId, event) => {
+    if (!codeProject?.id || isReadOnly) return;
+    
+    const textarea = event.target;
+    const cursorPos = textarea.selectionStart;
+    const textBeforeCursor = textarea.value.substring(0, cursorPos);
+    const lines = textBeforeCursor.split('\n');
+    const line = lines.length;
+    const column = lines[lines.length - 1].length;
+    
+    // Calculate approximate pixel position
+    const lineHeight = 18; // Approximate line height
+    const charWidth = 7.8; // Approximate character width for monospace
+    
+    const cursorData = {
+      fileId,
+      line,
+      column,
+      x: column * charWidth,
+      y: (line - 1) * lineHeight
+    };
+    
+    // Debounced cursor update
+    if (updateTimerRef.current) {
+      clearTimeout(updateTimerRef.current);
+    }
+    
+    updateTimerRef.current = setTimeout(async () => {
+      try {
+        const currentContent = codeProject.content ? JSON.parse(codeProject.content) : {};
+        const presence = currentContent.presence || [];
+        
+        const updatedPresence = presence.map(p => 
+          p.email === currentUser?.email 
+            ? { ...p, cursor: cursorData, lastSeen: new Date().toISOString() }
+            : p
+        );
+        
+        if (!updatedPresence.some(p => p.email === currentUser?.email)) {
+          updatedPresence.push({
+            email: currentUser?.email,
+            activeFile: activeFiles[0]?.name,
+            lastSeen: new Date().toISOString(),
+            cursor: cursorData
+          });
+        }
+        
+        const updatedContent = JSON.stringify({
+          ...currentContent,
+          presence: updatedPresence
+        });
+        
+        await base44.entities.ProjectIDE.update(codeProject.id, {
+          content: updatedContent
+        });
+      } catch (error) {
+        // Silently fail cursor updates
+      }
+    }, 100);
+  }, [codeProject, currentUser, activeFiles, isReadOnly]);
 
   const initializeDefaultFiles = () => {
     const defaultFiles = [
