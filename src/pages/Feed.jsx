@@ -1314,55 +1314,68 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
           <CardContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 pt-2">
             <p className="text-gray-700 line-clamp-3 mb-4 cu-text-responsive-sm leading-relaxed">{project.description}</p>
 
-            {/* Content Toggle Buttons - Published, IDEs, Highlights */}
-            {hasAnyContent && (hasLinks || hasHighlights || hasIDEs) && (
-              <div className="flex gap-2 mb-4">
-                {hasLinks && (
-                  <Button
-                    size="sm"
-                    variant={contentView === 'link' ? 'default' : 'outline'}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleContentViewChange('link');
-                    }}
-                    className="flex-1 text-xs sm:text-sm px-2 sm:px-4"
-                  >
-                    <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">Showcase{hasMultipleLinks && ` (${project.project_urls.length})`}</span>
-                  </Button>
-                )}
-                {hasIDEs && (
-                  <Button
-                    size="sm"
-                    variant={contentView === 'ides' ? 'default' : 'outline'}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleContentViewChange('ides');
-                    }}
-                    className="flex-1 text-xs sm:text-sm px-2 sm:px-4"
-                  >
-                    <Code className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">IDEs ({projectIDEs.length})</span>
-                  </Button>
-                )}
-                {hasHighlights && (
-                  <Button
-                    size="sm"
-                    variant={contentView === 'highlights' ? 'default' : 'outline'}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleContentViewChange('highlights');
-                    }}
-                    className="flex-1 text-xs sm:text-sm px-2 sm:px-4"
-                  >
-                    <Camera className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">Highlights ({project.highlights.length})</span>
-                  </Button>
-                )}
-              </div>
+            {/* Content Navigation with Arrows - Showcase, IDEs, Highlights */}
+            {hasAnyContent && (
+              (() => {
+                // Build ordered list of available content types
+                const contentTypes = [];
+                if (hasLinks) contentTypes.push({ key: 'link', label: 'Showcase', icon: LinkIcon, count: project.project_urls?.length });
+                if (hasIDEs) contentTypes.push({ key: 'ides', label: 'IDEs', icon: Code, count: projectIDEs.length });
+                if (hasHighlights) contentTypes.push({ key: 'highlights', label: 'Highlights', icon: Camera, count: project.highlights?.length });
+                
+                if (contentTypes.length === 0) return null;
+                
+                const currentIndex = contentTypes.findIndex(ct => ct.key === contentView);
+                const currentType = contentTypes[currentIndex] || contentTypes[0];
+                const hasPrev = currentIndex > 0;
+                const hasNext = currentIndex < contentTypes.length - 1;
+                
+                const goToPrev = (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (hasPrev) handleContentViewChange(contentTypes[currentIndex - 1].key);
+                };
+                
+                const goToNext = (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (hasNext) handleContentViewChange(contentTypes[currentIndex + 1].key);
+                };
+                
+                const CurrentIcon = currentType.icon;
+                
+                return (
+                  <div className="flex items-center justify-between mb-4 bg-gray-50 rounded-lg p-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={goToPrev}
+                      disabled={!hasPrev}
+                      className={`p-2 ${!hasPrev ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-200'}`}
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </Button>
+                    
+                    <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <CurrentIcon className="w-4 h-4" />
+                      <span>{currentType.label}</span>
+                      {currentType.count > 0 && (
+                        <span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">{currentType.count}</span>
+                      )}
+                    </div>
+                    
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={goToNext}
+                      disabled={!hasNext}
+                      className={`p-2 ${!hasNext ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-200'}`}
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </Button>
+                  </div>
+                );
+              })()
             )}
 
             {/* Project Links - Horizontal Scroll - Direct Links */}
