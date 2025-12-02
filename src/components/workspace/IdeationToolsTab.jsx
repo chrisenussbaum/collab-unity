@@ -66,7 +66,7 @@ export default function IdeationToolsTab({
   }, [project.id]);
 
   // IDE types that belong to Ideate tab (not to be shown here)
-  const ideateToolTypes = ['notes', 'mind_map', 'whiteboard', 'kanban'];
+  const ideateToolTypes = ['notes', 'mind_map', 'whiteboard', 'kanban', 'ideation_notes', 'ideation_mindmap', 'ideation_whiteboard', 'ideation_kanban'];
 
   const loadIdeInstances = async () => {
     setIsLoading(true);
@@ -79,9 +79,9 @@ export default function IdeationToolsTab({
         is_active: true
       }, '-created_date', 50));
       
-      // Filter out ideation tools (Notes, Mind Map, Whiteboard, Kanban) - they belong in Ideate tab
+      // Only show code_playground IDEs - all ideation tools belong in Ideate tab
       const filteredInstances = (instances || []).filter(
-        inst => !ideateToolTypes.includes(inst.ide_type)
+        inst => inst.ide_type === 'code_playground'
       );
       
       setIdeInstances(filteredInstances);
