@@ -1112,10 +1112,10 @@ export default function Layout({ children, currentPageName }) {
         {React.cloneElement(children, { currentUser, authIsLoading: isLoading })}
       </main>
 
-      {/* Mobile Bottom Navigation (visible on screens < 1024px) */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden z-50">
+      {/* Mobile/Tablet Bottom Navigation (visible on screens < 1024px) */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden z-50 safe-area-inset-bottom">
         <div className="relative">
-          <div className={`grid h-16 ${currentUser ? 'grid-cols-5' : 'grid-cols-3'}`}>
+          <div className={`grid h-16 md:h-20 ${currentUser ? 'grid-cols-5' : 'grid-cols-3'}`}>
             {mobileNavItems.map((item, index) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
