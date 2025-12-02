@@ -87,7 +87,14 @@ export default function Layout({ children, currentPageName }) {
     createPageUrl("Testimonials")
   ];
 
-  const isPublicRoute = publicRoutes.some(route => location.pathname.startsWith(route));
+  // Check for login callback - don't redirect during auth flow
+  const isLoginCallback = location.pathname.includes('/login') || 
+                          location.pathname.includes('/callback') ||
+                          location.pathname.includes('/auth') ||
+                          location.search.includes('code=') ||
+                          location.search.includes('token=');
+
+  const isPublicRoute = publicRoutes.some(route => location.pathname.startsWith(route)) || isLoginCallback;
 
   // Ensure branding persists on every render (belt and suspenders approach)
   useEffect(() => {
