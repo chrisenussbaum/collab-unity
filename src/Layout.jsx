@@ -924,6 +924,34 @@ export default function Layout({ children, currentPageName }) {
             display: inline;
           }
         }
+        
+        /* iPad/Tablet safe area support */
+        .safe-area-inset-top {
+          padding-top: env(safe-area-inset-top, 0px);
+        }
+        
+        .safe-area-inset-bottom {
+          padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        
+        /* Ensure touch targets are large enough on tablets */
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .cu-icon-sm {
+            width: 1.375rem;
+            height: 1.375rem;
+          }
+          
+          .cu-text-responsive-xs {
+            font-size: 0.8125rem;
+          }
+        }
+        
+        /* Fix for iPad viewport height issues */
+        @supports (-webkit-touch-callout: none) {
+          .min-h-screen {
+            min-height: -webkit-fill-available;
+          }
+        }
       `}</style>
 
       {/* Mobile/Tablet Header (visible on screens < 1024px) */}
