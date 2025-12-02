@@ -265,6 +265,13 @@ export default function Layout({ children, currentPageName }) {
           return;
         }
 
+        // If user is authenticated and on Welcome page, redirect them to Feed
+        if (location.pathname === createPageUrl("Welcome") || location.pathname === "/") {
+          setHasNavigated(true);
+          navigate(createPageUrl("Feed"), { replace: true });
+          return;
+        }
+
       } catch (error) {
         console.log("User not authenticated:", error);
         setCurrentUser(null);
