@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Video, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Project, User } from "@/entities/all";
 import MediaDisplay from "./MediaDisplay";
@@ -139,12 +139,7 @@ export default function FeedProjectHighlights({
                   </Button>
                 )}
 
-                {mediaType === 'video' && (
-                  <div className="absolute top-2 left-12 bg-black/70 text-white rounded px-2 py-1 text-xs font-medium flex items-center gap-1 z-10">
-                    <Video className="w-3 h-3" />
-                    VIDEO
-                  </div>
-                )}
+
                 {highlight.caption && (
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
                     <p className="text-white text-sm line-clamp-2">{highlight.caption}</p>
