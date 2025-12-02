@@ -926,9 +926,9 @@ export default function Layout({ children, currentPageName }) {
         }
       `}</style>
 
-      {/* Mobile Header (visible on screens < 1024px) */}
-      <nav className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
-        <div className="flex items-center justify-between px-3 h-14 gap-3">
+      {/* Mobile/Tablet Header (visible on screens < 1024px) */}
+      <nav className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 safe-area-inset-top">
+        <div className="flex items-center justify-between px-3 md:px-6 h-14 md:h-16 gap-3">
           <Link 
             to={createPageUrl("Feed")}
             className="flex-shrink-0"
