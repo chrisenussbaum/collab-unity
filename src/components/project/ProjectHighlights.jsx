@@ -22,12 +22,17 @@ export default function ProjectHighlights({ project, currentUser, onProjectUpdat
     project?.collaborator_emails?.includes(currentUser.email)
   );
 
-  // Fetch uploader profiles
+  // Fetch uploader profiles (including project creator as fallback)
   useEffect(() => {
     const fetchUploaderProfiles = async () => {
       if (!highlights || highlights.length === 0) return;
       
-      const uploaderEmails = [...new Set(highlights.map(h => h.uploaded_by).filter(Boolean))];
+      // Collect uploader emails and include project creator as fallback
+      const uploaderEmails = [...new Set([
+        ...highlights.map(h => h.uploaded_by).filter(Boolean),
+        project?.created_by // Always fetch project creator for fallback
+      ].filter(Boolean))];
+      
       if (uploaderEmails.length === 0) return;
 
       try {
@@ -47,7 +52,7 @@ export default function ProjectHighlights({ project, currentUser, onProjectUpdat
     };
 
     fetchUploaderProfiles();
-  }, [highlights]);
+  }, [highlights, project?.created_by]);
 
   // Function to generate thumbnail from video using canvas
   const generateVideoThumbnailFromBlob = (videoFile) => {
