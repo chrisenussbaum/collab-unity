@@ -136,13 +136,7 @@ export default function MediaDisplay({
             </div>
           )}
 
-          {/* VIDEO badge */}
-          <div className="absolute top-2 right-2 bg-black/70 text-white rounded px-2 py-1 text-xs font-medium flex items-center gap-1">
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
-            </svg>
-            VIDEO
-          </div>
+
         </div>
         
         <MediaModal
