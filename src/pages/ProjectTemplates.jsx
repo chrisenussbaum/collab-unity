@@ -236,7 +236,7 @@ export default function ProjectTemplates({ currentUser }) {
               <div className="text-center lg:text-left">
                 <h1 className="cu-text-responsive-xl font-bold text-gray-900 mb-2">Project Templates</h1>
                 <p className="text-gray-600 cu-text-responsive-sm">
-                  Jump-start your project with guided templates
+                  Preview templates for project guidance or submit a template to the library
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
