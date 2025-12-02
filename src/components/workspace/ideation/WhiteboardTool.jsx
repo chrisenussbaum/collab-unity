@@ -11,12 +11,13 @@ import {
   Eraser, 
   Square, 
   Circle, 
-  Type,
   Trash2,
-  Download,
   Undo,
   Redo,
-  Minus
+  Minus,
+  Hand,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react';
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -35,6 +36,10 @@ export default function WhiteboardTool({ instance, project, currentUser, isColla
   const [isSaving, setIsSaving] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const canvasRef = useRef(null);
   const svgRef = useRef(null);
 
@@ -94,13 +99,24 @@ export default function WhiteboardTool({ instance, project, currentUser, isColla
     const rect = svg.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    // Transform screen coordinates to canvas coordinates accounting for pan and zoom
     return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
+      x: (clientX - rect.left - pan.x) / zoom,
+      y: (clientY - rect.top - pan.y) / zoom
     };
   };
 
   const handlePointerDown = (e) => {
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    // Handle pan mode
+    if (tool === 'hand') {
+      setIsPanning(true);
+      setPanStart({ x: clientX - pan.x, y: clientY - pan.y });
+      return;
+    }
+    
     if (!isCollaborator) return;
     setIsDrawing(true);
     const point = getPoint(e);
@@ -140,6 +156,18 @@ export default function WhiteboardTool({ instance, project, currentUser, isColla
   };
 
   const handlePointerMove = (e) => {
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    // Handle panning
+    if (isPanning) {
+      setPan({
+        x: clientX - panStart.x,
+        y: clientY - panStart.y
+      });
+      return;
+    }
+    
     if (!isDrawing || !currentPath) return;
     const point = getPoint(e);
 
@@ -160,6 +188,11 @@ export default function WhiteboardTool({ instance, project, currentUser, isColla
   };
 
   const handlePointerUp = () => {
+    if (isPanning) {
+      setIsPanning(false);
+      return;
+    }
+    
     if (!isDrawing || !currentPath) return;
     setIsDrawing(false);
     
@@ -168,6 +201,12 @@ export default function WhiteboardTool({ instance, project, currentUser, isColla
     setPaths(prev => [...prev, currentPath]);
     setCurrentPath(null);
     setHasUnsavedChanges(true);
+  };
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    setZoom(prev => Math.max(0.25, Math.min(3, prev + delta)));
   };
 
   const handleUndo = () => {
@@ -260,6 +299,7 @@ export default function WhiteboardTool({ instance, project, currentUser, isColla
   };
 
   const tools = [
+    { id: 'hand', icon: Hand, label: 'Pan' },
     { id: 'pen', icon: Pencil, label: 'Pen' },
     { id: 'eraser', icon: Eraser, label: 'Eraser' },
     { id: 'line', icon: Minus, label: 'Line' },
@@ -351,6 +391,18 @@ export default function WhiteboardTool({ instance, project, currentUser, isColla
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
+
+              <div className="h-6 w-px bg-gray-300" />
+
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setZoom(z => Math.max(0.25, z - 0.25))}>
+                  <ZoomOut className="w-4 h-4" />
+                </Button>
+                <span className="text-xs w-12 text-center">{Math.round(zoom * 100)}%</span>
+                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setZoom(z => Math.min(3, z + 0.25))}>
+                  <ZoomIn className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           )}
 
@@ -359,6 +411,7 @@ export default function WhiteboardTool({ instance, project, currentUser, isColla
             ref={canvasRef}
             className="relative w-full h-[500px] bg-white rounded-lg border-2 overflow-hidden"
             style={{ touchAction: 'none' }}
+            onWheel={handleWheel}
           >
             <svg
               ref={svgRef}
@@ -370,10 +423,14 @@ export default function WhiteboardTool({ instance, project, currentUser, isColla
               onTouchStart={handlePointerDown}
               onTouchMove={handlePointerMove}
               onTouchEnd={handlePointerUp}
-              style={{ cursor: isCollaborator ? 'crosshair' : 'default' }}
+              style={{ 
+                cursor: tool === 'hand' ? (isPanning ? 'grabbing' : 'grab') : (isCollaborator ? 'crosshair' : 'default')
+              }}
             >
-              {paths.map((path, i) => renderPath(path, i))}
-              {currentPath && renderPath(currentPath, 'current')}
+              <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
+                {paths.map((path, i) => renderPath(path, i))}
+                {currentPath && renderPath(currentPath, 'current')}
+              </g>
             </svg>
           </div>
         </CardContent>

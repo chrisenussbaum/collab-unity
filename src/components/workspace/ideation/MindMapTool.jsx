@@ -38,9 +38,11 @@ export default function MindMapTool({ instance, project, currentUser, isCollabor
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [panMode, setPanMode] = useState(false);
   const [connectingFrom, setConnectingFrom] = useState(null);
+  const [draggingNode, setDraggingNode] = useState(null);
   const canvasRef = useRef(null);
-  const dragRef = useRef(null);
 
   useEffect(() => {
     if (instance?.content) {
@@ -127,19 +129,45 @@ export default function MindMapTool({ instance, project, currentUser, isCollabor
     setHasUnsavedChanges(true);
   };
 
-  const handleNodeDrag = useCallback((nodeId, e) => {
+  const handleCanvasMouseDown = (e) => {
+    // Only start panning if clicking directly on canvas (not on a node) or if in pan mode
+    if (panMode || e.target === canvasRef.current || e.target.tagName === 'svg') {
+      setIsPanning(true);
+      setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    }
+  };
+
+  const handleCanvasMouseMove = (e) => {
+    if (isPanning && !draggingNode) {
+      setPan({
+        x: e.clientX - panStart.x,
+        y: e.clientY - panStart.y
+      });
+    } else if (draggingNode && isCollaborator) {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      
+      const x = (e.clientX - rect.left - pan.x) / zoom;
+      const y = (e.clientY - rect.top - pan.y) / zoom;
+      
+      setNodes(prev => prev.map(n => 
+        n.id === draggingNode ? { ...n, x, y } : n
+      ));
+      setHasUnsavedChanges(true);
+    }
+  };
+
+  const handleCanvasMouseUp = () => {
+    setIsPanning(false);
+    setDraggingNode(null);
+  };
+
+  const handleNodeMouseDown = (nodeId, e) => {
+    if (panMode) return; // Don't drag nodes in pan mode
+    e.stopPropagation();
     if (!isCollaborator) return;
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    
-    const x = (e.clientX - rect.left - pan.x) / zoom;
-    const y = (e.clientY - rect.top - pan.y) / zoom;
-    
-    setNodes(prev => prev.map(n => 
-      n.id === nodeId ? { ...n, x, y } : n
-    ));
-    setHasUnsavedChanges(true);
-  }, [zoom, pan, isCollaborator]);
+    setDraggingNode(nodeId);
+  };
 
   const handleNodeClick = (node, e) => {
     e.stopPropagation();
@@ -185,8 +213,22 @@ export default function MindMapTool({ instance, project, currentUser, isCollabor
 
   const handleWheel = (e) => {
     e.preventDefault();
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setZoom(prev => Math.max(0.5, Math.min(2, prev + delta)));
+    const newZoom = Math.max(0.25, Math.min(3, zoom + delta));
+    
+    // Zoom towards mouse position
+    const zoomRatio = newZoom / zoom;
+    const newPanX = mouseX - (mouseX - pan.x) * zoomRatio;
+    const newPanY = mouseY - (mouseY - pan.y) * zoomRatio;
+    
+    setZoom(newZoom);
+    setPan({ x: newPanX, y: newPanY });
   };
 
   return (
@@ -235,12 +277,20 @@ export default function MindMapTool({ instance, project, currentUser, isCollabor
                   )}
                 </>
               )}
+              <Button 
+                variant={panMode ? "default" : "outline"} 
+                size="sm" 
+                onClick={() => setPanMode(!panMode)}
+                title="Pan Mode (Space + Drag)"
+              >
+                <Move className="w-4 h-4" />
+              </Button>
               <div className="flex items-center gap-1 ml-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setZoom(z => Math.max(0.5, z - 0.2))}>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setZoom(z => Math.max(0.25, z - 0.2))}>
                   <ZoomOut className="w-4 h-4" />
                 </Button>
                 <span className="text-xs w-12 text-center">{Math.round(zoom * 100)}%</span>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setZoom(z => Math.min(2, z + 0.2))}>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setZoom(z => Math.min(3, z + 0.2))}>
                   <ZoomIn className="w-4 h-4" />
                 </Button>
               </div>
@@ -250,40 +300,49 @@ export default function MindMapTool({ instance, project, currentUser, isCollabor
         <CardContent>
           <div 
             ref={canvasRef}
-            className="relative w-full h-[500px] bg-gray-50 rounded-lg border-2 border-dashed overflow-hidden cursor-grab"
+            className="relative w-full h-[500px] bg-gray-50 rounded-lg border-2 border-dashed overflow-hidden"
+            style={{ cursor: panMode || isPanning ? (isPanning ? 'grabbing' : 'grab') : 'default' }}
             onClick={handleCanvasClick}
             onWheel={handleWheel}
+            onMouseDown={handleCanvasMouseDown}
+            onMouseMove={handleCanvasMouseMove}
+            onMouseUp={handleCanvasMouseUp}
+            onMouseLeave={handleCanvasMouseUp}
           >
             <svg 
               className="absolute inset-0 w-full h-full pointer-events-none"
-              style={{ transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)` }}
             >
-              {edges.map((edge, i) => {
-                const fromNode = nodes.find(n => n.id === edge.from);
-                const toNode = nodes.find(n => n.id === edge.to);
-                if (!fromNode || !toNode) return null;
-                return (
-                  <line
-                    key={i}
-                    x1={fromNode.x}
-                    y1={fromNode.y}
-                    x2={toNode.x}
-                    y2={toNode.y}
-                    stroke="#9CA3AF"
-                    strokeWidth="2"
-                  />
-                );
-              })}
+              <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
+                {edges.map((edge, i) => {
+                  const fromNode = nodes.find(n => n.id === edge.from);
+                  const toNode = nodes.find(n => n.id === edge.to);
+                  if (!fromNode || !toNode) return null;
+                  return (
+                    <line
+                      key={i}
+                      x1={fromNode.x}
+                      y1={fromNode.y}
+                      x2={toNode.x}
+                      y2={toNode.y}
+                      stroke="#9CA3AF"
+                      strokeWidth={2 / zoom}
+                    />
+                  );
+                })}
+              </g>
             </svg>
 
             <div 
-              className="absolute inset-0"
-              style={{ transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`, transformOrigin: 'top left' }}
+              className="absolute inset-0 pointer-events-none"
+              style={{ 
+                transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, 
+                transformOrigin: '0 0' 
+              }}
             >
               {nodes.map(node => (
                 <div
                   key={node.id}
-                  className={`absolute cursor-pointer select-none transition-shadow ${
+                  className={`absolute select-none transition-shadow pointer-events-auto ${
                     selectedNode === node.id ? 'ring-2 ring-purple-500 ring-offset-2' : ''
                   } ${connectingFrom === node.id ? 'ring-2 ring-blue-500' : ''}`}
                   style={{
@@ -293,19 +352,12 @@ export default function MindMapTool({ instance, project, currentUser, isCollabor
                     backgroundColor: node.color.bg,
                     border: `2px solid ${node.color.border}`,
                     borderRadius: 12,
-                    padding: '8px 12px'
+                    padding: '8px 12px',
+                    cursor: panMode ? 'grab' : (isCollaborator ? 'move' : 'pointer')
                   }}
                   onClick={(e) => handleNodeClick(node, e)}
                   onDoubleClick={(e) => handleNodeDoubleClick(node, e)}
-                  draggable={isCollaborator}
-                  onDragStart={(e) => {
-                    dragRef.current = node.id;
-                    e.dataTransfer.effectAllowed = 'move';
-                  }}
-                  onDrag={(e) => {
-                    if (e.clientX && e.clientY) handleNodeDrag(node.id, e);
-                  }}
-                  onDragEnd={() => { dragRef.current = null; }}
+                  onMouseDown={(e) => handleNodeMouseDown(node.id, e)}
                 >
                   {editingNode === node.id ? (
                     <Input
@@ -329,8 +381,14 @@ export default function MindMapTool({ instance, project, currentUser, isCollabor
             </div>
 
             {connectingFrom && (
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-full text-sm">
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-full text-sm z-10">
                 Click another node to connect
+              </div>
+            )}
+            
+            {panMode && (
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-full text-xs z-10">
+                Pan Mode - Drag to move around
               </div>
             )}
           </div>
