@@ -84,7 +84,8 @@ export default function FeedProjectHighlights({
           const mediaUrl = highlight.media_url || highlight.image_url;
           const mediaType = highlight.media_type || 'image';
           const thumbnailUrl = highlight.thumbnail_url;
-          const uploaderProfile = uploaderProfiles[highlight.uploaded_by];
+          // Use uploader profile, or fall back to project creator profile
+          const uploaderProfile = uploaderProfiles[highlight.uploaded_by] || uploaderProfiles[project.created_by];
           const isUploader = currentUser && currentUser.email === highlight.uploaded_by;
           const isProjectOwner = currentUser && currentUser.email === project.created_by;
           const canDeleteThis = isUploader || isProjectOwner;
