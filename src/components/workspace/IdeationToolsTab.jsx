@@ -65,6 +65,9 @@ export default function IdeationToolsTab({
     loadIdeInstances();
   }, [project.id]);
 
+  // IDE types that belong to Ideate tab (not to be shown here)
+  const ideateToolTypes = ['notes', 'mind_map', 'whiteboard', 'kanban'];
+
   const loadIdeInstances = async () => {
     setIsLoading(true);
     try {
@@ -75,7 +78,13 @@ export default function IdeationToolsTab({
         project_id: project.id,
         is_active: true
       }, '-created_date', 50));
-      setIdeInstances(instances || []);
+      
+      // Filter out ideation tools (Notes, Mind Map, Whiteboard, Kanban) - they belong in Ideate tab
+      const filteredInstances = (instances || []).filter(
+        inst => !ideateToolTypes.includes(inst.ide_type)
+      );
+      
+      setIdeInstances(filteredInstances);
     } catch (error) {
       console.error("Error loading IDE instances:", error);
       if (error.response?.status !== 429) {
