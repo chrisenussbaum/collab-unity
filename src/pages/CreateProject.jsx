@@ -752,10 +752,18 @@ export default function CreateProject() {
                         {formData.highlights.map((highlight, index) => (
                           <div key={index} className="relative group aspect-video bg-gray-100 rounded-lg overflow-hidden">
                             {highlight.media_type === 'video' ? (
-                              <video 
-                                src={highlight.media_url} 
-                                className="w-full h-full object-cover"
-                              />
+                              highlight.thumbnail_url ? (
+                                <img 
+                                  src={highlight.thumbnail_url} 
+                                  alt={highlight.file_name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <video 
+                                  src={highlight.media_url} 
+                                  className="w-full h-full object-cover"
+                                />
+                              )
                             ) : (
                               <img 
                                 src={highlight.media_url} 
@@ -763,11 +771,29 @@ export default function CreateProject() {
                                 className="w-full h-full object-cover"
                               />
                             )}
+                            {/* Video play icon overlay */}
+                            {highlight.media_type === 'video' && (
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                                  <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-gray-800 border-b-[6px] border-b-transparent ml-1"></div>
+                                </div>
+                              </div>
+                            )}
                             <div className="absolute top-1 left-1">
-                              <Badge variant="secondary" className="text-xs">
+                              <Badge variant="secondary" className="text-xs bg-black/70 text-white border-0">
                                 {highlight.media_type === 'video' ? <Video className="w-3 h-3" /> : <Image className="w-3 h-3" />}
                               </Badge>
                             </div>
+                            {/* Uploader avatar */}
+                            {currentUser?.profile_image && (
+                              <div className="absolute top-1 right-8 mr-1">
+                                <img 
+                                  src={currentUser.profile_image} 
+                                  alt="Uploader"
+                                  className="w-6 h-6 rounded-full border-2 border-white shadow-lg object-cover"
+                                />
+                              </div>
+                            )}
                             <button
                               onClick={() => removeHighlight(index)}
                               className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
