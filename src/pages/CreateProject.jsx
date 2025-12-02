@@ -232,12 +232,28 @@ export default function CreateProject() {
         const isVideo = file.type.startsWith('video/');
         const { file_url } = await UploadFile({ file });
         
+        // Generate thumbnail for videos
+        let thumbnailUrl = null;
+        if (isVideo) {
+          try {
+            const thumbnailFile = await generateVideoThumbnail(file);
+            if (thumbnailFile) {
+              const { file_url: thumb_url } = await UploadFile({ file: thumbnailFile });
+              thumbnailUrl = thumb_url;
+            }
+          } catch (thumbError) {
+            console.warn("Could not generate video thumbnail:", thumbError);
+          }
+        }
+        
         const newHighlight = {
           media_url: file_url,
           media_type: isVideo ? 'video' : 'image',
+          thumbnail_url: thumbnailUrl,
           caption: '',
           file_name: file.name,
           file_size: file.size,
+          uploaded_by: currentUser?.email,
           uploaded_at: new Date().toISOString()
         };
         
@@ -254,6 +270,50 @@ export default function CreateProject() {
       if (mediaInputRef.current) mediaInputRef.current.value = "";
       setIsUploadingMedia(false);
     }
+  };
+
+  // Function to generate thumbnail from video
+  const generateVideoThumbnail = (videoFile) => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.muted = true;
+      video.playsInline = true;
+      
+      const videoURL = URL.createObjectURL(videoFile);
+      video.src = videoURL;
+
+      video.addEventListener('loadeddata', () => {
+        const seekTime = Math.min(1, video.duration * 0.1);
+        video.currentTime = seekTime;
+      });
+
+      video.addEventListener('seeked', () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        canvas.toBlob((blob) => {
+          URL.revokeObjectURL(videoURL);
+          if (blob) {
+            const thumbnailFile = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' });
+            resolve(thumbnailFile);
+          } else {
+            reject(new Error('Failed to generate thumbnail'));
+          }
+        }, 'image/jpeg', 0.85);
+      });
+
+      video.addEventListener('error', (e) => {
+        URL.revokeObjectURL(videoURL);
+        reject(new Error('Failed to load video for thumbnail generation'));
+      });
+
+      video.load();
+    });
   };
 
   const removeHighlight = (index) => {
