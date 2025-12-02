@@ -37,7 +37,6 @@ const extractResumeContent = async (base44, resumeBase64, resumeType) => {
   if (!resumeBase64) return null;
   
   try {
-    // Upload the resume temporarily to get a URL
     const byteCharacters = atob(resumeBase64);
     const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
@@ -52,7 +51,6 @@ const extractResumeContent = async (base44, resumeBase64, resumeType) => {
       file: new File([blob], `resume.${extension}`, { type: resumeType })
     });
 
-    // Extract data from the resume
     const extractedData = await base44.integrations.Core.ExtractDataFromUploadedFile({
       file_url,
       json_schema: {
@@ -122,35 +120,25 @@ Deno.serve(async (req) => {
     const allProjects = await base44.asServiceRole.entities.Project.list();
     const userProjects = allProjects.filter(p => 
       p.collaborator_emails?.includes(profileUser.email)
-    );
+    ).sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
 
-    // Deep scrape: Get tasks, collaborator info, and more details
+    // Deep scrape: Get tasks and aggregate data
     let completedTasks = [];
     let allToolsUsed = new Set();
     let allSkillsUsed = new Set();
-    let collaboratorCount = 0;
 
     if (includeDeepScrape && userProjects.length > 0) {
-      // Fetch tasks assigned to user
       const allTasks = await base44.asServiceRole.entities.Task.list();
       completedTasks = allTasks.filter(t => 
         t.assigned_to === profileUser.email && t.status === 'done'
       );
 
-      // Aggregate tools and skills from all projects
       userProjects.forEach(project => {
         if (project.tools_needed) {
-          project.tools_needed.forEach(tool => allToolsUsed.add(tool));
+          project.tools_needed.slice(0, 5).forEach(tool => allToolsUsed.add(tool));
         }
         if (project.skills_needed) {
-          project.skills_needed.forEach(skill => allSkillsUsed.add(skill));
-        }
-        if (project.project_tools) {
-          project.project_tools.forEach(tool => allToolsUsed.add(tool.name));
-        }
-        // Count unique collaborators
-        if (project.collaborator_emails) {
-          collaboratorCount += project.collaborator_emails.filter(e => e !== profileUser.email).length;
+          project.skills_needed.slice(0, 5).forEach(skill => allSkillsUsed.add(skill));
         }
       });
     }
@@ -161,44 +149,43 @@ Deno.serve(async (req) => {
       existingResumeData = await extractResumeContent(base44, existingResumeBase64, existingResumeType);
     }
 
-    // Create PDF
+    // Create PDF with tighter spacing
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    let yPos = 20;
-    const margin = 20;
-    const lineHeight = 6;
-    const footerHeight = 20;
+    let yPos = 15;
+    const margin = 18;
+    const lineHeight = 5;
+    const sectionGap = 4;
+    const footerHeight = 18;
     const purpleColor = [67, 56, 202];
 
     const checkNewPage = (requiredSpace) => {
       if (yPos + requiredSpace > pageHeight - footerHeight) {
         doc.addPage();
-        yPos = 20;
+        yPos = 15;
         return true;
       }
       return false;
     };
 
-    const addLine = () => {
+    const addSectionHeader = (title) => {
+      checkNewPage(20);
+      yPos += sectionGap;
       doc.setDrawColor(200);
       doc.line(margin, yPos, pageWidth - margin, yPos);
-      yPos += 8;
-    };
-
-    const addSectionHeader = (title) => {
-      checkNewPage(30);
-      doc.setFontSize(16);
+      yPos += 5;
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(purpleColor[0], purpleColor[1], purpleColor[2]);
-      doc.text(title, margin, yPos);
+      doc.text(title.toUpperCase(), margin, yPos);
       doc.setTextColor(0);
-      yPos += 8;
+      yPos += 6;
     };
 
-    // Header - Name (clickable)
+    // Header - Name
     const profileUrl = `https://collabunity.io/user-profile?username=${username}`;
-    doc.setFontSize(28);
+    doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(purpleColor[0], purpleColor[1], purpleColor[2]);
     doc.textWithLink(cleanTextForPDF(profileUser.full_name || 'Profile'), pageWidth / 2, yPos, { 
@@ -206,29 +193,36 @@ Deno.serve(async (req) => {
       url: profileUrl 
     });
     doc.setTextColor(0);
-    yPos += 12;
+    yPos += 8;
 
-    // Contact Info
-    doc.setFontSize(11);
+    // Contact Info - Single line format
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    if (profileUser.email) {
-      doc.text(cleanTextForPDF(profileUser.email), pageWidth / 2, yPos, { align: 'center' });
-      yPos += 6;
-    }
-    if (profileUser.location) {
-      doc.text(cleanTextForPDF(profileUser.location), pageWidth / 2, yPos, { align: 'center' });
-      yPos += 6;
-    }
-    if (profileUser.phone_number) {
-      doc.text(cleanTextForPDF(profileUser.phone_number), pageWidth / 2, yPos, { align: 'center' });
-      yPos += 8;
-    } else {
-      yPos += 4;
+    const contactParts = [];
+    if (profileUser.email) contactParts.push(profileUser.email);
+    if (profileUser.phone_number) contactParts.push(profileUser.phone_number);
+    if (profileUser.location) contactParts.push(profileUser.location);
+    
+    if (contactParts.length > 0) {
+      doc.text(cleanTextForPDF(contactParts.join('  |  ')), pageWidth / 2, yPos, { align: 'center' });
+      yPos += 5;
     }
 
-    addLine();
+    // Links on same line
+    const linkParts = [];
+    if (profileUser.linkedin_url) linkParts.push(profileUser.linkedin_url);
+    if (profileUser.website_url) linkParts.push(profileUser.website_url);
+    
+    if (linkParts.length > 0) {
+      doc.setFontSize(9);
+      doc.setTextColor(purpleColor[0], purpleColor[1], purpleColor[2]);
+      const linksText = cleanTextForPDF(linkParts.join('  |  '));
+      doc.text(linksText, pageWidth / 2, yPos, { align: 'center' });
+      doc.setTextColor(0);
+      yPos += 3;
+    }
 
-    // Professional Summary - Merge with existing resume summary if available
+    // Professional Summary
     const summaryText = existingResumeData?.summary || profileUser.bio;
     if (summaryText) {
       addSectionHeader('Professional Summary');
@@ -236,76 +230,58 @@ Deno.serve(async (req) => {
       doc.setFont('helvetica', 'normal');
       const bioLines = doc.splitTextToSize(cleanTextForPDF(summaryText), pageWidth - 2 * margin);
       doc.text(bioLines, margin, yPos);
-      yPos += bioLines.length * lineHeight + 6;
-      addLine();
-    }
-
-    // LinkedIn & Website
-    if (profileUser.linkedin_url || profileUser.website_url) {
-      addSectionHeader('Links');
-      doc.setFontSize(10);
-      doc.setTextColor(purpleColor[0], purpleColor[1], purpleColor[2]);
-      
-      if (profileUser.linkedin_url) {
-        doc.textWithLink('LinkedIn: ' + cleanTextForPDF(profileUser.linkedin_url), margin, yPos, { 
-          url: profileUser.linkedin_url 
-        });
-        yPos += 6;
-      }
-      
-      if (profileUser.website_url) {
-        doc.textWithLink('Website: ' + cleanTextForPDF(profileUser.website_url), margin, yPos, { 
-          url: profileUser.website_url 
-        });
-        yPos += 6;
-      }
-      
-      doc.setTextColor(0);
-      addLine();
+      yPos += bioLines.length * lineHeight;
     }
 
     // Work Experience from existing resume
     if (existingResumeData?.work_experience && existingResumeData.work_experience.length > 0) {
       addSectionHeader('Work Experience');
       
-      for (const exp of existingResumeData.work_experience) {
-        checkNewPage(40);
+      for (const exp of existingResumeData.work_experience.slice(0, 4)) {
+        checkNewPage(30);
         
-        doc.setFontSize(12);
+        // Title and Company on same line
+        doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
         doc.text(cleanTextForPDF(exp.title || ''), margin, yPos);
-        yPos += 6;
         
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'italic');
-        doc.text(cleanTextForPDF(`${exp.company || ''} | ${exp.dates || ''}`), margin, yPos);
-        yPos += 6;
-        
-        if (exp.description) {
+        if (exp.dates) {
+          doc.setFont('helvetica', 'normal');
           doc.setFontSize(10);
+          const dateWidth = doc.getTextWidth(cleanTextForPDF(exp.dates));
+          doc.text(cleanTextForPDF(exp.dates), pageWidth - margin - dateWidth, yPos);
+        }
+        yPos += 5;
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'italic');
+        doc.text(cleanTextForPDF(exp.company || ''), margin, yPos);
+        yPos += 5;
+        
+        // Achievements as bullet points
+        if (exp.achievements && exp.achievements.length > 0) {
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+          for (const achievement of exp.achievements.slice(0, 3)) {
+            checkNewPage(8);
+            const achText = cleanTextForPDF(`• ${achievement}`);
+            const achLines = doc.splitTextToSize(achText, pageWidth - 2 * margin - 5);
+            doc.text(achLines, margin + 3, yPos);
+            yPos += achLines.length * 4;
+          }
+        } else if (exp.description) {
+          doc.setFontSize(9);
           doc.setFont('helvetica', 'normal');
           const descLines = doc.splitTextToSize(cleanTextForPDF(exp.description), pageWidth - 2 * margin);
-          doc.text(descLines, margin, yPos);
-          yPos += descLines.length * lineHeight;
+          doc.text(descLines.slice(0, 3), margin, yPos);
+          yPos += Math.min(descLines.length, 3) * 4;
         }
         
-        if (exp.achievements && exp.achievements.length > 0) {
-          doc.setFontSize(10);
-          for (const achievement of exp.achievements.slice(0, 4)) {
-            checkNewPage(10);
-            const achText = cleanTextForPDF(`- ${achievement}`);
-            const achLines = doc.splitTextToSize(achText, pageWidth - 2 * margin - 5);
-            doc.text(achLines, margin + 5, yPos);
-            yPos += achLines.length * lineHeight;
-          }
-        }
-        
-        yPos += 4;
+        yPos += 3;
       }
-      addLine();
     }
 
-    // Education - Merge profile and existing resume
+    // Education
     const allEducation = [
       ...(profileUser.education || []),
       ...(existingResumeData?.education || []).map(e => ({
@@ -316,10 +292,9 @@ Deno.serve(async (req) => {
       }))
     ];
     
-    // Deduplicate by institution name
     const uniqueEducation = allEducation.reduce((acc, edu) => {
-      const key = (edu.university_name || edu.institution || '').toLowerCase();
-      if (!acc.find(e => (e.university_name || '').toLowerCase() === key)) {
+      const key = (edu.university_name || '').toLowerCase();
+      if (key && !acc.find(e => (e.university_name || '').toLowerCase() === key)) {
         acc.push(edu);
       }
       return acc;
@@ -328,250 +303,182 @@ Deno.serve(async (req) => {
     if (uniqueEducation.length > 0) {
       addSectionHeader('Education');
 
-      for (const edu of uniqueEducation) {
-        checkNewPage(20);
+      for (const edu of uniqueEducation.slice(0, 3)) {
+        checkNewPage(15);
         doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
         const eduTitle = cleanTextForPDF(`${edu.degree || ''} ${edu.major ? 'in ' + edu.major : ''}`.trim());
         if (eduTitle) {
           doc.text(eduTitle, margin, yPos);
-          yPos += 6;
+          
+          if (edu.graduation_date) {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            const dateWidth = doc.getTextWidth(cleanTextForPDF(edu.graduation_date));
+            doc.text(cleanTextForPDF(edu.graduation_date), pageWidth - margin - dateWidth, yPos);
+          }
+          yPos += 5;
         }
 
-        doc.setFont('helvetica', 'italic');
-        doc.text(cleanTextForPDF(edu.university_name || ''), margin, yPos);
-        yPos += 6;
-
-        if (edu.graduation_date) {
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(10);
-          doc.text(cleanTextForPDF(edu.graduation_date), margin, yPos);
-          yPos += 6;
-        }
-
-        yPos += 3;
-      }
-      addLine();
-    }
-
-    // Collab Unity Projects Section with enhanced details
-    if (userProjects.length > 0) {
-      addSectionHeader('Projects (Collab Unity)');
-
-      // Add summary stats if deep scrape was done
-      if (includeDeepScrape) {
         doc.setFontSize(10);
         doc.setFont('helvetica', 'italic');
-        doc.setTextColor(100);
-        const statsText = `${userProjects.length} projects | ${completedTasks.length} tasks completed | ${collaboratorCount} collaborators`;
-        doc.text(cleanTextForPDF(statsText), margin, yPos);
-        doc.setTextColor(0);
-        yPos += 8;
+        doc.text(cleanTextForPDF(edu.university_name || ''), margin, yPos);
+        yPos += 5;
       }
+    }
 
-      for (const project of userProjects.slice(0, 10)) {
-        checkNewPage(50);
+    // Project Experience
+    if (userProjects.length > 0) {
+      addSectionHeader('Project Experience');
+
+      for (const project of userProjects.slice(0, 5)) {
+        checkNewPage(35);
         
         const projectUrl = `https://collabunity.io/ProjectDetail?id=${project.id}`;
         const isOwner = project.created_by === profileUser.email;
         
-        doc.setFontSize(13);
+        // Project title with role
+        doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(purpleColor[0], purpleColor[1], purpleColor[2]);
         doc.textWithLink(cleanTextForPDF(project.title), margin, yPos, { url: projectUrl });
         doc.setTextColor(0);
-        yPos += 7;
-
-        // Role and Status
+        
+        // Role on right side
+        const roleText = isOwner ? 'Project Lead' : 'Contributor';
+        doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
+        const roleWidth = doc.getTextWidth(roleText);
+        doc.text(roleText, pageWidth - margin - roleWidth, yPos);
+        yPos += 5;
+
+        // Project type and team size
+        doc.setFontSize(9);
         doc.setFont('helvetica', 'italic');
-        const roleText = isOwner ? 'Project Owner' : 'Collaborator';
-        const statusLabel = cleanTextForPDF(project.status?.replace(/_/g, ' ') || '');
-        const typeLabel = cleanTextForPDF(project.project_type || '');
-        doc.text(`${roleText} | ${typeLabel}${typeLabel && statusLabel ? ' | ' : ''}${statusLabel}`, margin, yPos);
-        yPos += 6;
-
-        // Team size
+        const metaParts = [];
+        if (project.project_type) metaParts.push(project.project_type);
         if (project.collaborator_emails && project.collaborator_emails.length > 1) {
-          doc.setFont('helvetica', 'normal');
-          doc.text(`Team of ${project.collaborator_emails.length} members`, margin, yPos);
-          yPos += 6;
+          metaParts.push(`Team of ${project.collaborator_emails.length}`);
         }
+        if (project.status) metaParts.push(project.status.replace(/_/g, ' '));
+        doc.text(cleanTextForPDF(metaParts.join(' | ')), margin, yPos);
+        yPos += 5;
 
+        // Description - 2 lines max
         if (project.description) {
           doc.setFont('helvetica', 'normal');
-          const descText = cleanTextForPDF(project.description.substring(0, 300) + (project.description.length > 300 ? '...' : ''));
+          const descText = cleanTextForPDF(project.description);
           const descLines = doc.splitTextToSize(descText, pageWidth - 2 * margin);
-          doc.text(descLines, margin, yPos);
-          yPos += descLines.length * lineHeight + 4;
+          doc.text(descLines.slice(0, 2), margin, yPos);
+          yPos += Math.min(descLines.length, 2) * 4 + 1;
         }
 
-        // Completed tasks for this project
+        // Key contributions from completed tasks
         if (includeDeepScrape) {
           const projectTasks = completedTasks.filter(t => t.project_id === project.id);
           if (projectTasks.length > 0) {
-            checkNewPage(15);
             doc.setFontSize(9);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Key Contributions:', margin, yPos);
-            yPos += 5;
             doc.setFont('helvetica', 'normal');
-            for (const task of projectTasks.slice(0, 3)) {
-              checkNewPage(8);
-              const taskText = cleanTextForPDF(`- ${task.title}`);
-              const taskLines = doc.splitTextToSize(taskText, pageWidth - 2 * margin - 5);
-              doc.text(taskLines, margin + 5, yPos);
-              yPos += taskLines.length * 5;
+            for (const task of projectTasks.slice(0, 2)) {
+              checkNewPage(6);
+              const taskText = cleanTextForPDF(`• ${task.title}`);
+              doc.text(taskText, margin + 3, yPos);
+              yPos += 4;
             }
-            if (projectTasks.length > 3) {
-              doc.text(cleanTextForPDF(`  + ${projectTasks.length - 3} more tasks completed`), margin + 5, yPos);
-              yPos += 5;
-            }
-            yPos += 2;
           }
         }
 
-        // Skills used
+        // Skills for this project - inline
         if (project.skills_needed && project.skills_needed.length > 0) {
-          checkNewPage(15);
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'bold');
-          doc.text('Skills: ', margin, yPos);
-          doc.setFont('helvetica', 'normal');
-          const skillsText = cleanTextForPDF(project.skills_needed.slice(0, 8).join(', '));
-          const skillsLines = doc.splitTextToSize(skillsText, pageWidth - 2 * margin - 15);
-          doc.text(skillsLines, margin + 15, yPos);
-          yPos += skillsLines.length * 5 + 2;
-        }
-
-        // Tools used
-        if (project.tools_needed && project.tools_needed.length > 0) {
-          checkNewPage(15);
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'bold');
-          doc.text('Tools: ', margin, yPos);
-          doc.setFont('helvetica', 'normal');
-          const toolsText = cleanTextForPDF(project.tools_needed.slice(0, 8).join(', '));
-          const toolsLines = doc.splitTextToSize(toolsText, pageWidth - 2 * margin - 15);
-          doc.text(toolsLines, margin + 15, yPos);
-          yPos += toolsLines.length * 5 + 2;
-        }
-
-        yPos += 6;
-      }
-      
-      addLine();
-    }
-
-    // Aggregated Skills - Merge profile, resume, and project skills
-    const allSkills = new Set([
-      ...(profileUser.skills || []),
-      ...(existingResumeData?.skills || []),
-      ...allSkillsUsed
-    ]);
-    
-    if (allSkills.size > 0) {
-      addSectionHeader('Skills');
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      const skillsText = cleanTextForPDF([...allSkills].join(', '));
-      const skillsLines = doc.splitTextToSize(skillsText, pageWidth - 2 * margin);
-      doc.text(skillsLines, margin, yPos);
-      yPos += skillsLines.length * lineHeight + 6;
-      addLine();
-    }
-
-    // Tools & Technologies
-    const allTools = new Set([
-      ...(profileUser.tools_technologies || []),
-      ...allToolsUsed
-    ]);
-    
-    if (allTools.size > 0) {
-      addSectionHeader('Tools & Technologies');
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      const toolsText = cleanTextForPDF([...allTools].join(', '));
-      const toolsLines = doc.splitTextToSize(toolsText, pageWidth - 2 * margin);
-      doc.text(toolsLines, margin, yPos);
-      yPos += toolsLines.length * lineHeight + 6;
-      addLine();
-    }
-
-    // Interests
-    if (profileUser.interests && profileUser.interests.length > 0) {
-      addSectionHeader('Interests');
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      const interestsText = cleanTextForPDF(profileUser.interests.join(', '));
-      const interestsLines = doc.splitTextToSize(interestsText, pageWidth - 2 * margin);
-      doc.text(interestsLines, margin, yPos);
-      yPos += interestsLines.length * lineHeight + 6;
-      addLine();
-    }
-
-    // Awards & Certifications - Merge both sources
-    const allAwards = [
-      ...(profileUser.awards_certifications || []),
-      ...(existingResumeData?.certifications || []).map(c => ({ name: c }))
-    ];
-    
-    if (allAwards.length > 0) {
-      addSectionHeader('Honors & Certifications');
-
-      for (const award of allAwards) {
-        checkNewPage(20);
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'bold');
-        doc.text(cleanTextForPDF(award.name || ''), margin, yPos);
-        yPos += 6;
-
-        if (award.issuing_organization) {
-          doc.setFontSize(10);
+          doc.setFontSize(8);
           doc.setFont('helvetica', 'italic');
-          doc.text(cleanTextForPDF(award.issuing_organization), margin, yPos);
-          yPos += 5;
-        }
-
-        if (award.date_received) {
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'normal');
-          doc.text(cleanTextForPDF(award.date_received), margin, yPos);
-          yPos += 5;
-        }
-
-        if (award.credential_url) {
-          checkNewPage(10);
-          doc.setFontSize(9);
-          doc.setTextColor(purpleColor[0], purpleColor[1], purpleColor[2]);
-          const credUrl = cleanTextForPDF(award.credential_url.length > 60 ? award.credential_url.substring(0, 57) + '...' : award.credential_url);
-          doc.textWithLink(credUrl, margin, yPos, { url: award.credential_url });
+          doc.setTextColor(100);
+          const skillsText = cleanTextForPDF('Skills: ' + project.skills_needed.slice(0, 5).join(', '));
+          doc.text(skillsText, margin, yPos);
           doc.setTextColor(0);
-          yPos += 6;
+          yPos += 4;
         }
 
         yPos += 3;
       }
-      addLine();
+    }
+
+    // Skills Section - Categorized and limited
+    const profileSkills = profileUser.skills || [];
+    const resumeSkills = existingResumeData?.skills || [];
+    const projectSkills = [...allSkillsUsed];
+    
+    // Combine and dedupe, limit to top 15
+    const allSkillsArray = [...new Set([...profileSkills, ...resumeSkills, ...projectSkills])].slice(0, 15);
+    
+    if (allSkillsArray.length > 0) {
+      addSectionHeader('Skills');
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      
+      // Display in a wrapped format with bullets
+      const skillsText = cleanTextForPDF(allSkillsArray.join('  •  '));
+      const skillsLines = doc.splitTextToSize(skillsText, pageWidth - 2 * margin);
+      doc.text(skillsLines.slice(0, 3), margin, yPos);
+      yPos += Math.min(skillsLines.length, 3) * lineHeight;
+    }
+
+    // Technical Tools - Limited
+    const profileTools = profileUser.tools_technologies || [];
+    const allToolsArray = [...new Set([...profileTools, ...allToolsUsed])].slice(0, 12);
+    
+    if (allToolsArray.length > 0) {
+      addSectionHeader('Tools & Technologies');
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const toolsText = cleanTextForPDF(allToolsArray.join('  •  '));
+      const toolsLines = doc.splitTextToSize(toolsText, pageWidth - 2 * margin);
+      doc.text(toolsLines.slice(0, 2), margin, yPos);
+      yPos += Math.min(toolsLines.length, 2) * lineHeight;
+    }
+
+    // Certifications & Awards - Combined, limited
+    const allAwards = [
+      ...(profileUser.awards_certifications || []),
+      ...(existingResumeData?.certifications || []).map(c => ({ name: c }))
+    ].slice(0, 5);
+    
+    if (allAwards.length > 0) {
+      addSectionHeader('Certifications & Awards');
+
+      for (const award of allAwards) {
+        checkNewPage(12);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        
+        let awardText = cleanTextForPDF(award.name || '');
+        if (award.issuing_organization) {
+          awardText += ' - ' + cleanTextForPDF(award.issuing_organization);
+        }
+        if (award.date_received) {
+          doc.setFont('helvetica', 'normal');
+          const dateWidth = doc.getTextWidth(cleanTextForPDF(award.date_received));
+          doc.text(cleanTextForPDF(award.date_received), pageWidth - margin - dateWidth, yPos);
+        }
+        
+        doc.setFont('helvetica', 'normal');
+        doc.text(awardText, margin, yPos);
+        yPos += 5;
+      }
     }
 
     // Footer on every page
     const totalPages = doc.internal.pages.length - 1;
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
-      const footerY = pageHeight - 15;
+      const footerY = pageHeight - 10;
       
-      doc.setFontSize(9);
+      doc.setFontSize(8);
       doc.setTextColor(purpleColor[0], purpleColor[1], purpleColor[2]);
-      doc.setFont('helvetica', 'bold');
-      doc.textWithLink('Collab Unity', pageWidth / 2, footerY, { 
-        align: 'center',
-        url: 'https://collabunity.io'
-      });
-      
-      doc.setFont('helvetica', 'italic');
-      doc.setTextColor(120);
-      doc.text('Where Ideas Happen', pageWidth / 2, footerY + 4, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.textWithLink('Collab Unity', pageWidth / 2 - 15, footerY, { url: 'https://collabunity.io' });
+      doc.setTextColor(150);
+      doc.text(' - Where Ideas Happen', pageWidth / 2 + 5, footerY);
     }
 
     const pdfBytes = doc.output('arraybuffer');

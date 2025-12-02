@@ -9,16 +9,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
   Upload, 
   FileText, 
   X, 
   Loader2, 
-  Sparkles, 
   CheckCircle2,
-  AlertCircle,
   Download,
   Briefcase,
   Users,
@@ -42,13 +39,11 @@ export default function GenerateResumeDialog({
   const resumeInputRef = useRef(null);
 
   const generationSteps = [
-    { label: 'Analyzing profile data...', icon: FileText },
-    { label: 'Scanning projects & contributions...', icon: Briefcase },
-    { label: 'Extracting completed tasks...', icon: CheckSquare },
-    { label: 'Gathering tools & skills used...', icon: Wrench },
-    { label: 'Identifying collaborators...', icon: Users },
-    { label: 'Merging with existing resume...', icon: Sparkles },
-    { label: 'Generating final PDF...', icon: Download },
+    { label: 'Gathering profile data...', icon: FileText },
+    { label: 'Compiling projects...', icon: Briefcase },
+    { label: 'Adding completed tasks...', icon: CheckSquare },
+    { label: 'Organizing skills & tools...', icon: Wrench },
+    { label: 'Formatting resume...', icon: Download },
   ];
 
   const handleResumeUpload = async (e) => {
@@ -193,11 +188,11 @@ export default function GenerateResumeDialog({
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-600" />
-              Generate Enhanced Resume
+              <FileText className="w-5 h-5 text-purple-600" />
+              Generate Resume
             </DialogTitle>
             <DialogDescription>
-              Create a comprehensive resume by merging your existing resume with your Collab Unity projects, tasks, and contributions.
+              Create a professional resume combining your profile with your Collab Unity projects and contributions.
             </DialogDescription>
           </DialogHeader>
 
@@ -248,50 +243,42 @@ export default function GenerateResumeDialog({
 
               {/* What will be included */}
               <div className="bg-purple-50 rounded-lg p-4 space-y-3">
-                <h4 className="font-medium text-purple-900 text-sm">What will be included:</h4>
+                <h4 className="font-medium text-purple-900 text-sm">Your resume will include:</h4>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex items-center gap-2 text-xs text-purple-700">
                     <CheckCircle2 className="w-3 h-3" />
-                    <span>Profile & Bio</span>
+                    <span>Contact & Summary</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-purple-700">
                     <CheckCircle2 className="w-3 h-3" />
-                    <span>Education & Awards</span>
+                    <span>Education</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-purple-700">
                     <CheckCircle2 className="w-3 h-3" />
-                    <span>All Projects</span>
+                    <span>Project Experience</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-purple-700">
                     <CheckCircle2 className="w-3 h-3" />
-                    <span>Completed Tasks</span>
+                    <span>Key Contributions</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-purple-700">
                     <CheckCircle2 className="w-3 h-3" />
-                    <span>Skills & Tools Used</span>
+                    <span>Top Skills</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-purple-700">
                     <CheckCircle2 className="w-3 h-3" />
-                    <span>Team Collaborations</span>
+                    <span>Certifications</span>
                   </div>
                 </div>
                 
                 {existingResume && (
                   <div className="pt-2 border-t border-purple-200">
                     <div className="flex items-center gap-2 text-xs text-purple-800 font-medium">
-                      <Sparkles className="w-3 h-3" />
-                      <span>+ Content from your uploaded resume will be merged</span>
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>Your uploaded resume content will be included</span>
                     </div>
                   </div>
                 )}
-              </div>
-
-              {/* Info note */}
-              <div className="flex items-start gap-2 text-xs text-gray-500">
-                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <p>
-                  The AI will intelligently merge your existing resume with your Collab Unity activity to create a comprehensive, professional document.
-                </p>
               </div>
             </div>
           ) : (
