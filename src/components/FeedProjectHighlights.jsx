@@ -17,12 +17,17 @@ export default function FeedProjectHighlights({
   
   const allProjectHighlights = project.highlights || [];
 
-  // Fetch uploader profiles
+  // Fetch uploader profiles (including project creator as fallback)
   useEffect(() => {
     const fetchUploaderProfiles = async () => {
       if (!allProjectHighlights || allProjectHighlights.length === 0) return;
       
-      const uploaderEmails = [...new Set(allProjectHighlights.map(h => h.uploaded_by).filter(Boolean))];
+      // Collect uploader emails and include project creator as fallback
+      const uploaderEmails = [...new Set([
+        ...allProjectHighlights.map(h => h.uploaded_by).filter(Boolean),
+        project.created_by // Always fetch project creator for fallback
+      ].filter(Boolean))];
+      
       if (uploaderEmails.length === 0) return;
 
       try {
@@ -42,7 +47,7 @@ export default function FeedProjectHighlights({
     };
 
     fetchUploaderProfiles();
-  }, [allProjectHighlights]);
+  }, [allProjectHighlights, project.created_by]);
 
   const handleDeleteHighlight = async (index, highlight) => {
     const isUploader = currentUser && currentUser.email === highlight.uploaded_by;
