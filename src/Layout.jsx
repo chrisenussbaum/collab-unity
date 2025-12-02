@@ -233,6 +233,15 @@ export default function Layout({ children, currentPageName }) {
 
     const loadUserAndHandleRedirects = async () => {
       setIsLoading(true);
+      
+      // Don't interfere with login/auth callbacks - let them complete
+      if (isLoginCallback) {
+        console.log("Login callback detected, waiting for auth to complete...");
+        setAuthChecked(true);
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         // First check if user is authenticated before making the API call
         const isAuthenticated = await base44.auth.isAuthenticated();
