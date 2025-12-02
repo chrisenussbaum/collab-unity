@@ -748,7 +748,7 @@ export default function CreateProject() {
                     </Label>
                     
                     {formData.highlights.length > 0 && (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {formData.highlights.map((highlight, index) => (
                           <div key={index} className="relative group aspect-video bg-gray-100 rounded-lg overflow-hidden">
                             {highlight.media_type === 'video' ? (
