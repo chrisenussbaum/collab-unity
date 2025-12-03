@@ -2802,7 +2802,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
 
                         {!isOwner && propCurrentUser && (profileUser.skills && profileUser.skills.length > 0) && (
                           <p className="text-xs text-gray-500 mt-3 text-center">
-                            Click on a skill or the <Plus className="inline w-3 h-3" /> icon to endorse {profileUser.full_name || 'them'}
+                            Click on a skill to endorse {profileUser.full_name || 'them'}
                           </p>
                         )}
                         
