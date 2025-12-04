@@ -45,7 +45,6 @@ import { toast } from "sonner";
 import WorkspaceTabs from "@/components/workspace/WorkspaceTabs";
 import ProjectHighlights from "../components/project/ProjectHighlights";
 import ClickableImage from "../components/ClickableImage";
-import ProjectInstructions from "../components/ProjectInstructions";
 import ContextualSearchAssistant from "../components/workspace/ContextualSearchAssistant";
 
 import { formatDistanceToNow } from "date-fns";
@@ -66,7 +65,6 @@ import ProjectMembershipManager from "../components/ProjectMembershipManager";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import { UploadFile } from "@/functions/UploadFile";
 import ProjectFundingCard from "../components/ProjectFundingCard";
-import EditProjectInstructionsModal from "@/components/EditProjectInstructionsModal";
 import CommunicationsPanel from '../components/CommunicationsPanel';
 import SocialsPanel from '../components/SocialsPanel';
 import ProjectLinkPreview from "../components/ProjectLinkPreview"; // New import
@@ -152,8 +150,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [applicationMessage, setApplicationMessage] = useState("");
   const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
-  
-  const [showEditProjectInstructionsModal, setShowEditProjectInstructionsModal] = useState(false);
   
   const isMounted = useRef(true);
   const retryCountRef = useRef(0);
@@ -672,20 +668,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
       window.removeEventListener('projectUpdated', handleProjectUpdateEvent);
     };
   }, [projectId, handleProjectUpdate]);
-
-  // Handler for opening the edit instructions modal
-  const handleEditInstructions = useCallback(() => {
-    if (project) {
-      setShowEditProjectInstructionsModal(true);
-    }
-  }, [project]);
-
-  // Handler for when instructions are updated
-  const handleInstructionsUpdated = useCallback(async () => {
-    setShowEditProjectInstructionsModal(false);
-    await handleProjectUpdate(); // Use existing update handler
-    // toast.success("Project instructions updated!"); // Removed redundant success toast
-  }, [handleProjectUpdate]);
 
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
@@ -1278,36 +1260,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
               </div>
             )}
 
-            {/* Project Instructions Section - Only show to collaborators */}
-            {userCanContribute && (
-              project.project_instructions ? (
-                <ProjectInstructions 
-                  instructions={project.project_instructions}
-                  onEditClick={isOwner ? handleEditInstructions : undefined}
-                  isOwner={isOwner}
-                />
-              ) : (
-                isOwner && (
-                  <Card className="cu-card border-dashed border-gray-300">
-                    <CardContent className="p-6 text-center">
-                      <BookOpen className="w-10 h-10 mx-auto text-gray-400" />
-                      <h3 className="mt-4 text-lg font-medium text-gray-900">Add a Project Guide</h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Create structured instructions to guide collaborators through your project.
-                      </p>
-                      <Button 
-                        className="mt-4 cu-button"
-                        onClick={handleEditInstructions}
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Instructions
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )
-              )
-            )}
-
             {/* Project Links Section */}
             {(project.project_urls && project.project_urls.length > 0) || projectIDEs.length > 0 ? (
               <Card className="cu-card">
@@ -1682,16 +1634,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
           </div>
         )}
       </div>
-
-      {/* Edit Instructions Modal */}
-      {showEditProjectInstructionsModal && project && (
-        <EditProjectInstructionsModal
-          project={project}
-          isOpen={showEditProjectInstructionsModal}
-          onClose={() => setShowEditProjectInstructionsModal(false)}
-          onSuccess={handleInstructionsUpdated}
-        />
-      )}
     </>
   );
 }
