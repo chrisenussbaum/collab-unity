@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, BrainCircuit } from 'lucide-react';
+import { Search} from 'lucide-react';
 import { toast } from "sonner";
 
 export default function ContextualSearchAssistant({ project }) {
@@ -43,7 +43,7 @@ export default function ContextualSearchAssistant({ project }) {
     <Card className="cu-card">
       <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6 pt-4 sm:pt-6">
         <CardTitle className="flex items-center text-base sm:text-lg">
-          <BrainCircuit className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-600" />
+          <Search className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-600" />
           Search
         </CardTitle>
       </CardHeader>
