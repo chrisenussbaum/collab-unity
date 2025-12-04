@@ -195,7 +195,7 @@ const UserCard = ({ user, currentUser, index }) => {
             className="mt-auto cu-button w-full text-sm font-semibold shadow-sm hover:shadow-md transition-all duration-200 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
           >
             <MessageCircle className="w-4 h-4 mr-2" />
-            Sync
+            Chat
           </Button>
         </CardContent>
       </Card>
