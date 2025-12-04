@@ -1668,13 +1668,13 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         </DialogContent>
       </Dialog>
 
-      {/* Chat Confirmation Dialog */}
+      {/* Sync Confirmation Dialog */}
       <Dialog open={showSyncDialog} onOpenChange={setShowSyncDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Chat with {profileUser?.full_name}?</DialogTitle>
+            <DialogTitle>Sync with {profileUser?.full_name}?</DialogTitle>
             <DialogDescription>
-              Start a conversation with {profileUser?.full_name} to chat about a project or collaboration opportunity.
+              Start a conversation with {profileUser?.full_name} to sync about a project or collaboration opportunity.
             </DialogDescription>
           </DialogHeader>
           
@@ -1704,7 +1704,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
               disabled={isSyncing}
               className="cu-button"
             >
-              {isSyncing ? "Chatting..." : "Yes, Chat"}
+              {isSyncing ? "Syncing..." : "Yes, Sync"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1955,7 +1955,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                               className="cu-button text-sm"
                             >
                               <MessageCircle className="w-4 h-4 mr-2" />
-                              Chat
+                              Sync
                             </Button>
                           </div>
                         )}

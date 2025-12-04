@@ -434,7 +434,7 @@ export default function Layout({ children, currentPageName }) {
     { name: "Feed", path: createPageUrl("Feed"), icon: LayoutGrid },
       ...(currentUser ? [
       { name: "My Projects", path: createPageUrl("MyProjects"), icon: Lightbulb },
-      { name: "Chat", path: createPageUrl("Chat"), icon: MessageCircle },
+      { name: "Sync", path: createPageUrl("Sync"), icon: MessageCircle },
     ] : []),
   ];
 
@@ -444,7 +444,7 @@ export default function Layout({ children, currentPageName }) {
       ...(currentUser ? [
       { name: "Create", path: createPageUrl("CreateProject"), icon: Plus, isCreateButton: true },
       { name: "My Projects", path: createPageUrl("MyProjects"), icon: Lightbulb },
-      { name: "Chat", path: createPageUrl("Chat"), icon: MessageCircle },
+      { name: "Sync", path: createPageUrl("Sync"), icon: MessageCircle },
     ] : []),
   ];
 
