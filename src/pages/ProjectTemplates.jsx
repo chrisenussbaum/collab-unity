@@ -236,7 +236,7 @@ export default function ProjectTemplates({ currentUser }) {
               <div className="text-center lg:text-left">
                 <h1 className="cu-text-responsive-xl font-bold text-gray-900 mb-2">Project Templates</h1>
                 <p className="text-gray-600 cu-text-responsive-sm">
-                  Preview templates for project guidance or submit a template to the library
+                  Jump-start your project with guided templates
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
@@ -464,6 +464,14 @@ export default function ProjectTemplates({ currentUser }) {
                               <Eye className="cu-icon-sm mr-1.5" />
                               Preview
                             </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleUseTemplate(template)}
+                              className="cu-button cu-text-responsive-xs flex-1"
+                            >
+                              <Rocket className="cu-icon-sm mr-1.5" />
+                              Use This Template
+                            </Button>
                           </div>
                         </CardFooter>
                       </Card>
@@ -642,6 +650,10 @@ export default function ProjectTemplates({ currentUser }) {
               <div className="flex gap-3 pt-4 border-t">
                 <Button variant="outline" onClick={() => setPreviewTemplate(null)} className="flex-1">
                   Close
+                </Button>
+                <Button onClick={() => handleUseTemplate(previewTemplate)} className="flex-1 cu-button">
+                  <Rocket className="w-4 h-4 mr-2" />
+                  Use This Template
                 </Button>
               </div>
             </div>

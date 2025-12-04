@@ -1672,9 +1672,9 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
       <Dialog open={showSyncDialog} onOpenChange={setShowSyncDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Chat with {profileUser?.full_name}?</DialogTitle>
+            <DialogTitle>Sync with {profileUser?.full_name}?</DialogTitle>
             <DialogDescription>
-              Start a conversation with {profileUser?.full_name} to chat about a project or collaboration opportunity.
+              Start a conversation with {profileUser?.full_name} to sync about a project or collaboration opportunity.
             </DialogDescription>
           </DialogHeader>
           
@@ -1704,7 +1704,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
               disabled={isSyncing}
               className="cu-button"
             >
-              {isSyncing ? "Chatting..." : "Yes, Chat"}
+              {isSyncing ? "Syncing..." : "Yes, Sync"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1955,7 +1955,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                               className="cu-button text-sm"
                             >
                               <MessageCircle className="w-4 h-4 mr-2" />
-                              Chat
+                              Sync
                             </Button>
                           </div>
                         )}
@@ -2802,7 +2802,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
 
                         {!isOwner && propCurrentUser && (profileUser.skills && profileUser.skills.length > 0) && (
                           <p className="text-xs text-gray-500 mt-3 text-center">
-                            Click on a skill to endorse {profileUser.full_name || 'them'}
+                            Click on a skill or the <Plus className="inline w-3 h-3" /> icon to endorse {profileUser.full_name || 'them'}
                           </p>
                         )}
                         
