@@ -1674,7 +1674,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
           <DialogHeader>
             <DialogTitle>Chat with {profileUser?.full_name}?</DialogTitle>
             <DialogDescription>
-              Start a conversation with {profileUser?.full_name} to sync about a project or collaboration opportunity.
+              Start a conversation with {profileUser?.full_name} to chat about a project or collaboration opportunity.
             </DialogDescription>
           </DialogHeader>
           
