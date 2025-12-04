@@ -18,10 +18,6 @@ export default function ContextualSearchAssistant({ project }) {
     // Construct an intelligent query using project context
     const keywords = [
       query,
-      project.title,
-      project.area_of_interest,
-      ...(project.skills_needed || []),
-      ...(project.tools_needed || [])
     ];
     
     // Remove duplicates and filter out empty strings to create a clean search string
