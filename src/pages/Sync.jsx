@@ -22,7 +22,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 
-export default function Sync({ currentUser, authIsLoading }) {
+export default function Chat({ currentUser, authIsLoading }) {
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
