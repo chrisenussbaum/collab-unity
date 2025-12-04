@@ -485,7 +485,7 @@ export default function Sync({ currentUser, authIsLoading }) {
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
                 <MessageCircle className="w-8 h-8 mr-3 text-purple-600" />
-                Sync
+                Chat
               </h1>
               <p className="text-gray-600 mt-1">Chat with collaborators and community members</p>
             </div>
