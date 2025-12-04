@@ -464,14 +464,6 @@ export default function ProjectTemplates({ currentUser }) {
                               <Eye className="cu-icon-sm mr-1.5" />
                               Preview
                             </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handleUseTemplate(template)}
-                              className="cu-button cu-text-responsive-xs flex-1"
-                            >
-                              <Rocket className="cu-icon-sm mr-1.5" />
-                              Use This Template
-                            </Button>
                           </div>
                         </CardFooter>
                       </Card>
