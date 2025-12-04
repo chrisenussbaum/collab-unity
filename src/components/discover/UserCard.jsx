@@ -188,23 +188,23 @@ const UserCard = ({ user, currentUser, index }) => {
             </div>
           )}
 
-          {/* Sync Button */}
+          {/* Chat Button */}
           <Button 
             onClick={() => setShowConnectDialog(true)}
             disabled={!currentUser}
             className="mt-auto cu-button w-full text-sm font-semibold shadow-sm hover:shadow-md transition-all duration-200 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
           >
             <MessageCircle className="w-4 h-4 mr-2" />
-            Sync
+            Chat
           </Button>
         </CardContent>
       </Card>
 
-      {/* Sync Confirmation Dialog */}
+      {/* Chat Confirmation Dialog */}
       <Dialog open={showConnectDialog} onOpenChange={setShowConnectDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Sync with {user.full_name}?</DialogTitle>
+            <DialogTitle>Chat with {user.full_name}?</DialogTitle>
             <DialogDescription>
               Start a conversation with {user.full_name} to sync about a project or collaboration opportunity.
             </DialogDescription>
@@ -269,7 +269,7 @@ const UserCard = ({ user, currentUser, index }) => {
                   }
 
                   setShowConnectDialog(false);
-                  // Navigate to Sync page with conversation ID
+                  // Navigate to Chat page with conversation ID
                   navigate(createPageUrl(`Sync?conversation=${conversation.id}`));
                 } catch (error) {
                   console.error("Error connecting:", error);
@@ -281,7 +281,7 @@ const UserCard = ({ user, currentUser, index }) => {
               disabled={isConnecting}
               className="cu-button"
             >
-              {isConnecting ? "Syncing..." : "Yes, Sync"}
+              {isConnecting ? "Chatting..." : "Yes, Chat"}
             </Button>
           </DialogFooter>
         </DialogContent>
