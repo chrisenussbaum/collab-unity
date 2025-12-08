@@ -2047,6 +2047,14 @@ export default function Feed({ currentUser, authIsLoading }) {
         ...moreFeedPostsData.map(fp => ({ ...fp, itemType: 'feedPost', sortDate: new Date(fp.created_date) }))
       ].sort((a, b) => b.sortDate - a.sortDate);
 
+      // Check if database returned zero items - this is the true end condition
+      if (moreProjectsData.length === 0 && moreFeedPostsData.length === 0) {
+        console.log('No more items in database, reached end of feed');
+        setHasMorePosts(false);
+        setIsLoadingMore(false);
+        return;
+      }
+
       // Filter out duplicates using the ref
       const uniqueNewItems = combinedFetchedItems.filter(item => {
         const isUnique = !loadedItemIdsRef.current.has(item.id);
@@ -2062,12 +2070,14 @@ export default function Feed({ currentUser, authIsLoading }) {
         consecutiveEmptyLoadsRef.current++;
         console.log(`All fetched items were duplicates (attempt ${consecutiveEmptyLoadsRef.current}/${MAX_EMPTY_LOAD_ATTEMPTS})`);
         
-        // If we've tried multiple times and still getting duplicates, assume we've reached the end
+        // If we've tried multiple times and still getting duplicates, try a larger offset jump
         if (consecutiveEmptyLoadsRef.current >= MAX_EMPTY_LOAD_ATTEMPTS) {
-          console.log('Max empty load attempts reached, no more unique posts');
-          setHasMorePosts(false);
-          setIsLoadingMore(false);
+          console.log('Max empty load attempts reached, trying larger offset jump');
+          // Reset counter and try with a larger offset by skipping ahead more pages
           consecutiveEmptyLoadsRef.current = 0;
+          setCurrentPage(currentPage + 3); // Skip ahead 3 pages
+          setIsLoadingMore(false);
+          setTimeout(() => loadMorePosts(), 100);
           return;
         }
         
@@ -2166,15 +2176,11 @@ export default function Feed({ currentUser, authIsLoading }) {
       
       setCurrentPage(nextPage);
       
-      // Determine if there are more items. If we got less than requested *or* found less unique items
-      // than `fetchAmount`, it's likely we're near the end.
-      const databaseHasMoreProjects = moreProjectsData.length >= fetchAmount;
-      const databaseHasMoreFeedPosts = moreFeedPostsData.length >= fetchAmount;
-      const hasMore = databaseHasMoreProjects || databaseHasMoreFeedPosts || uniqueNewItems.length >= fetchAmount;
+      // Continue loading as long as the database returns items
+      // Only stop when database returns nothing (handled above)
+      setHasMorePosts(true);
       
-      setHasMorePosts(hasMore);
-      
-      console.log(`Database has more projects: ${databaseHasMoreProjects}, Feed posts: ${databaseHasMoreFeedPosts}, Has more items: ${hasMore}`);
+      console.log(`Added ${itemsToAdd.length} items, continuing to load more...`);
 
     } catch (error) {
       console.error("Error loading more posts:", error);
