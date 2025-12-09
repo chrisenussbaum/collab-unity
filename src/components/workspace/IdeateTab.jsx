@@ -124,9 +124,11 @@ const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner }) => 
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (isAutoSave = false) => {
     if (!isCollaborator) {
-      toast.error("You don't have permission to edit this project's ideation.");
+      if (!isAutoSave) {
+        toast.error("You don't have permission to edit this project's ideation.");
+      }
       return;
     }
 
@@ -138,19 +140,19 @@ const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner }) => 
         last_saved_at: new Date().toISOString()
       };
 
-      await Project.update(project.id, { 
+      await withRetry(() => Project.update(project.id, { 
         project_ideation: content,
         project_ideation_metadata: metadata
-      });
+      }));
 
-      await ActivityLog.create({
+      await withRetry(() => ActivityLog.create({
         project_id: project.id,
         user_email: currentUser.email,
         user_name: currentUser.full_name || currentUser.email,
         action_type: 'ideation_updated',
         action_description: 'updated the project ideation notes',
         entity_type: 'ideation'
-      });
+      }));
 
       initialContentRef.current = content;
       setHasUnsavedChanges(false);
@@ -160,6 +162,10 @@ const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner }) => 
       setIsStale(false);
       setStaleInfo(null);
       
+      if (!isAutoSave) {
+        toast.success("Saved successfully!");
+      }
+      
       // Dispatch event to notify other components
       window.dispatchEvent(new CustomEvent('projectUpdated', { 
         detail: { projectId: project.id } 
@@ -167,7 +173,9 @@ const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner }) => 
 
     } catch (error) {
       console.error("Error saving ideation:", error);
-      toast.error("Failed to save ideation. Please try again.");
+      if (error.response?.status !== 429) {
+        toast.error("Failed to save ideation. Please try again.");
+      }
     } finally {
       setIsSaving(false);
     }
@@ -438,7 +446,16 @@ const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner }) => 
                 <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Refresh</span>
               </Button>
-
+              {isCollaborator && (
+                <Button
+                  onClick={() => handleSave(false)}
+                  disabled={isSaving || !hasUnsavedChanges}
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  {isSaving ? 'Saving...' : 'Save'}
+                </Button>
+              )}
             </div>
           </div>
           {lastSavedBy && lastSavedAt && (

@@ -1617,6 +1617,14 @@ export default function Feed({ currentUser, authIsLoading }) {
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [inlineAds, setInlineAds] = useState([]);
   const [allCollaboratorProfiles, setAllCollaboratorProfiles] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Reset visible items when search query changes to show results immediately
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      setVisibleItems(50); // Show more items immediately when searching
+    }
+  }, [searchQuery]);
   
   // Use ref for synchronous tracking of loaded item IDs to prevent race conditions
   const loadedItemIdsRef = useRef(new Set());
@@ -1850,13 +1858,16 @@ export default function Feed({ currentUser, authIsLoading }) {
 
       // Update with full profile data and IDEs when available
       const [profilesResponse, fetchedProjectApplauds, fetchedFeedPostApplauds, fetchedIDEsMap] = await Promise.all([
-        profilesPromise, 
+        profilesPromise.catch(err => {
+          console.warn("Error loading profiles:", err);
+          return { data: [] };
+        }), 
         applaudsPromise, 
         feedPostApplaudsPromise,
         idesPromise
       ]);
       
-      const ownerProfiles = profilesResponse.data || [];
+      const ownerProfiles = profilesResponse?.data || [];
       const profilesMap = ownerProfiles.reduce((acc, profile) => {
         acc[profile.email] = profile;
         return acc;
@@ -1907,7 +1918,8 @@ export default function Feed({ currentUser, authIsLoading }) {
           });
           setAllCollaboratorProfiles(collabProfilesMap);
         } catch (error) {
-          console.error("Error fetching collaborator profiles for activity:", error);
+          console.warn("Error fetching collaborator profiles for activity:", error);
+          // Continue without blocking on profile load
         }
       }
 
@@ -2066,7 +2078,8 @@ export default function Feed({ currentUser, authIsLoading }) {
           });
           setAllCollaboratorProfiles(prev => ({ ...prev, ...newCollabProfilesMap }));
         } catch (error) {
-          console.error("Error fetching new collaborator profiles for activity:", error);
+          console.warn("Error fetching new collaborator profiles for activity:", error);
+          // Continue without blocking on profile load
         }
       }
         
@@ -2179,8 +2192,29 @@ export default function Feed({ currentUser, authIsLoading }) {
     }
   }, [projects, feedPosts]);
   
-  // filteredItems now just returns allFeedItems as search bar is removed
-  const displayedItems = allFeedItems;
+  // Filter items based on search query
+  const displayedItems = React.useMemo(() => {
+    if (!searchQuery.trim()) {
+      return allFeedItems;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    return allFeedItems.filter(item => {
+      if (item.itemType === 'project') {
+        return item.title?.toLowerCase().includes(query) ||
+               item.description?.toLowerCase().includes(query) ||
+               item.location?.toLowerCase().includes(query) ||
+               item.industry?.toLowerCase().includes(query) ||
+               item.area_of_interest?.toLowerCase().includes(query) ||
+               item.skills_needed?.some(skill => skill.toLowerCase().includes(query));
+      } else if (item.itemType === 'feedPost') {
+        return item.title?.toLowerCase().includes(query) ||
+               item.content?.toLowerCase().includes(query) ||
+               item.tags?.some(tag => tag.toLowerCase().includes(query));
+      }
+      return false;
+    });
+  }, [allFeedItems, searchQuery]);
 
   useEffect(() => {
     const checkUserProjects = async () => {
@@ -2321,7 +2355,18 @@ export default function Feed({ currentUser, authIsLoading }) {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
+                  className="space-y-3"
                 >
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search feed..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 bg-white"
+                    />
+                  </div>
                   <Button
                     onClick={() => setShowCreatePostDialog(true)}
                     className="cu-button w-full cu-gradient"
@@ -2361,13 +2406,17 @@ export default function Feed({ currentUser, authIsLoading }) {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
                   <p className="cu-text-responsive-sm text-gray-600">Loading feed...</p>
                 </div>
-              ) : displayedItems.length === 0 && !hasMorePosts ? (
+              ) : displayedItems.length === 0 ? (
                 <div className="text-center py-16">
-                  <h3 className="cu-text-responsive-lg font-semibold">No posts found</h3>
+                  <h3 className="cu-text-responsive-lg font-semibold">
+                    {searchQuery.trim() ? "No results found" : "No posts found"}
+                  </h3>
                   <p className="text-gray-600 mt-2 cu-text-responsive-sm">
-                    Be the first to create a post!
+                    {searchQuery.trim() 
+                      ? "Try different keywords or clear your search" 
+                      : "Be the first to create a post!"}
                   </p>
-                  {currentUser && (
+                  {!searchQuery.trim() && currentUser && (
                     <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
                       <Button 
                         onClick={() => setShowCreatePostDialog(true)}
@@ -2458,7 +2507,18 @@ export default function Feed({ currentUser, authIsLoading }) {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
+                  className="space-y-3"
                 >
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search feed..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 bg-white"
+                    />
+                  </div>
                   <Button
                     onClick={() => setShowCreatePostDialog(true)}
                     className="cu-button w-full cu-gradient"
@@ -2502,13 +2562,17 @@ export default function Feed({ currentUser, authIsLoading }) {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
                   <p className="cu-text-responsive-sm text-gray-600">Loading feed...</p>
                 </div>
-              ) : displayedItems.length === 0 && !hasMorePosts ? (
+              ) : displayedItems.length === 0 ? (
                 <div className="text-center py-16">
-                  <h3 className="cu-text-responsive-lg font-semibold">No posts found</h3>
+                  <h3 className="cu-text-responsive-lg font-semibold">
+                    {searchQuery.trim() ? "No results found" : "No posts found"}
+                  </h3>
                   <p className="text-gray-600 mt-2 cu-text-responsive-sm">
-                    Be the first to create a post!
+                    {searchQuery.trim() 
+                      ? "Try different keywords or clear your search" 
+                      : "Be the first to create a post!"}
                   </p>
-                  {currentUser && (
+                  {!searchQuery.trim() && currentUser && (
                     <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
                       <Button 
                         onClick={() => setShowCreatePostDialog(true)}
@@ -2592,7 +2656,18 @@ export default function Feed({ currentUser, authIsLoading }) {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
+                  className="space-y-3"
                 >
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search feed..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 bg-white"
+                    />
+                  </div>
                   <Button
                     onClick={() => setShowCreatePostDialog(true)}
                     className="cu-button w-full cu-gradient"
