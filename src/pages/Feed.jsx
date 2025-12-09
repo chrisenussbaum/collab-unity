@@ -1858,13 +1858,16 @@ export default function Feed({ currentUser, authIsLoading }) {
 
       // Update with full profile data and IDEs when available
       const [profilesResponse, fetchedProjectApplauds, fetchedFeedPostApplauds, fetchedIDEsMap] = await Promise.all([
-        profilesPromise, 
+        profilesPromise.catch(err => {
+          console.warn("Error loading profiles:", err);
+          return { data: [] };
+        }), 
         applaudsPromise, 
         feedPostApplaudsPromise,
         idesPromise
       ]);
       
-      const ownerProfiles = profilesResponse.data || [];
+      const ownerProfiles = profilesResponse?.data || [];
       const profilesMap = ownerProfiles.reduce((acc, profile) => {
         acc[profile.email] = profile;
         return acc;
@@ -1915,7 +1918,8 @@ export default function Feed({ currentUser, authIsLoading }) {
           });
           setAllCollaboratorProfiles(collabProfilesMap);
         } catch (error) {
-          console.error("Error fetching collaborator profiles for activity:", error);
+          console.warn("Error fetching collaborator profiles for activity:", error);
+          // Continue without blocking on profile load
         }
       }
 
@@ -2074,7 +2078,8 @@ export default function Feed({ currentUser, authIsLoading }) {
           });
           setAllCollaboratorProfiles(prev => ({ ...prev, ...newCollabProfilesMap }));
         } catch (error) {
-          console.error("Error fetching new collaborator profiles for activity:", error);
+          console.warn("Error fetching new collaborator profiles for activity:", error);
+          // Continue without blocking on profile load
         }
       }
         
@@ -2401,13 +2406,17 @@ export default function Feed({ currentUser, authIsLoading }) {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
                   <p className="cu-text-responsive-sm text-gray-600">Loading feed...</p>
                 </div>
-              ) : displayedItems.length === 0 && !hasMorePosts ? (
+              ) : displayedItems.length === 0 ? (
                 <div className="text-center py-16">
-                  <h3 className="cu-text-responsive-lg font-semibold">No posts found</h3>
+                  <h3 className="cu-text-responsive-lg font-semibold">
+                    {searchQuery.trim() ? "No results found" : "No posts found"}
+                  </h3>
                   <p className="text-gray-600 mt-2 cu-text-responsive-sm">
-                    Be the first to create a post!
+                    {searchQuery.trim() 
+                      ? "Try different keywords or clear your search" 
+                      : "Be the first to create a post!"}
                   </p>
-                  {currentUser && (
+                  {!searchQuery.trim() && currentUser && (
                     <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
                       <Button 
                         onClick={() => setShowCreatePostDialog(true)}
