@@ -79,8 +79,29 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
 
     setIsSaving(true);
     try {
+      // Ensure all links are in the proper object format {title, url}
+      const normalizedLinks = editedLinks.map(linkItem => {
+        if (typeof linkItem === 'object' && linkItem.url) {
+          // Already an object with url property
+          return {
+            title: linkItem.title || '',
+            url: linkItem.url
+          };
+        } else if (typeof linkItem === 'string') {
+          // Legacy string format - convert to object
+          return {
+            title: '',
+            url: linkItem
+          };
+        } else {
+          // Invalid format - skip
+          console.warn('Invalid link format:', linkItem);
+          return null;
+        }
+      }).filter(link => link !== null); // Remove any invalid links
+
       await Project.update(project.id, {
-        project_urls: editedLinks
+        project_urls: normalizedLinks
       });
 
       toast.success("Feed project links updated successfully!");
