@@ -2059,16 +2059,7 @@ export default function Feed({ currentUser, authIsLoading }) {
       
       setCurrentPage(nextPage);
       
-      // Determine if there are more items based on what the database returned
-      // If we got any results from the database, assume there might be more
-      // Only set hasMore to false if BOTH sources returned 0 results
-      const gotSomeProjects = moreProjectsData.length > 0;
-      const gotSomeFeedPosts = moreFeedPostsData.length > 0;
-      const hasMore = gotSomeProjects || gotSomeFeedPosts;
-      
-      setHasMorePosts(hasMore);
-      
-      console.log(`Got ${moreProjectsData.length} projects, ${moreFeedPostsData.length} feed posts. Has more: ${hasMore}`);
+      console.log(`Successfully loaded ${itemsToAdd.length} new items. Total loaded: ${loadedItemIdsRef.current.size}`);
 
     } catch (error) {
       console.error("Error loading more posts:", error);
