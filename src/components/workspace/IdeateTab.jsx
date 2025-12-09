@@ -138,19 +138,19 @@ const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner }) => 
         last_saved_at: new Date().toISOString()
       };
 
-      await Project.update(project.id, { 
+      await withRetry(() => Project.update(project.id, { 
         project_ideation: content,
         project_ideation_metadata: metadata
-      });
+      }));
 
-      await ActivityLog.create({
+      await withRetry(() => ActivityLog.create({
         project_id: project.id,
         user_email: currentUser.email,
         user_name: currentUser.full_name || currentUser.email,
         action_type: 'ideation_updated',
         action_description: 'updated the project ideation notes',
         entity_type: 'ideation'
-      });
+      }));
 
       initialContentRef.current = content;
       setHasUnsavedChanges(false);
@@ -244,10 +244,10 @@ const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner }) => 
     };
     
     // Fire and forget - don't await
-    Project.update(project.id, { 
+    withRetry(() => Project.update(project.id, { 
       project_ideation: contentToSave,
       project_ideation_metadata: metadata
-    }).then(() => {
+    })).then(() => {
       initialContentRef.current = contentToSave;
       if (isMountedRef.current) {
         setHasUnsavedChanges(false);
@@ -291,10 +291,10 @@ const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner }) => 
         };
         
         // Fire synchronously on unmount
-        Project.update(projectIdRef2.current, { 
+        withRetry(() => Project.update(projectIdRef2.current, { 
           project_ideation: contentRef.current,
           project_ideation_metadata: metadata
-        }).then(() => {
+        })).then(() => {
           initialContentRef.current = contentRef.current;
         }).catch(err => console.error("Auto-save on unmount failed:", err));
       }
