@@ -110,18 +110,18 @@ export default function IdeationNotes({ project, currentUser, isCollaborator }) 
         last_saved_by_name: currentUser.full_name || currentUser.email,
         last_saved_at: new Date().toISOString()
       };
-      await Project.update(project.id, { 
+      await withRetry(() => Project.update(project.id, { 
         project_ideation: content,
         project_ideation_metadata: metadata
-      });
-      await ActivityLog.create({
+      }));
+      await withRetry(() => ActivityLog.create({
         project_id: project.id,
         user_email: currentUser.email,
         user_name: currentUser.full_name || currentUser.email,
         action_type: 'ideation_updated',
         action_description: 'updated the project ideation notes',
         entity_type: 'ideation'
-      });
+      }));
       initialContentRef.current = content;
       setHasUnsavedChanges(false);
       setLastSavedBy(currentUser.email);
