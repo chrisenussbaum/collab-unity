@@ -1619,13 +1619,6 @@ export default function Feed({ currentUser, authIsLoading }) {
   const [allCollaboratorProfiles, setAllCollaboratorProfiles] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Reset visible items when search query changes to show results immediately
-  useEffect(() => {
-    if (searchQuery.trim()) {
-      setVisibleItems(50); // Show more items immediately when searching
-    }
-  }, [searchQuery]);
-  
   // Use ref for synchronous tracking of loaded item IDs to prevent race conditions
   const loadedItemIdsRef = useRef(new Set());
   const consecutiveEmptyLoadsRef = useRef(0);
