@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -215,162 +216,149 @@ export default function Discover({ currentUser: propCurrentUser }) {
     syncApplicationStatus();
   }, [currentUser]);
 
-  useEffect(() => {
-    // Only fetch projects when 'projects' tab is active
-    if (!userInitialized || activeTab !== "projects") {
-      return;
-    }
+  const queryClient = useQueryClient();
 
-    const fetchProjectsData = async () => {
-      setIsLoading(true);
-      try {
-        const rawAllProjects = await withRetry(() => base44.entities.Project.filter({ 
-          is_visible_on_feed: true
-        }, "-created_date"));
+  const { data: projectsQueryData, isLoading: isProjectsQueryLoading } = useQuery({
+    queryKey: ['discover-projects', currentUser?.email],
+    queryFn: async () => {
+      const rawAllProjects = await withRetry(() => base44.entities.Project.filter({ 
+        is_visible_on_feed: true
+      }, "-created_date"));
+      
+      const allApplauds = await withRetry(() => base44.entities.ProjectApplaud.filter({}));
+      // Fetch owner profiles for ALL projects
+      const ownerEmails = [...new Set(rawAllProjects.map(p => p.created_by))];
+      let profilesMap = {};
+      
+      if (ownerEmails.length > 0) {
+        const cachedProfiles = [];
+        const uncachedEmails = [];
         
-        const allApplauds = await withRetry(() => base44.entities.ProjectApplaud.filter({}));
-        setProjectApplauds(allApplauds);
-
-        // Fetch owner profiles for ALL projects first
-        const ownerEmails = [...new Set(rawAllProjects.map(p => p.created_by))];
-        let profilesMap = {};
-        
-        if (ownerEmails.length > 0) {
-          const cachedProfiles = [];
-          const uncachedEmails = [];
-          
-          ownerEmails.forEach(email => {
-            const cached = userProfileCache.get(email);
-            if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
-              cachedProfiles.push(cached.profile);
-            } else {
-              uncachedEmails.push(email);
-            }
-          });
-
-          cachedProfiles.forEach(profile => {
-            profilesMap[profile.email] = profile;
-          });
-
-          if (uncachedEmails.length > 0) {
-            try {
-              await new Promise(resolve => setTimeout(resolve, 500));
-              
-              const { data: ownerProfiles } = await withRetry(() => 
-                getPublicUserProfiles({ emails: uncachedEmails })
-              );
-              
-              (ownerProfiles || []).forEach(profile => {
-                userProfileCache.set(profile.email, {
-                  profile,
-                  timestamp: Date.now()
-                });
-                profilesMap[profile.email] = profile;
-              });
-            } catch (error) {
-              console.error("Error fetching user profiles:", error);
-              toast.warning("Some user profile information could not be loaded.");
-            }
-          }
-        }
-
-        // Fetch collaborator profiles for all projects (first 3 per project)
-        const allCollaboratorEmails = new Set();
-        rawAllProjects.forEach(project => {
-          if (project.collaborator_emails) {
-            project.collaborator_emails.slice(0, 3).forEach(email => allCollaboratorEmails.add(email));
+        ownerEmails.forEach(email => {
+          const cached = userProfileCache.get(email);
+          if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
+            cachedProfiles.push(cached.profile);
+          } else {
+            uncachedEmails.push(email);
           }
         });
 
-        let collaboratorProfilesMap = {};
-        if (allCollaboratorEmails.size > 0) {
-          try {
-            await new Promise(resolve => setTimeout(resolve, 300));
-            const { data: collabProfiles } = await getPublicUserProfiles({ emails: Array.from(allCollaboratorEmails) });
-            (collabProfiles || []).forEach(profile => {
-              collaboratorProfilesMap[profile.email] = profile;
+        cachedProfiles.forEach(profile => {
+          profilesMap[profile.email] = profile;
+        });
+
+        if (uncachedEmails.length > 0) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          const { data: ownerProfiles } = await withRetry(() => 
+            getPublicUserProfiles({ emails: uncachedEmails })
+          );
+          
+          (ownerProfiles || []).forEach(profile => {
+            userProfileCache.set(profile.email, {
+              profile,
+              timestamp: Date.now()
             });
-          } catch (error) {
-            console.error("Error fetching collaborator profiles:", error);
-          }
-        }
-
-        // Apply owner and collaborator profiles to ALL projects
-        const allProjectsWithOwners = rawAllProjects.map(project => ({
-          ...project,
-          owner: profilesMap[project.created_by] || {
-            email: project.created_by,
-            full_name: project.created_by.split('@')[0],
-            profile_image: null
-          },
-          collaboratorProfiles: project.collaborator_emails 
-            ? project.collaborator_emails.slice(0, 3).map(email => collaboratorProfilesMap[email]).filter(Boolean)
-            : [],
-          collaboratorProfilesMap: collaboratorProfilesMap
-        }));
-        setAllProjectsUnfiltered(allProjectsWithOwners); // Store all projects
-
-        // Then, filter for the 'projects' tab (excluding own/collaborated)
-        let filteredForProjectsTab = allProjectsWithOwners;
-        if (currentUser && currentUser.email) {
-          filteredForProjectsTab = allProjectsWithOwners.filter(project => {
-            const isOwnProject = project.created_by === currentUser.email;
-            const isCollaborator = project.collaborator_emails?.includes(currentUser.email);
-            return !isOwnProject && !isCollaborator;
+            profilesMap[profile.email] = profile;
           });
         }
-        setProjects(filteredForProjectsTab); // Set the 'projects' state to the filtered list
-        
-      } catch (error) {
-        console.error("Error loading projects or applauds:", error);
-        if (error.response?.status === 429) {
-          toast.error("Too many requests. Please wait a moment and refresh.");
-        } else {
-          toast.error("Failed to load projects. Please refresh the page.");
-        }
-        setProjects([]);
-        setAllProjectsUnfiltered([]); // NEW
-        setProjectApplauds([]);
-      } finally {
-        setIsLoading(false);
       }
-    };
 
-    fetchProjectsData();
-  }, [currentUser, userInitialized, activeTab]); // `activeTab` is a dependency to re-run when it changes to "projects"
+      // Fetch collaborator profiles for all projects (first 3 per project)
+      const allCollaboratorEmails = new Set();
+      rawAllProjects.forEach(project => {
+        if (project.collaborator_emails) {
+          project.collaborator_emails.slice(0, 3).forEach(email => allCollaboratorEmails.add(email));
+        }
+      });
+
+      let collaboratorProfilesMap = {};
+      if (allCollaboratorEmails.size > 0) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        const { data: collabProfiles } = await getPublicUserProfiles({ emails: Array.from(allCollaboratorEmails) });
+        (collabProfiles || []).forEach(profile => {
+          collaboratorProfilesMap[profile.email] = profile;
+        });
+      }
+
+      // Apply owner and collaborator profiles to ALL projects
+      const allProjectsWithOwners = rawAllProjects.map(project => ({
+        ...project,
+        owner: profilesMap[project.created_by] || {
+          email: project.created_by,
+          full_name: project.created_by.split('@')[0],
+          profile_image: null
+        },
+        collaboratorProfiles: project.collaborator_emails 
+          ? project.collaborator_emails.slice(0, 3).map(email => collaboratorProfilesMap[email]).filter(Boolean)
+          : [],
+        collaboratorProfilesMap: collaboratorProfilesMap
+      }));
+
+      // Filter for the 'projects' tab (excluding own/collaborated)
+      let filteredForProjectsTab = allProjectsWithOwners;
+      if (currentUser && currentUser.email) {
+        filteredForProjectsTab = allProjectsWithOwners.filter(project => {
+          const isOwnProject = project.created_by === currentUser.email;
+          const isCollaborator = project.collaborator_emails?.includes(currentUser.email);
+          return !isOwnProject && !isCollaborator;
+        });
+      }
+      
+      return {
+        allProjects: allProjectsWithOwners,
+        projects: filteredForProjectsTab,
+        applauds: allApplauds
+      };
+    },
+    enabled: userInitialized && activeTab === "projects",
+    staleTime: 3 * 60 * 1000, // 3 minutes
+    cacheTime: 15 * 60 * 1000, // 15 minutes
+  });
+
+  const { data: usersQueryData, isLoading: isUsersQueryLoading } = useQuery({
+    queryKey: ['discover-users', currentUser?.email],
+    queryFn: async () => {
+      const { data: allUsers } = await withRetry(() => getPublicUserProfilesForDiscovery());
+      
+      let filteredUsers = allUsers || [];
+      
+      // Filter out current user by email and id
+      if (currentUser) {
+        filteredUsers = filteredUsers.filter(user => 
+          user.email !== currentUser.email && 
+          user.id !== currentUser.id
+        );
+      }
+      
+      return filteredUsers;
+    },
+    enabled: userInitialized && activeTab === "people",
+    staleTime: 3 * 60 * 1000, // 3 minutes
+    cacheTime: 15 * 60 * 1000, // 15 minutes
+  });
+
+  // Update state when query data changes
+  useEffect(() => {
+    if (projectsQueryData && activeTab === "projects") {
+      setAllProjectsUnfiltered(projectsQueryData.allProjects);
+      setProjects(projectsQueryData.projects);
+      setProjectApplauds(projectsQueryData.applauds);
+      setIsLoading(false);
+    }
+  }, [projectsQueryData, activeTab]);
 
   useEffect(() => {
-    if (!userInitialized || activeTab !== "people") {
-      return;
+    if (usersQueryData && activeTab === "people") {
+      setUsers(usersQueryData);
+      setIsLoadingUsers(false);
     }
+  }, [usersQueryData, activeTab]);
 
-    const fetchUsers = async () => {
-      setIsLoadingUsers(true);
-      try {
-        const { data: allUsers } = await withRetry(() => getPublicUserProfilesForDiscovery());
-        
-        let filteredUsers = allUsers || [];
-        
-        // Filter out current user by email and id
-        if (currentUser) {
-          filteredUsers = filteredUsers.filter(user => 
-            user.email !== currentUser.email && 
-            user.id !== currentUser.id
-          );
-        }
-        
-        setUsers(filteredUsers);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        toast.error("Failed to load users.");
-        setUsers([]);
-      } finally {
-        setIsLoadingUsers(false);
-      }
-    };
-
-    fetchUsers();
-  }, [userInitialized, activeTab, currentUser]);
+  useEffect(() => {
+    setIsLoading(isProjectsQueryLoading && activeTab === "projects");
+    setIsLoadingUsers(isUsersQueryLoading && activeTab === "people");
+  }, [isProjectsQueryLoading, isUsersQueryLoading, activeTab]);
 
   const handleFollow = async (projectId, e) => {
     e.preventDefault();
