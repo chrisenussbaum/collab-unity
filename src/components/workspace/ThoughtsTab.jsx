@@ -82,9 +82,9 @@ export default function ThoughtsTab({ project, currentUser, isCollaborator, isPr
       };
 
       if (editingThought) {
-        await Thought.update(editingThought.id, thoughtData);
+        await withRetry(() => Thought.update(editingThought.id, thoughtData));
         
-        await ActivityLog.create({
+        await withRetry(() => ActivityLog.create({
           project_id: project.id,
           user_email: currentUser.email,
           user_name: currentUser.full_name || currentUser.email,
@@ -92,13 +92,13 @@ export default function ThoughtsTab({ project, currentUser, isCollaborator, isPr
           action_description: `updated thought "${formData.title}"`,
           entity_type: "thought",
           entity_id: editingThought.id
-        });
+        }));
         
         toast.success("Thought updated successfully!");
       } else {
-        const newThought = await Thought.create(thoughtData);
+        const newThought = await withRetry(() => Thought.create(thoughtData));
         
-        await ActivityLog.create({
+        await withRetry(() => ActivityLog.create({
           project_id: project.id,
           user_email: currentUser.email,
           user_name: currentUser.full_name || currentUser.email,
@@ -106,7 +106,7 @@ export default function ThoughtsTab({ project, currentUser, isCollaborator, isPr
           action_description: `created thought "${formData.title}"`,
           entity_type: "thought",
           entity_id: newThought.id
-        });
+        }));
         
         toast.success("Thought published successfully!");
       }
@@ -137,7 +137,7 @@ export default function ThoughtsTab({ project, currentUser, isCollaborator, isPr
     
     if (window.confirm("Are you sure you want to delete this thought?")) {
       try {
-        await Thought.delete(thoughtId);
+        await withRetry(() => Thought.delete(thoughtId));
         toast.success("Thought deleted successfully!");
         loadThoughts();
       } catch (error) {
@@ -151,9 +151,9 @@ export default function ThoughtsTab({ project, currentUser, isCollaborator, isPr
     if (!hasWriteAccess) return;
 
     try {
-      await Thought.update(thought.id, {
+      await withRetry(() => Thought.update(thought.id, {
         is_pinned: !thought.is_pinned,
-      });
+      }));
       loadThoughts();
       toast.success(thought.is_pinned ? "Thought unpinned" : "Thought pinned");
     } catch (error) {
