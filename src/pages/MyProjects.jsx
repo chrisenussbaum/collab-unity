@@ -209,7 +209,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
               placeholder="Search your projects..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 cu-text-responsive-sm bg-white"
+              className="pl-10 bg-white"
             />
           </div>
 
