@@ -69,7 +69,7 @@ export default function CreateProject() {
   });
 
   const [newLink, setNewLink] = useState("");
-  const [newLinkLabel, setNewLinkLabel] = useState("");
+  const [newLinkTitle, setNewLinkTitle] = useState("");
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [newToolName, setNewToolName] = useState("");
@@ -209,17 +209,29 @@ export default function CreateProject() {
     if (formData.project_urls.length >= 10) {
       return;
     }
-    if (newLink && !formData.project_urls.includes(newLink)) {
+    if (newLink) {
       if (!newLink.startsWith('http://') && !newLink.startsWith('https://')) {
         toast.error("Please enter a valid URL including http:// or https://");
         return;
       }
-      addToArray('project_urls', newLink, setNewLink);
+      const linkObj = {
+        title: newLinkTitle.trim() || '',
+        url: newLink.trim()
+      };
+      setFormData(prev => ({
+        ...prev,
+        project_urls: [...prev.project_urls, linkObj]
+      }));
+      setNewLink("");
+      setNewLinkTitle("");
     }
   };
 
-  const removeLink = (linkToRemove) => {
-    removeFromArray('project_urls', linkToRemove);
+  const removeLink = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      project_urls: prev.project_urls.filter((_, i) => i !== index)
+    }));
   };
 
   const handleMediaUpload = async (e) => {
@@ -872,14 +884,27 @@ export default function CreateProject() {
                     </Label>
                     
                     {formData.project_urls.length > 0 && (
-                      <div className="flex flex-col gap-2 p-3 border rounded-lg bg-gray-50/50">
+                      <div className="flex flex-col gap-3 p-3 border rounded-lg bg-gray-50/50">
                         {formData.project_urls.map((link, index) => (
-                          <div key={index} className="flex items-center justify-between text-sm">
-                            <a href={link} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline truncate flex-1">
-                              <LinkIcon className="inline w-4 h-4 mr-1 text-gray-500" />
-                              {link}
-                            </a>
-                            <button onClick={() => removeLink(link)} className="ml-4 flex-shrink-0 text-gray-500 hover:text-red-500">
+                          <div key={index} className="flex items-start justify-between gap-2 p-2 bg-white rounded border">
+                            <div className="flex-1 min-w-0">
+                              {link.title && (
+                                <p className="font-medium text-sm text-gray-900 mb-1">{link.title}</p>
+                              )}
+                              <a 
+                                href={link.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-purple-600 hover:underline text-xs truncate block"
+                              >
+                                <LinkIcon className="inline w-3 h-3 mr-1 text-gray-500" />
+                                {link.url}
+                              </a>
+                            </div>
+                            <button 
+                              onClick={() => removeLink(index)} 
+                              className="flex-shrink-0 text-gray-500 hover:text-red-500 p-1"
+                            >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
@@ -887,19 +912,26 @@ export default function CreateProject() {
                       </div>
                     )}
                     
-                    <div className="flex space-x-2">
+                    <div className="space-y-2">
                       <Input
-                        placeholder="https://yourproject.com..."
-                        value={newLink}
-                        onChange={(e) => setNewLink(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addLink())}
+                        placeholder="Link title (e.g., Live Demo, GitHub Repo, Live Stream)"
+                        value={newLinkTitle}
+                        onChange={(e) => setNewLinkTitle(e.target.value)}
                       />
-                      <Button type="button" variant="outline" onClick={addLink} disabled={!newLink || formData.project_urls.length >= 10}>
-                        <Plus className="w-4 h-4" />
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Input
+                          placeholder="https://yourproject.com..."
+                          value={newLink}
+                          onChange={(e) => setNewLink(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addLink())}
+                        />
+                        <Button type="button" variant="outline" onClick={addLink} disabled={!newLink || formData.project_urls.length >= 10}>
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                     <p className="text-xs text-gray-500">
-                      Add URLs to your published/live project (Max 10)
+                      Add titled showcase links to your project (Max 10)
                     </p>
                   </div>
                 </motion.div>
