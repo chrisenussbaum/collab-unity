@@ -2346,7 +2346,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                   className="space-y-3"
                 >
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <Input
                       type="text"
                       placeholder="Search feed..."
@@ -2354,7 +2354,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10 cu-text-responsive-sm bg-white"
                     />
-                    <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none text-transparent bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text cu-text-responsive-sm" style={{ display: searchQuery ? 'none' : 'block' }}>
+                    <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none text-transparent bg-gradient-to-r from-gray-400 to-gray-500 bg-clip-text cu-text-responsive-sm" style={{ display: searchQuery ? 'none' : 'block' }}>
                       Search feed...
                     </div>
                   </div>
@@ -2497,7 +2497,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                   className="space-y-3"
                 >
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <Input
                       type="text"
                       placeholder="Search feed..."
@@ -2505,7 +2505,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10 cu-text-responsive-sm bg-white"
                     />
-                    <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none text-transparent bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text cu-text-responsive-sm" style={{ display: searchQuery ? 'none' : 'block' }}>
+                    <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none text-transparent bg-gradient-to-r from-gray-400 to-gray-500 bg-clip-text cu-text-responsive-sm" style={{ display: searchQuery ? 'none' : 'block' }}>
                       Search feed...
                     </div>
                   </div>
@@ -2645,7 +2645,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                   className="space-y-3"
                 >
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <Input
                       type="text"
                       placeholder="Search feed..."
@@ -2653,7 +2653,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10 cu-text-responsive-sm bg-white"
                     />
-                    <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none text-transparent bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text cu-text-responsive-sm" style={{ display: searchQuery ? 'none' : 'block' }}>
+                    <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none text-transparent bg-gradient-to-r from-gray-400 to-gray-500 bg-clip-text cu-text-responsive-sm" style={{ display: searchQuery ? 'none' : 'block' }}>
                       Search feed...
                     </div>
                   </div>

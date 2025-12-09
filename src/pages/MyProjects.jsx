@@ -203,16 +203,15 @@ export default function MyProjects({ currentUser, authIsLoading }) {
         >
           {/* Search Bar */}
           <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <Input
               type="text"
               placeholder="Search your projects..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 cu-text-responsive-sm bg-white placeholder:text-transparent placeholder:bg-gradient-to-r placeholder:from-purple-400 placeholder:to-indigo-400 placeholder:bg-clip-text"
-              style={{ '--tw-placeholder-opacity': '1' }}
+              className="pl-10 cu-text-responsive-sm bg-white"
             />
-            <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none text-transparent bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text cu-text-responsive-sm" style={{ display: searchQuery ? 'none' : 'block' }}>
+            <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none text-transparent bg-gradient-to-r from-gray-400 to-gray-500 bg-clip-text cu-text-responsive-sm" style={{ display: searchQuery ? 'none' : 'block' }}>
               Search your projects...
             </div>
           </div>
