@@ -1863,8 +1863,10 @@ export default function Feed({ currentUser, authIsLoading }) {
       };
     },
     enabled: !authIsLoading,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const queryClient = useQueryClient();
