@@ -201,6 +201,18 @@ export default function MyProjects({ currentUser, authIsLoading }) {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 sm:mb-8"
         >
+          {/* Search Bar */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search your projects..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 cu-text-responsive-sm"
+            />
+          </div>
+
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">

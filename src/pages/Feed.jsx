@@ -1617,6 +1617,7 @@ export default function Feed({ currentUser, authIsLoading }) {
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [inlineAds, setInlineAds] = useState([]);
   const [allCollaboratorProfiles, setAllCollaboratorProfiles] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Use ref for synchronous tracking of loaded item IDs to prevent race conditions
   const loadedItemIdsRef = useRef(new Set());
@@ -2179,8 +2180,29 @@ export default function Feed({ currentUser, authIsLoading }) {
     }
   }, [projects, feedPosts]);
   
-  // filteredItems now just returns allFeedItems as search bar is removed
-  const displayedItems = allFeedItems;
+  // Filter items based on search query
+  const displayedItems = React.useMemo(() => {
+    if (!searchQuery.trim()) {
+      return allFeedItems;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    return allFeedItems.filter(item => {
+      if (item.itemType === 'project') {
+        return item.title?.toLowerCase().includes(query) ||
+               item.description?.toLowerCase().includes(query) ||
+               item.location?.toLowerCase().includes(query) ||
+               item.industry?.toLowerCase().includes(query) ||
+               item.area_of_interest?.toLowerCase().includes(query) ||
+               item.skills_needed?.some(skill => skill.toLowerCase().includes(query));
+      } else if (item.itemType === 'feedPost') {
+        return item.title?.toLowerCase().includes(query) ||
+               item.content?.toLowerCase().includes(query) ||
+               item.tags?.some(tag => tag.toLowerCase().includes(query));
+      }
+      return false;
+    });
+  }, [allFeedItems, searchQuery]);
 
   useEffect(() => {
     const checkUserProjects = async () => {
@@ -2592,7 +2614,18 @@ export default function Feed({ currentUser, authIsLoading }) {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
+                  className="space-y-3"
                 >
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search feed..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 cu-text-responsive-sm"
+                    />
+                  </div>
                   <Button
                     onClick={() => setShowCreatePostDialog(true)}
                     className="cu-button w-full cu-gradient"
