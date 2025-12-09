@@ -225,8 +225,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
       setIsLoading(true);
       try {
         const rawAllProjects = await withRetry(() => base44.entities.Project.filter({ 
-          is_visible_on_feed: true,
-          project_type: "Collaborative"
+          is_visible_on_feed: true
         }, "-created_date"));
         
         const allApplauds = await withRetry(() => base44.entities.ProjectApplaud.filter({}));
