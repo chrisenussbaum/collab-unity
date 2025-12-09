@@ -110,9 +110,21 @@ export default function IdeationNotes({ project, currentUser, isCollaborator }) 
         last_saved_by_name: currentUser.full_name || currentUser.email,
         last_saved_at: new Date().toISOString()
       };
+      
+      // Normalize project_urls to prevent validation errors
+      const normalizedUrls = (project.project_urls || []).map(linkItem => {
+        if (typeof linkItem === 'object' && linkItem.url) {
+          return { title: linkItem.title || '', url: linkItem.url };
+        } else if (typeof linkItem === 'string') {
+          return { title: '', url: linkItem };
+        }
+        return null;
+      }).filter(link => link !== null);
+      
       await withRetry(() => Project.update(project.id, { 
         project_ideation: content,
-        project_ideation_metadata: metadata
+        project_ideation_metadata: metadata,
+        project_urls: normalizedUrls
       }));
       await withRetry(() => ActivityLog.create({
         project_id: project.id,
