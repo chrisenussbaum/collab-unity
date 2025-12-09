@@ -1001,61 +1001,69 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3 py-4">
-            {project.project_urls?.map((url, index) => (
-              <a
-                key={index}
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block group"
-              >
-                <Card className="cu-card bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden">
-                  <div className="p-4">
-                    <div className="flex items-center justify-between text-xs text-gray-500 mb-3 px-2">
-                      <div className="flex items-center space-x-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-                        <span className="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
-                        <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-                      </div>
-                      <div className="flex-1 text-center bg-white rounded-md mx-4 py-1 truncate">
-                        {getDomain(url)}
-                      </div>
-                      <img 
-                        src={getFaviconUrl(url)} 
-                        alt={`${getDomain(url)} icon`}
-                        className="w-4 h-4"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          const fallback = document.createElement('div');
-                          fallback.innerHTML = '<svg class="w-4 h-4 text-gray-400 group-hover:text-green-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" x2="21" y1="14" y2="3"></line></svg>';
-                          e.currentTarget.parentNode.appendChild(fallback.firstChild);
-                        }}
-                      />
-                    </div>
-                    <div className="relative aspect-video bg-white rounded-lg flex items-center justify-center overflow-hidden border">
-                      <div className="text-center p-4">
+            {project.project_urls?.map((linkItem, index) => {
+              const url = typeof linkItem === 'object' ? linkItem.url : linkItem;
+              const title = typeof linkItem === 'object' ? linkItem.title : '';
+              return (
+                <a
+                  key={index}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block group"
+                >
+                  <Card className="cu-card bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden">
+                    <div className="p-4">
+                      <div className="flex items-center justify-between text-xs text-gray-500 mb-3 px-2">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                          <span className="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
+                          <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                        </div>
+                        <div className="flex-1 text-center bg-white rounded-md mx-4 py-1 truncate">
+                          {getDomain(url)}
+                        </div>
                         <img 
                           src={getFaviconUrl(url)} 
                           alt={`${getDomain(url)} icon`}
-                          className="w-16 h-16 mx-auto mb-2 object-contain" 
+                          className="w-4 h-4"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
                             const fallback = document.createElement('div');
-                            fallback.innerHTML = '<div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl mx-auto mb-2 flex items-center justify-center"><svg class="w-8 h-8 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></div>';
+                            fallback.innerHTML = '<svg class="w-4 h-4 text-gray-400 group-hover:text-green-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" x2="21" y1="14" y2="3"></line></svg>';
                             e.currentTarget.parentNode.appendChild(fallback.firstChild);
-                          }} 
+                          }}
                         />
-                        <p className="font-semibold text-gray-800">Published Project</p>
-                        <p className="text-sm text-gray-500 mt-1">Click to visit the live site</p>
                       </div>
-                      <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <LinkIcon className="w-8 h-8 text-black/50" />
+                      <div className="relative aspect-video bg-white rounded-lg flex items-center justify-center overflow-hidden border">
+                        <div className="text-center p-4">
+                          <img 
+                            src={getFaviconUrl(url)} 
+                            alt={`${getDomain(url)} icon`}
+                            className="w-16 h-16 mx-auto mb-2 object-contain" 
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fallback = document.createElement('div');
+                              fallback.innerHTML = '<div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl mx-auto mb-2 flex items-center justify-center"><svg class="w-8 h-8 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></div>';
+                              e.currentTarget.parentNode.appendChild(fallback.firstChild);
+                            }} 
+                          />
+                          {title && (
+                            <p className="text-base font-bold text-gray-900 mb-1 line-clamp-2">{title}</p>
+                          )}
+                          <p className="font-semibold text-gray-800">{title ? 'Showcase' : 'Published Project'}</p>
+                          <p className="text-sm text-gray-500 mt-1">Click to visit</p>
+                        </div>
+                        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <LinkIcon className="w-8 h-8 text-black/50" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Card>
-              </a>
-            ))}
+                  </Card>
+                </a>
+              );
+            })()
+          )}
           </div>
         </DialogContent>
       </Dialog>
@@ -1270,69 +1278,76 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                       className="pb-2"
                       showArrows={project.project_urls.length > 1}
                     >
-                      {project.project_urls.slice(0, 3).map((url, index) => (
-                        <a
-                          key={index}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[360px] block"
-                        >
-                          <Card className="cu-card bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden h-full border-2 border-gray-100 hover:border-green-300 group">
-                            <div className="p-3">
-                              <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-                                <Badge className="bg-green-100 text-green-700 flex items-center gap-1">
-                                  <LinkIcon className="w-3 h-3" />
-                                  Showcase
-                                </Badge>
-                                <img 
-                                  src={getFaviconUrl(url)} 
-                                  alt={`${getDomain(url)} icon`}
-                                  className="w-4 h-4 group-hover:scale-110 transition-transform object-contain"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                    const fallback = document.createElement('div');
-                                    fallback.innerHTML = '<svg class="w-4 h-4 text-gray-400 group-hover:text-green-600 transition-colors" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" x2="21" y1="14" y2="3"></line></svg>';
-                                    e.currentTarget.parentNode.appendChild(fallback.firstChild);
-                                  }}
-                                />
-                              </div>
-                              
-                              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-2">
-                                <div className="bg-gray-900 px-3 py-2 flex items-center justify-between">
-                                  <div className="flex items-center space-x-1">
-                                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                                    <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-                                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                                  </div>
-                                  <span className="text-[10px] text-gray-400">{getDomain(url)}</span>
+                      {project.project_urls.slice(0, 3).map((linkItem, index) => {
+                        const url = typeof linkItem === 'object' ? linkItem.url : linkItem;
+                        const title = typeof linkItem === 'object' ? linkItem.title : '';
+                        return (
+                          <a
+                            key={index}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[360px] block"
+                          >
+                            <Card className="cu-card bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden h-full border-2 border-gray-100 hover:border-green-300 group">
+                              <div className="p-3">
+                                <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+                                  <Badge className="bg-green-100 text-green-700 flex items-center gap-1">
+                                    <LinkIcon className="w-3 h-3" />
+                                    Showcase
+                                  </Badge>
+                                  <img 
+                                    src={getFaviconUrl(url)} 
+                                    alt={`${getDomain(url)} icon`}
+                                    className="w-4 h-4 group-hover:scale-110 transition-transform object-contain"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                      const fallback = document.createElement('div');
+                                      fallback.innerHTML = '<svg class="w-4 h-4 text-gray-400 group-hover:text-green-600 transition-colors" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" x2="21" y1="14" y2="3"></line></svg>';
+                                      e.currentTarget.parentNode.appendChild(fallback.firstChild);
+                                    }}
+                                  />
                                 </div>
-                                <div className="aspect-video bg-white flex items-center justify-center p-4 group-hover:bg-gray-50 transition-colors">
-                                  <div className="text-center">
-                                    <img 
-                                      src={getFaviconUrl(url)} 
-                                      alt={`${getDomain(url)} icon`}
-                                      className="w-16 h-16 mx-auto mb-2 object-contain group-hover:scale-110 transition-transform"
-                                      onError={(e) => {
-                                        e.currentTarget.style.display = 'none';
-                                        const fallback = document.createElement('div');
-                                        fallback.innerHTML = '<div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl mx-auto mb-2 flex items-center justify-center group-hover:scale-110 transition-transform"><svg class="w-8 h-8 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></div>';
-                                        e.currentTarget.parentNode.appendChild(fallback.firstChild);
-                                      }}
-                                    />
-                                    <p className="text-xs font-semibold text-gray-800">Showcase</p>
-                                    <p className="text-[10px] text-gray-500 mt-1">Click to visit</p>
+                                
+                                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-2">
+                                  <div className="bg-gray-900 px-3 py-2 flex items-center justify-between">
+                                    <div className="flex items-center space-x-1">
+                                      <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                                      <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                                      <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                    </div>
+                                    <span className="text-[10px] text-gray-400">{getDomain(url)}</span>
+                                  </div>
+                                  <div className="aspect-video bg-white flex items-center justify-center p-4 group-hover:bg-gray-50 transition-colors">
+                                    <div className="text-center">
+                                      <img 
+                                        src={getFaviconUrl(url)} 
+                                        alt={`${getDomain(url)} icon`}
+                                        className="w-16 h-16 mx-auto mb-2 object-contain group-hover:scale-110 transition-transform"
+                                        onError={(e) => {
+                                          e.currentTarget.style.display = 'none';
+                                          const fallback = document.createElement('div');
+                                          fallback.innerHTML = '<div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl mx-auto mb-2 flex items-center justify-center group-hover:scale-110 transition-transform"><svg class="w-8 h-8 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></div>';
+                                          e.currentTarget.parentNode.appendChild(fallback.firstChild);
+                                        }}
+                                      />
+                                      {title && (
+                                        <p className="text-sm font-bold text-gray-900 mb-1 line-clamp-2">{title}</p>
+                                      )}
+                                      <p className="text-xs font-semibold text-gray-800">{title ? 'Showcase' : 'Showcase'}</p>
+                                      <p className="text-[10px] text-gray-500 mt-1">Click to visit</p>
+                                    </div>
                                   </div>
                                 </div>
+                                
+                                <h4 className="font-semibold text-sm text-gray-900 line-clamp-1 group-hover:text-green-600 transition-colors">
+                                  {title || getDomain(url)}
+                                </h4>
                               </div>
-                              
-                              <h4 className="font-semibold text-sm text-gray-900 line-clamp-1 group-hover:text-green-600 transition-colors">
-                                {getDomain(url)}
-                              </h4>
-                            </div>
-                          </Card>
-                        </a>
-                      ))}
+                            </Card>
+                          </a>
+                        );
+                      })}
                     </HorizontalScrollContainer>
                     
                     {project.project_urls.length > 3 && (
@@ -1348,69 +1363,79 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                     )}
                   </div>
                 ) : (
-                  <a
-                    href={project.project_urls[0]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block"
-                  >
-                    <div className="flex-shrink-0 w-full max-w-md mx-auto">
-                      <Card className="cu-card bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden border-2 border-gray-100 hover:border-green-300 group">
-                        <div className="p-4">
-                          <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                            <Badge className="bg-green-100 text-green-700 flex items-center gap-1">
-                              <LinkIcon className="w-3 h-3" />
-                              Published
-                            </Badge>
-                            <img 
-                              src={getFaviconUrl(project.project_urls[0])} 
-                              alt={`${getDomain(project.project_urls[0])} icon`}
-                              className="w-5 h-5 group-hover:scale-110 transition-transform object-contain"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                const fallback = document.createElement('div');
-                                fallback.innerHTML = '<svg class="w-5 h-5 text-gray-400 group-hover:text-green-600 transition-colors" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" x2="21" y1="14" y2="3"></line></svg>';
-                                e.currentTarget.parentNode.appendChild(fallback.firstChild);
-                              }}
-                            />
-                          </div>
-                          
-                          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-3">
-                            <div className="bg-gray-900 px-3 py-2 flex items-center justify-between">
-                              <div className="flex items-center space-x-1">
-                                <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                                <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-                                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                              </div>
-                              <span className="text-[10px] text-gray-400">{getDomain(project.project_urls[0])}</span>
-                            </div>
-                            <div className="aspect-video bg-white flex items-center justify-center p-6 group-hover:bg-gray-50 transition-colors">
-                              <div className="text-center">
+                  (() => {
+                    const linkItem = project.project_urls[0];
+                    const url = typeof linkItem === 'object' ? linkItem.url : linkItem;
+                    const title = typeof linkItem === 'object' ? linkItem.title : '';
+                    return (
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block"
+                      >
+                        <div className="flex-shrink-0 w-full max-w-md mx-auto">
+                          <Card className="cu-card bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden border-2 border-gray-100 hover:border-green-300 group">
+                            <div className="p-4">
+                              <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                                <Badge className="bg-green-100 text-green-700 flex items-center gap-1">
+                                  <LinkIcon className="w-3 h-3" />
+                                  Published
+                                </Badge>
                                 <img 
-                                  src={getFaviconUrl(project.project_urls[0])} 
-                                  alt={`${getDomain(project.project_urls[0])} icon`}
-                                  className="w-20 h-20 mx-auto mb-3 object-contain group-hover:scale-110 transition-transform"
+                                  src={getFaviconUrl(url)} 
+                                  alt={`${getDomain(url)} icon`}
+                                  className="w-5 h-5 group-hover:scale-110 transition-transform object-contain"
                                   onError={(e) => {
                                     e.currentTarget.style.display = 'none';
                                     const fallback = document.createElement('div');
-                                    fallback.innerHTML = '<div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl mx-auto mb-3 flex items-center justify-center group-hover:scale-110 transition-transform"><svg class="w-10 h-10 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></div>';
+                                    fallback.innerHTML = '<svg class="w-5 h-5 text-gray-400 group-hover:text-green-600 transition-colors" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" x2="21" y1="14" y2="3"></line></svg>';
                                     e.currentTarget.parentNode.appendChild(fallback.firstChild);
                                   }}
                                 />
-                                <p className="text-sm font-semibold text-gray-800">Showcase</p>
-                                <p className="text-xs text-gray-500 mt-1">Click to visit</p>
                               </div>
+                              
+                              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-3">
+                                <div className="bg-gray-900 px-3 py-2 flex items-center justify-between">
+                                  <div className="flex items-center space-x-1">
+                                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                                    <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                  </div>
+                                  <span className="text-[10px] text-gray-400">{getDomain(url)}</span>
+                                </div>
+                                <div className="aspect-video bg-white flex items-center justify-center p-6 group-hover:bg-gray-50 transition-colors">
+                                  <div className="text-center">
+                                    <img 
+                                      src={getFaviconUrl(url)} 
+                                      alt={`${getDomain(url)} icon`}
+                                      className="w-20 h-20 mx-auto mb-3 object-contain group-hover:scale-110 transition-transform"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        const fallback = document.createElement('div');
+                                        fallback.innerHTML = '<div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl mx-auto mb-3 flex items-center justify-center group-hover:scale-110 transition-transform"><svg class="w-10 h-10 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></div>';
+                                        e.currentTarget.parentNode.appendChild(fallback.firstChild);
+                                      }}
+                                    />
+                                    {title && (
+                                      <p className="text-base font-bold text-gray-900 mb-1 line-clamp-2 px-2">{title}</p>
+                                    )}
+                                    <p className="text-sm font-semibold text-gray-800">{title ? 'Showcase' : 'Showcase'}</p>
+                                    <p className="text-xs text-gray-500 mt-1">Click to visit</p>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-green-600 transition-colors">
+                                {title || getDomain(url)}
+                              </h4>
+                              <p className="text-xs text-gray-500">Click anywhere to visit this site</p>
                             </div>
-                          </div>
-                          
-                          <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-green-600 transition-colors">
-                            {getDomain(project.project_urls[0])}
-                          </h4>
-                          <p className="text-xs text-gray-500">Click anywhere to visit this site</p>
+                          </Card>
                         </div>
-                      </Card>
-                    </div>
-                  </a>
+                      </a>
+                    );
+                  })()
                 )}
               </div>
             )}
