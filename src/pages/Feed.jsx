@@ -2352,7 +2352,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                       placeholder="Search feed..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-white"
+                      className="pl-10 cu-text-responsive-sm"
                     />
                   </div>
                   <Button
@@ -2500,7 +2500,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                       placeholder="Search feed..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-white"
+                      className="pl-10 cu-text-responsive-sm"
                     />
                   </div>
                   <Button
@@ -2645,7 +2645,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                       placeholder="Search feed..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-white"
+                      className="pl-10 cu-text-responsive-sm"
                     />
                   </div>
                   <Button
