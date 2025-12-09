@@ -626,9 +626,7 @@ ${navigationScript}
     if (isReadOnly) return;
 
     if (!title.trim()) {
-      if (!isAutoSave) {
-        toast.error("Please enter a project title");
-      }
+      toast.error("Please enter a project title");
       return;
     }
 
@@ -645,40 +643,24 @@ ${navigationScript}
         is_active: true
       };
 
-      // Retry logic for rate limiting
-      const saveWithRetry = async (attempt = 1, maxAttempts = 3) => {
-        try {
-          if (codeProject?.id) {
-            await base44.entities.ProjectIDE.update(codeProject.id, codeData);
-          } else {
-            const newCode = await base44.entities.ProjectIDE.create(codeData);
-            if (onSave) {
-              onSave(newCode);
-            }
-          }
-        } catch (error) {
-          if (error.response?.status === 429 && attempt < maxAttempts) {
-            const delay = 1000 * Math.pow(2, attempt);
-            await new Promise(resolve => setTimeout(resolve, delay));
-            return saveWithRetry(attempt + 1, maxAttempts);
-          }
-          throw error;
+      if (codeProject?.id) {
+        await base44.entities.ProjectIDE.update(codeProject.id, codeData);
+      } else {
+        const newCode = await base44.entities.ProjectIDE.create(codeData);
+        if (onSave) {
+          onSave(newCode);
         }
-      };
-
-      await saveWithRetry();
+      }
 
       setHasUnsavedChanges(false);
       setLastSaved(new Date().toISOString());
       
       if (!isAutoSave) {
-        toast.success("Saved successfully!");
+        toast.success("Saved");
       }
     } catch (error) {
       console.error("Error saving:", error);
-      if (error.response?.status !== 429) {
-        toast.error("Failed to save. Please try again.");
-      }
+      toast.error("Failed to save");
     } finally {
       setIsSaving(false);
     }
