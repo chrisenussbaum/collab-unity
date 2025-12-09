@@ -34,6 +34,7 @@ import {
   Link as LinkIcon,
   Tag,
   Building2,
+  MoreVertical,
   ArrowRight,
   ArrowLeft,
   ChevronLeft,
