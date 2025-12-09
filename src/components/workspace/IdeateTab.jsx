@@ -132,12 +132,6 @@ const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner }) => 
       return;
     }
 
-    if (!project?.id || !currentUser?.email) {
-      console.error("Missing required data for save:", { projectId: project?.id, userEmail: currentUser?.email });
-      toast.error("Failed to save: Missing project or user information");
-      return;
-    }
-
     setIsSaving(true);
     try {
       const metadata = {
@@ -146,26 +140,19 @@ const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner }) => 
         last_saved_at: new Date().toISOString()
       };
 
-      // Save project ideation
       await withRetry(() => Project.update(project.id, { 
         project_ideation: content,
         project_ideation_metadata: metadata
-      }), 5, 2000);
+      }));
 
-      // Create activity log (don't let this fail the save)
-      try {
-        await withRetry(() => ActivityLog.create({
-          project_id: project.id,
-          user_email: currentUser.email,
-          user_name: currentUser.full_name || currentUser.email,
-          action_type: 'ideation_updated',
-          action_description: 'updated the project ideation notes',
-          entity_type: 'ideation'
-        }), 3, 1000);
-      } catch (logError) {
-        console.warn("Failed to create activity log:", logError);
-        // Don't fail the save if activity log fails
-      }
+      await withRetry(() => ActivityLog.create({
+        project_id: project.id,
+        user_email: currentUser.email,
+        user_name: currentUser.full_name || currentUser.email,
+        action_type: 'ideation_updated',
+        action_description: 'updated the project ideation notes',
+        entity_type: 'ideation'
+      }));
 
       initialContentRef.current = content;
       setHasUnsavedChanges(false);
@@ -186,8 +173,9 @@ const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner }) => 
 
     } catch (error) {
       console.error("Error saving ideation:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Unknown error";
-      toast.error(`Failed to save: ${errorMessage}`);
+      if (error.response?.status !== 429) {
+        toast.error("Failed to save ideation. Please try again.");
+      }
     } finally {
       setIsSaving(false);
     }
