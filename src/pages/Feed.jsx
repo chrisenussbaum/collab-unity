@@ -2352,11 +2352,8 @@ export default function Feed({ currentUser, authIsLoading }) {
                       placeholder="Search feed..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 cu-text-responsive-sm bg-white"
+                      className="pl-10 bg-white"
                     />
-                    <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none text-transparent bg-gradient-to-r from-gray-400 to-gray-500 bg-clip-text cu-text-responsive-sm" style={{ display: searchQuery ? 'none' : 'block' }}>
-                      Search feed...
-                    </div>
                   </div>
                   <Button
                     onClick={() => setShowCreatePostDialog(true)}
@@ -2503,11 +2500,8 @@ export default function Feed({ currentUser, authIsLoading }) {
                       placeholder="Search feed..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 cu-text-responsive-sm bg-white"
+                      className="pl-10 bg-white"
                     />
-                    <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none text-transparent bg-gradient-to-r from-gray-400 to-gray-500 bg-clip-text cu-text-responsive-sm" style={{ display: searchQuery ? 'none' : 'block' }}>
-                      Search feed...
-                    </div>
                   </div>
                   <Button
                     onClick={() => setShowCreatePostDialog(true)}
@@ -2651,11 +2645,8 @@ export default function Feed({ currentUser, authIsLoading }) {
                       placeholder="Search feed..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 cu-text-responsive-sm bg-white"
+                      className="pl-10 bg-white"
                     />
-                    <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none text-transparent bg-gradient-to-r from-gray-400 to-gray-500 bg-clip-text cu-text-responsive-sm" style={{ display: searchQuery ? 'none' : 'block' }}>
-                      Search feed...
-                    </div>
                   </div>
                   <Button
                     onClick={() => setShowCreatePostDialog(true)}
