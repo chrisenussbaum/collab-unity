@@ -129,8 +129,9 @@ export default function IdeationNotes({ project, currentUser, isCollaborator }) 
       setIsStale(false);
       toast.success("Notes saved!");
     } catch (error) {
-      console.error("Error saving:", error);
-      toast.error("Failed to save");
+      console.error("Error saving ideation notes:", error);
+      const errorMessage = error?.message || error?.response?.data?.message || "Failed to save notes";
+      toast.error(`Save failed: ${errorMessage}`);
     } finally {
       setIsSaving(false);
     }
