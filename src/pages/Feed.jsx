@@ -1851,16 +1851,13 @@ export default function Feed({ currentUser, authIsLoading }) {
 
       // Update with full profile data and IDEs when available
       const [profilesResponse, fetchedProjectApplauds, fetchedFeedPostApplauds, fetchedIDEsMap] = await Promise.all([
-        profilesPromise.catch(err => {
-          console.warn("Error loading profiles:", err);
-          return { data: [] };
-        }), 
+        profilesPromise, 
         applaudsPromise, 
         feedPostApplaudsPromise,
         idesPromise
       ]);
       
-      const ownerProfiles = profilesResponse?.data || [];
+      const ownerProfiles = profilesResponse.data || [];
       const profilesMap = ownerProfiles.reduce((acc, profile) => {
         acc[profile.email] = profile;
         return acc;
@@ -1911,8 +1908,7 @@ export default function Feed({ currentUser, authIsLoading }) {
           });
           setAllCollaboratorProfiles(collabProfilesMap);
         } catch (error) {
-          console.warn("Error fetching collaborator profiles for activity:", error);
-          // Continue without blocking on profile load
+          console.error("Error fetching collaborator profiles for activity:", error);
         }
       }
 
@@ -2071,8 +2067,7 @@ export default function Feed({ currentUser, authIsLoading }) {
           });
           setAllCollaboratorProfiles(prev => ({ ...prev, ...newCollabProfilesMap }));
         } catch (error) {
-          console.warn("Error fetching new collaborator profiles for activity:", error);
-          // Continue without blocking on profile load
+          console.error("Error fetching new collaborator profiles for activity:", error);
         }
       }
         
@@ -2351,14 +2346,17 @@ export default function Feed({ currentUser, authIsLoading }) {
                   className="space-y-3"
                 >
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
                     <Input
                       type="text"
                       placeholder="Search feed..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-white"
+                      className="pl-10 cu-text-responsive-sm bg-white"
                     />
+                    <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none text-transparent bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text cu-text-responsive-sm" style={{ display: searchQuery ? 'none' : 'block' }}>
+                      Search feed...
+                    </div>
                   </div>
                   <Button
                     onClick={() => setShowCreatePostDialog(true)}
@@ -2399,17 +2397,13 @@ export default function Feed({ currentUser, authIsLoading }) {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
                   <p className="cu-text-responsive-sm text-gray-600">Loading feed...</p>
                 </div>
-              ) : displayedItems.length === 0 ? (
+              ) : displayedItems.length === 0 && !hasMorePosts ? (
                 <div className="text-center py-16">
-                  <h3 className="cu-text-responsive-lg font-semibold">
-                    {searchQuery.trim() ? "No results found" : "No posts found"}
-                  </h3>
+                  <h3 className="cu-text-responsive-lg font-semibold">No posts found</h3>
                   <p className="text-gray-600 mt-2 cu-text-responsive-sm">
-                    {searchQuery.trim() 
-                      ? "Try different keywords or clear your search" 
-                      : "Be the first to create a post!"}
+                    Be the first to create a post!
                   </p>
-                  {!searchQuery.trim() && currentUser && (
+                  {currentUser && (
                     <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
                       <Button 
                         onClick={() => setShowCreatePostDialog(true)}
@@ -2503,14 +2497,17 @@ export default function Feed({ currentUser, authIsLoading }) {
                   className="space-y-3"
                 >
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
                     <Input
                       type="text"
                       placeholder="Search feed..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-white"
+                      className="pl-10 cu-text-responsive-sm bg-white"
                     />
+                    <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none text-transparent bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text cu-text-responsive-sm" style={{ display: searchQuery ? 'none' : 'block' }}>
+                      Search feed...
+                    </div>
                   </div>
                   <Button
                     onClick={() => setShowCreatePostDialog(true)}
@@ -2555,17 +2552,13 @@ export default function Feed({ currentUser, authIsLoading }) {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
                   <p className="cu-text-responsive-sm text-gray-600">Loading feed...</p>
                 </div>
-              ) : displayedItems.length === 0 ? (
+              ) : displayedItems.length === 0 && !hasMorePosts ? (
                 <div className="text-center py-16">
-                  <h3 className="cu-text-responsive-lg font-semibold">
-                    {searchQuery.trim() ? "No results found" : "No posts found"}
-                  </h3>
+                  <h3 className="cu-text-responsive-lg font-semibold">No posts found</h3>
                   <p className="text-gray-600 mt-2 cu-text-responsive-sm">
-                    {searchQuery.trim() 
-                      ? "Try different keywords or clear your search" 
-                      : "Be the first to create a post!"}
+                    Be the first to create a post!
                   </p>
-                  {!searchQuery.trim() && currentUser && (
+                  {currentUser && (
                     <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
                       <Button 
                         onClick={() => setShowCreatePostDialog(true)}
@@ -2652,14 +2645,17 @@ export default function Feed({ currentUser, authIsLoading }) {
                   className="space-y-3"
                 >
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
                     <Input
                       type="text"
                       placeholder="Search feed..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-white"
+                      className="pl-10 cu-text-responsive-sm bg-white"
                     />
+                    <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none text-transparent bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text cu-text-responsive-sm" style={{ display: searchQuery ? 'none' : 'block' }}>
+                      Search feed...
+                    </div>
                   </div>
                   <Button
                     onClick={() => setShowCreatePostDialog(true)}
