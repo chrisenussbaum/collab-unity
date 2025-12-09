@@ -12,6 +12,7 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editedLinks, setEditedLinks] = useState(project.project_urls || []);
   const [newLink, setNewLink] = useState("");
+  const [newLinkTitle, setNewLinkTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   const isOwner = currentUser && project.created_by === currentUser.email;
@@ -34,8 +35,13 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
 
     try {
       new URL(newLink);
-      setEditedLinks([...editedLinks, newLink.trim()]);
+      const linkObj = {
+        title: newLinkTitle.trim() || '',
+        url: newLink.trim()
+      };
+      setEditedLinks([...editedLinks, linkObj]);
       setNewLink("");
+      setNewLinkTitle("");
       toast.success("Link added! Click 'Save Changes' to save.");
     } catch (e) {
       toast.error("Invalid URL. Please include http:// or https://");
@@ -96,7 +102,16 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
   const handleCancel = () => {
     setEditedLinks([...projectLinks]);
     setNewLink("");
+    setNewLinkTitle("");
     setIsEditModalOpen(false);
+  };
+
+  const getLinkUrl = (linkItem) => {
+    return typeof linkItem === 'object' ? linkItem.url : linkItem;
+  };
+
+  const getLinkTitle = (linkItem) => {
+    return typeof linkItem === 'object' ? linkItem.title : '';
   };
 
   const getDomain = (url) => {
@@ -106,6 +121,16 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
     } catch (e) {
       return url;
     }
+  };
+
+  const handleEditLinkTitle = (index, newTitle) => {
+    const updatedLinks = [...editedLinks];
+    if (typeof updatedLinks[index] === 'object') {
+      updatedLinks[index] = { ...updatedLinks[index], title: newTitle };
+    } else {
+      updatedLinks[index] = { url: updatedLinks[index], title: newTitle };
+    }
+    setEditedLinks(updatedLinks);
   };
 
   if (projectLinks.length === 0 && !isOwner) {
@@ -151,26 +176,35 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
             </div>
           ) : (
             <div className="space-y-2">
-              {projectLinks.map((link, index) => (
-                <a
-                  key={`link-${index}`}
-                  href={link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group border border-gray-100"
-                >
-                  <div className="flex items-center space-x-3 min-w-0">
-                    <ExternalLink className="w-5 h-5 text-purple-600 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm text-gray-900 truncate">{getDomain(link)}</p>
-                      {index === 0 && (
-                        <p className="text-xs text-purple-600 mt-0.5">Shown on Feed</p>
-                      )}
+              {projectLinks.map((linkItem, index) => {
+                const url = getLinkUrl(linkItem);
+                const title = getLinkTitle(linkItem);
+                return (
+                  <a
+                    key={`link-${index}`}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group border border-gray-100"
+                  >
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <ExternalLink className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        {title && (
+                          <p className="font-semibold text-sm text-gray-900 truncate">{title}</p>
+                        )}
+                        <p className={`text-xs ${title ? 'text-gray-500' : 'font-medium text-gray-900'} truncate`}>
+                          {getDomain(url)}
+                        </p>
+                        {index === 0 && (
+                          <p className="text-xs text-purple-600 mt-0.5">Shown on Feed</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-gray-600 flex-shrink-0" />
-                </a>
-              ))}
+                    <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-gray-600 flex-shrink-0" />
+                  </a>
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -189,7 +223,13 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="new-link">Add Showcase Link</Label>
+              <Label htmlFor="new-link-title">Add Showcase Link</Label>
+              <Input
+                id="new-link-title"
+                placeholder="Link title (e.g., Live Demo, GitHub Repo, Live Stream)"
+                value={newLinkTitle}
+                onChange={(e) => setNewLinkTitle(e.target.value)}
+              />
               <div className="flex gap-2">
                 <Input
                   id="new-link"
@@ -213,52 +253,62 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
 
             {editedLinks.length > 0 && (
               <div className="space-y-2">
-                <Label>Current Links (Use arrows to reorder)</Label>
+                <Label>Current Links (Use arrows to reorder, edit titles inline)</Label>
                 <div className="space-y-2">
-                  {editedLinks.map((link, index) => (
-                    <div
-                      key={`link-${index}`}
-                      className="flex items-center gap-2 p-3 bg-white border border-gray-200 rounded-lg"
-                    >
-                      <div className="flex flex-col gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleMoveUp(index)}
-                          disabled={index === 0}
-                          className="h-6 w-6 p-0 hover:bg-purple-50 disabled:opacity-30"
-                          type="button"
-                        >
-                          <ChevronUp className="w-4 h-4 text-purple-600" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleMoveDown(index)}
-                          disabled={index === editedLinks.length - 1}
-                          className="h-6 w-6 p-0 hover:bg-purple-50 disabled:opacity-30"
-                          type="button"
-                        >
-                          <ChevronDown className="w-4 h-4 text-purple-600" />
-                        </Button>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{getDomain(link)}</p>
-                        {index === 0 && (
-                          <p className="text-xs text-purple-600 mt-0.5">Main project link</p>
-                        )}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemoveLink(index)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                        type="button"
+                  {editedLinks.map((linkItem, index) => {
+                    const url = getLinkUrl(linkItem);
+                    const title = getLinkTitle(linkItem);
+                    return (
+                      <div
+                        key={`link-${index}`}
+                        className="flex items-center gap-2 p-3 bg-white border border-gray-200 rounded-lg"
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleMoveUp(index)}
+                            disabled={index === 0}
+                            className="h-6 w-6 p-0 hover:bg-purple-50 disabled:opacity-30"
+                            type="button"
+                          >
+                            <ChevronUp className="w-4 h-4 text-purple-600" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleMoveDown(index)}
+                            disabled={index === editedLinks.length - 1}
+                            className="h-6 w-6 p-0 hover:bg-purple-50 disabled:opacity-30"
+                            type="button"
+                          >
+                            <ChevronDown className="w-4 h-4 text-purple-600" />
+                          </Button>
+                        </div>
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <Input
+                            placeholder="Link title (optional)"
+                            value={title}
+                            onChange={(e) => handleEditLinkTitle(index, e.target.value)}
+                            className="text-sm h-8"
+                          />
+                          <p className="text-xs text-gray-500 truncate">{getDomain(url)}</p>
+                          {index === 0 && (
+                            <p className="text-xs text-purple-600">Main showcase link</p>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveLink(index)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          type="button"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
