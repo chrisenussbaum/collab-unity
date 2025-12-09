@@ -201,22 +201,6 @@ export default function MyProjects({ currentUser, authIsLoading }) {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 sm:mb-8"
         >
-          {/* Search Bar */}
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
-            <Input
-              type="text"
-              placeholder="Search your projects..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 cu-text-responsive-sm bg-white placeholder:text-transparent placeholder:bg-gradient-to-r placeholder:from-purple-400 placeholder:to-indigo-400 placeholder:bg-clip-text"
-              style={{ '--tw-placeholder-opacity': '1' }}
-            />
-            <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none text-transparent bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text cu-text-responsive-sm" style={{ display: searchQuery ? 'none' : 'block' }}>
-              Search your projects...
-            </div>
-          </div>
-
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
