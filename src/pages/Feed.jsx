@@ -1717,7 +1717,7 @@ export default function Feed({ currentUser, authIsLoading }) {
   // Use ref for synchronous tracking of loaded item IDs to prevent race conditions
   const loadedItemIdsRef = useRef(new Set());
   const consecutiveEmptyLoadsRef = useRef(0);
-  const MAX_EMPTY_LOAD_ATTEMPTS = 3;
+  const MAX_EMPTY_LOAD_ATTEMPTS = 5; // Increased to be more lenient with duplicate detection
   
   const location = useLocation();
   const highlightedItemIdRef = useRef(null);
@@ -2059,10 +2059,19 @@ export default function Feed({ currentUser, authIsLoading }) {
       console.log(`After filtering: ${uniqueNewItems.length} unique items`);
 
       if (uniqueNewItems.length === 0) {
+        // Check if database returned nothing at all - means we're at the end
+        if (moreProjectsData.length === 0 && moreFeedPostsData.length === 0) {
+          console.log('Database returned no results, reached the end');
+          setHasMorePosts(false);
+          setIsLoadingMore(false);
+          consecutiveEmptyLoadsRef.current = 0;
+          return;
+        }
+        
+        // Otherwise, all items were duplicates - try loading from further offset
         consecutiveEmptyLoadsRef.current++;
         console.log(`All fetched items were duplicates (attempt ${consecutiveEmptyLoadsRef.current}/${MAX_EMPTY_LOAD_ATTEMPTS})`);
         
-        // If we've tried multiple times and still getting duplicates, assume we've reached the end
         if (consecutiveEmptyLoadsRef.current >= MAX_EMPTY_LOAD_ATTEMPTS) {
           console.log('Max empty load attempts reached, no more unique posts');
           setHasMorePosts(false);
@@ -2071,10 +2080,11 @@ export default function Feed({ currentUser, authIsLoading }) {
           return;
         }
         
-        // Try loading from further offset
-        setCurrentPage(nextPage);
+        // Use functional update to ensure correct page number
+        setCurrentPage(prev => prev + 1);
         setIsLoadingMore(false);
-        setTimeout(() => loadMorePosts(), 100);
+        // Retry immediately instead of setTimeout
+        requestAnimationFrame(() => loadMorePosts());
         return;
       }
 
@@ -2166,15 +2176,16 @@ export default function Feed({ currentUser, authIsLoading }) {
       
       setCurrentPage(nextPage);
       
-      // Determine if there are more items. If we got less than requested *or* found less unique items
-      // than `fetchAmount`, it's likely we're near the end.
-      const databaseHasMoreProjects = moreProjectsData.length >= fetchAmount;
-      const databaseHasMoreFeedPosts = moreFeedPostsData.length >= fetchAmount;
-      const hasMore = databaseHasMoreProjects || databaseHasMoreFeedPosts || uniqueNewItems.length >= fetchAmount;
+      // Determine if there are more items based on what the database returned
+      // If we got any results from the database, assume there might be more
+      // Only set hasMore to false if BOTH sources returned 0 results
+      const gotSomeProjects = moreProjectsData.length > 0;
+      const gotSomeFeedPosts = moreFeedPostsData.length > 0;
+      const hasMore = gotSomeProjects || gotSomeFeedPosts;
       
       setHasMorePosts(hasMore);
       
-      console.log(`Database has more projects: ${databaseHasMoreProjects}, Feed posts: ${databaseHasMoreFeedPosts}, Has more items: ${hasMore}`);
+      console.log(`Got ${moreProjectsData.length} projects, ${moreFeedPostsData.length} feed posts. Has more: ${hasMore}`);
 
     } catch (error) {
       console.error("Error loading more posts:", error);
