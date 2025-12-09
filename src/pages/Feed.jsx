@@ -2343,7 +2343,18 @@ export default function Feed({ currentUser, authIsLoading }) {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
+                  className="space-y-3"
                 >
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search feed..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 cu-text-responsive-sm"
+                    />
+                  </div>
                   <Button
                     onClick={() => setShowCreatePostDialog(true)}
                     className="cu-button w-full cu-gradient"
@@ -2480,7 +2491,18 @@ export default function Feed({ currentUser, authIsLoading }) {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
+                  className="space-y-3"
                 >
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search feed..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 cu-text-responsive-sm"
+                    />
+                  </div>
                   <Button
                     onClick={() => setShowCreatePostDialog(true)}
                     className="cu-button w-full cu-gradient"
