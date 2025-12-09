@@ -1051,7 +1051,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                           {title && (
                             <p className="text-base font-bold text-gray-900 mb-1 line-clamp-2">{title}</p>
                           )}
-                          <p className="font-semibold text-gray-800">{title ? 'Showcase' : 'Published Project'}</p>
                           <p className="text-sm text-gray-500 mt-1">Click to visit</p>
                         </div>
                         <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -1333,7 +1332,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                                       {title && (
                                         <p className="text-sm font-bold text-gray-900 mb-1 line-clamp-2">{title}</p>
                                       )}
-                                      <p className="text-xs font-semibold text-gray-800">{title ? 'Showcase' : 'Showcase'}</p>
                                       <p className="text-[10px] text-gray-500 mt-1">Click to visit</p>
                                     </div>
                                   </div>
@@ -1419,7 +1417,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                                     {title && (
                                       <p className="text-base font-bold text-gray-900 mb-1 line-clamp-2 px-2">{title}</p>
                                     )}
-                                    <p className="text-sm font-semibold text-gray-800">{title ? 'Showcase' : 'Showcase'}</p>
                                     <p className="text-xs text-gray-500 mt-1">Click to visit</p>
                                   </div>
                                 </div>
