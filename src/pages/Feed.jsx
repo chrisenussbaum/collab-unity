@@ -21,8 +21,6 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 
 import {
   MessageCircle,
@@ -36,9 +34,6 @@ import {
   Link as LinkIcon,
   Tag,
   Building2,
-  MoreVertical,
-  Eye,
-  Edit,
   ArrowRight,
   ArrowLeft,
   ChevronLeft,
@@ -603,12 +598,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
     }
   }, [projectApplauds, project.id, currentUser]);
 
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [editFormData, setEditFormData] = useState({
-    title: project.title || '',
-    description: project.description || ''
-  });
-  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
 
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(project.followers_count || 0);
@@ -862,44 +852,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
     }
   };
 
-  const handleEditPost = () => {
-    setEditFormData({
-      title: project.title || '',
-      description: project.description || ''
-    });
-    setShowEditDialog(true);
-  };
 
-  const handleSaveEdit = async () => {
-    if (!editFormData.title.trim()) {
-      toast.error("Project title cannot be empty.");
-      return;
-    }
-
-    if (!editFormData.description.trim()) {
-      toast.error("Project description cannot be empty.");
-      return;
-    }
-
-    setIsSavingEdit(true);
-    try {
-      await Project.update(project.id, {
-        title: editFormData.title.trim(),
-        description: editFormData.description.trim()
-      });
-
-      setShowEditDialog(false);
-      
-      if (onProjectUpdate) {
-        onProjectUpdate();
-      }
-    } catch (error) {
-      console.error("Error updating project:", error);
-      toast.error("Failed to update project.");
-    } finally {
-      setIsSavingEdit(false);
-    }
-  };
 
   const getDomain = (urlString) => {
     try {
@@ -1029,57 +982,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
               className="w-full"
             >
               Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Edit Post</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-title">Project Title *</Label>
-              <Input
-                id="edit-title"
-                value={editFormData.title}
-                onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-                placeholder="Enter project title..."
-                className="text-base"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-description">Project Description *</Label>
-              <Textarea
-                id="edit-description"
-                value={editFormData.description}
-                onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                placeholder="Describe your project..."
-                rows={8}
-                className="resize-none text-base"
-              />
-              <p className="text-xs text-gray-500 text-right">
-                {editFormData.description.length} characters
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowEditDialog(false)}
-              disabled={isSavingEdit}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSaveEdit}
-              disabled={isSavingEdit || !editFormData.title.trim() || !editFormData.description.trim()}
-              className="cu-button"
-            >
-              {isSavingEdit ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1242,27 +1144,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                   <Share2 className="w-4 h-4" />
                 </Button>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="flex-shrink-0">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link to={createPageUrl(`ProjectDetail?id=${project.id}`)} className="cursor-pointer">
-                        <Eye className="w-4 h-4 mr-2" />
-                        View Project
-                      </Link>
-                    </DropdownMenuItem>
-                    {isOwnProject && (
-                      <DropdownMenuItem onClick={handleEditPost}>
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit Post
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+
               </div>
             </div>
              <div className="flex flex-wrap items-center gap-2 mt-4">
