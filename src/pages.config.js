@@ -19,7 +19,6 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import JoinProjects from './pages/JoinProjects';
 import Sync from './pages/Sync';
 import Welcome from './pages/Welcome';
-import About from './pages/About';
 import Contact from './pages/Contact';
 import SupportCU from './pages/SupportCU';
 import ReportBug from './pages/ReportBug';
@@ -51,7 +50,6 @@ export const PAGES = {
     "JoinProjects": JoinProjects,
     "Sync": Sync,
     "Welcome": Welcome,
-    "About": About,
     "Contact": Contact,
     "SupportCU": SupportCU,
     "ReportBug": ReportBug,
