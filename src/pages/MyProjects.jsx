@@ -99,8 +99,10 @@ export default function MyProjects({ currentUser, authIsLoading }) {
       return { projects: uniqueProjects, collaboratorProfiles: profilesMap };
     },
     enabled: !!currentUser && !authIsLoading,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   useEffect(() => {
@@ -292,6 +294,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                                 src={project.logo_url} 
                                 alt={project.title}
                                 className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover border-2 border-gray-100 shadow-sm"
+                                loading="lazy"
                               />
                             ) : (
                               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center border-2 border-gray-100 shadow-sm">

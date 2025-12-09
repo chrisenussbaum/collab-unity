@@ -312,8 +312,10 @@ export default function Discover({ currentUser: propCurrentUser }) {
       };
     },
     enabled: userInitialized && activeTab === "projects",
-    staleTime: 3 * 60 * 1000, // 3 minutes
-    cacheTime: 15 * 60 * 1000, // 15 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: usersQueryData, isLoading: isUsersQueryLoading } = useQuery({
@@ -334,8 +336,10 @@ export default function Discover({ currentUser: propCurrentUser }) {
       return filteredUsers;
     },
     enabled: userInitialized && activeTab === "people",
-    staleTime: 3 * 60 * 1000, // 3 minutes
-    cacheTime: 15 * 60 * 1000, // 15 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   // Update state when query data changes
@@ -978,6 +982,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                                       src={project.logo_url} 
                                       alt={project.title}
                                       className="w-10 h-10 rounded-lg object-cover border-2 border-gray-100 shadow-sm flex-shrink-0"
+                                      loading="lazy"
                                     />
                                     <div className="flex-1 min-w-0">
                                       <h3 className="font-bold text-sm text-gray-900 hover:text-purple-600 transition-colors line-clamp-2">
@@ -1237,6 +1242,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                                       src={project.logo_url} 
                                       alt={project.title}
                                       className="w-12 h-12 rounded-lg object-cover border-2 border-gray-100 shadow-sm"
+                                      loading="lazy"
                                     />
                                   </div>
                                   <div className="flex-1 min-w-0">

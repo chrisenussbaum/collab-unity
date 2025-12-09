@@ -186,18 +186,22 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
   }, [post.related_project_id]);
 
   const handleApplaud = async () => {
-    if (!currentUser) {
-      return;
-    }
+    if (!currentUser) return;
+
+    // Optimistic update
+    const wasApplauded = isApplauded;
+    const previousCount = applaudCount;
+    
+    setIsApplauded(!wasApplauded);
+    setApplaudCount(prev => wasApplauded ? prev - 1 : prev + 1);
+
     try {
-      if (isApplauded) {
+      if (wasApplauded) {
         const userApplaud = feedPostApplauds.find(applaud => 
           applaud.feed_post_id === post.id && applaud.user_email === currentUser.email
         );
         if (userApplaud) {
           await FeedPostApplaud.delete(userApplaud.id);
-          setIsApplauded(false);
-          setApplaudCount(prev => prev - 1);
           if (onApplaudUpdate) onApplaudUpdate();
         }
       } else {
@@ -206,11 +210,9 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
           user_email: currentUser.email,
           user_name: currentUser.full_name || currentUser.email
         });
-        setIsApplauded(true);
-        setApplaudCount(prev => prev + 1);
 
         if (post.created_by !== currentUser.email) {
-          await Notification.create({
+          Notification.create({
             user_email: post.created_by,
             title: "Someone applauded your post!",
             message: `${currentUser.full_name || currentUser.email} applauded your post "${post.title || post.content.substring(0, 50) + '...' }".`,
@@ -219,11 +221,14 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
             actor_email: currentUser.email,
             actor_name: currentUser.full_name || currentUser.email,
             metadata: { post_title: post.title }
-          });
+          }).catch(err => console.error("Failed to create notification:", err));
         }
         if (onApplaudUpdate) onApplaudUpdate();
       }
     } catch (error) {
+      // Rollback on error
+      setIsApplauded(wasApplauded);
+      setApplaudCount(previousCount);
       console.error("Error handling feed post applaud:", error);
       toast.error("Failed to update applaud.");
     }
@@ -297,7 +302,7 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
                 className="flex-shrink-0"
               >
                 <Avatar className="w-12 h-12 border-2 border-gray-100 shadow-sm">
-                  <AvatarImage src={owner?.profile_image} className="object-cover" />
+                  <AvatarImage src={owner?.profile_image} className="object-cover" loading="lazy" />
                   <AvatarFallback className="bg-blue-100 text-blue-600 font-bold">
                     {owner?.full_name?.[0] || 'U'}
                   </AvatarFallback>
@@ -798,23 +803,23 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
   };
 
   const handleApplaud = async () => {
-    if (!currentUser) {
-      return;
-    }
+    if (!currentUser) return;
+
+    // Optimistic update - update UI immediately
+    const wasApplauded = isApplauded;
+    const previousCount = applaudCount;
+    
+    setIsApplauded(!wasApplauded);
+    setApplaudCount(prev => wasApplauded ? prev - 1 : prev + 1);
 
     try {
-      if (isApplauded) {
+      if (wasApplauded) {
         const userApplaud = projectApplauds.find(applaud => 
           applaud.project_id === project.id && applaud.user_email === currentUser.email
         );
         if (userApplaud) {
           await ProjectApplaud.delete(userApplaud.id);
-          setIsApplauded(false);
-          setApplaudCount(prev => prev - 1);
-          
-          if (onApplaudUpdate) {
-            onApplaudUpdate();
-          }
+          if (onApplaudUpdate) onApplaudUpdate();
         }
       } else {
         await ProjectApplaud.create({
@@ -822,11 +827,9 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
           user_email: currentUser.email,
           user_name: currentUser.full_name || currentUser.email
         });
-        setIsApplauded(true);
-        setApplaudCount(prev => prev + 1);
 
         if (project.created_by !== currentUser.email) {
-          await Notification.create({
+          Notification.create({
             user_email: project.created_by,
             title: "Someone applauded your project!",
             message: `${currentUser.full_name || currentUser.email} applauded your project "${project.title}".`,
@@ -835,14 +838,15 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
             actor_email: currentUser.email,
             actor_name: currentUser.full_name || currentUser.email,
             metadata: { project_title: project.title }
-          });
+          }).catch(err => console.error("Failed to create notification:", err));
         }
         
-        if (onApplaudUpdate) {
-          onApplaudUpdate();
-        }
+        if (onApplaudUpdate) onApplaudUpdate();
       }
     } catch (error) {
+      // Rollback on error
+      setIsApplauded(wasApplauded);
+      setApplaudCount(previousCount);
       console.error("Error handling applaud:", error);
       toast.error("Failed to update applaud.");
     }
@@ -1083,6 +1087,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                       src={project.logo_url} 
                       alt={project.title}
                       className="w-12 h-12 rounded-lg object-cover border-2 border-gray-100 shadow-sm"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center border-2 border-gray-100 shadow-sm">
@@ -2064,21 +2069,33 @@ export default function Feed({ currentUser, authIsLoading }) {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Only trigger if not loading more, there are more posts
       if (isLoadingMore || !hasMorePosts) return;
 
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.offsetHeight;
 
-      // Trigger load more when user scrolls near the bottom (e.g., 300px from the end)
-      if (scrollTop + windowHeight >= documentHeight - 300) {
+      // Prefetch when 70% scrolled (aggressive prefetching)
+      const scrollPercentage = (scrollTop + windowHeight) / documentHeight;
+      if (scrollPercentage >= 0.7) {
         loadMorePosts();
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Throttle scroll events for better performance
+    let ticking = false;
+    const throttledScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', throttledScroll, { passive: true });
+    return () => window.removeEventListener('scroll', throttledScroll);
   }, [loadMorePosts, isLoadingMore, hasMorePosts]);
 
   useEffect(() => {
