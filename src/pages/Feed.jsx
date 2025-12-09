@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Project, Advertisement, ProjectApplaud, Notification, FeedPost, FeedPostApplaud, Comment, User } from "@/entities/all";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1756,30 +1757,18 @@ export default function Feed({ currentUser, authIsLoading }) {
     }
   }, []);
 
-  // OPTIMIZED: Load feed data with parallel requests and immediate rendering
-  const loadFeedData = useCallback(async () => {
-    if (authIsLoading) return;
-
-    setIsLoading(true);
-    setCurrentPage(1);
-    setHasMorePosts(true);
-    consecutiveEmptyLoadsRef.current = 0;
-    
-    // Clear existing data
-    setProjects([]);
-    setFeedPosts([]);
-    loadedItemIdsRef.current = new Set();
-    setProjectApplauds([]);
-    setFeedPostApplauds([]);
-    setProjectIDEsMap({});
-
-    try {
+  // React Query: Fetch initial feed data with caching
+  const { data: cachedFeedData, isLoading: isQueryLoading } = useQuery({
+    queryKey: ['feed-initial', currentUser?.email],
+    queryFn: async () => {
       // Fetch both projects and feed posts
       const [visibleProjectsData, initialFeedPostsData] = await Promise.all([
         withRetry(() =>
-          Project.filter({ is_visible_on_feed: true }, "-created_date", POSTS_PER_PAGE * 2, 0) // Fetch more than needed
+          Project.filter({ is_visible_on_feed: true }, "-created_date", POSTS_PER_PAGE * 2, 0)
         ),
-        loadFeedPosts(1, POSTS_PER_PAGE * 2, 0) // Fetch more than needed
+        withRetry(() =>
+          FeedPost.filter({ is_visible: true }, "-created_date", POSTS_PER_PAGE * 2, 0)
+        )
       ]);
       
       const combinedInitialItems = [
@@ -1789,13 +1778,7 @@ export default function Feed({ currentUser, authIsLoading }) {
 
       const itemsForInitialDisplay = combinedInitialItems.slice(0, POSTS_PER_PAGE);
 
-      if (itemsForInitialDisplay.length === 0) {
-        setIsLoading(false);
-        setHasMorePosts(false);
-        return;
-      }
-
-      // Track loaded item IDs immediately in ref
+      // Track loaded item IDs immediately
       itemsForInitialDisplay.forEach(p => loadedItemIdsRef.current.add(p.id));
 
       // Separate projects and feed posts
@@ -1805,88 +1788,42 @@ export default function Feed({ currentUser, authIsLoading }) {
       // Get unique owner emails
       const allOwnerEmails = [...new Set(itemsForInitialDisplay.map(p => p.created_by))];
       
-      const profilesPromise = allOwnerEmails.length > 0 
-        ? withRetry(() => getPublicUserProfiles({ emails: allOwnerEmails }), 2, 2000)
-        : Promise.resolve({ data: [] });
-
       const projectIds = initialProjects.map(p => p.id);
       const feedPostIds = initialFeedPosts.map(fp => fp.id);
       
-      const applaudsPromise = loadApplauds(projectIds);
-      const feedPostApplaudsPromise = loadFeedPostApplauds(feedPostIds);
-      const idesPromise = loadIDEsForProjects(projectIds); // BATCH LOAD IDEs
-
-      // Populate with basic owner data for immediate rendering
-      const populatedInitialProjects = initialProjects.map(project => ({
-        ...project,
-        owner: {
-          email: project.created_by,
-          full_name: project.created_by.split('@')[0],
-          username: null,
-          profile_image: null,
-        }
-      }));
-      const populatedInitialFeedPosts = initialFeedPosts.map(post => ({
-        ...post,
-        owner: {
-          email: post.created_by,
-          full_name: post.created_by.split('@')[0],
-          username: null,
-          profile_image: null,
-        }
-      }));
-
-
-      // Show content immediately
-      setProjects(populatedInitialProjects);
-      setFeedPosts(populatedInitialFeedPosts);
-      setHasMorePosts(combinedInitialItems.length > POSTS_PER_PAGE); // If we fetched more than POSTS_PER_PAGE initially, assume more exist
-      setIsLoading(false);
-
-      // Load ads in background - don't await this
-      loadAdsForPage(1, itemsForInitialDisplay).catch(err => {
-        console.error("Background ad loading failed:", err);
-      });
-
-      // Update with full profile data and IDEs when available
+      // Parallel load all data
       const [profilesResponse, fetchedProjectApplauds, fetchedFeedPostApplauds, fetchedIDEsMap] = await Promise.all([
-        profilesPromise, 
-        applaudsPromise, 
-        feedPostApplaudsPromise,
-        idesPromise
+        allOwnerEmails.length > 0 ? withRetry(() => getPublicUserProfiles({ emails: allOwnerEmails }), 2, 2000) : Promise.resolve({ data: [] }),
+        projectIds.length > 0 ? withRetry(() => ProjectApplaud.filter({ project_id: { $in: projectIds } })) : Promise.resolve([]),
+        feedPostIds.length > 0 ? withRetry(() => FeedPostApplaud.filter({ feed_post_id: { $in: feedPostIds } })) : Promise.resolve([]),
+        projectIds.length > 0 ? loadIDEsForProjects(projectIds) : Promise.resolve({})
       ]);
       
-      const ownerProfiles = profilesResponse.data || [];
-      const profilesMap = ownerProfiles.reduce((acc, profile) => {
+      const profilesMap = (profilesResponse.data || []).reduce((acc, profile) => {
         acc[profile.email] = profile;
         return acc;
       }, {});
 
-      // Update projects and feed posts with full profile data
-      const fullyPopulatedProjects = populatedInitialProjects.map(project => {
-        const owner = profilesMap[project.created_by] || {
+      // Populate projects and posts with full data
+      const fullyPopulatedProjects = initialProjects.map(project => ({
+        ...project,
+        owner: profilesMap[project.created_by] || {
           email: project.created_by,
           full_name: project.created_by.split('@')[0],
           username: null,
           profile_image: null,
-        };
-        return { ...project, owner };
-      });
-      const fullyPopulatedFeedPosts = populatedInitialFeedPosts.map(post => {
-        const owner = profilesMap[post.created_by] || {
+        }
+      }));
+      
+      const fullyPopulatedFeedPosts = initialFeedPosts.map(post => ({
+        ...post,
+        owner: profilesMap[post.created_by] || {
           email: post.created_by,
           full_name: post.created_by.split('@')[0],
           username: null,
           profile_image: null,
-        };
-        return { ...post, owner };
-      });
-
-      setProjects(fullyPopulatedProjects);
-      setFeedPosts(fullyPopulatedFeedPosts);
-      setProjectApplauds(fetchedProjectApplauds);
-      setFeedPostApplauds(fetchedFeedPostApplauds);
-      setProjectIDEsMap(fetchedIDEsMap); // SET IDEs MAP
+        }
+      }));
 
       // Fetch collaborator profiles for activity indicators
       const allCollaboratorEmails = new Set();
@@ -1896,36 +1833,70 @@ export default function Feed({ currentUser, authIsLoading }) {
         }
       });
       
+      let collabProfilesMap = {};
       if (allCollaboratorEmails.size > 0) {
         try {
           const { data: collabProfiles } = await withRetry(() => 
             getPublicUserProfiles({ emails: Array.from(allCollaboratorEmails) })
           );
-          const collabProfilesMap = {};
           (collabProfiles || []).forEach(profile => {
             collabProfilesMap[profile.email] = profile;
           });
-          setAllCollaboratorProfiles(collabProfilesMap);
         } catch (error) {
           console.error("Error fetching collaborator profiles for activity:", error);
         }
       }
 
-    } catch (error) {
-      console.error("Error loading initial feed data:", error);
-      if (error.response?.status === 429) {
-        toast.error("Loading data too quickly. Please wait a moment and refresh.");
-      } else {
-        toast.error("Failed to load feed. Please try again.");
-      }
-      setIsLoading(false);
-      setHasMorePosts(false);
-    }
-  }, [authIsLoading, loadAdsForPage, loadApplauds, loadFeedPosts, loadFeedPostApplauds, loadIDEsForProjects]);
+      return {
+        projects: fullyPopulatedProjects,
+        feedPosts: fullyPopulatedFeedPosts,
+        projectApplauds: fetchedProjectApplauds,
+        feedPostApplauds: fetchedFeedPostApplauds,
+        projectIDEsMap: fetchedIDEsMap,
+        collaboratorProfiles: collabProfilesMap,
+        hasMore: combinedInitialItems.length > POSTS_PER_PAGE
+      };
+    },
+    enabled: !authIsLoading,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+  });
 
+  const queryClient = useQueryClient();
+
+  // Update local state when cached data changes
   useEffect(() => {
-    loadFeedData();
-  }, [loadFeedData]);
+    if (cachedFeedData && !isQueryLoading) {
+      setProjects(cachedFeedData.projects);
+      setFeedPosts(cachedFeedData.feedPosts);
+      setProjectApplauds(cachedFeedData.projectApplauds);
+      setFeedPostApplauds(cachedFeedData.feedPostApplauds);
+      setProjectIDEsMap(cachedFeedData.projectIDEsMap);
+      setAllCollaboratorProfiles(cachedFeedData.collaboratorProfiles);
+      setHasMorePosts(cachedFeedData.hasMore);
+      setCurrentPage(1);
+      consecutiveEmptyLoadsRef.current = 0;
+      
+      // Load ads in background
+      if (cachedFeedData.projects.length > 0 || cachedFeedData.feedPosts.length > 0) {
+        const items = [
+          ...cachedFeedData.projects.map(p => ({ ...p, itemType: 'project' })),
+          ...cachedFeedData.feedPosts.map(fp => ({ ...fp, itemType: 'feedPost' }))
+        ].slice(0, POSTS_PER_PAGE);
+        loadAdsForPage(1, items).catch(err => console.error("Background ad loading failed:", err));
+      }
+    }
+  }, [cachedFeedData, isQueryLoading, loadAdsForPage]);
+
+  // Manual refresh function for post creation/deletion
+  const loadFeedData = useCallback(() => {
+    queryClient.invalidateQueries(['feed-initial']);
+  }, [queryClient]);
+
+  // Set loading based on query state
+  useEffect(() => {
+    setIsLoading(isQueryLoading);
+  }, [isQueryLoading]);
 
   const loadMorePosts = useCallback(async () => {
     if (isLoadingMore || !hasMorePosts) return;

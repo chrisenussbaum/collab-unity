@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,72 +45,74 @@ export default function MyProjects({ currentUser, authIsLoading }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [collaboratorProfiles, setCollaboratorProfiles] = useState({});
 
-  useEffect(() => {
-    const loadProjects = async () => {
-      if (!currentUser) {
-        setIsLoading(false);
-        return;
-      }
+  const queryClient = useQueryClient();
 
-      try {
-        // Fetch both queries in parallel to reduce API calls
-        const [createdProjects, collaboratingProjects] = await Promise.all([
-          base44.entities.Project.filter(
-            { created_by: currentUser.email },
-            "-created_date"
-          ),
-          base44.entities.Project.filter(
-            { collaborator_emails: { $in: [currentUser.email] } },
-            "-created_date"
-          )
-        ]);
+  const { data: projectsData, isLoading: isQueryLoading } = useQuery({
+    queryKey: ['my-projects', currentUser?.email],
+    queryFn: async () => {
+      if (!currentUser) return { projects: [], collaboratorProfiles: {} };
 
-        // Combine and deduplicate projects
-        const allUserProjects = [...createdProjects, ...collaboratingProjects];
-        const uniqueProjects = allUserProjects.reduce((acc, current) => {
-          if (!acc.find(item => item.id === current.id)) {
-            acc.push(current);
-          }
-          return acc;
-        }, []);
+      // Fetch both queries in parallel
+      const [createdProjects, collaboratingProjects] = await Promise.all([
+        base44.entities.Project.filter(
+          { created_by: currentUser.email },
+          "-created_date"
+        ),
+        base44.entities.Project.filter(
+          { collaborator_emails: { $in: [currentUser.email] } },
+          "-created_date"
+        )
+      ]);
 
-        // Sort by created_date (most recent first)
-        uniqueProjects.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-
-        setProjects(uniqueProjects || []);
-
-        // Fetch collaborator profiles for all projects
-        const allCollaboratorEmails = new Set();
-        uniqueProjects.forEach(project => {
-          if (project.collaborator_emails) {
-            project.collaborator_emails.slice(0, 3).forEach(email => allCollaboratorEmails.add(email));
-          }
-        });
-
-        if (allCollaboratorEmails.size > 0) {
-          try {
-            const { data: profiles } = await getPublicUserProfiles({ emails: Array.from(allCollaboratorEmails) });
-            const profilesMap = {};
-            (profiles || []).forEach(profile => {
-              profilesMap[profile.email] = profile;
-            });
-            setCollaboratorProfiles(profilesMap);
-          } catch (error) {
-            console.error("Error fetching collaborator profiles:", error);
-          }
+      // Combine and deduplicate projects
+      const allUserProjects = [...createdProjects, ...collaboratingProjects];
+      const uniqueProjects = allUserProjects.reduce((acc, current) => {
+        if (!acc.find(item => item.id === current.id)) {
+          acc.push(current);
         }
-      } catch (error) {
-        console.error("Error loading projects:", error);
-        toast.error("Failed to load projects. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+        return acc;
+      }, []);
 
-    if (!authIsLoading) {
-      loadProjects();
+      // Sort by created_date (most recent first)
+      uniqueProjects.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+
+      // Fetch collaborator profiles for all projects
+      const allCollaboratorEmails = new Set();
+      uniqueProjects.forEach(project => {
+        if (project.collaborator_emails) {
+          project.collaborator_emails.slice(0, 3).forEach(email => allCollaboratorEmails.add(email));
+        }
+      });
+
+      let profilesMap = {};
+      if (allCollaboratorEmails.size > 0) {
+        try {
+          const { data: profiles } = await getPublicUserProfiles({ emails: Array.from(allCollaboratorEmails) });
+          (profiles || []).forEach(profile => {
+            profilesMap[profile.email] = profile;
+          });
+        } catch (error) {
+          console.error("Error fetching collaborator profiles:", error);
+        }
+      }
+
+      return { projects: uniqueProjects, collaboratorProfiles: profilesMap };
+    },
+    enabled: !!currentUser && !authIsLoading,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+  });
+
+  useEffect(() => {
+    if (projectsData && !isQueryLoading) {
+      setProjects(projectsData.projects);
+      setCollaboratorProfiles(projectsData.collaboratorProfiles);
     }
-  }, [currentUser, authIsLoading]);
+  }, [projectsData, isQueryLoading]);
+
+  useEffect(() => {
+    setIsLoading(isQueryLoading);
+  }, [isQueryLoading]);
 
   const statusConfig = {
     seeking_collaborators: {
@@ -158,8 +161,8 @@ export default function MyProjects({ currentUser, authIsLoading }) {
     try {
       await base44.entities.Project.delete(projectToDelete.id);
       
-      // Update local state to remove the deleted project
-      setProjects(prevProjects => prevProjects.filter(p => p.id !== projectToDelete.id));
+      // Invalidate cache to refetch data
+      queryClient.invalidateQueries(['my-projects']);
       
       setProjectToDelete(null);
     } catch (error) {
