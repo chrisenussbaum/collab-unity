@@ -1062,8 +1062,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                   </Card>
                 </a>
               );
-            })()
-          )}
+            })}
           </div>
         </DialogContent>
       </Dialog>
