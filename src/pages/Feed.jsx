@@ -1776,7 +1776,7 @@ export default function Feed({ currentUser, authIsLoading }) {
 
   // React Query: Fetch initial feed data with caching
   const { data: cachedFeedData, isLoading: isQueryLoading } = useQuery({
-    queryKey: ['feed-initial', currentUser?.email],
+    queryKey: ['feed-projects', currentUser?.email],
     queryFn: async () => {
       // Fetch ALL public projects and initial feed posts
       const [visibleProjectsData, initialFeedPostsData] = await Promise.all([
@@ -1906,7 +1906,7 @@ export default function Feed({ currentUser, authIsLoading }) {
 
   // Manual refresh function for post creation/deletion
   const loadFeedData = useCallback(() => {
-    queryClient.invalidateQueries(['feed-initial']);
+    queryClient.invalidateQueries(['feed-projects']);
   }, [queryClient]);
 
   // Set loading based on query state
