@@ -314,10 +314,10 @@ export default function Discover({ currentUser: propCurrentUser }) {
       };
     },
     enabled: userInitialized,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: 'always',
   });
 
   const { data: usersQueryData, isLoading: isUsersQueryLoading } = useQuery({
