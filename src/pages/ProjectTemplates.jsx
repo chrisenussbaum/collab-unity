@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -95,24 +94,54 @@ export default function ProjectTemplates({ currentUser }) {
     challenges: false
   });
 
-  // Renamed loadTemplates to fetchTemplatesAndCreators as per outline
+  // Retry helper with exponential backoff
+  const withRetry = async (fn, maxRetries = 3, baseDelay = 1000) => {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await fn();
+      } catch (error) {
+        if (error.response?.status === 429 && attempt < maxRetries - 1) {
+          const delay = baseDelay * Math.pow(2, attempt);
+          console.warn(`Rate limit hit, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        throw error;
+      }
+    }
+  };
+
   const fetchTemplatesAndCreators = async () => {
     setIsLoading(true);
     try {
-      const data = await ProjectTemplate.filter({ is_active: true }, '-created_date');
+      // Add delay between requests to avoid rate limiting
+      const data = await withRetry(() => 
+        ProjectTemplate.filter({ is_active: true }, '-created_date')
+      );
       const templatesArray = Array.isArray(data) ? data : [];
+
+      if (templatesArray.length === 0) {
+        setTemplates([]);
+        setIsLoading(false);
+        return;
+      }
 
       const creatorEmails = [...new Set(templatesArray.map(t => t.created_by).filter(Boolean))];
 
       if (creatorEmails.length > 0) {
-        const { data: creatorProfilesData } = await getPublicUserProfiles({ emails: creatorEmails });
+        // Add delay before fetching creator profiles
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const { data: creatorProfilesData } = await withRetry(() => 
+          getPublicUserProfiles({ emails: creatorEmails })
+        );
         const creatorProfiles = creatorProfilesData || [];
 
         const profilesMap = creatorProfiles.reduce((acc, profile) => {
           acc[profile.email] = profile;
           return acc;
         }, {});
-        setCreators(profilesMap); // Set creators state as per outline
+        setCreators(profilesMap);
 
         const populatedTemplates = templatesArray.map(template => {
           const creator = profilesMap[template.created_by] || {
@@ -129,8 +158,15 @@ export default function ProjectTemplates({ currentUser }) {
       }
     } catch (error) {
       console.error("Error loading templates:", error);
-      toast.error("Failed to load templates");
-      setTemplates([]);
+      if (error.response?.status === 429) {
+        toast.error("Loading templates... please wait a moment");
+        // Retry after longer delay on rate limit
+        setTimeout(() => fetchTemplatesAndCreators(), 3000);
+      } else {
+        toast.error("Failed to load templates");
+        setTemplates([]);
+        setIsLoading(false);
+      }
     } finally {
       setIsLoading(false);
     }
