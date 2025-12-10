@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,17 +24,14 @@ import { createPageUrl } from "@/utils";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 
 export default function Sync({ currentUser, authIsLoading }) {
-  const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-  const [userProfiles, setUserProfiles] = useState({});
   const [messageToDelete, setMessageToDelete] = useState(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -45,6 +43,7 @@ export default function Sync({ currentUser, authIsLoading }) {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -54,35 +53,20 @@ export default function Sync({ currentUser, authIsLoading }) {
     scrollToBottom();
   }, [messages]);
 
-  // Fetch user profiles for conversations
-  const fetchUserProfiles = async (emails) => {
-    if (!emails || emails.length === 0) return;
-    
-    try {
-      const { data: profiles } = await getPublicUserProfiles({ emails });
-      const profilesMap = {};
-      (profiles || []).forEach(profile => {
-        profilesMap[profile.email] = profile;
-      });
-      setUserProfiles(prev => ({ ...prev, ...profilesMap }));
-    } catch (error) {
-      console.error("Error fetching user profiles:", error);
-      // Don't show error toast - profiles will fall back to email addresses
-    }
-  };
+  // Use React Query for conversations with real-time polling
+  const { data: conversationsData, isLoading } = useQuery({
+    queryKey: ['conversations', currentUser?.email],
+    queryFn: async () => {
+      if (!currentUser) return { conversations: [], userProfiles: {} };
 
-  // Fetch conversations
-  const fetchConversations = async () => {
-    if (!currentUser) return;
-
-    try {
-      const conv1 = await base44.entities.Conversation.filter({
-        participant_1_email: currentUser.email
-      }, "-last_message_time");
-
-      const conv2 = await base44.entities.Conversation.filter({
-        participant_2_email: currentUser.email
-      }, "-last_message_time");
+      const [conv1, conv2] = await Promise.all([
+        base44.entities.Conversation.filter({
+          participant_1_email: currentUser.email
+        }, "-last_message_time"),
+        base44.entities.Conversation.filter({
+          participant_2_email: currentUser.email
+        }, "-last_message_time")
+      ]);
 
       const allConversations = [...conv1, ...conv2];
       const uniqueConversations = allConversations.reduce((acc, current) => {
@@ -96,82 +80,39 @@ export default function Sync({ currentUser, authIsLoading }) {
         new Date(b.last_message_time || b.created_date) - new Date(a.last_message_time || a.created_date)
       );
 
-      setConversations(uniqueConversations);
-
+      // Fetch user profiles for all conversation participants
       const otherEmails = uniqueConversations.map(conv => 
         conv.participant_1_email === currentUser.email 
           ? conv.participant_2_email 
           : conv.participant_1_email
       );
       
-      // Only fetch profiles for emails we don't already have
-      const newEmails = otherEmails.filter(email => !userProfiles[email]);
-      
-      if (newEmails.length > 0) {
-        await fetchUserProfiles(newEmails);
-      }
-    } catch (error) {
-      console.error("Error fetching conversations:", error);
-      toast.error("Failed to load conversations");
-    }
-  };
-
-  // Fetch messages for selected conversation
-  const fetchMessages = async (conversationId) => {
-    try {
-      const msgs = await base44.entities.Message.filter({
-        conversation_id: conversationId
-      }, "created_date");
-
-      setMessages(msgs || []);
-
-      const unreadMessages = msgs.filter(msg => 
-        msg.sender_email !== currentUser.email && !msg.is_read
-      );
-
-      if (unreadMessages.length > 0) {
-        for (const msg of unreadMessages) {
-          await base44.entities.Message.update(msg.id, {
-            is_read: true,
-            read_at: new Date().toISOString()
+      let profilesMap = {};
+      if (otherEmails.length > 0) {
+        try {
+          const { data: profiles } = await getPublicUserProfiles({ emails: otherEmails });
+          (profiles || []).forEach(profile => {
+            profilesMap[profile.email] = profile;
           });
+        } catch (error) {
+          console.error("Error fetching user profiles:", error);
         }
-
-        const isParticipant1 = selectedConversation.participant_1_email === currentUser.email;
-        await base44.entities.Conversation.update(conversationId, {
-          [isParticipant1 ? 'participant_1_unread_count' : 'participant_2_unread_count']: 0
-        });
-
-        fetchConversations();
       }
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      toast.error("Failed to load messages");
-    }
-  };
 
-  // Initial load
-  useEffect(() => {
-    if (authIsLoading || !currentUser) return;
+      return { 
+        conversations: uniqueConversations, 
+        userProfiles: profilesMap 
+      };
+    },
+    enabled: !authIsLoading && !!currentUser,
+    staleTime: 10 * 1000, // 10 seconds for chat (needs to be fresh)
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5000, // Poll every 5 seconds for new messages
+    refetchOnWindowFocus: true,
+  });
 
-    const init = async () => {
-      setIsLoading(true);
-      await fetchConversations();
-      setIsLoading(false);
-    };
-
-    init();
-
-    pollIntervalRef.current = setInterval(() => {
-      fetchConversations();
-    }, 5000);
-
-    return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-      }
-    };
-  }, [currentUser, authIsLoading]);
+  const conversations = conversationsData?.conversations || [];
+  const userProfiles = conversationsData?.userProfiles || {};
 
   // Load messages when conversation is selected - LOCAL LOADING
   const handleSelectConversation = async (conversation) => {
@@ -202,7 +143,7 @@ export default function Sync({ currentUser, authIsLoading }) {
           [isParticipant1 ? 'participant_1_unread_count' : 'participant_2_unread_count']: 0
         });
 
-        fetchConversations();
+        queryClient.invalidateQueries(['conversations']);
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -277,7 +218,7 @@ export default function Sync({ currentUser, authIsLoading }) {
       });
 
       await fetchMessages(selectedConversation.id);
-      await fetchConversations();
+      queryClient.invalidateQueries(['conversations']);
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
@@ -315,7 +256,7 @@ export default function Sync({ currentUser, authIsLoading }) {
 
       setShowDeleteDialog(false);
       setMessageToDelete(null);
-      fetchConversations();
+      queryClient.invalidateQueries(['conversations']);
     } catch (error) {
       console.error("Error deleting message:", error);
       toast.error("Failed to delete message");
@@ -346,15 +287,13 @@ export default function Sync({ currentUser, authIsLoading }) {
       // Delete the conversation
       await base44.entities.Conversation.delete(conversationToDelete.id);
       
-      // Update local state
-      setConversations(prev => prev.filter(c => c.id !== conversationToDelete.id));
-      
       // Clear selected conversation if it was the one being deleted
       if (selectedConversation?.id === conversationToDelete.id) {
         setSelectedConversation(null);
         setMessages([]);
       }
 
+      queryClient.invalidateQueries(['conversations']);
       setShowDeleteConversationDialog(false);
       setConversationToDelete(null);
     } catch (error) {
@@ -395,7 +334,7 @@ export default function Sync({ currentUser, authIsLoading }) {
       }
 
       setShowNewChatDialog(false);
-      await fetchConversations();
+      queryClient.invalidateQueries(['conversations']);
       handleSelectConversation(conversation);
     } catch (error) {
       console.error("Error starting conversation:", error);
