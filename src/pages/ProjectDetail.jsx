@@ -318,49 +318,45 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
           }
         }
 
-        return {
-          project: projectDataResult,
-          userApplication: currentUserApplication,
-          projectUsers: profiles,
-          projectIDEs: idesData || [],
-          projectTemplate: templateData,
-          pendingInvitation: pendingInvite
-        };
-        } catch (error) {
-        console.error("Error loading project:", error);
-        throw error;
-        }
-        },
-        enabled: !!projectId,
-        staleTime: 2 * 60 * 1000, // 2 minutes
-        gcTime: 10 * 60 * 1000, // 10 minutes
-        refetchOnWindowFocus: false,
-        retry: 2,
-        });
+      return {
+        project: projectDataResult,
+        userApplication: currentUserApplication,
+        projectUsers: profiles,
+        projectIDEs: idesData || [],
+        projectTemplate: templateData,
+        pendingInvitation: pendingInvite
+      };
+    },
+    enabled: !!projectId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: 2,
+  });
 
-        // Update local state from query data
-        useEffect(() => {
-        if (projectData) {
-        setProject(projectData.project);
-        setUserApplication(projectData.userApplication);
-        setProjectUsers(projectData.projectUsers);
-        setProjectIDEs(projectData.projectIDEs);
-        setProjectTemplate(projectData.projectTemplate);
-        setPendingInvitation(projectData.pendingInvitation);
-        setIsLoading(false);
-        setHasError(false);
-        }
-        }, [projectData]);
+  // Update local state from query data
+  useEffect(() => {
+    if (projectData) {
+      setProject(projectData.project);
+      setUserApplication(projectData.userApplication);
+      setProjectUsers(projectData.projectUsers);
+      setProjectIDEs(projectData.projectIDEs);
+      setProjectTemplate(projectData.projectTemplate);
+      setPendingInvitation(projectData.pendingInvitation);
+      setIsLoading(false);
+      setHasError(false);
+    }
+  }, [projectData]);
 
-        useEffect(() => {
-        setIsLoading(isProjectQueryLoading);
-        if (projectQueryError) {
-        setHasError(true);
-        if (projectQueryError.response?.status === 429) {
+  useEffect(() => {
+    setIsLoading(isProjectQueryLoading);
+    if (projectQueryError) {
+      setHasError(true);
+      if (projectQueryError.response?.status === 429) {
         toast.error("Loading too quickly. Please wait a moment and try again.");
-        }
-        }
-        }, [isProjectQueryLoading, projectQueryError]);
+      }
+    }
+  }, [isProjectQueryLoading, projectQueryError]);
 
   // Prevent scroll restoration when tab changes
   useEffect(() => {
