@@ -1769,7 +1769,7 @@ export default function Feed({ currentUser, authIsLoading }) {
       // Fetch both projects and feed posts
       const [visibleProjectsData, initialFeedPostsData] = await Promise.all([
         withRetry(() =>
-          Project.filter({ is_visible_on_feed: true }, "-created_date", POSTS_PER_PAGE * 2, 0)
+          Project.filter({ is_visible_on_feed: true }, "-created_date")
         ),
         withRetry(() =>
           FeedPost.filter({ is_visible: true }, "-created_date", POSTS_PER_PAGE * 2, 0)
@@ -1918,7 +1918,7 @@ export default function Feed({ currentUser, authIsLoading }) {
       const fetchAmount = POSTS_PER_PAGE * 3; // Overfetch to ensure enough unique items
       
       const [moreProjectsData, moreFeedPostsData] = await Promise.all([
-        Project.filter({ is_visible_on_feed: true }, "-created_date", fetchAmount, offset),
+        Project.filter({ is_visible_on_feed: true }, "-created_date"),
         FeedPost.filter({ is_visible: true }, "-created_date", fetchAmount, offset)
       ]);
 
