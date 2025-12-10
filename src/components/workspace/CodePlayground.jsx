@@ -191,7 +191,12 @@ export default function CodePlayground({
     if (!codeProject?.id || isReadOnly) return;
     
     try {
-      const currentContent = codeProject.content ? JSON.parse(codeProject.content) : {};
+      // Fetch latest content from database to avoid overwriting
+      const latestProjects = await base44.entities.ProjectIDE.filter({ id: codeProject.id });
+      if (!latestProjects || latestProjects.length === 0) return;
+      
+      const latestProject = latestProjects[0];
+      const currentContent = latestProject.content ? JSON.parse(latestProject.content) : {};
       const presence = currentContent.presence || [];
       
       // Update or add current user's presence
@@ -199,22 +204,20 @@ export default function CodePlayground({
         email: currentUser?.email,
         activeFile: activeFiles[0]?.name,
         lastSeen: new Date().toISOString(),
-        cursor: null // Will be updated on cursor move
+        cursor: null
       };
       
       const updatedPresence = [
         ...presence.filter(p => p.email !== currentUser?.email),
         myPresence
       ].filter(p => {
-        // Remove stale presence (> 30 seconds old)
         const lastSeen = new Date(p.lastSeen);
         return (Date.now() - lastSeen.getTime()) < 30000;
       });
       
-      // Save presence without triggering full save
+      // CRITICAL: Use latest files from database, not stale state
       const updatedContent = JSON.stringify({
-        ...currentContent,
-        files,
+        files: currentContent.files || files, // Preserve existing files
         presence: updatedPresence
       });
       
@@ -237,7 +240,12 @@ export default function CodePlayground({
     
     updateTimerRef.current = setTimeout(async () => {
       try {
-        const currentContent = codeProject.content ? JSON.parse(codeProject.content) : {};
+        // CRITICAL: Fetch latest content to avoid overwriting files
+        const latestProjects = await base44.entities.ProjectIDE.filter({ id: codeProject.id });
+        if (!latestProjects || latestProjects.length === 0) return;
+        
+        const latestProject = latestProjects[0];
+        const currentContent = latestProject.content ? JSON.parse(latestProject.content) : {};
         const presence = currentContent.presence || [];
         
         const updatedPresence = presence.map(p => 
@@ -255,8 +263,9 @@ export default function CodePlayground({
           });
         }
         
+        // CRITICAL: Preserve files from database
         const updatedContent = JSON.stringify({
-          ...currentContent,
+          files: currentContent.files || files, // Keep existing files
           presence: updatedPresence
         });
         
@@ -267,7 +276,7 @@ export default function CodePlayground({
         // Silently fail cursor updates
       }
     }, 200);
-  }, [codeProject, currentUser, activeFiles, isReadOnly]);
+  }, [codeProject, currentUser, activeFiles, files, isReadOnly]);
 
   // Handle Monaco save shortcut
   useEffect(() => {
