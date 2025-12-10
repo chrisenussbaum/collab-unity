@@ -76,6 +76,8 @@ import IDEPreviewDialog from "@/components/IDEPreviewDialog";
 import ProjectLinkPreviewDialog from "@/components/ProjectLinkPreviewDialog";
 import FeedProjectHighlights from "../components/FeedProjectHighlights";
 import ProjectActivityIndicator, { isProjectActive } from "../components/ProjectActivityIndicator";
+import OptimizedImage from "@/components/OptimizedImage";
+import OptimizedAvatar from "@/components/OptimizedAvatar";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
