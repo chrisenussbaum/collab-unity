@@ -101,10 +101,10 @@ export default function MyProjects({ currentUser, authIsLoading }) {
       return { projects: uniqueProjects, collaboratorProfiles: profilesMap };
     },
     enabled: !!currentUser && !authIsLoading,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 0,
+    gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: 'always',
   });
 
   useEffect(() => {
