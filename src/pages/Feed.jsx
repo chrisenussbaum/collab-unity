@@ -1917,17 +1917,12 @@ export default function Feed({ currentUser, authIsLoading }) {
 
       const fetchAmount = POSTS_PER_PAGE * 3; // Overfetch to ensure enough unique items
       
-      const [moreProjectsData, moreFeedPostsData] = await Promise.all([
-        Project.filter({ is_visible_on_feed: true }, "-created_date"),
-        FeedPost.filter({ is_visible: true }, "-created_date", fetchAmount, offset)
-      ]);
+      // Only fetch more FeedPosts - all projects are already loaded in initial fetch
+      const moreFeedPostsData = await FeedPost.filter({ is_visible: true }, "-created_date", fetchAmount, offset);
 
-      console.log(`Fetched ${moreProjectsData.length} projects and ${moreFeedPostsData.length} feed posts from database (requested ${fetchAmount} each)`);
+      console.log(`Fetched ${moreFeedPostsData.length} feed posts from database (requested ${fetchAmount})`);
 
-      const combinedFetchedItems = [
-        ...moreProjectsData.map(p => ({ ...p, itemType: 'project', sortDate: new Date(p.created_date) })),
-        ...moreFeedPostsData.map(fp => ({ ...fp, itemType: 'feedPost', sortDate: new Date(fp.created_date) }))
-      ].sort((a, b) => b.sortDate - a.sortDate);
+      const combinedFetchedItems = moreFeedPostsData.map(fp => ({ ...fp, itemType: 'feedPost', sortDate: new Date(fp.created_date) }));
 
       // Filter out duplicates using the ref
       const uniqueNewItems = combinedFetchedItems.filter(item => {
@@ -1942,7 +1937,7 @@ export default function Feed({ currentUser, authIsLoading }) {
 
       if (uniqueNewItems.length === 0) {
         // Check if database returned nothing at all - means we're at the end
-        if (moreProjectsData.length === 0 && moreFeedPostsData.length === 0) {
+        if (moreFeedPostsData.length === 0) {
           console.log('Database returned no results, reached the end');
           setHasMorePosts(false);
           setIsLoadingMore(false);
