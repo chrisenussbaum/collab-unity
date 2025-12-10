@@ -317,7 +317,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
-    refetchOnMount: true,
+    refetchOnMount: false,
   });
 
   const { data: usersQueryData, isLoading: isUsersQueryLoading } = useQuery({
