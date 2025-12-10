@@ -4,6 +4,7 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { ProjectTemplate } from "@/entities/all";
 import { getPublicUserProfiles } from '@/functions/getPublicUserProfiles';
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -80,9 +81,6 @@ const getCategoryIcon = (category) => {
 
 export default function ProjectTemplates({ currentUser }) {
   const navigate = useNavigate();
-  const [templates, setTemplates] = useState([]);
-  const [creators, setCreators] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
   const [previewTemplate, setPreviewTemplate] = useState(null);
@@ -111,26 +109,23 @@ export default function ProjectTemplates({ currentUser }) {
     }
   };
 
-  const fetchTemplatesAndCreators = async () => {
-    setIsLoading(true);
-    try {
-      // Add delay between requests to avoid rate limiting
+  // Use React Query for caching
+  const { data: templatesData, isLoading } = useQuery({
+    queryKey: ['project-templates'],
+    queryFn: async () => {
       const data = await withRetry(() => 
         ProjectTemplate.filter({ is_active: true }, '-created_date')
       );
       const templatesArray = Array.isArray(data) ? data : [];
 
       if (templatesArray.length === 0) {
-        setTemplates([]);
-        setIsLoading(false);
-        return;
+        return { templates: [], creators: {} };
       }
 
       const creatorEmails = [...new Set(templatesArray.map(t => t.created_by).filter(Boolean))];
 
       if (creatorEmails.length > 0) {
-        // Add delay before fetching creator profiles
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         const { data: creatorProfilesData } = await withRetry(() => 
           getPublicUserProfiles({ emails: creatorEmails })
@@ -141,7 +136,6 @@ export default function ProjectTemplates({ currentUser }) {
           acc[profile.email] = profile;
           return acc;
         }, {});
-        setCreators(profilesMap);
 
         const populatedTemplates = templatesArray.map(template => {
           const creator = profilesMap[template.created_by] || {
@@ -152,29 +146,19 @@ export default function ProjectTemplates({ currentUser }) {
           return { ...template, creator };
         });
 
-        setTemplates(populatedTemplates);
-      } else {
-        setTemplates(templatesArray);
+        return { templates: populatedTemplates, creators: profilesMap };
       }
-    } catch (error) {
-      console.error("Error loading templates:", error);
-      if (error.response?.status === 429) {
-        toast.error("Loading templates... please wait a moment");
-        // Retry after longer delay on rate limit
-        setTimeout(() => fetchTemplatesAndCreators(), 3000);
-      } else {
-        toast.error("Failed to load templates");
-        setTemplates([]);
-        setIsLoading(false);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      
+      return { templates: templatesArray, creators: {} };
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
 
-  useEffect(() => {
-    fetchTemplatesAndCreators(); // Updated function call
-  }, []);
+  const templates = templatesData?.templates || [];
+  const creators = templatesData?.creators || {};
 
   // Dynamically generate category filters based on templates
   const categoryFilters = useMemo(() => {
