@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Project, User, Notification, Comment, Issue, Task, AssetVersion, ProjectTemplate, ProjectApplication, ProjectInvitation } from "@/entities/all";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -136,6 +137,7 @@ const statusColors = {
 export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoading }) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const projectId = searchParams.get("id");
   const tabParam = searchParams.get("tab");
 
@@ -447,6 +449,11 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
       await withRetry(() => Project.update(project.id, { is_visible_on_feed: newVisibility }));
       
       setProject(prev => ({ ...prev, is_visible_on_feed: newVisibility }));
+      
+      // Invalidate all relevant query caches so other pages update
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['discoverProjects'] });
     } catch (error) {
       console.error("Error updating project visibility:", error);
       if (error.response?.status === 429) {
