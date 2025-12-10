@@ -24,6 +24,8 @@ import { getPublicUserProfilesForDiscovery } from "@/functions/getPublicUserProf
 import { toast } from "sonner";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import ProjectActivityIndicator, { isProjectActive } from "../components/ProjectActivityIndicator";
+import OptimizedImage from "@/components/OptimizedImage";
+import OptimizedAvatar from "@/components/OptimizedAvatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -1238,9 +1240,10 @@ export default function Discover({ currentUser: propCurrentUser }) {
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex items-start space-x-3 flex-1 min-w-0">
                                   <div className="relative flex-shrink-0">
-                                    <img 
+                                    <OptimizedImage
                                       src={project.logo_url} 
                                       alt={project.title}
+                                      width={96}
                                       className="w-12 h-12 rounded-lg object-cover border-2 border-gray-100 shadow-sm"
                                       loading="lazy"
                                     />
@@ -1261,12 +1264,13 @@ export default function Discover({ currentUser: propCurrentUser }) {
                                         className="flex items-center space-x-1.5"
                                         onClick={(e) => e.stopPropagation()} // Prevent card link from firing
                                       >
-                                        <Avatar className="w-5 h-5 border-2 border-white shadow-sm">
-                                          <AvatarImage src={project.owner?.profile_image} className="object-cover" />
-                                          <AvatarFallback className="bg-purple-100 text-purple-600 text-xs">
-                                            {project.owner?.full_name?.[0] || 'U'}
-                                          </AvatarFallback>
-                                        </Avatar>
+                                        <OptimizedAvatar
+                                          src={project.owner?.profile_image}
+                                          alt={project.owner?.full_name || 'Owner'}
+                                          fallback={project.owner?.full_name?.[0] || 'U'}
+                                          size="xs"
+                                          className="w-5 h-5 border-2 border-white shadow-sm"
+                                        />
                                         <span className="cu-text-responsive-xs text-gray-600 hover:text-purple-600 transition-colors">
                                           {project.owner?.full_name || 'Anonymous'}
                                         </span>
@@ -1356,12 +1360,14 @@ export default function Discover({ currentUser: propCurrentUser }) {
                                   {project.collaboratorProfiles && project.collaboratorProfiles.length > 0 ? (
                                     <div className="flex items-center -space-x-1.5">
                                       {project.collaboratorProfiles.map((collab) => (
-                                        <Avatar key={collab.email} className="w-6 h-6 border-2 border-white shadow-sm">
-                                          <AvatarImage src={collab.profile_image} className="object-cover" />
-                                          <AvatarFallback className="bg-purple-100 text-purple-600 text-[10px]">
-                                            {collab.full_name?.[0] || collab.email?.[0] || 'U'}
-                                          </AvatarFallback>
-                                        </Avatar>
+                                        <OptimizedAvatar
+                                          key={collab.email}
+                                          src={collab.profile_image}
+                                          alt={collab.full_name || 'Collaborator'}
+                                          fallback={collab.full_name?.[0] || collab.email?.[0] || 'U'}
+                                          size="xs"
+                                          className="w-6 h-6 border-2 border-white shadow-sm"
+                                        />
                                       ))}
                                     </div>
                                   ) : (

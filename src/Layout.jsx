@@ -7,6 +7,7 @@ import { base44 } from "@/api/base44Client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import OptimizedAvatar from "./components/OptimizedAvatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1002,12 +1003,13 @@ export default function Layout({ children, currentPageName }) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="p-0 rounded-full ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                    <Avatar className="w-7 h-7 cursor-pointer">
-                      <AvatarImage src={currentUser?.profile_image} className="object-cover" />
-                      <AvatarFallback className="bg-purple-100 text-purple-600 text-xs">
-                        {currentUser?.full_name?.[0] || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
+                    <OptimizedAvatar
+                      src={currentUser?.profile_image}
+                      alt={currentUser?.full_name || 'User'}
+                      fallback={currentUser?.full_name?.[0] || 'U'}
+                      size="xs"
+                      className="w-7 h-7 cursor-pointer"
+                    />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -1104,12 +1106,13 @@ export default function Layout({ children, currentPageName }) {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="p-0 rounded-full ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                        <Avatar className="w-9 h-9 cursor-pointer">
-                          <AvatarImage src={currentUser?.profile_image} className="object-cover" />
-                          <AvatarFallback className="bg-purple-100 text-purple-600">
-                            {currentUser?.full_name?.[0] || currentUser?.email?.[0] || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
+                        <OptimizedAvatar
+                          src={currentUser?.profile_image}
+                          alt={currentUser?.full_name || 'User'}
+                          fallback={currentUser?.full_name?.[0] || currentUser?.email?.[0] || 'U'}
+                          size="sm"
+                          className="w-9 h-9 cursor-pointer"
+                        />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">

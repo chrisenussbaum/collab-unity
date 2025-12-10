@@ -28,6 +28,8 @@ import { toast } from "sonner";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import ProjectActivityIndicator, { isProjectActive } from "@/components/ProjectActivityIndicator";
+import OptimizedImage from "@/components/OptimizedImage";
+import OptimizedAvatar from "@/components/OptimizedAvatar";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -290,11 +292,17 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                         <div className="flex items-start justify-between mb-3">
                           <Link to={createPageUrl(`ProjectDetail?id=${project.id}`)} className="flex items-start space-x-3 flex-1 min-w-0">
                             {project.logo_url ? (
-                              <img 
+                              <OptimizedImage
                                 src={project.logo_url} 
                                 alt={project.title}
+                                width={112}
                                 className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover border-2 border-gray-100 shadow-sm"
                                 loading="lazy"
+                                fallback={
+                                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center border-2 border-gray-100 shadow-sm">
+                                    <Lightbulb className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600" />
+                                  </div>
+                                }
                               />
                             ) : (
                               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center border-2 border-gray-100 shadow-sm">
@@ -396,14 +404,14 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                                   {project.collaborator_emails.slice(0, 3).map((email) => {
                                     const profile = collaboratorProfiles[email];
                                     return (
-                                      <Avatar key={email} className="w-6 h-6 border-2 border-white shadow-sm">
-                                        {profile?.profile_image && (
-                                          <AvatarImage src={profile.profile_image} className="object-cover" />
-                                        )}
-                                        <AvatarFallback className="bg-purple-100 text-purple-600 text-[10px]">
-                                          {profile?.full_name?.[0] || email?.[0] || 'U'}
-                                        </AvatarFallback>
-                                      </Avatar>
+                                      <OptimizedAvatar
+                                        key={email}
+                                        src={profile?.profile_image}
+                                        alt={profile?.full_name || 'Collaborator'}
+                                        fallback={profile?.full_name?.[0] || email?.[0] || 'U'}
+                                        size="xs"
+                                        className="w-6 h-6 border-2 border-white shadow-sm"
+                                      />
                                     );
                                   })}
                                 </div>
