@@ -301,12 +301,13 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
                 to={createPageUrl(owner?.username ? `UserProfile?username=${owner.username}` : `UserProfile?email=${owner?.email}`)}
                 className="flex-shrink-0"
               >
-                <Avatar className="w-12 h-12 border-2 border-gray-100 shadow-sm">
-                  <AvatarImage src={owner?.profile_image} className="object-cover" loading="lazy" />
-                  <AvatarFallback className="bg-blue-100 text-blue-600 font-bold">
-                    {owner?.full_name?.[0] || 'U'}
-                  </AvatarFallback>
-                </Avatar>
+                <OptimizedAvatar
+                  src={owner?.profile_image}
+                  alt={owner?.full_name || 'User'}
+                  fallback={owner?.full_name?.[0] || 'U'}
+                  size="default"
+                  className="w-12 h-12 border-2 border-gray-100 shadow-sm"
+                />
               </Link>
 
               <div className="flex-1 min-w-0">
@@ -1083,11 +1084,17 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
               <div className="flex items-start space-x-3 flex-1 min-w-0">
                 <Link to={createPageUrl(`ProjectDetail?id=${project.id}`)} className="flex-shrink-0">
                   {project.logo_url ? (
-                    <img 
+                    <OptimizedImage
                       src={project.logo_url} 
                       alt={project.title}
+                      width={96}
                       className="w-12 h-12 rounded-lg object-cover border-2 border-gray-100 shadow-sm"
                       loading="lazy"
+                      fallback={
+                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center border-2 border-gray-100 shadow-sm">
+                          <Lightbulb className="w-6 h-6 text-purple-600" />
+                        </div>
+                      }
                     />
                   ) : (
                     <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center border-2 border-gray-100 shadow-sm">
@@ -1116,12 +1123,13 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                       to={createPageUrl(owner.username ? `UserProfile?username=${owner.username}` : `UserProfile?email=${owner.email}`)}
                       className="flex items-center space-x-1.5 group"
                     >
-                      <Avatar className="w-5 h-5 border-2 border-white shadow-sm">
-                        <AvatarImage src={owner.profile_image} className="object-cover" />
-                        <AvatarFallback className="bg-purple-100 text-purple-600 text-xs">
-                          {owner.full_name?.[0] || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
+                      <OptimizedAvatar
+                        src={owner.profile_image}
+                        alt={owner.full_name || 'Owner'}
+                        fallback={owner.full_name?.[0] || 'U'}
+                        size="xs"
+                        className="w-5 h-5 border-2 border-white shadow-sm"
+                      />
                       <span className="text-xs sm:text-sm text-gray-600 group-hover:text-purple-600 transition-colors">
                         {owner.full_name || 'Anonymous User'}
                       </span>
@@ -1177,12 +1185,14 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                     {collaboratorProfiles.length > 0 ? (
                       <div className="flex items-center -space-x-1.5">
                         {collaboratorProfiles.map((collab) => (
-                          <Avatar key={collab.email} className="w-6 h-6 sm:w-7 sm:h-7 border-2 border-white shadow-sm">
-                            <AvatarImage src={collab.profile_image} className="object-cover" />
-                            <AvatarFallback className="bg-purple-100 text-purple-600 text-[10px]">
-                              {collab.full_name?.[0] || collab.email?.[0] || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
+                          <OptimizedAvatar
+                            key={collab.email}
+                            src={collab.profile_image}
+                            alt={collab.full_name || 'Collaborator'}
+                            fallback={collab.full_name?.[0] || collab.email?.[0] || 'U'}
+                            size="xs"
+                            className="w-6 h-6 sm:w-7 sm:h-7 border-2 border-white shadow-sm"
+                          />
                         ))}
                       </div>
                     ) : (
