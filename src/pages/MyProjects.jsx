@@ -397,7 +397,9 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                                     const profile = collaboratorProfiles[email];
                                     return (
                                       <Avatar key={email} className="w-6 h-6 border-2 border-white shadow-sm">
-                                        <AvatarImage src={profile?.profile_image} className="object-cover" />
+                                        {profile?.profile_image && (
+                                          <AvatarImage src={profile.profile_image} className="object-cover" />
+                                        )}
                                         <AvatarFallback className="bg-purple-100 text-purple-600 text-[10px]">
                                           {profile?.full_name?.[0] || email?.[0] || 'U'}
                                         </AvatarFallback>
