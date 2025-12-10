@@ -1766,7 +1766,7 @@ export default function Feed({ currentUser, authIsLoading }) {
   const { data: cachedFeedData, isLoading: isQueryLoading } = useQuery({
     queryKey: ['feed-initial', currentUser?.email],
     queryFn: async () => {
-      // Fetch both projects and feed posts
+      // Fetch ALL public projects and initial feed posts
       const [visibleProjectsData, initialFeedPostsData] = await Promise.all([
         withRetry(() =>
           Project.filter({ is_visible_on_feed: true }, "-created_date")
@@ -1776,22 +1776,19 @@ export default function Feed({ currentUser, authIsLoading }) {
         )
       ]);
       
-      const combinedInitialItems = [
-        ...visibleProjectsData.map(p => ({ ...p, itemType: 'project', sortDate: new Date(p.created_date) })),
-        ...initialFeedPostsData.map(fp => ({ ...fp, itemType: 'feedPost', sortDate: new Date(fp.created_date) }))
-      ].sort((a, b) => b.sortDate - a.sortDate);
+      // Track all loaded item IDs
+      visibleProjectsData.forEach(p => loadedItemIdsRef.current.add(p.id));
+      initialFeedPostsData.forEach(fp => loadedItemIdsRef.current.add(fp.id));
 
-      const itemsForInitialDisplay = combinedInitialItems.slice(0, POSTS_PER_PAGE);
+      // Separate projects and feed posts (all projects, initial feed posts)
+      const initialProjects = visibleProjectsData;
+      const initialFeedPosts = initialFeedPostsData;
 
-      // Track loaded item IDs immediately
-      itemsForInitialDisplay.forEach(p => loadedItemIdsRef.current.add(p.id));
-
-      // Separate projects and feed posts
-      const initialProjects = itemsForInitialDisplay.filter(item => item.itemType === 'project');
-      const initialFeedPosts = itemsForInitialDisplay.filter(item => item.itemType === 'feedPost');
-
-      // Get unique owner emails
-      const allOwnerEmails = [...new Set(itemsForInitialDisplay.map(p => p.created_by))];
+      // Get unique owner emails from all items
+      const allOwnerEmails = [...new Set([
+        ...initialProjects.map(p => p.created_by),
+        ...initialFeedPosts.map(fp => fp.created_by)
+      ])];
       
       const projectIds = initialProjects.map(p => p.id);
       const feedPostIds = initialFeedPosts.map(fp => fp.id);
@@ -1859,7 +1856,7 @@ export default function Feed({ currentUser, authIsLoading }) {
         feedPostApplauds: fetchedFeedPostApplauds,
         projectIDEsMap: fetchedIDEsMap,
         collaboratorProfiles: collabProfilesMap,
-        hasMore: combinedInitialItems.length > POSTS_PER_PAGE
+        hasMore: initialFeedPosts.length >= POSTS_PER_PAGE * 2 // Only feed posts paginate
       };
     },
     enabled: !authIsLoading,
