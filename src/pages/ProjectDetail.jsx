@@ -443,9 +443,10 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
       setProject(prev => ({ ...prev, is_visible_on_feed: newVisibility }));
       
       // Invalidate all relevant query caches so other pages update
-      queryClient.invalidateQueries({ queryKey: ['feed'] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['discoverProjects'] });
+      queryClient.invalidateQueries({ queryKey: ['feed-projects'] });
+      queryClient.invalidateQueries({ queryKey: ['feed-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['discover-projects'] });
+      queryClient.invalidateQueries({ queryKey: ['my-projects'] });
     } catch (error) {
       console.error("Error updating project visibility:", error);
       if (error.response?.status === 429) {
