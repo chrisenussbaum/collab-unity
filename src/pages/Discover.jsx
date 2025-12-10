@@ -223,11 +223,14 @@ export default function Discover({ currentUser: propCurrentUser }) {
   const { data: projectsQueryData, isLoading: isProjectsQueryLoading } = useQuery({
     queryKey: ['discover-projects', currentUser?.email],
     queryFn: async () => {
-      const rawAllProjects = await withRetry(() => base44.entities.Project.filter({ 
-        is_visible_on_feed: true
-      }, "-created_date"));
+      // Parallel fetch projects and applauds
+      const [rawAllProjects, allApplauds] = await Promise.all([
+        withRetry(() => base44.entities.Project.filter({ 
+          is_visible_on_feed: true
+        }, "-created_date")),
+        withRetry(() => base44.entities.ProjectApplaud.filter({}))
+      ]);
       
-      const allApplauds = await withRetry(() => base44.entities.ProjectApplaud.filter({}));
       // Fetch owner profiles for ALL projects
       const ownerEmails = [...new Set(rawAllProjects.map(p => p.created_by))];
       let profilesMap = {};
@@ -250,8 +253,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
         });
 
         if (uncachedEmails.length > 0) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
           const { data: ownerProfiles } = await withRetry(() => 
             getPublicUserProfiles({ emails: uncachedEmails })
           );
@@ -276,7 +277,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
 
       let collaboratorProfilesMap = {};
       if (allCollaboratorEmails.size > 0) {
-        await new Promise(resolve => setTimeout(resolve, 300));
         const { data: collabProfiles } = await getPublicUserProfiles({ emails: Array.from(allCollaboratorEmails) });
         (collabProfiles || []).forEach(profile => {
           collaboratorProfilesMap[profile.email] = profile;
@@ -313,11 +313,11 @@ export default function Discover({ currentUser: propCurrentUser }) {
         applauds: allApplauds
       };
     },
-    enabled: userInitialized && activeTab === "projects",
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    enabled: userInitialized,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: true,
   });
 
   const { data: usersQueryData, isLoading: isUsersQueryLoading } = useQuery({
