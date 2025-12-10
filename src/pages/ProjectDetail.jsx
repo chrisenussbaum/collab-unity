@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Project, User, Notification, Comment, Issue, Task, AssetVersion, ProjectTemplate, ProjectApplication, ProjectInvitation } from "@/entities/all";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -208,155 +208,203 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
     return [];
   }, []);
 
-  // Use React Query for project data
-  const { data: projectData, isLoading: isProjectQueryLoading, error: projectQueryError } = useQuery({
-    queryKey: ['project-detail', projectId],
-    queryFn: async () => {
-      if (!projectId) {
-        navigate(createPageUrl("Discover"), { replace: true });
-        return null;
-      }
+  // Enhanced initialization with sequential loading to reduce concurrent requests
+  // Only run when projectId changes, NOT when tab changes
+  const initializeProjectPage = useCallback(async () => {
+    // Don't re-initialize if only the tab parameter changed
+    if (previousProjectIdRef.current === projectId) {
+      return;
+    }
+    
+    // Don't re-initialize if we've already initialized this project successfully
+    if (hasInitialized.current && previousProjectIdRef.current === projectId) {
+      return;
+    }
+    
+    previousProjectIdRef.current = projectId;
+    hasInitialized.current = false;
 
+    if (!projectId) {
+      navigate(createPageUrl("Discover"), { replace: true });
+      return;
+    }
+    
+    setIsLoading(true);
+    setHasError(false);
+    setProject(null);
+    setPendingInvitation(null);
+
+    try {
+      // Load user first
       const user = await withRetry(() => User.me().catch(() => null));
+      
+      if (!isMounted.current) return;
       setCurrentUser(user);
 
-        // Small delay to prevent rapid successive requests
-        await new Promise(resolve => setTimeout(resolve, 300));
+      // Small delay to prevent rapid successive requests
+      await new Promise(resolve => setTimeout(resolve, 300));
 
-        // Load project data
-        const projectResults = await withRetry(() => Project.filter({ id: projectId }));
-        
-        if (!isMounted.current) return;
+      // Load project data
+      const projectResults = await withRetry(() => Project.filter({ id: projectId }));
+      
+      if (!isMounted.current) return;
 
-        const projectDataResult = projectResults?.[0];
-        if (!projectDataResult) {
-          toast.error("Project not found.");
-          navigate(createPageUrl("Discover"), { replace: true });
-          return null;
-        }
+      const projectData = projectResults?.[0];
+      if (!projectData) {
+        setHasError(true);
+        setProject(null);
+        toast.error("Project not found.");
+        navigate(createPageUrl("Discover"), { replace: true });
+        return;
+      }
 
-        // Check access permissions first
-        const isOwner = user && projectDataResult.created_by === user.email;
-        const isExplicitCollaborator = user && projectDataResult.collaborator_emails?.includes(user.email);
-        
-        // Check for pending invitations if not already a collaborator
-        let hasPendingInvitation = false;
-        let pendingInvite = null;
-        if (user && !isOwner && !isExplicitCollaborator) {
-          try {
-            const pendingInvites = await withRetry(() => ProjectInvitation.filter({
-              project_id: projectId,
-              invitee_email: user.email,
-              status: "pending"
-            }));
-            if (pendingInvites && pendingInvites.length > 0) {
-              hasPendingInvitation = true;
-              pendingInvite = pendingInvites[0];
-            }
-          } catch (error) {
-            console.warn("Could not check for pending invitations:", error);
+      // Check access permissions first
+      const isOwner = user && projectData.created_by === user.email;
+      const isExplicitCollaborator = user && projectData.collaborator_emails?.includes(user.email);
+      
+      // Check for pending invitations if not already a collaborator
+      let hasPendingInvitation = false;
+      let pendingInvite = null;
+      if (user && !isOwner && !isExplicitCollaborator) {
+        try {
+          const pendingInvites = await withRetry(() => ProjectInvitation.filter({
+            project_id: projectId,
+            invitee_email: user.email,
+            status: "pending"
+          }));
+          if (pendingInvites && pendingInvites.length > 0) {
+            hasPendingInvitation = true;
+            pendingInvite = pendingInvites[0];
+            setPendingInvitation(pendingInvite);
           }
+        } catch (error) {
+          console.warn("Could not check for pending invitations:", error);
         }
+      }
+      
+      // Check privacy: deny access if project is private and user is not owner/collaborator/has no pending invite
+      if (projectData.is_visible_on_feed === false && !isOwner && !isExplicitCollaborator && !hasPendingInvitation) {
+        toast.error("This project is private and you don't have access to view it.");
+        setProject(null);
+        navigate(createPageUrl("Discover"), { replace: true });
+        return;
+      }
 
-        // Check privacy
-        if (projectDataResult.is_visible_on_feed === false && !isOwner && !isExplicitCollaborator && !hasPendingInvitation) {
-          toast.error("This project is private and you don't have access to view it.");
-          navigate(createPageUrl("Discover"), { replace: true });
-          return null;
-        }
+      setProject(projectData);
 
-        await new Promise(resolve => setTimeout(resolve, 300));
+      // Another small delay before next batch of requests
+      await new Promise(resolve => setTimeout(resolve, 300));
 
-        // Load application data if needed
-        let currentUserApplication = null;
-        if (user && !isOwner && !isExplicitCollaborator) {
-          try {
-            const allApplications = await withRetry(() => ProjectApplication.filter({ 
-              project_id: projectId,
-              applicant_email: user.email
-            }));
-
-            if (allApplications && allApplications.length > 0) {
-              currentUserApplication = allApplications.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
-            }
-          } catch (error) {
-            console.warn("Could not fetch user applications:", error);
+      // Load application data if needed
+      let currentUserApplication = null;
+      if (user && !isOwner && !isExplicitCollaborator) {
+        try {
+          const allApplications = await withRetry(() => ProjectApplication.filter({ 
+            project_id: projectId,
+            applicant_email: user.email
+          }));
+          
+          if (allApplications && allApplications.length > 0) {
+            currentUserApplication = allApplications.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
           }
+        } catch (error) {
+          console.warn("Could not fetch user applications:", error);
+          currentUserApplication = null;
         }
+      }
+      setUserApplication(currentUserApplication);
 
+      // Another delay before fetching profiles
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Load collaborator profiles
+      const profiles = await getCollaboratorProfiles(projectData);
+      if (isMounted.current) {
+        setProjectUsers(profiles);
+      }
+
+      // Load project IDEs
+      try {
         await new Promise(resolve => setTimeout(resolve, 300));
+        const idesData = await withRetry(() => 
+          base44.entities.ProjectIDE.filter({
+            project_id: projectId,
+            is_active: true,
+            ide_type: 'code_playground'
+          }, '-created_date')
+        );
+        if (idesData && isMounted.current) {
+          setProjectIDEs(idesData);
+        }
+      } catch (error) {
+        console.warn("Could not load project IDEs:", error);
+      }
 
-        // Load collaborator profiles
-        const profiles = await getCollaboratorProfiles(projectDataResult);
-
-        // Load project IDEs
-        let idesData = [];
+      // Load template if project was created from one
+      if (projectData.template_id) {
         try {
           await new Promise(resolve => setTimeout(resolve, 300));
-          idesData = await withRetry(() => 
-            base44.entities.ProjectIDE.filter({
-              project_id: projectId,
-              is_active: true,
-              ide_type: 'code_playground'
-            }, '-created_date')
+          const templateResults = await withRetry(() => 
+            ProjectTemplate.filter({ id: projectData.template_id })
           );
-        } catch (error) {
-          console.warn("Could not load project IDEs:", error);
-        }
-
-        // Load template if project was created from one
-        let templateData = null;
-        if (projectDataResult.template_id) {
-          try {
-            await new Promise(resolve => setTimeout(resolve, 300));
-            const templateResults = await withRetry(() => 
-              ProjectTemplate.filter({ id: projectDataResult.template_id })
-            );
-            templateData = templateResults?.[0];
-          } catch (error) {
-            console.warn("Could not load project template:", error);
+          const templateData = templateResults?.[0];
+          if (templateData && isMounted.current) {
+            setProjectTemplate(templateData);
           }
+        } catch (error) {
+          console.warn("Could not load project template:", error);
         }
+      }
 
-      return {
-        project: projectDataResult,
-        userApplication: currentUserApplication,
-        projectUsers: profiles,
-        projectIDEs: idesData || [],
-        projectTemplate: templateData,
-        pendingInvitation: pendingInvite
-      };
-    },
-    enabled: !!projectId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    retry: 2,
-  });
+      retryCountRef.current = 0;
+      hasInitialized.current = true;
 
-  // Update local state from query data
-  useEffect(() => {
-    if (projectData) {
-      setProject(projectData.project);
-      setUserApplication(projectData.userApplication);
-      setProjectUsers(projectData.projectUsers);
-      setProjectIDEs(projectData.projectIDEs);
-      setProjectTemplate(projectData.projectTemplate);
-      setPendingInvitation(projectData.pendingInvitation);
-      setIsLoading(false);
-      setHasError(false);
-    }
-  }, [projectData]);
-
-  useEffect(() => {
-    setIsLoading(isProjectQueryLoading);
-    if (projectQueryError) {
-      setHasError(true);
-      if (projectQueryError.response?.status === 429) {
-        toast.error("Loading too quickly. Please wait a moment and try again.");
+    } catch (error) {
+      if (isMounted.current) {
+        console.error("Error initializing project page:", error);
+        
+        if (error.response?.status === 429) {
+          const currentRetry = retryCountRef.current + 1;
+          retryCountRef.current = currentRetry;
+          
+          if (currentRetry < 3) {
+            toast.error(`Loading too quickly. Retrying in a moment... (${currentRetry}/3)`);
+            setTimeout(() => {
+              if (isMounted.current) {
+                previousProjectIdRef.current = null;
+                hasInitialized.current = false;
+                initializeProjectPage();
+              }
+            }, 5000 * Math.pow(2, currentRetry - 1));
+            return;
+          } else {
+            toast.error("Server is busy. Please wait a moment and refresh the page.");
+            setProject(null);
+          }
+        } else {
+          toast.error("An unexpected error occurred while loading project data.");
+          setProject(null);
+        }
+        setHasError(true);
+      }
+    } finally {
+      if (isMounted.current) {
+        if (retryCountRef.current === 0) {
+          setIsLoading(false);
+        }
       }
     }
-  }, [isProjectQueryLoading, projectQueryError]);
+  }, [projectId, navigate, getCollaboratorProfiles]);
+
+  useEffect(() => {
+    isMounted.current = true;
+    
+    if (!hasInitialized.current || previousProjectIdRef.current !== projectId) {
+      debounceRequest(initializeProjectPage, 500);
+    }
+    
+    return () => { isMounted.current = false; };
+  }, [projectId, initializeProjectPage]);
 
   // Prevent scroll restoration when tab changes
   useEffect(() => {
