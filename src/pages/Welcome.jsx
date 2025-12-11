@@ -796,7 +796,6 @@ const ProfileMockup = () => (
 // Language translations
 const translations = {
   en: {
-    tagline: "Where Ideas Happen",
     hero: {
       title1: "Collab Unity",
       title2: "Where Ideas Happen",
@@ -1166,10 +1165,6 @@ export default function Welcome() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <Badge className="bg-purple-100 text-purple-700 mb-4 px-4 py-1">
-                <Lightbulb className="w-3 h-3 mr-1" />
-                {t.tagline}
-              </Badge>
               <h1 className="text-6xl sm:text-7xl font-bold text-gray-900 mb-6 leading-tight">
                 {t.hero.title1}
                 <br />
