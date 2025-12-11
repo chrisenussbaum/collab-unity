@@ -66,6 +66,8 @@ export default function CreateProject() {
     highlights: [],
     logo_url: "",
     is_visible_on_feed: false,
+    template_id: "",
+    project_instructions: null,
   });
 
   const [newLink, setNewLink] = useState("");
@@ -80,6 +82,34 @@ export default function CreateProject() {
   useEffect(() => {
     User.me().then(setCurrentUser).catch(() => navigate(createPageUrl("Discover")));
   }, [navigate]);
+
+  // Handle template data from URL params
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const fromTemplate = params.get('fromTemplate');
+    
+    if (fromTemplate === 'true') {
+      const templateId = params.get('templateId');
+      const title = params.get('title');
+      const description = params.get('description');
+      const skills = params.get('skills');
+      const tools = params.get('tools');
+      const projectInstructions = params.get('projectInstructions');
+      
+      setFormData(prev => ({
+        ...prev,
+        title: title || "",
+        description: description || "",
+        skills_needed: skills ? JSON.parse(skills) : [],
+        tools_needed: tools ? JSON.parse(tools) : [],
+        template_id: templateId || "",
+        project_instructions: projectInstructions ? JSON.parse(projectInstructions) : null,
+      }));
+      
+      setIsAIAssisted(true);
+      setCurrentStep(1);
+    }
+  }, [location.search]);
 
   const handleBackNavigation = () => {
     if (currentStep === 0) {
@@ -117,6 +147,8 @@ export default function CreateProject() {
       highlights: [],
       logo_url: "",
       is_visible_on_feed: false,
+      template_id: "",
+      project_instructions: null,
     });
     setCurrentStep(1);
   };
@@ -398,6 +430,10 @@ export default function CreateProject() {
         current_collaborators_count: 1
       };
 
+      // Only include template_id and project_instructions if they exist
+      if (!projectData.template_id) delete projectData.template_id;
+      if (!projectData.project_instructions) delete projectData.project_instructions;
+
       await Project.create(projectData); 
       navigate(createPageUrl("MyProjects"));
     } catch (error) {
@@ -527,9 +563,14 @@ export default function CreateProject() {
                       <Lightbulb className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-medium text-purple-900 mb-1">Project Assistant</h3>
+                      <h3 className="font-medium text-purple-900 mb-1">
+                        {formData.template_id ? 'Template Assistant' : 'Project Assistant'}
+                      </h3>
                       <p className="text-sm text-purple-700">
-                        We've pre-filled this form based on your project idea. Feel free to customize any details to match your specific needs.
+                        {formData.template_id 
+                          ? 'We\'ve pre-filled this form based on the template. Customize any details to match your specific needs.'
+                          : 'We\'ve pre-filled this form based on your project idea. Feel free to customize any details to match your specific needs.'
+                        }
                       </p>
                     </div>
                   </div>
