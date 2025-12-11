@@ -604,11 +604,10 @@ export default function ProjectTemplates({ currentUser }) {
                   <p className="text-gray-600 text-sm">{previewTemplate.project_instructions.overview}</p>
 
                   {['setup', 'development', 'launch'].map(phaseKey => {
-                    // Adjusted icon mapping for semantic consistency
                     const Icon = {setup: Settings, development: Code, launch: Rocket}[phaseKey]; 
                     const phase = previewTemplate.project_instructions[`${phaseKey}_phase`];
-                    if (!phase) return null;
-                    
+                    if (!phase || typeof phase !== 'object' || !phase.title) return null;
+
                     return (
                       <Card key={phaseKey} className="cu-card bg-gray-50">
                         <CardHeader onClick={() => togglePreviewSection(phaseKey)} className="cursor-pointer flex flex-row items-center justify-between p-4">
@@ -619,8 +618,8 @@ export default function ProjectTemplates({ currentUser }) {
                         </CardHeader>
                         {expandedSections[phaseKey] && (
                           <CardContent className="px-4 pb-4 space-y-3">
-                            <p className="text-sm text-gray-600">{phase.description}</p>
-                            {phase.steps && phase.steps.length > 0 && (
+                            {phase.description && <p className="text-sm text-gray-600">{phase.description}</p>}
+                            {phase.steps && Array.isArray(phase.steps) && phase.steps.length > 0 && (
                               <div>
                                 <h4 className="font-semibold text-sm mb-1">Steps:</h4>
                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
@@ -628,7 +627,7 @@ export default function ProjectTemplates({ currentUser }) {
                                 </ul>
                               </div>
                             )}
-                            {phase.deliverables && phase.deliverables.length > 0 && (
+                            {phase.deliverables && Array.isArray(phase.deliverables) && phase.deliverables.length > 0 && (
                               <div>
                                 <h4 className="font-semibold text-sm mb-1">Deliverables:</h4>
                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
@@ -642,7 +641,7 @@ export default function ProjectTemplates({ currentUser }) {
                     );
                   })}
                   
-                  {previewTemplate.project_instructions.success_criteria && previewTemplate.project_instructions.success_criteria.length > 0 && (
+                  {previewTemplate.project_instructions.success_criteria && Array.isArray(previewTemplate.project_instructions.success_criteria) && previewTemplate.project_instructions.success_criteria.length > 0 && (
                      <Card className="cu-card bg-green-50 border-green-200">
                         <CardHeader onClick={() => togglePreviewSection('success')} className="cursor-pointer flex flex-row items-center justify-between p-4">
                            <CardTitle className="text-base font-semibold flex items-center text-green-800">
@@ -660,7 +659,7 @@ export default function ProjectTemplates({ currentUser }) {
                       </Card>
                   )}
 
-                  {previewTemplate.project_instructions.common_challenges && previewTemplate.project_instructions.common_challenges.length > 0 && (
+                  {previewTemplate.project_instructions.common_challenges && Array.isArray(previewTemplate.project_instructions.common_challenges) && previewTemplate.project_instructions.common_challenges.length > 0 && (
                      <Card className="cu-card bg-yellow-50 border-yellow-200">
                         <CardHeader onClick={() => togglePreviewSection('challenges')} className="cursor-pointer flex flex-row items-center justify-between p-4">
                            <CardTitle className="text-base font-semibold flex items-center text-yellow-800">
