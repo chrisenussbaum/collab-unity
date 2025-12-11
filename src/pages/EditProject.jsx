@@ -261,7 +261,7 @@ export default function EditProject({ currentUser, authIsLoading }) {
     );
   }
 
-  if (!project) { // Check if project data was successfully loaded and is accessible
+  if (!project || !formData) { // Check if project data was successfully loaded and is accessible
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
