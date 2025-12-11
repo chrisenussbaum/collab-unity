@@ -270,7 +270,7 @@ const UserCard = ({ user, currentUser, index }) => {
 
                   setShowConnectDialog(false);
                   // Navigate to Chat page with conversation ID
-                  navigate(createPageUrl(`Chat?conversation=${conversation.id}`));
+                  navigate(`${createPageUrl('Chat')}?conversation=${conversation.id}`);
                 } catch (error) {
                   console.error("Error connecting:", error);
                   toast.error("Failed to start conversation. Please try again.");
