@@ -193,7 +193,7 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <div className="mb-6 pb-8">
           {/* Mobile: Horizontal scroll */}
-          <div className="block lg:hidden">
+          <div className="block md:hidden">
             <HorizontalScrollContainer 
               className="w-full bg-gray-100 rounded-lg p-1"
               showArrows={true}
@@ -205,9 +205,9 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
             </HorizontalScrollContainer>
           </div>
           
-          {/* Desktop: Full width evenly spaced tabs */}
-          <div className="hidden lg:block bg-gray-100 rounded-lg p-1">
-            <TabsList className="w-full flex justify-start gap-2 h-auto p-0 bg-transparent">
+          {/* Tablet and Desktop: Evenly spaced with horizontal scroll if needed */}
+          <div className="hidden md:block bg-gray-100 rounded-lg p-1 overflow-x-auto scrollbar-hide">
+            <TabsList className="w-full flex justify-between h-auto p-0 bg-transparent min-w-max md:min-w-0">
               {renderTabs()}
             </TabsList>
           </div>
