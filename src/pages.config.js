@@ -12,8 +12,6 @@ import CreateAd from './pages/CreateAd';
 import AdminVerificationPanel from './pages/AdminVerificationPanel';
 import Onboarding from './pages/Onboarding';
 import UserProjects from './pages/UserProjects';
-import ProjectTemplates from './pages/ProjectTemplates';
-import SubmitProjectTemplate from './pages/SubmitProjectTemplate';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import JoinProjects from './pages/JoinProjects';
@@ -43,8 +41,6 @@ export const PAGES = {
     "AdminVerificationPanel": AdminVerificationPanel,
     "Onboarding": Onboarding,
     "UserProjects": UserProjects,
-    "ProjectTemplates": ProjectTemplates,
-    "SubmitProjectTemplate": SubmitProjectTemplate,
     "TermsOfService": TermsOfService,
     "PrivacyPolicy": PrivacyPolicy,
     "JoinProjects": JoinProjects,
