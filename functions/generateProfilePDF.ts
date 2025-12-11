@@ -122,17 +122,77 @@ Deno.serve(async (req) => {
       p.collaborator_emails?.includes(profileUser.email)
     ).sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
 
-    // Deep scrape: Get tasks and aggregate data
+    // Deep scrape: Get comprehensive contribution data
     let completedTasks = [];
     let allToolsUsed = new Set();
     let allSkillsUsed = new Set();
+    const projectContributions = new Map();
 
     if (includeDeepScrape && userProjects.length > 0) {
-      const allTasks = await base44.asServiceRole.entities.Task.list();
+      const projectIds = userProjects.map(p => p.id);
+      
+      // Fetch all relevant data in parallel
+      const [allTasks, allThoughts, allAssets, allIDEs, allActivities] = await Promise.all([
+        base44.asServiceRole.entities.Task.list(),
+        base44.asServiceRole.entities.Thought.list(),
+        base44.asServiceRole.entities.AssetVersion.list(),
+        base44.asServiceRole.entities.ProjectIDE.list(),
+        base44.asServiceRole.entities.ActivityLog.list()
+      ]);
+
+      // Process data for each project
+      for (const project of userProjects) {
+        const contributions = {
+          tasksCompleted: 0,
+          tasksInProgress: 0,
+          thoughtsCreated: 0,
+          assetsUploaded: 0,
+          idesCreated: 0,
+          activities: [],
+          keyTasks: []
+        };
+
+        // Count user's tasks
+        const userTasks = allTasks.filter(t => 
+          t.project_id === project.id && t.assigned_to === profileUser.email
+        );
+        contributions.tasksCompleted = userTasks.filter(t => t.status === 'done').length;
+        contributions.tasksInProgress = userTasks.filter(t => t.status === 'in_progress').length;
+        contributions.keyTasks = userTasks
+          .filter(t => t.status === 'done')
+          .sort((a, b) => (b.priority === 'urgent' ? 1 : 0) - (a.priority === 'urgent' ? 1 : 0))
+          .slice(0, 3);
+
+        // Count thoughts created by user
+        contributions.thoughtsCreated = allThoughts.filter(t => 
+          t.project_id === project.id && t.created_by === profileUser.email
+        ).length;
+
+        // Count assets uploaded by user
+        contributions.assetsUploaded = allAssets.filter(a => 
+          a.project_id === project.id && a.uploaded_by === profileUser.email
+        ).length;
+
+        // Count IDEs created by user
+        contributions.idesCreated = allIDEs.filter(ide => 
+          ide.project_id === project.id && ide.created_by === profileUser.email
+        ).length;
+
+        // Get recent activities
+        contributions.activities = allActivities
+          .filter(a => a.project_id === project.id && a.user_email === profileUser.email)
+          .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+          .slice(0, 5);
+
+        projectContributions.set(project.id, contributions);
+      }
+
+      // Aggregate all completed tasks
       completedTasks = allTasks.filter(t => 
         t.assigned_to === profileUser.email && t.status === 'done'
       );
 
+      // Aggregate skills and tools
       userProjects.forEach(project => {
         if (project.tools_needed) {
           project.tools_needed.slice(0, 5).forEach(tool => allToolsUsed.add(tool));
@@ -373,16 +433,46 @@ Deno.serve(async (req) => {
           yPos += Math.min(descLines.length, 2) * 4 + 1;
         }
 
-        // Key contributions from completed tasks
-        if (includeDeepScrape) {
-          const projectTasks = completedTasks.filter(t => t.project_id === project.id);
-          if (projectTasks.length > 0) {
-            doc.setFontSize(9);
+        // Detailed contributions summary
+        if (includeDeepScrape && projectContributions.has(project.id)) {
+          const contributions = projectContributions.get(project.id);
+          
+          // Contribution metrics
+          const metrics = [];
+          if (contributions.tasksCompleted > 0) {
+            metrics.push(`${contributions.tasksCompleted} task${contributions.tasksCompleted > 1 ? 's' : ''} completed`);
+          }
+          if (contributions.thoughtsCreated > 0) {
+            metrics.push(`${contributions.thoughtsCreated} note${contributions.thoughtsCreated > 1 ? 's' : ''}`);
+          }
+          if (contributions.assetsUploaded > 0) {
+            metrics.push(`${contributions.assetsUploaded} asset${contributions.assetsUploaded > 1 ? 's' : ''}`);
+          }
+          if (contributions.idesCreated > 0) {
+            metrics.push(`${contributions.idesCreated} workspace${contributions.idesCreated > 1 ? 's' : ''}`);
+          }
+
+          if (metrics.length > 0) {
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(purpleColor[0], purpleColor[1], purpleColor[2]);
+            doc.text('Contributions:', margin, yPos);
             doc.setFont('helvetica', 'normal');
-            for (const task of projectTasks.slice(0, 2)) {
-              checkNewPage(6);
+            doc.setTextColor(80);
+            doc.text(cleanTextForPDF(metrics.join(' | ')), margin + 25, yPos);
+            doc.setTextColor(0);
+            yPos += 4;
+          }
+
+          // Key tasks completed
+          if (contributions.keyTasks && contributions.keyTasks.length > 0) {
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            for (const task of contributions.keyTasks.slice(0, 2)) {
+              checkNewPage(5);
               const taskText = cleanTextForPDF(`• ${task.title}`);
-              doc.text(taskText, margin + 3, yPos);
+              const taskLines = doc.splitTextToSize(taskText, pageWidth - 2 * margin - 5);
+              doc.text(taskLines.slice(0, 1), margin + 3, yPos);
               yPos += 4;
             }
           }

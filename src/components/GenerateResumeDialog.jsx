@@ -40,8 +40,8 @@ export default function GenerateResumeDialog({
 
   const generationSteps = [
     { label: 'Gathering profile data...', icon: FileText },
-    { label: 'Compiling projects...', icon: Briefcase },
-    { label: 'Adding completed tasks...', icon: CheckSquare },
+    { label: 'Analyzing project contributions...', icon: Briefcase },
+    { label: 'Compiling tasks, notes & assets...', icon: CheckSquare },
     { label: 'Organizing skills & tools...', icon: Wrench },
     { label: 'Formatting resume...', icon: Download },
   ];
@@ -259,7 +259,7 @@ export default function GenerateResumeDialog({
                   </div>
                   <div className="flex items-center gap-2 text-xs text-purple-700">
                     <CheckCircle2 className="w-3 h-3" />
-                    <span>Key Contributions</span>
+                    <span>Detailed Contributions</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-purple-700">
                     <CheckCircle2 className="w-3 h-3" />
