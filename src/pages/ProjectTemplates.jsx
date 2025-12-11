@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Lightbulb,
   Layers,
-  Code, // Used for development phase
+  Code,
   FileText,
   Briefcase,
   Palette,
@@ -23,13 +23,34 @@ import {
   Eye,
   Star,
   BookOpen,
-  Rocket, // Used for launch phase and 'Use Template' button
+  Rocket,
   Plus,
-  Award, // Used for success criteria
-  Settings, // Used for setup phase
-  AlertTriangle, // Used for common challenges
+  Award,
+  Settings,
+  AlertTriangle,
   ChevronDown,
   ChevronUp,
+  Laptop,
+  Smartphone,
+  Database,
+  Wrench,
+  Hammer,
+  Paintbrush,
+  Camera,
+  Video,
+  Music,
+  Home,
+  ShoppingCart,
+  Heart,
+  Utensils,
+  Dumbbell,
+  Plane,
+  BookMarked,
+  Sparkles,
+  Package,
+  Globe,
+  Cpu,
+  Gamepad2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -52,12 +73,32 @@ const difficultyConfig = {
 
 const baseCategoryFilters = [
   { value: "all", label: "All Categories", icon: Layers },
-  { value: "technology", label: "Technology", icon: Code },
-  { value: "content", label: "Content", icon: FileText },
-  { value: "business", label: "Business", icon: Briefcase },
-  { value: "design", label: "Design", icon: Palette },
+  { value: "web_development", label: "Web Development", icon: Globe },
+  { value: "mobile_development", label: "Mobile Development", icon: Smartphone },
+  { value: "software_engineering", label: "Software Engineering", icon: Code },
   { value: "data_science", label: "Data Science", icon: BarChart },
-  { value: "marketing", label: "Marketing", icon: TrendingUp }
+  { value: "ai_ml", label: "AI & Machine Learning", icon: Cpu },
+  { value: "game_development", label: "Game Development", icon: Gamepad2 },
+  { value: "graphic_design", label: "Graphic Design", icon: Palette },
+  { value: "ui_ux_design", label: "UI/UX Design", icon: Laptop },
+  { value: "3d_design", label: "3D Design & Modeling", icon: Package },
+  { value: "video_production", label: "Video Production", icon: Video },
+  { value: "photography", label: "Photography", icon: Camera },
+  { value: "music_audio", label: "Music & Audio", icon: Music },
+  { value: "writing", label: "Writing & Content", icon: FileText },
+  { value: "marketing", label: "Marketing", icon: TrendingUp },
+  { value: "business", label: "Business", icon: Briefcase },
+  { value: "woodworking", label: "Woodworking", icon: Hammer },
+  { value: "crafts_diy", label: "Crafts & DIY", icon: Wrench },
+  { value: "painting_drawing", label: "Painting & Drawing", icon: Paintbrush },
+  { value: "digital_art", label: "Digital Art", icon: Sparkles },
+  { value: "home_improvement", label: "Home Improvement", icon: Home },
+  { value: "cooking_food", label: "Cooking & Food", icon: Utensils },
+  { value: "fitness_wellness", label: "Fitness & Wellness", icon: Dumbbell },
+  { value: "travel", label: "Travel & Adventure", icon: Plane },
+  { value: "education", label: "Education & Learning", icon: BookMarked },
+  { value: "nonprofit", label: "Nonprofit & Social Good", icon: Heart },
+  { value: "ecommerce", label: "E-commerce & Retail", icon: ShoppingCart },
 ];
 
 const difficultyFilters = [
@@ -69,12 +110,32 @@ const difficultyFilters = [
 
 const getCategoryIcon = (category) => {
   const iconMap = {
-    technology: { icon: <Code className="w-6 h-6 text-purple-600" />, color: "bg-purple-100" },
-    content: { icon: <FileText className="w-6 h-6 text-blue-600" />, color: "bg-blue-100" },
-    business: { icon: <Briefcase className="w-6 h-6 text-green-600" />, color: "bg-green-100" },
-    design: { icon: <Palette className="w-6 h-6 text-pink-600" />, color: "bg-pink-100" },
+    web_development: { icon: <Globe className="w-6 h-6 text-blue-600" />, color: "bg-blue-100" },
+    mobile_development: { icon: <Smartphone className="w-6 h-6 text-indigo-600" />, color: "bg-indigo-100" },
+    software_engineering: { icon: <Code className="w-6 h-6 text-purple-600" />, color: "bg-purple-100" },
     data_science: { icon: <BarChart className="w-6 h-6 text-orange-600" />, color: "bg-orange-100" },
+    ai_ml: { icon: <Cpu className="w-6 h-6 text-cyan-600" />, color: "bg-cyan-100" },
+    game_development: { icon: <Gamepad2 className="w-6 h-6 text-violet-600" />, color: "bg-violet-100" },
+    graphic_design: { icon: <Palette className="w-6 h-6 text-pink-600" />, color: "bg-pink-100" },
+    ui_ux_design: { icon: <Laptop className="w-6 h-6 text-fuchsia-600" />, color: "bg-fuchsia-100" },
+    "3d_design": { icon: <Package className="w-6 h-6 text-purple-600" />, color: "bg-purple-100" },
+    video_production: { icon: <Video className="w-6 h-6 text-red-600" />, color: "bg-red-100" },
+    photography: { icon: <Camera className="w-6 h-6 text-slate-600" />, color: "bg-slate-100" },
+    music_audio: { icon: <Music className="w-6 h-6 text-purple-600" />, color: "bg-purple-100" },
+    writing: { icon: <FileText className="w-6 h-6 text-blue-600" />, color: "bg-blue-100" },
     marketing: { icon: <TrendingUp className="w-6 h-6 text-teal-600" />, color: "bg-teal-100" },
+    business: { icon: <Briefcase className="w-6 h-6 text-green-600" />, color: "bg-green-100" },
+    woodworking: { icon: <Hammer className="w-6 h-6 text-amber-600" />, color: "bg-amber-100" },
+    crafts_diy: { icon: <Wrench className="w-6 h-6 text-orange-600" />, color: "bg-orange-100" },
+    painting_drawing: { icon: <Paintbrush className="w-6 h-6 text-rose-600" />, color: "bg-rose-100" },
+    digital_art: { icon: <Sparkles className="w-6 h-6 text-yellow-600" />, color: "bg-yellow-100" },
+    home_improvement: { icon: <Home className="w-6 h-6 text-emerald-600" />, color: "bg-emerald-100" },
+    cooking_food: { icon: <Utensils className="w-6 h-6 text-orange-600" />, color: "bg-orange-100" },
+    fitness_wellness: { icon: <Dumbbell className="w-6 h-6 text-lime-600" />, color: "bg-lime-100" },
+    travel: { icon: <Plane className="w-6 h-6 text-sky-600" />, color: "bg-sky-100" },
+    education: { icon: <BookMarked className="w-6 h-6 text-indigo-600" />, color: "bg-indigo-100" },
+    nonprofit: { icon: <Heart className="w-6 h-6 text-red-600" />, color: "bg-red-100" },
+    ecommerce: { icon: <ShoppingCart className="w-6 h-6 text-green-600" />, color: "bg-green-100" },
   };
   return iconMap[category] || { icon: <Lightbulb className="w-6 h-6 text-gray-600" />, color: "bg-gray-100" };
 };
@@ -252,80 +313,44 @@ export default function ProjectTemplates({ currentUser }) {
             transition={{ duration: 0.5 }} // Added transition as per outline
             className="mb-8"
           >
-            <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-4 mb-6">
-              <div className="text-center lg:text-left">
-                <h1 className="cu-text-responsive-xl font-bold text-gray-900 mb-2">Project Templates</h1>
-                <p className="text-gray-600 cu-text-responsive-sm">
-                  Jump-start your project with guided templates
-                </p>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {/* Admin 'Generate Instructions' button and its logic removed as per outline */}
-                <Button 
-                  onClick={() => navigate(createPageUrl("SubmitProjectTemplate"))}
-                  className="cu-button flex-shrink-0 text-xs sm:text-sm"
-                >
-                  <Plus className="cu-icon-sm mr-2" />
-                  <span className="hidden sm:inline">Submit Template</span>
-                  <span className="sm:hidden">Submit</span>
-                </Button>
-              </div>
+            <div className="text-center mb-8">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
+                Project Templates
+              </h1>
+              <p className="text-base sm:text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
+                Browse templates across {categoryFilters.length - 1}+ categories to jumpstart your next project
+              </p>
+              <Button 
+                onClick={() => navigate(createPageUrl("SubmitProjectTemplate"))}
+                className="cu-button"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Submit Your Template
+              </Button>
             </div>
 
-            {/* Removed Search Bar */}
-
-            {/* Category Filters */}
-            <div className="mb-4">
-              {/* Mobile & Tablet: Horizontal Scroll */}
-              <div className="block xl:hidden">
-                <HorizontalScrollContainer 
-                  className="w-full"
-                  showArrows={true}
-                  arrowClassName="hidden sm:flex"
-                >
-                  <div className="flex gap-2 px-1">
-                    {categoryFilters.map((filter) => {
-                      const Icon = filter.icon;
-                      return (
-                        <Button
-                          key={filter.value}
-                          variant={selectedCategory === filter.value ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setSelectedCategory(filter.value)}
-                          className={`cu-text-responsive-xs flex-shrink-0 ${
-                            selectedCategory === filter.value
-                              ? "cu-button"
-                              : "border-gray-300 text-gray-700 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300"
-                          }`}
-                        >
-                          <Icon className="cu-icon-sm mr-2" />
-                          {filter.label}
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </HorizontalScrollContainer>
-              </div>
-
-              {/* Desktop: Centered Flex Wrap */}
-              <div className="hidden xl:flex xl:flex-wrap xl:justify-center xl:gap-2">
+            {/* Category Grid - All Devices */}
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Browse by Category</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {categoryFilters.map((filter) => {
                   const Icon = filter.icon;
+                  const isSelected = selectedCategory === filter.value;
                   return (
-                    <Button
+                    <button
                       key={filter.value}
-                      variant={selectedCategory === filter.value ? "default" : "outline"}
-                      size="sm"
                       onClick={() => setSelectedCategory(filter.value)}
-                      className={`cu-text-responsive-xs ${
-                        selectedCategory === filter.value
-                          ? "cu-button"
-                          : "border-gray-300 text-gray-700 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300"
+                      className={`flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-all ${
+                        isSelected
+                          ? "border-purple-500 bg-purple-50 shadow-md"
+                          : "border-gray-200 bg-white hover:border-purple-300 hover:shadow-sm"
                       }`}
                     >
-                      <Icon className="cu-icon-sm mr-2" />
-                      {filter.label}
-                    </Button>
+                      <Icon className={`w-8 h-8 mb-2 ${isSelected ? "text-purple-600" : "text-gray-600"}`} />
+                      <span className={`text-xs text-center font-medium ${isSelected ? "text-purple-900" : "text-gray-700"}`}>
+                        {filter.label}
+                      </span>
+                    </button>
                   );
                 })}
               </div>
