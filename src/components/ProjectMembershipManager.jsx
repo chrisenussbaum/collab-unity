@@ -161,34 +161,15 @@ export default function ProjectMembershipManager({
 
     setIsTransferring(true);
     try {
-      // Remove BOTH old owner and new owner from collaborator list
-      // Old owner leaves completely, new owner becomes owner (not collaborator)
+      // Remove old owner from collaborator list and add new owner
       const updatedCollaborators = (project.collaborator_emails || [])
-        .filter(email => email !== selectedNewOwner.email && email !== currentUser.email);
+        .filter(email => email !== selectedNewOwner.email);
 
-      // Transfer ownership and remove old owner from project
+      // Transfer ownership by updating created_by field
       await Project.update(project.id, {
         created_by: selectedNewOwner.email,
-        collaborator_emails: updatedCollaborators,
-        current_collaborators_count: Math.max(1, (project.current_collaborators_count || 1) - 1)
+        collaborator_emails: updatedCollaborators
       });
-
-      // Update old owner's application status if exists
-      try {
-        const oldOwnerApplications = await ProjectApplication.filter({
-          project_id: project.id,
-          applicant_email: currentUser.email,
-          status: 'accepted'
-        });
-
-        for (const application of oldOwnerApplications) {
-          await ProjectApplication.update(application.id, {
-            status: 'withdrawn'
-          });
-        }
-      } catch (error) {
-        console.error("Error updating old owner's application status:", error);
-      }
 
       // Notify new owner
       await Notification.create({
@@ -212,7 +193,7 @@ export default function ProjectMembershipManager({
         await Notification.create({
           user_email: collaborator.email,
           title: "Project ownership changed",
-          message: `${currentUser.full_name || currentUser.email} transferred ownership of "${project.title}" to ${selectedNewOwner.full_name || selectedNewOwner.email} and left the project.`,
+          message: `${currentUser.full_name || currentUser.email} transferred ownership of "${project.title}" to ${selectedNewOwner.full_name || selectedNewOwner.email}.`,
           type: "project_update",
           related_project_id: project.id,
           actor_email: currentUser.email,
@@ -226,7 +207,7 @@ export default function ProjectMembershipManager({
         });
       }
 
-      toast.success(`Ownership transferred to ${selectedNewOwner.full_name || selectedNewOwner.email}. You have left the project.`);
+      toast.success(`Ownership transferred to ${selectedNewOwner.full_name || selectedNewOwner.email}`);
       
       if (onUpdate) onUpdate();
     } catch (error) {
