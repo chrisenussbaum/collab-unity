@@ -1410,11 +1410,11 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                           </div>
                         ))}
                       </HorizontalScrollContainer>
-                      </div>
-                      )}
-                      </CardContent>
-                      </Card>
-                      ) : null}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ) : null}
 
             {/* Project Highlights - Show if highlights exist OR if user can edit (to allow adding) */}
             {(project.highlights && project.highlights.length > 0) || (userCanContribute) ? (
@@ -1425,6 +1425,31 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                 onProjectUpdate={handleProjectUpdate}
               />
             ) : null}
+            
+            {/* Project Instructions - Full width in main content */}
+            {project.project_instructions && (
+              <div className="mt-6 sm:mt-8">
+                <ProjectInstructions
+                  instructions={project.project_instructions}
+                  isOwner={isOwner}
+                  onEditClick={() => setShowEditInstructionsModal(true)}
+                />
+              </div>
+            )}
+
+            {/* Workspace Tabs - Full width in main content */}
+            {userCanContribute && (
+              <div className="mt-6 sm:mt-8">
+                <WorkspaceTabs 
+                  project={project} 
+                  currentUser={currentUser}
+                  projectUsers={projectUsers}
+                  onProjectUpdate={handleProjectUpdate}
+                  isCollaborator={userCanContribute}
+                  isProjectOwner={isOwner}
+                />
+              </div>
+            )}
           </main>
 
           {/* Right Sidebar - Only show to collaborators on desktop */}
@@ -1631,32 +1656,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
               </>
             )}
           </div>
-        </div>
-
-        {/* Project Instructions - Show to everyone if instructions exist */}
-        {project.project_instructions && (
-          <div className="mt-6 sm:mt-8">
-            <ProjectInstructions
-              instructions={project.project_instructions}
-              isOwner={isOwner}
-              onEditClick={() => setShowEditInstructionsModal(true)}
-            />
-          </div>
-        )}
-
-        {/* Workspace Tabs */}
-        {(userCanContribute) && (
-          <div className="mt-6 sm:mt-8">
-            <WorkspaceTabs 
-              project={project} 
-              currentUser={currentUser}
-              projectUsers={projectUsers}
-              onProjectUpdate={handleProjectUpdate}
-              isCollaborator={userCanContribute}
-              isProjectOwner={isOwner}
-            />
-          </div>
-        )}
         </div>
 
         {/* Edit Project Instructions Modal */}
