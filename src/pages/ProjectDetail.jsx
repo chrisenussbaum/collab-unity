@@ -1660,14 +1660,12 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         </div>
 
         {/* Edit Project Instructions Modal */}
-        {isOwner && (
         <EditProjectInstructionsModal
-          isOpen={showEditInstructionsModal}
+          isOpen={showEditInstructionsModal && isOwner}
           onClose={() => setShowEditInstructionsModal(false)}
           project={project}
           onSave={handleProjectUpdate}
         />
-        )}
         </>
         );
         }
