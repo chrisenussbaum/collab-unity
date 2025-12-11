@@ -73,8 +73,6 @@ import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import IDEPreviewDialog from "@/components/IDEPreviewDialog";
 import { base44 } from "@/api/base44Client";
 import { Code, Maximize2 } from "lucide-react";
-import ProjectGuide from "../components/ProjectGuide";
-import EditProjectInstructionsModal from "../components/EditProjectInstructionsModal";
 
 
 import {
@@ -174,9 +172,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   // New state for invitations
   const [pendingInvitation, setPendingInvitation] = useState(null);
   const [isRespondingToInvite, setIsRespondingToInvite] = useState(false);
-
-  // State for editing project guide
-  const [showEditInstructionsModal, setShowEditInstructionsModal] = useState(false);
 
 
 
@@ -1429,14 +1424,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
               />
             ) : null}
 
-            {/* Project Guide - Visible to everyone if it exists */}
-            {project.project_instructions && (
-              <ProjectGuide
-                project={project}
-                isOwner={isOwner}
-                onEditClick={() => setShowEditInstructionsModal(true)}
-              />
-            )}
+
             </main>
 
           {/* Right Sidebar - Only show to collaborators on desktop */}
@@ -1660,15 +1648,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         )}
         </div>
 
-        {/* Edit Project Instructions Modal */}
-        {isOwner && (
-          <EditProjectInstructionsModal
-            isOpen={showEditInstructionsModal}
-            onClose={() => setShowEditInstructionsModal(false)}
-            project={project}
-            onSave={handleProjectUpdate}
-          />
-        )}
+
         </>
         );
         }
