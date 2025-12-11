@@ -1633,8 +1633,8 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
           </div>
         </div>
 
-        {/* Project Instructions - Visible to collaborators and above project details */}
-        {userCanContribute && project.project_instructions && (
+        {/* Project Instructions - Show to everyone if instructions exist */}
+        {project.project_instructions && (
           <div className="mt-6 sm:mt-8">
             <ProjectInstructions
               instructions={project.project_instructions}
