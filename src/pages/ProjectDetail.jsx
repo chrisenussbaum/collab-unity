@@ -1429,7 +1429,14 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
               />
             ) : null}
 
-
+            {/* Project Guide - Visible to everyone if it exists */}
+            {project.project_instructions && (
+              <ProjectGuide
+                project={project}
+                isOwner={isOwner}
+                onEditClick={() => setShowEditInstructionsModal(true)}
+              />
+            )}
             </main>
 
           {/* Right Sidebar - Only show to collaborators on desktop */}
@@ -1653,7 +1660,15 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         )}
         </div>
 
-
+        {/* Edit Project Instructions Modal */}
+        {isOwner && (
+          <EditProjectInstructionsModal
+            isOpen={showEditInstructionsModal}
+            onClose={() => setShowEditInstructionsModal(false)}
+            project={project}
+            onSave={handleProjectUpdate}
+          />
+        )}
         </>
         );
         }
