@@ -980,73 +980,98 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Mobile/Tablet Header (visible on screens < 1024px) */}
       <nav className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 safe-area-inset-top">
-        <div className="flex items-center justify-between px-3 md:px-6 h-14 md:h-16 gap-3">
-          <Link 
-            to={createPageUrl("Feed")}
-            className="flex-shrink-0"
-          >
-            <img 
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg"
-              alt="Collab Unity"
-              className="w-7 h-7 rounded-lg object-contain"
+        <div className="px-3 md:px-6">
+          <div className="flex items-center justify-between h-14 md:h-16 gap-3">
+            <Link 
+              to={createPageUrl("Feed")}
+              className="flex-shrink-0"
+            >
+              <img 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg"
+                alt="Collab Unity"
+                className="w-7 h-7 rounded-lg object-contain"
+              />
+            </Link>
+
+            <GlobalSearchBar 
+              className="flex-1" 
+              placeholder="Search..."
             />
-          </Link>
 
-          <GlobalSearchBar 
-            className="flex-1" 
-            placeholder="Search..."
-          />
-
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            {currentUser && <NotificationBell />}
-            {currentUser && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="p-0 rounded-full ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                    <OptimizedAvatar
-                      src={currentUser?.profile_image}
-                      alt={currentUser?.full_name || 'User'}
-                      fallback={currentUser?.full_name?.[0] || 'U'}
-                      size="xs"
-                      className="w-7 h-7 cursor-pointer"
-                    />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem asChild>
-                    <Link to={createPageUrl(`UserProfile?username=${currentUser.username}`)} className="flex items-center cursor-pointer">
-                      <Eye className="cu-icon-sm mr-2" /> View Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  {currentUser?.role === 'admin' && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link to={createPageUrl("AdminVerificationPanel")} className="flex items-center cursor-pointer">
-                          <ShieldCheck className="cu-icon-sm mr-2" /> Ad Review Panel
-                        </Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to={createPageUrl("SupportCU")} className="flex items-center cursor-pointer">
-                      <Heart className="cu-icon-sm mr-2" /> Support CU
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to={createPageUrl("ReportBug")} className="flex items-center cursor-pointer">
-                      <Bug className="cu-icon-sm mr-2" /> Report Bug
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700">
-                    <LogOut className="cu-icon-sm mr-2" /> Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              {currentUser && <NotificationBell />}
+              {currentUser && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="p-0 rounded-full ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                      <OptimizedAvatar
+                        src={currentUser?.profile_image}
+                        alt={currentUser?.full_name || 'User'}
+                        fallback={currentUser?.full_name?.[0] || 'U'}
+                        size="xs"
+                        className="w-7 h-7 cursor-pointer"
+                      />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild>
+                      <Link to={createPageUrl(`UserProfile?username=${currentUser.username}`)} className="flex items-center cursor-pointer">
+                        <Eye className="cu-icon-sm mr-2" /> View Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    {currentUser?.role === 'admin' && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                          <Link to={createPageUrl("AdminVerificationPanel")} className="flex items-center cursor-pointer">
+                            <ShieldCheck className="cu-icon-sm mr-2" /> Ad Review Panel
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to={createPageUrl("SupportCU")} className="flex items-center cursor-pointer">
+                        <Heart className="cu-icon-sm mr-2" /> Support CU
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to={createPageUrl("ReportBug")} className="flex items-center cursor-pointer">
+                        <Bug className="cu-icon-sm mr-2" /> Report Bug
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700">
+                      <LogOut className="cu-icon-sm mr-2" /> Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </div>
+
+          {/* Mobile only: Promote + Start Project Buttons below header */}
+          {currentUser && location.pathname === createPageUrl("Feed") && (
+            <div className="pb-3 space-y-2">
+              <Link to={createPageUrl("Advertise")} className="block">
+                <Button
+                  variant="outline"
+                  className="w-full border-2 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400 transition-all"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Promote Your Project
+                </Button>
+              </Link>
+              <Link to={createPageUrl("CreateProject")} className="block">
+                <Button
+                  className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-gray-900 font-semibold shadow-md hover:shadow-lg transition-all"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Start a Project
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </nav>
 
