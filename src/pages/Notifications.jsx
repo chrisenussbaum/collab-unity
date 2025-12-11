@@ -454,7 +454,7 @@ export default function Notifications({ currentUser, authIsLoading }) {
   const getNotificationLink = useCallback((notification) => {
     // Handle direct message notifications
     if (notification.type === 'direct_message' && notification.related_entity_id) {
-      return createPageUrl(`Sync?conversation=${notification.related_entity_id}`);
+      return createPageUrl(`Chat?conversation=${notification.related_entity_id}`);
     }
     
     const isFeedInteraction = ['feed_applaud', 'feed_comment', 'feed_share', 'feed_comment_mention'].includes(notification.type);
