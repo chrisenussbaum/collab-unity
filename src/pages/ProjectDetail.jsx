@@ -73,6 +73,8 @@ import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import IDEPreviewDialog from "@/components/IDEPreviewDialog";
 import { base44 } from "@/api/base44Client";
 import { Code, Maximize2 } from "lucide-react";
+import ProjectGuide from "../components/ProjectGuide";
+import EditProjectInstructionsModal from "../components/EditProjectInstructionsModal";
 
 
 import {
@@ -172,6 +174,9 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   // New state for invitations
   const [pendingInvitation, setPendingInvitation] = useState(null);
   const [isRespondingToInvite, setIsRespondingToInvite] = useState(false);
+
+  // State for editing project guide
+  const [showEditInstructionsModal, setShowEditInstructionsModal] = useState(false);
 
 
 
