@@ -151,10 +151,10 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
     const primaryUser = usersInTab[0];
 
     return (
-      <div key={tab.value} className="relative flex-shrink-0 md:flex-1">
+      <div key={tab.value} className="relative flex-shrink-0">
         <TabsTrigger 
           value={tab.value} 
-          className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm hover:bg-background/80 min-w-fit md:w-full relative"
+          className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm hover:bg-background/80 min-w-fit relative"
           title={tab.title}
           style={hasActiveUsers ? {
             borderBottom: `3px solid ${primaryUser.color}`,
@@ -206,8 +206,8 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
           </div>
           
           {/* Tablet and Desktop: Evenly spaced with horizontal scroll if needed */}
-          <div className="hidden md:block bg-gray-100 rounded-lg p-1">
-            <TabsList className="w-full flex justify-start gap-1 h-auto p-0 bg-transparent">
+          <div className="hidden md:block bg-gray-100 rounded-lg p-1 overflow-x-auto scrollbar-hide">
+            <TabsList className="w-full flex justify-between h-auto p-0 bg-transparent min-w-max md:min-w-0">
               {renderTabs()}
             </TabsList>
           </div>
