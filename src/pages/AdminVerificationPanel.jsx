@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { User, Advertisement, Notification, ProjectTemplate } from '@/entities/all';
+import { User, Advertisement, Notification } from '@/entities/all';
 import { base44 } from "@/api/base44Client";
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -165,13 +164,11 @@ export default function AdminVerificationPanel() {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
   const [pendingAds, setPendingAds] = useState([]);
-  const [pendingTemplates, setPendingTemplates] = useState([]);
   const [bugs, setBugs] = useState([]);
-  const [activeTab, setActiveTab] = useState('ads'); // 'ads', 'templates', or 'bugs'
+  const [activeTab, setActiveTab] = useState('ads'); // 'ads' or 'bugs'
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedAd, setSelectedAd] = useState(null);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [selectedBug, setSelectedBug] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
@@ -194,17 +191,13 @@ export default function AdminVerificationPanel() {
         return;
       }
 
-      const [allAds, allTemplates, allBugs] = await Promise.all([
+      const [allAds, allBugs] = await Promise.all([
         Advertisement.list(),
-        ProjectTemplate.list(),
         base44.entities.Bug.list('-created_date')
       ]);
 
       const pending = allAds.filter(ad => !ad.is_active);
       setPendingAds(pending);
-
-      const pendingTemps = allTemplates.filter(template => !template.is_active);
-      setPendingTemplates(pendingTemps);
 
       setBugs(allBugs || []);
 
@@ -289,72 +282,6 @@ export default function AdminVerificationPanel() {
     }
   };
 
-  const handleApproveTemplate = async (template) => {
-    setIsProcessing(true);
-    try {
-      await ProjectTemplate.update(template.id, { is_active: true });
-
-      if (template.created_by) {
-        await Notification.create({
-          user_email: template.created_by,
-          title: "Project Template Approved!",
-          message: `Your project template "${template.title}" has been approved and is now available for all users.`,
-          type: "general",
-          actor_email: currentUser.email,
-          actor_name: currentUser.full_name || "Admin"
-        });
-      }
-
-      toast.success(`Template "${template.title}" has been approved and is now live.`);
-      await loadPendingItems();
-      setShowApprovalDialog(false);
-      setSelectedTemplate(null);
-    } catch (error) {
-      console.error("Error approving template:", error);
-      toast.error("Failed to approve template. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleRejectTemplate = async (template) => {
-    if (!rejectionNotes.trim()) {
-      toast.error("Please provide a reason for rejection.");
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      await ProjectTemplate.delete(template.id);
-
-      if (template.created_by) {
-        await Notification.create({
-          user_email: template.created_by,
-          title: "Project Template Review Update",
-          message: `Your project template "${template.title}" was not approved. Reason: ${rejectionNotes}`,
-          type: "general",
-          actor_email: currentUser.email,
-          actor_name: currentUser.full_name || "Admin",
-          metadata: {
-            rejection_reason: rejectionNotes,
-            template_title: template.title
-          }
-        });
-      }
-
-      toast.success(`Template "${template.title}" has been rejected.`);
-      await loadPendingItems();
-      setShowRejectionDialog(false);
-      setSelectedTemplate(null);
-      setRejectionNotes('');
-    } catch (error) {
-      console.error("Error rejecting template:", error);
-      toast.error("Failed to reject template. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   const handleUpdateBug = async (bug, updates) => {
     setIsProcessing(true);
     try {
@@ -432,7 +359,6 @@ export default function AdminVerificationPanel() {
                 onClick={() => {
                   setActiveTab('ads');
                   setSelectedAd(null);
-                  setSelectedTemplate(null);
                   setSelectedBug(null);
                   setShowDetailsModal(false);
                   setShowApprovalDialog(false);
@@ -446,29 +372,10 @@ export default function AdminVerificationPanel() {
                 <span className="sm:ml-1">({pendingAds.length})</span>
               </Button>
               <Button
-                variant={activeTab === 'templates' ? 'default' : 'outline'}
-                onClick={() => {
-                  setActiveTab('templates');
-                  setSelectedAd(null);
-                  setSelectedTemplate(null);
-                  setSelectedBug(null);
-                  setShowDetailsModal(false);
-                  setShowApprovalDialog(false);
-                  setShowRejectionDialog(false);
-                  setRejectionNotes('');
-                }}
-                className={`flex-shrink-0 ${activeTab === 'templates' ? 'bg-white text-purple-600 hover:bg-white/90' : 'bg-white/20 text-white border-white/30 hover:bg-white/30'}`}
-              >
-                <Lightbulb className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Templates</span>
-                <span className="sm:ml-1">({pendingTemplates.length})</span>
-              </Button>
-              <Button
                 variant={activeTab === 'bugs' ? 'default' : 'outline'}
                 onClick={() => {
                   setActiveTab('bugs');
                   setSelectedAd(null);
-                  setSelectedTemplate(null);
                   setSelectedBug(null);
                   setShowDetailsModal(false);
                   setShowApprovalDialog(false);
@@ -518,17 +425,14 @@ export default function AdminVerificationPanel() {
                         ad={ad}
                         onApprove={(ad) => {
                           setSelectedAd(ad);
-                          setSelectedTemplate(null); // Ensure template is cleared
                           setShowApprovalDialog(true);
                         }}
                         onReject={(ad) => {
                           setSelectedAd(ad);
-                          setSelectedTemplate(null); // Ensure template is cleared
                           setShowRejectionDialog(true);
                         }}
                         onViewDetails={(ad) => {
                           setSelectedAd(ad);
-                          setSelectedTemplate(null); // Ensure template is cleared
                           setShowDetailsModal(true);
                         }}
                         isProcessing={isProcessing}
@@ -541,142 +445,7 @@ export default function AdminVerificationPanel() {
           </>
         )}
 
-        {/* Templates Tab */}
-        {activeTab === 'templates' && (
-          <>
-            {pendingTemplates.length === 0 ? (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-                <Card className="cu-card">
-                  <CardContent className="p-12 text-center">
-                    <div className="w-20 h-20 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Lightbulb className="w-10 h-10 text-purple-400" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      No Pending Templates
-                    </h3>
-                    <p className="text-gray-600">
-                      All project templates have been reviewed.
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <AnimatePresence>
-                  {pendingTemplates.map((template, index) => (
-                    <motion.div
-                      key={template.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 + (index * 0.05) }}
-                    >
-                      <Card className="cu-card hover:shadow-xl transition-all duration-300 border border-gray-100">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-purple-100">
-                                <Lightbulb className="w-6 h-6 text-purple-600" />
-                              </div>
-                              <div className="min-w-0">
-                                <h3 className="font-semibold text-gray-900 truncate text-base">
-                                  {template.title}
-                                </h3>
-                                <p className="text-sm text-gray-600">by {template.creator_name || 'Anonymous'}</p>
-                              </div>
-                            </div>
-                            <Badge className="bg-amber-50 text-amber-700 border border-amber-200 font-medium text-xs whitespace-nowrap">
-                              <Clock className="w-3 h-3 mr-1" />
-                              Pending
-                            </Badge>
-                          </div>
-                        </CardHeader>
 
-                        <CardContent className="space-y-4 pt-3">
-                          <p className="text-sm text-gray-600 line-clamp-3">{template.description}</p>
-
-                          <div className="grid grid-cols-2 gap-3 text-sm">
-                            <div>
-                              <p className="font-medium text-gray-500 text-xs mb-1">Category</p>
-                              <Badge variant="outline" className="text-xs">
-                                {template.category === 'other' && template.custom_category ? template.custom_category : template.category}
-                              </Badge>
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-500 text-xs mb-1">Difficulty</p>
-                              <Badge variant="outline" className="text-xs capitalize">
-                                {template.difficulty_level}
-                              </Badge>
-                            </div>
-                          </div>
-
-                          {template.target_skills && template.target_skills.length > 0 && (
-                            <div>
-                              <p className="font-medium text-gray-500 text-xs mb-1">Skills ({template.target_skills.length})</p>
-                              <div className="flex flex-wrap gap-1">
-                                {template.target_skills.slice(0, 3).map((skill, idx) => (
-                                  <Badge key={idx} variant="secondary" className="text-xs">{skill}</Badge>
-                                ))}
-                                {template.target_skills.length > 3 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{template.target_skills.length - 3}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="flex gap-2 pt-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedTemplate(template);
-                                setSelectedAd(null); // Ensure ad is cleared
-                                setShowDetailsModal(true);
-                              }}
-                              className="flex-1 text-xs"
-                            >
-                              <Eye className="w-3 h-3 mr-1" />
-                              Details
-                            </Button>
-
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                setSelectedTemplate(template);
-                                setSelectedAd(null); // Ensure ad is cleared
-                                setShowApprovalDialog(true);
-                              }}
-                              disabled={isProcessing}
-                              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
-                            >
-                              <CheckCircle className="w-3 h-3 mr-1" />
-                              Approve
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedTemplate(template);
-                                setSelectedAd(null); // Ensure ad is cleared
-                                setShowRejectionDialog(true);
-                              }}
-                              disabled={isProcessing}
-                              className="flex-1 text-xs"
-                            >
-                              <XCircle className="w-3 h-3 mr-1" />
-                              Reject
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            )}
-          </>
-        )}
 
         {/* Bugs Tab */}
         {activeTab === 'bugs' && (
@@ -819,46 +588,7 @@ export default function AdminVerificationPanel() {
           />
         )}
 
-        {/* Approval Dialog - Templates */}
-        {selectedTemplate && activeTab === 'templates' && (
-          <ConfirmationDialog
-            isOpen={showApprovalDialog}
-            onOpenChange={setShowApprovalDialog}
-            title="Approve Project Template"
-            description={`Are you sure you want to approve "${selectedTemplate.title}"? This template will be available to all users.`}
-            confirmText="Approve"
-            cancelText="Cancel"
-            onConfirm={() => handleApproveTemplate(selectedTemplate)}
-            isDestructive={false}
-            isLoading={isProcessing}
-          />
-        )}
 
-        {/* Rejection Dialog - Templates */}
-        {selectedTemplate && activeTab === 'templates' && (
-          <ConfirmationDialog
-            isOpen={showRejectionDialog}
-            onOpenChange={setShowRejectionDialog}
-            title="Reject Project Template"
-            description={
-              <div className="space-y-4">
-                <p>Please provide a reason for rejecting this template. The submitter will receive this feedback.</p>
-                <Textarea
-                  placeholder="Enter rejection reason (required)..."
-                  value={rejectionNotes}
-                  onChange={(e) => setRejectionNotes(e.target.value)}
-                  className="mt-2"
-                  rows={4}
-                />
-              </div>
-            }
-            confirmText="Reject Template"
-            cancelText="Cancel"
-            onConfirm={() => handleRejectTemplate(selectedTemplate)}
-            isDestructive={true}
-            isLoading={isProcessing}
-          />
-        )}
 
         {/* Bug Details Modal */}
         {selectedBug && activeTab === 'bugs' && (
@@ -975,73 +705,6 @@ export default function AdminVerificationPanel() {
           isDestructive={true}
           isLoading={isProcessing}
         />
-
-        {/* Details Modal - Template */}
-        {selectedTemplate && activeTab === 'templates' && (
-          <ConfirmationDialog
-            isOpen={showDetailsModal}
-            onOpenChange={setShowDetailsModal}
-            title={`Template Details - ${selectedTemplate.title}`}
-            description={
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                <div>
-                  <p className="font-medium text-gray-700 mb-1">Description</p>
-                  <p className="text-sm text-gray-600">{selectedTemplate.description}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="font-medium text-gray-700 mb-1">Category</p>
-                    <Badge>{selectedTemplate.category === 'other' && selectedTemplate.custom_category ? selectedTemplate.custom_category : selectedTemplate.category}</Badge>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-700 mb-1">Difficulty</p>
-                    <Badge className="capitalize">{selectedTemplate.difficulty_level}</Badge>
-                  </div>
-                </div>
-
-                {selectedTemplate.estimated_duration && (
-                  <div>
-                    <p className="font-medium text-gray-700 mb-1">Estimated Duration</p>
-                    <p className="text-sm text-gray-600">{selectedTemplate.estimated_duration}</p>
-                  </div>
-                )}
-
-                {selectedTemplate.target_skills && selectedTemplate.target_skills.length > 0 && (
-                  <div>
-                    <p className="font-medium text-gray-700 mb-1">Target Skills</p>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedTemplate.target_skills.map((skill, idx) => (
-                        <Badge key={idx} variant="secondary" className="text-xs">{skill}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {selectedTemplate.suggested_tools && selectedTemplate.suggested_tools.length > 0 && (
-                  <div>
-                    <p className="font-medium text-gray-700 mb-1">Suggested Tools</p>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedTemplate.suggested_tools.map((tool, idx) => (
-                        <Badge key={idx} variant="outline" className="text-xs">{tool}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {selectedTemplate.project_instructions?.overview && (
-                  <div>
-                    <p className="font-medium text-gray-700 mb-1">Overview</p>
-                    <p className="text-sm text-gray-600">{selectedTemplate.project_instructions.overview}</p>
-                  </div>
-                )}
-              </div>
-            }
-            confirmText="Close"
-            onConfirm={() => setShowDetailsModal(false)}
-            isDestructive={false}
-          />
-        )}
 
         {/* Details Modal - Ad */}
         {selectedAd && activeTab === 'ads' && (
