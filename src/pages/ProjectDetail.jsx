@@ -73,6 +73,8 @@ import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import IDEPreviewDialog from "@/components/IDEPreviewDialog";
 import { base44 } from "@/api/base44Client";
 import { Code, Maximize2 } from "lucide-react";
+import ProjectInstructions from "../components/ProjectInstructions";
+import EditProjectInstructionsModal from "../components/EditProjectInstructionsModal";
 
 import {
   Select,
@@ -171,6 +173,9 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   // New state for invitations
   const [pendingInvitation, setPendingInvitation] = useState(null);
   const [isRespondingToInvite, setIsRespondingToInvite] = useState(false);
+
+  // State for editing project instructions
+  const [showEditInstructionsModal, setShowEditInstructionsModal] = useState(false);
 
   // Function to check if current user can contribute to this project
   const canContribute = useCallback((project, user, userApplication) => {
@@ -1628,6 +1633,17 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
           </div>
         </div>
 
+        {/* Project Instructions - Show to everyone if instructions exist */}
+        {project.project_instructions && (
+          <div className="mt-6 sm:mt-8">
+            <ProjectInstructions
+              instructions={project.project_instructions}
+              isOwner={isOwner}
+              onEditClick={() => setShowEditInstructionsModal(true)}
+            />
+          </div>
+        )}
+
         {/* Workspace Tabs */}
         {(userCanContribute) && (
           <div className="mt-6 sm:mt-8">
@@ -1641,7 +1657,17 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
             />
           </div>
         )}
-      </div>
-    </>
-  );
-}
+        </div>
+
+        {/* Edit Project Instructions Modal */}
+        {isOwner && (
+        <EditProjectInstructionsModal
+          isOpen={showEditInstructionsModal}
+          onClose={() => setShowEditInstructionsModal(false)}
+          project={project}
+          onSave={handleProjectUpdate}
+        />
+        )}
+        </>
+        );
+        }

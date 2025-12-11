@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,9 +19,12 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function ProjectInstructions({ instructions, isOwner, onEditClick }) {
   const [expandedSections, setExpandedSections] = useState({
-    planning: false, // Changed from true to false
+    planning: false,
     execution: false,
     delivery: false,
+    setup: false,
+    development: false,
+    launch: false,
     challenges: false
   });
 
@@ -42,20 +44,31 @@ export default function ProjectInstructions({ instructions, isOwner, onEditClick
     planning_phase,
     execution_phase,
     delivery_phase,
+    setup_phase,
+    development_phase,
+    launch_phase,
     success_criteria,
     common_challenges,
   } = instructions;
   
+  // Support both old (planning/execution/delivery) and new (setup/development/launch) phase naming
   const phaseIcons = {
     planning: Settings,
     execution: Rocket,
-    delivery: Award
+    delivery: Award,
+    setup: Settings,
+    development: Rocket,
+    launch: Award
   };
 
-  const phases = [
+  const phases = planning_phase || execution_phase || delivery_phase ? [
     { key: 'planning', data: planning_phase, color: 'blue' },
     { key: 'execution', data: execution_phase, color: 'purple' },
     { key: 'delivery', data: delivery_phase, color: 'green' }
+  ] : [
+    { key: 'setup', data: setup_phase, color: 'blue' },
+    { key: 'development', data: development_phase, color: 'purple' },
+    { key: 'launch', data: launch_phase, color: 'green' }
   ];
 
   const colorClasses = {
