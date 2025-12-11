@@ -205,9 +205,9 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
             </HorizontalScrollContainer>
           </div>
           
-          {/* Desktop: Full width evenly spaced tabs */}
-          <div className="hidden lg:block bg-gray-100 rounded-lg p-1">
-            <TabsList className="w-full flex justify-start gap-2 h-auto p-0 bg-transparent">
+          {/* Desktop: Full width horizontally stretched tabs */}
+          <div className="hidden lg:block">
+            <TabsList className="w-full inline-flex h-10 items-center justify-start rounded-lg bg-gray-100 p-1 text-muted-foreground">
               {renderTabs()}
             </TabsList>
           </div>
