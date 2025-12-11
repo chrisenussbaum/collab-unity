@@ -1656,6 +1656,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
               </>
             )}
           </div>
+        </div>
       </div>
 
       {/* Edit Project Instructions Modal */}
