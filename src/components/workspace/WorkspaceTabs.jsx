@@ -207,7 +207,7 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
           
           {/* Tablet and Desktop: Evenly spaced with horizontal scroll if needed */}
           <div className="hidden md:block bg-gray-100 rounded-lg p-1">
-            <TabsList className="w-full flex h-auto p-0 bg-transparent">
+            <TabsList className="w-full flex justify-start gap-1 h-auto p-0 bg-transparent">
               {renderTabs()}
             </TabsList>
           </div>
