@@ -799,7 +799,7 @@ const translations = {
     tagline: "Where Ideas Happen",
     hero: {
       title1: "Collab Unity",
-      title2: "The future of work",
+      title2: "Where Ideas Happen",
       description: "Join a community of creators, learners, and innovators. Build projects together, share knowledge, and turn your ideas into reality with the perfect team.",
       getStarted: "Get Started",
       haveAccount: "I Already Have an Account"
