@@ -190,44 +190,50 @@ Deno.serve(async (req) => {
         .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
         .slice(0, 8);
 
-        // Search Project Templates
-        const allTemplates = await base44.asServiceRole.entities.ProjectTemplate.filter({ 
-            is_active: true 
-        });
-        
-        const matchedTemplates = allTemplates.filter(template => {
-            // Search by title
-            if (template.title?.toLowerCase().includes(searchTerm)) return true;
+        // Search Project Templates - Skip if entity doesn't exist
+        let matchedTemplates = [];
+        try {
+            const allTemplates = await base44.asServiceRole.entities.ProjectTemplate.filter({ 
+                is_active: true 
+            });
             
-            // Search by description
-            if (template.description?.toLowerCase().includes(searchTerm)) return true;
-            
-            // Search by category
-            if (template.category?.toLowerCase().includes(searchTerm)) return true;
-            
-            // Search by target skills
-            if (arrayIncludes(template.target_skills, searchTerm)) return true;
-            
-            // Search by suggested tools
-            if (arrayIncludes(template.suggested_tools, searchTerm)) return true;
-            
-            // Search by tags
-            if (arrayIncludes(template.tags, searchTerm)) return true;
-            
-            // Search by difficulty level
-            if (template.difficulty_level?.toLowerCase().includes(searchTerm)) return true;
-            
-            return false;
-        })
-        .sort((a, b) => {
-            // Prioritize exact title matches
-            const aExactTitle = a.title?.toLowerCase() === searchTerm;
-            const bExactTitle = b.title?.toLowerCase() === searchTerm;
-            if (aExactTitle && !bExactTitle) return -1;
-            if (!aExactTitle && bExactTitle) return 1;
-            return new Date(b.created_date) - new Date(a.created_date);
-        })
-        .slice(0, 8);
+            matchedTemplates = allTemplates.filter(template => {
+                // Search by title
+                if (template.title?.toLowerCase().includes(searchTerm)) return true;
+                
+                // Search by description
+                if (template.description?.toLowerCase().includes(searchTerm)) return true;
+                
+                // Search by category
+                if (template.category?.toLowerCase().includes(searchTerm)) return true;
+                
+                // Search by target skills
+                if (arrayIncludes(template.target_skills, searchTerm)) return true;
+                
+                // Search by suggested tools
+                if (arrayIncludes(template.suggested_tools, searchTerm)) return true;
+                
+                // Search by tags
+                if (arrayIncludes(template.tags, searchTerm)) return true;
+                
+                // Search by difficulty level
+                if (template.difficulty_level?.toLowerCase().includes(searchTerm)) return true;
+                
+                return false;
+            })
+            .sort((a, b) => {
+                // Prioritize exact title matches
+                const aExactTitle = a.title?.toLowerCase() === searchTerm;
+                const bExactTitle = b.title?.toLowerCase() === searchTerm;
+                if (aExactTitle && !bExactTitle) return -1;
+                if (!aExactTitle && bExactTitle) return 1;
+                return new Date(b.created_date) - new Date(a.created_date);
+            })
+            .slice(0, 8);
+        } catch (error) {
+            // ProjectTemplate entity might not exist, skip it
+            console.log("ProjectTemplate entity not found, skipping template search");
+        }
 
         const results = {
             projects: matchedProjects.map(p => ({
