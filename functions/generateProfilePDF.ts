@@ -118,9 +118,9 @@ Deno.serve(async (req) => {
 
     // Fetch all projects user is part of
     const allProjects = await base44.asServiceRole.entities.Project.list();
-    const userProjects = allProjects.filter(p => 
+    let userProjects = allProjects.filter(p => 
       p.collaborator_emails?.includes(profileUser.email)
-    ).sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+    );
 
     // Deep scrape: Get comprehensive contribution data
     let completedTasks = [];
@@ -186,6 +186,38 @@ Deno.serve(async (req) => {
 
         projectContributions.set(project.id, contributions);
       }
+
+      // Sort projects by priority: completed > in_progress > seeking_collaborators
+      // Within each status, sort by total contributions and activity
+      const statusPriority = {
+        'completed': 3,
+        'in_progress': 2,
+        'seeking_collaborators': 1
+      };
+
+      userProjects.sort((a, b) => {
+        // First sort by status
+        const statusDiff = (statusPriority[b.status] || 0) - (statusPriority[a.status] || 0);
+        if (statusDiff !== 0) return statusDiff;
+
+        // Then by total contributions (tasks + thoughts + assets + ides)
+        const aContribs = projectContributions.get(a.id);
+        const bContribs = projectContributions.get(b.id);
+        
+        const aTotal = (aContribs?.tasksCompleted || 0) + (aContribs?.thoughtsCreated || 0) + 
+                       (aContribs?.assetsUploaded || 0) + (aContribs?.idesCreated || 0);
+        const bTotal = (bContribs?.tasksCompleted || 0) + (bContribs?.thoughtsCreated || 0) + 
+                       (bContribs?.assetsUploaded || 0) + (bContribs?.idesCreated || 0);
+        
+        if (bTotal !== aTotal) return bTotal - aTotal;
+
+        // Then by project age (older = more established)
+        const ageDiff = new Date(a.created_date) - new Date(b.created_date);
+        if (ageDiff !== 0) return ageDiff;
+
+        // Finally by last activity
+        return new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date);
+      });
 
       // Aggregate all completed tasks
       completedTasks = allTasks.filter(t => 
