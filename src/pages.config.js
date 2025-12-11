@@ -15,7 +15,6 @@ import UserProjects from './pages/UserProjects';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import JoinProjects from './pages/JoinProjects';
-import Sync from './pages/Sync';
 import Welcome from './pages/Welcome';
 import Contact from './pages/Contact';
 import SupportCU from './pages/SupportCU';
@@ -23,6 +22,7 @@ import ReportBug from './pages/ReportBug';
 import FeatureRequest from './pages/FeatureRequest';
 import Testimonials from './pages/Testimonials';
 import AboutUs from './pages/AboutUs';
+import Chat from './pages/Chat';
 import __Layout from './Layout.jsx';
 
 
@@ -44,7 +44,6 @@ export const PAGES = {
     "TermsOfService": TermsOfService,
     "PrivacyPolicy": PrivacyPolicy,
     "JoinProjects": JoinProjects,
-    "Sync": Sync,
     "Welcome": Welcome,
     "Contact": Contact,
     "SupportCU": SupportCU,
@@ -52,6 +51,7 @@ export const PAGES = {
     "FeatureRequest": FeatureRequest,
     "Testimonials": Testimonials,
     "AboutUs": AboutUs,
+    "Chat": Chat,
 }
 
 export const pagesConfig = {
