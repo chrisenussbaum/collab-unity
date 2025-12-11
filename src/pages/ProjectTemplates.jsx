@@ -659,7 +659,7 @@ export default function ProjectTemplates({ currentUser }) {
                 </div>
               )}
 
-              <div className="flex gap-3 pt-4 border-t">
+              <div className="flex gap-3 pt-4 pb-2 border-t sticky bottom-0 bg-white z-10">
                 <Button variant="outline" onClick={() => setPreviewTemplate(null)} className="flex-1">
                   Close
                 </Button>

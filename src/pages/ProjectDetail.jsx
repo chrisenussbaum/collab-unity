@@ -1425,7 +1425,16 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                 onProjectUpdate={handleProjectUpdate}
               />
             ) : null}
-          </main>
+
+            {/* Project Instructions - Visible to everyone if they exist */}
+            {project.project_instructions && (
+              <ProjectInstructions
+                instructions={project.project_instructions}
+                isOwner={isOwner}
+                onEditClick={() => setShowEditInstructionsModal(true)}
+              />
+            )}
+            </main>
 
           {/* Right Sidebar - Only show to collaborators on desktop */}
           {userCanContribute && (
@@ -1632,17 +1641,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
             )}
           </div>
         </div>
-
-        {/* Project Instructions - Visible to collaborators and above project details */}
-        {userCanContribute && project.project_instructions && (
-          <div className="mt-6 sm:mt-8">
-            <ProjectInstructions
-              instructions={project.project_instructions}
-              isOwner={isOwner}
-              onEditClick={() => setShowEditInstructionsModal(true)}
-            />
-          </div>
-        )}
 
         {/* Workspace Tabs */}
         {(userCanContribute) && (
