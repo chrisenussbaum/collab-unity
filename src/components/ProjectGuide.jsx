@@ -85,11 +85,9 @@ export default function ProjectGuide({ project, isOwner, onEditClick }) {
         {/* Phase Sections */}
         {["setup", "development", "launch"].map((phaseKey) => {
           const phase = instructions[`${phaseKey}_phase`];
-          if (!phase || typeof phase !== 'object' || !phase.title) return null;
+          if (!phase) return null;
 
           const config = phaseConfig[phaseKey];
-          if (!config) return null;
-          
           const Icon = config.icon;
           const isExpanded = expandedSections[phaseKey];
 
@@ -104,7 +102,7 @@ export default function ProjectGuide({ project, isOwner, onEditClick }) {
               >
                 <CardTitle className={`text-sm sm:text-base font-semibold flex items-center ${config.color}`}>
                   <Icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  {phase.title || `${phaseKey.charAt(0).toUpperCase() + phaseKey.slice(1)} Phase`}
+                  {phase.title}
                 </CardTitle>
                 {isExpanded ? (
                   <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
@@ -117,7 +115,7 @@ export default function ProjectGuide({ project, isOwner, onEditClick }) {
                   {phase.description && (
                     <p className="text-sm text-gray-600">{phase.description}</p>
                   )}
-                  {phase.steps && Array.isArray(phase.steps) && phase.steps.length > 0 && (
+                  {phase.steps && phase.steps.length > 0 && (
                     <div>
                       <h4 className="font-semibold text-xs sm:text-sm text-gray-900 mb-2">
                         Steps:
@@ -131,7 +129,7 @@ export default function ProjectGuide({ project, isOwner, onEditClick }) {
                       </ul>
                     </div>
                   )}
-                  {phase.deliverables && Array.isArray(phase.deliverables) && phase.deliverables.length > 0 && (
+                  {phase.deliverables && phase.deliverables.length > 0 && (
                     <div>
                       <h4 className="font-semibold text-xs sm:text-sm text-gray-900 mb-2">
                         Deliverables:
@@ -153,7 +151,6 @@ export default function ProjectGuide({ project, isOwner, onEditClick }) {
 
         {/* Success Criteria */}
         {instructions.success_criteria &&
-          Array.isArray(instructions.success_criteria) &&
           instructions.success_criteria.length > 0 && (
             <Card className="border-2 border-green-200 bg-green-50">
               <CardHeader
@@ -186,7 +183,6 @@ export default function ProjectGuide({ project, isOwner, onEditClick }) {
 
         {/* Common Challenges */}
         {instructions.common_challenges &&
-          Array.isArray(instructions.common_challenges) &&
           instructions.common_challenges.length > 0 && (
             <Card className="border-2 border-yellow-200 bg-yellow-50">
               <CardHeader
