@@ -165,11 +165,9 @@ export default function ProjectInstructions({ instructions, isOwner, onEditClick
                   
                   <CollapsibleContent>
                     <CardContent className="pt-0">
-                      {phase.data.description && (
-                        <p className="text-gray-700 mb-4">
-                          {phase.data.description}
-                        </p>
-                      )}
+                      <p className="text-gray-700 mb-4">
+                        {phase.data.description}
+                      </p>
                       
                       {phase.data.steps && phase.data.steps.length > 0 && (
                         <div className="mb-4">
