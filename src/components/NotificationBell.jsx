@@ -298,7 +298,7 @@ export default function NotificationBell() {
 
               const getNotificationLink = (notif) => {
                 if (notif.type === 'direct_message' && notif.related_entity_id) {
-                  return createPageUrl(`Sync?conversation=${notif.related_entity_id}`);
+                  return `${createPageUrl('Chat')}?conversation=${notif.related_entity_id}`;
                 }
                 
                 const isFeedInteraction = ['feed_applaud', 'feed_comment', 'feed_share', 'feed_comment_mention'].includes(notif.type);
