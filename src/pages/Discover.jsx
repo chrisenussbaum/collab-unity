@@ -908,6 +908,16 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   Promote Your Project
                 </Button>
               </Link>
+              
+              <Link to={createPageUrl("CreateProject")} className="w-full">
+                <Button
+                  size="lg"
+                  className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold shadow-lg hover:shadow-xl transition-all w-full"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Start a Project
+                </Button>
+              </Link>
             </div>
 
           </motion.div>
