@@ -35,9 +35,6 @@ export default function ProjectMembershipManager({
   const [memberToRemove, setMemberToRemove] = useState(null);
   const [isLeaving, setIsLeaving] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
-  const [showTransferOwnership, setShowTransferOwnership] = useState(false);
-  const [selectedNewOwner, setSelectedNewOwner] = useState(null);
-  const [isTransferring, setIsTransferring] = useState(false);
 
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -93,13 +90,6 @@ export default function ProjectMembershipManager({
   const handleLeaveProject = async () => {
     if (!currentUser || !project) return;
 
-    // If user is the owner and there are other collaborators, show transfer ownership dialog
-    if (isOwner && collaborators.length > 0) {
-      setShowLeaveConfirm(false);
-      setShowTransferOwnership(true);
-      return;
-    }
-
     setIsLeaving(true);
     try {
       const updatedCollaborators = (project.collaborator_emails || []).filter(
@@ -153,70 +143,6 @@ export default function ProjectMembershipManager({
     } finally {
       setIsLeaving(false);
       setShowLeaveConfirm(false);
-    }
-  };
-
-  const handleTransferOwnership = async () => {
-    if (!selectedNewOwner || !isOwner) return;
-
-    setIsTransferring(true);
-    try {
-      // Remove old owner from collaborator list and add new owner
-      const updatedCollaborators = (project.collaborator_emails || [])
-        .filter(email => email !== selectedNewOwner.email);
-
-      // Transfer ownership by updating created_by field
-      await Project.update(project.id, {
-        created_by: selectedNewOwner.email,
-        collaborator_emails: updatedCollaborators
-      });
-
-      // Notify new owner
-      await Notification.create({
-        user_email: selectedNewOwner.email,
-        title: "Project ownership transferred",
-        message: `${currentUser.full_name || currentUser.email} has transferred ownership of "${project.title}" to you. You now have full control over the project.`,
-        type: "general",
-        related_project_id: project.id,
-        actor_email: currentUser.email,
-        actor_name: currentUser.full_name || currentUser.email,
-        metadata: {
-          project_title: project.title,
-          previous_owner: currentUser.email,
-          new_owner: selectedNewOwner.email
-        }
-      });
-
-      // Notify all other collaborators
-      const otherCollaborators = collaborators.filter(c => c.email !== selectedNewOwner.email);
-      for (const collaborator of otherCollaborators) {
-        await Notification.create({
-          user_email: collaborator.email,
-          title: "Project ownership changed",
-          message: `${currentUser.full_name || currentUser.email} transferred ownership of "${project.title}" to ${selectedNewOwner.full_name || selectedNewOwner.email}.`,
-          type: "project_update",
-          related_project_id: project.id,
-          actor_email: currentUser.email,
-          actor_name: currentUser.full_name || currentUser.email,
-          metadata: {
-            project_title: project.title,
-            previous_owner: currentUser.email,
-            new_owner: selectedNewOwner.email,
-            update_type: "ownership_transfer"
-          }
-        });
-      }
-
-      toast.success(`Ownership transferred to ${selectedNewOwner.full_name || selectedNewOwner.email}`);
-      
-      if (onUpdate) onUpdate();
-    } catch (error) {
-      console.error("Error transferring ownership:", error);
-      toast.error("Failed to transfer ownership. Please try again.");
-    } finally {
-      setIsTransferring(false);
-      setShowTransferOwnership(false);
-      setSelectedNewOwner(null);
     }
   };
 
@@ -384,101 +310,12 @@ export default function ProjectMembershipManager({
         isOpen={showLeaveConfirm}
         onOpenChange={setShowLeaveConfirm}
         title="Leave Project"
-        description={isOwner && collaborators.length > 0 
-          ? "As the project owner, you must transfer ownership to another collaborator before leaving."
-          : "Are you sure you want to leave this project? You will lose access to all project resources and discussions."
-        }
+        description="Are you sure you want to leave this project? You will lose access to all project resources and discussions."
         confirmText="Leave Project"
         isDestructive={true}
         onConfirm={handleLeaveProject}
         isLoading={isLeaving}
       />
-
-      {/* Transfer Ownership Dialog */}
-      <Dialog open={showTransferOwnership} onOpenChange={setShowTransferOwnership}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <Crown className="w-5 h-5 mr-2 text-purple-600" />
-              Transfer Project Ownership
-            </DialogTitle>
-            <DialogDescription>
-              Select a collaborator to become the new project owner. They will have full control over the project.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Select New Owner</Label>
-              {collaborators.map((member) => (
-                <button
-                  key={member.email}
-                  onClick={() => setSelectedNewOwner(member)}
-                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors text-left ${
-                    selectedNewOwner?.email === member.email
-                      ? 'bg-purple-100 border-2 border-purple-500'
-                      : 'hover:bg-gray-50 border-2 border-transparent'
-                  }`}
-                >
-                  <Avatar className="w-10 h-10">
-                    <AvatarImage src={member.profile_image} className="object-cover" />
-                    <AvatarFallback className="bg-gray-200 text-gray-600">
-                      {member.full_name?.[0] || member.email?.[0] || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm text-gray-900">
-                      {member.full_name || member.email}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {member.username ? `@${member.username}` : member.email}
-                    </p>
-                  </div>
-                  {selectedNewOwner?.email === member.email && (
-                    <Crown className="w-5 h-5 text-purple-600" />
-                  )}
-                </button>
-              ))}
-            </div>
-
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-              <p className="text-sm text-amber-800">
-                <strong>Important:</strong> Once transferred, only the new owner can manage project settings and membership. This action cannot be undone.
-              </p>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowTransferOwnership(false);
-                setSelectedNewOwner(null);
-              }}
-              disabled={isTransferring}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleTransferOwnership}
-              disabled={!selectedNewOwner || isTransferring}
-              className="cu-button"
-            >
-              {isTransferring ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Transferring...
-                </>
-              ) : (
-                <>
-                  <Crown className="w-4 h-4 mr-2" />
-                  Transfer Ownership
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <ConfirmationDialog
         isOpen={showRemoveConfirm}
@@ -747,14 +584,11 @@ export default function ProjectMembershipManager({
             </div>
           )}
 
-          {/* Leave Project Button */}
-          {isExplicitCollaborator && (
+          {/* Leave Project Button for Collaborators */}
+          {isExplicitCollaborator && !isOwner && (
             <div className="pt-4 border-t">
               <p className="text-sm text-gray-600 mb-3">
-                {isOwner 
-                  ? "As the project owner, you can leave and transfer ownership to another collaborator."
-                  : "If you no longer wish to be a part of this project, you can leave at any time."
-                }
+                If you no longer wish to be a part of this project, you can leave at any time.
               </p>
               <Button
                 variant="destructive"
@@ -763,7 +597,7 @@ export default function ProjectMembershipManager({
                 disabled={isLeaving}
               >
                 <LogOut className="w-4 h-4 mr-2" />
-                {isOwner ? "Leave & Transfer Ownership" : "Leave Project"}
+                Leave Project
               </Button>
             </div>
           )}
