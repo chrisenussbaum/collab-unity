@@ -549,6 +549,8 @@ export default function CreateProject() {
             </motion.div>
           )}
 
+          {/* Browse Templates button removed - feature being reworked */}
+
           {/* Assisted Banner */}
           {isAIAssisted && currentStep > 0 && (
             <motion.div
