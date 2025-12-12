@@ -36,7 +36,6 @@ import {
 import { FeedPost, Project } from "@/entities/all";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
-import { generateVideoThumbnail } from "@/functions/generateVideoThumbnail";
 
 const POST_TYPES = [
   {
@@ -138,6 +137,53 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
     onClose();
   };
 
+  // Function to generate thumbnail from video using canvas
+  const generateVideoThumbnailFromBlob = (videoFile) => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.muted = true;
+      video.playsInline = true;
+      
+      const videoURL = URL.createObjectURL(videoFile);
+      video.src = videoURL;
+
+      video.addEventListener('loadeddata', () => {
+        // Seek to 1 second or 10% of video duration
+        const seekTime = Math.min(1, video.duration * 0.1);
+        video.currentTime = seekTime;
+      });
+
+      video.addEventListener('seeked', () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        canvas.toBlob((blob) => {
+          URL.revokeObjectURL(videoURL);
+          if (blob) {
+            // Create a File object from the blob
+            const thumbnailFile = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' });
+            resolve(thumbnailFile);
+          } else {
+            reject(new Error('Failed to generate thumbnail'));
+          }
+        }, 'image/jpeg', 0.85);
+      });
+
+      video.addEventListener('error', (e) => {
+        URL.revokeObjectURL(videoURL);
+        reject(new Error('Failed to load video for thumbnail generation'));
+      });
+
+      // Start loading the video
+      video.load();
+    });
+  };
+
   const handleMediaUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -163,17 +209,21 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
           continue;
         }
 
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-
         let thumbnailUrl = null;
+        
+        // Generate thumbnail BEFORE uploading the video
         if (isVideo) {
           try {
-            const { data: thumbData } = await generateVideoThumbnail({ video_url: file_url });
-            thumbnailUrl = thumbData?.thumbnail_url;
-          } catch (error) {
-            console.error("Error generating thumbnail:", error);
+            const thumbnailFile = await generateVideoThumbnailFromBlob(file);
+            const { file_url: thumb_url } = await base44.integrations.Core.UploadFile({ file: thumbnailFile });
+            thumbnailUrl = thumb_url;
+          } catch (thumbError) {
+            console.warn("Could not generate thumbnail, video will show without thumbnail:", thumbError);
+            // Continue without thumbnail rather than failing the entire upload
           }
         }
+
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
         setMediaAttachments(prev => [...prev, {
           media_url: file_url,
