@@ -213,41 +213,6 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
         </div>
 
         <p className="text-gray-700 leading-relaxed">{post.content}</p>
-
-        {post.media_attachments && post.media_attachments.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
-            {post.media_attachments.map((media, index) => (
-              <div key={index} className="relative group cursor-pointer rounded-lg overflow-hidden">
-                {media.media_type === 'image' ? (
-                  <img
-                    src={media.media_url}
-                    alt={media.caption || `Media ${index + 1}`}
-                    className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="relative w-full h-40 bg-gray-900">
-                    {media.thumbnail_url ? (
-                      <img
-                        src={media.thumbnail_url}
-                        alt={media.caption || `Video ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Video className="w-8 h-8 text-gray-400" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                      <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center">
-                        <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-gray-800 border-b-[6px] border-b-transparent ml-1"></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     );
   };
@@ -395,6 +360,42 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
             {post.post_type === 'status_update' && renderStatusUpdate()}
             {post.post_type === 'narrative' && renderNarrative()}
             {post.post_type === 'collaboration_call' && renderCollaborationCall()}
+
+            {/* Media Attachments for Status Updates */}
+            {post.post_type === 'status_update' && post.media_attachments && post.media_attachments.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 mt-4">
+                {post.media_attachments.map((media, index) => (
+                  <div key={index} className="relative group cursor-pointer rounded-lg overflow-hidden">
+                    {media.media_type === 'image' ? (
+                      <img
+                        src={media.media_url}
+                        alt={media.caption || `Media ${index + 1}`}
+                        className="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="relative w-full h-48 sm:h-64 bg-gray-900">
+                        {media.thumbnail_url ? (
+                          <img
+                            src={media.thumbnail_url}
+                            alt={media.caption || `Video ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Video className="w-12 h-12 text-gray-400" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                          <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
+                            <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-gray-800 border-b-[8px] border-b-transparent ml-1"></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Related Project Link */}
             {relatedProject && (
