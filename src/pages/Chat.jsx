@@ -99,8 +99,16 @@ export default function Chat({ currentUser, authIsLoading }) {
         }
       }
 
+      // Filter out conversations where the other user no longer exists
+      const validConversations = uniqueConversations.filter(conv => {
+        const otherEmail = conv.participant_1_email === currentUser.email 
+          ? conv.participant_2_email 
+          : conv.participant_1_email;
+        return profilesMap[otherEmail]; // Only keep conversations where we found the user profile
+      });
+
       return { 
-        conversations: uniqueConversations, 
+        conversations: validConversations, 
         userProfiles: profilesMap 
       };
     },
