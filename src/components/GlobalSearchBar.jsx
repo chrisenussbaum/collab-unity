@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -125,6 +124,11 @@ export default function GlobalSearchBar({ className = "", placeholder = "Search.
     navigate(createPageUrl(`ProjectTemplates`));
     setShowResults(false);
     setQuery("");
+  };
+
+  const handleViewAllResults = () => {
+    navigate(createPageUrl(`Search?q=${encodeURIComponent(query)}`));
+    setShowResults(false);
   };
 
   const postTypeIcons = {
@@ -353,6 +357,20 @@ export default function GlobalSearchBar({ className = "", placeholder = "Search.
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* View All Results Button */}
+          {hasResults && (
+            <div className="p-3 border-t">
+              <Button
+                variant="ghost"
+                className="w-full justify-center text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                onClick={handleViewAllResults}
+              >
+                View All Results
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
             </div>
           )}
         </Card>

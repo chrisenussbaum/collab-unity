@@ -23,6 +23,7 @@ import FeatureRequest from './pages/FeatureRequest';
 import Testimonials from './pages/Testimonials';
 import AboutUs from './pages/AboutUs';
 import Chat from './pages/Chat';
+import Search from './pages/Search';
 import __Layout from './Layout.jsx';
 
 
@@ -52,6 +53,7 @@ export const PAGES = {
     "Testimonials": Testimonials,
     "AboutUs": AboutUs,
     "Chat": Chat,
+    "Search": Search,
 }
 
 export const pagesConfig = {
