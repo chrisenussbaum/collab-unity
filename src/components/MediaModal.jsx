@@ -73,7 +73,7 @@ export default function MediaModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 overflow-hidden bg-transparent border-2 border-purple-300">
+      <DialogContent className="max-w-[98vw] sm:max-w-[95vw] max-h-[95vh] w-auto h-auto p-1 sm:p-2 overflow-hidden bg-transparent border-2 border-purple-300">
         <div className="relative w-full h-full flex items-center justify-center min-h-[300px]">
           {/* Close Button */}
           <Button
@@ -140,7 +140,7 @@ export default function MediaModal({
             </div>
           ) : (
             /* Media Content */
-            <div className="relative w-full h-full flex items-center justify-center p-4 sm:p-8">
+            <div className="relative w-full h-full flex items-center justify-center p-2 sm:p-4 md:p-8">
               {currentMediaType === 'video' ? (
                 <video
                   key={`video-${currentMediaUrl}-${currentIndex}`}
@@ -150,7 +150,7 @@ export default function MediaModal({
                   playsInline
                   preload="auto"
                   poster={currentMedia.thumbnail_url}
-                  className="max-w-full max-h-[80vh] w-auto h-auto"
+                  className="w-full sm:w-auto max-w-full max-h-[85vh] sm:max-h-[80vh] h-auto"
                   onLoadedData={handleMediaLoad}
                   onError={handleMediaError}
                   onCanPlay={handleMediaLoad}
@@ -164,7 +164,7 @@ export default function MediaModal({
                   key={`image-${currentMediaUrl}-${currentIndex}`}
                   src={currentMediaUrl}
                   alt={currentCaption || altText}
-                  className="max-w-full max-h-[80vh] w-auto h-auto object-contain"
+                  className="w-full sm:w-auto max-w-full max-h-[85vh] sm:max-h-[80vh] h-auto object-contain"
                   onLoad={handleMediaLoad}
                   onError={handleMediaError}
                 />
