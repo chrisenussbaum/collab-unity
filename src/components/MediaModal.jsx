@@ -73,7 +73,7 @@ export default function MediaModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[98vw] sm:max-w-[95vw] max-h-[95vh] w-auto h-auto p-1 sm:p-2 overflow-hidden bg-transparent border-2 border-purple-300">
+      <DialogContent className="max-w-[98vw] sm:max-w-[95vw] max-h-[95vh] w-auto h-auto p-1 sm:p-2 overflow-hidden bg-transparent border-none">
         <div className="relative w-full h-full flex items-center justify-center min-h-[300px]">
           {/* Close Button */}
           <Button
