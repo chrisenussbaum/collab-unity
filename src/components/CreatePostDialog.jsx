@@ -28,10 +28,15 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  PartyPopper
+  PartyPopper,
+  Upload,
+  Image as ImageIcon,
+  Video
 } from "lucide-react";
 import { FeedPost, Project } from "@/entities/all";
 import { toast } from "sonner";
+import { base44 } from "@/api/base44Client";
+import { generateVideoThumbnail } from "@/functions/generateVideoThumbnail";
 
 const POST_TYPES = [
   {
@@ -72,9 +77,11 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
   const [status, setStatus] = useState("on_track");
   const [statusTitle, setStatusTitle] = useState("");
   const [statusContent, setStatusContent] = useState("");
-  const [keyPoints, setKeyPoints] = useState([""]);
   const [statusProject, setStatusProject] = useState("");
   const [userProjects, setUserProjects] = useState([]);
+  const [mediaAttachments, setMediaAttachments] = useState([]);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const fileInputRef = useRef(null);
   
   // Narrative fields
   const [narrativeTitle, setNarrativeTitle] = useState("");
@@ -112,8 +119,8 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
     setStatus("on_track");
     setStatusTitle("");
     setStatusContent("");
-    setKeyPoints([""]);
     setStatusProject("");
+    setMediaAttachments([]);
     setNarrativeTitle("");
     setNarrativeContent("");
     setNarrativeTags([]);
@@ -131,20 +138,64 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
     onClose();
   };
 
-  const addKeyPoint = () => {
-    if (keyPoints.length < 5) {
-      setKeyPoints([...keyPoints, ""]);
+  const handleMediaUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    if (mediaAttachments.length + files.length > 5) {
+      toast.error("Maximum 5 media files allowed");
+      return;
+    }
+
+    setIsUploadingMedia(true);
+    try {
+      for (const file of files) {
+        const isVideo = file.type.startsWith('video/');
+        const isImage = file.type.startsWith('image/');
+
+        if (!isVideo && !isImage) {
+          toast.error(`${file.name} is not a valid image or video file`);
+          continue;
+        }
+
+        if (file.size > 100 * 1024 * 1024) {
+          toast.error(`${file.name} is too large. Maximum size is 100MB`);
+          continue;
+        }
+
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
+        let thumbnailUrl = null;
+        if (isVideo) {
+          try {
+            const { data: thumbData } = await generateVideoThumbnail({ video_url: file_url });
+            thumbnailUrl = thumbData?.thumbnail_url;
+          } catch (error) {
+            console.error("Error generating thumbnail:", error);
+          }
+        }
+
+        setMediaAttachments(prev => [...prev, {
+          media_url: file_url,
+          media_type: isVideo ? 'video' : 'image',
+          thumbnail_url: thumbnailUrl,
+          caption: ''
+        }]);
+      }
+      toast.success("Media uploaded successfully!");
+    } catch (error) {
+      console.error("Error uploading media:", error);
+      toast.error("Failed to upload media. Please try again.");
+    } finally {
+      setIsUploadingMedia(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
-  const removeKeyPoint = (index) => {
-    setKeyPoints(keyPoints.filter((_, i) => i !== index));
-  };
-
-  const updateKeyPoint = (index, value) => {
-    const updated = [...keyPoints];
-    updated[index] = value;
-    setKeyPoints(updated);
+  const removeMedia = (index) => {
+    setMediaAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
   const addTag = (tagValue, type) => {
@@ -178,11 +229,6 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
     }
     if (!statusContent.trim()) {
       toast.error("Please enter a status description");
-      return false;
-    }
-    const filledKeyPoints = keyPoints.filter(kp => kp.trim());
-    if (filledKeyPoints.length < 2) {
-      toast.error("Please add at least 2 key points");
       return false;
     }
     return true;
@@ -231,7 +277,7 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
       postData.title = statusTitle.trim();
       postData.content = statusContent.trim();
       postData.status = status;
-      postData.key_points = keyPoints.filter(kp => kp.trim());
+      postData.media_attachments = mediaAttachments;
       if (statusProject) {
         postData.related_project_id = statusProject;
       }
@@ -344,38 +390,65 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
       </div>
 
       <div>
-        <Label>Key Points * <span className="text-xs text-gray-500">(2-5 points)</span></Label>
-        <div className="space-y-2 mt-2">
-          {keyPoints.map((point, index) => (
-            <div key={index} className="flex items-start space-x-2">
-              <Input
-                value={point}
-                onChange={(e) => updateKeyPoint(index, e.target.value)}
-                placeholder={`Key point ${index + 1}...`}
-                className="flex-1"
-              />
-              {keyPoints.length > 1 && (
+        <Label>Media (Optional) <span className="text-xs text-gray-500">(up to 5 images or videos)</span></Label>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleMediaUpload}
+          accept="image/*,video/*"
+          multiple
+          className="hidden"
+        />
+        
+        {mediaAttachments.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3 mb-3">
+            {mediaAttachments.map((media, index) => (
+              <div key={index} className="relative group">
+                {media.media_type === 'image' ? (
+                  <img
+                    src={media.media_url}
+                    alt={`Upload ${index + 1}`}
+                    className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                  />
+                ) : (
+                  <div className="relative w-full h-32 bg-gray-100 rounded-lg border-2 border-gray-200 flex items-center justify-center">
+                    {media.thumbnail_url ? (
+                      <img
+                        src={media.thumbnail_url}
+                        alt={`Video ${index + 1}`}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    ) : (
+                      <Video className="w-8 h-8 text-gray-400" />
+                    )}
+                    <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center">
+                      <Video className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => removeKeyPoint(index)}
-                  className="flex-shrink-0"
+                  onClick={() => removeMedia(index)}
+                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3 h-3" />
                 </Button>
-              )}
-            </div>
-          ))}
-        </div>
-        {keyPoints.length < 5 && (
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {mediaAttachments.length < 5 && (
           <Button
             variant="outline"
             size="sm"
-            onClick={addKeyPoint}
-            className="mt-2"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploadingMedia}
+            className="mt-2 w-full"
           >
-            <Plus className="w-4 h-4 mr-1" />
-            Add Key Point
+            <Upload className="w-4 h-4 mr-2" />
+            {isUploadingMedia ? "Uploading..." : "Upload Images/Videos"}
           </Button>
         )}
       </div>

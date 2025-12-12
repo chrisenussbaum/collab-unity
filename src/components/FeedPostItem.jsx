@@ -213,17 +213,38 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
 
         <p className="text-gray-700 leading-relaxed">{post.content}</p>
 
-        {post.key_points && post.key_points.length > 0 && (
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="font-semibold text-gray-900 mb-3">Key Points</h4>
-            <ul className="space-y-2">
-              {post.key_points.map((point, index) => (
-                <li key={index} className="flex items-start space-x-2">
-                  <span className="text-purple-600 font-bold mt-1">•</span>
-                  <span className="text-gray-700 flex-1">{point}</span>
-                </li>
-              ))}
-            </ul>
+        {post.media_attachments && post.media_attachments.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
+            {post.media_attachments.map((media, index) => (
+              <div key={index} className="relative group cursor-pointer rounded-lg overflow-hidden">
+                {media.media_type === 'image' ? (
+                  <img
+                    src={media.media_url}
+                    alt={media.caption || `Media ${index + 1}`}
+                    className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="relative w-full h-40 bg-gray-900">
+                    {media.thumbnail_url ? (
+                      <img
+                        src={media.thumbnail_url}
+                        alt={media.caption || `Video ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Video className="w-8 h-8 text-gray-400" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                      <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center">
+                        <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-gray-800 border-b-[6px] border-b-transparent ml-1"></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>
