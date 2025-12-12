@@ -35,6 +35,7 @@ import {
   BookOpen,
   Users as UsersIcon,
   ExternalLink,
+  Video,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
