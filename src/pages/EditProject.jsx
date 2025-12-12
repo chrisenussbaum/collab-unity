@@ -449,11 +449,11 @@ export default function EditProject({ currentUser, authIsLoading }) {
                 </Label>
                 {(formData.project_urls || []).length > 0 && (
                   <div className="flex flex-col gap-2 p-3 border rounded-lg bg-gray-50/50">
-                    {formData.project_urls.map((link) => (
-                      <div key={link} className="flex items-center justify-between text-sm">
-                        <a href={link} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline truncate">
+                    {formData.project_urls.map((link, index) => (
+                      <div key={index} className="flex items-center justify-between text-sm">
+                        <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline truncate">
                           <LinkIcon className="inline w-4 h-4 mr-1 text-gray-500" />
-                          {link}
+                          {link.title || link.url}
                         </a>
                         <button onClick={() => removeLink(link)} className="ml-4 flex-shrink-0 text-gray-500 hover:text-red-500">
                           <Trash2 className="w-4 h-4" />
