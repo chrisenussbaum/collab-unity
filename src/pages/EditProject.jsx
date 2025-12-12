@@ -172,13 +172,16 @@ export default function EditProject({ currentUser, authIsLoading }) {
         toast.error("Please enter a valid URL including http:// or https://");
         return;
       }
-      addToArray('project_urls', newLink);
-      setNewLink(""); // Clear the input after adding
+      const linkObj = { url: newLink };
+      const newArray = [...formData.project_urls, linkObj];
+      handleInputChange('project_urls', newArray);
+      setNewLink("");
     }
   };
 
   const removeLink = (linkToRemove) => {
-    removeFromArray('project_urls', linkToRemove);
+    const newArray = formData.project_urls.filter(link => link.url !== linkToRemove.url);
+    handleInputChange('project_urls', newArray);
   };
 
   const handleSave = async () => {
