@@ -299,32 +299,74 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
 
       {/* Media Modal */}
       <Dialog open={showMediaModal} onOpenChange={setShowMediaModal}>
-        <DialogContent className="max-w-4xl p-0">
-          <div className="relative">
-            {post.media_attachments?.[selectedMediaIndex]?.media_type === 'image' ? (
-              <img
-                src={post.media_attachments[selectedMediaIndex].media_url}
-                alt={post.media_attachments[selectedMediaIndex].caption || 'Media'}
-                className="w-full h-auto max-h-[80vh] object-contain"
-              />
-            ) : (
-              <video
-                src={post.media_attachments?.[selectedMediaIndex]?.media_url}
-                controls
-                className="w-full h-auto max-h-[80vh]"
-              />
-            )}
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 overflow-hidden bg-transparent border-2 border-purple-300">
+          <div className="relative w-full h-full flex items-center justify-center min-h-[300px]">
+            {/* Close Button */}
+            <Button
+              onClick={() => setShowMediaModal(false)}
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 z-50 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg"
+            >
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
+            </Button>
+
+            {/* Navigation Arrows */}
             {post.media_attachments && post.media_attachments.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                {post.media_attachments.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedMediaIndex(idx)}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      idx === selectedMediaIndex ? 'bg-white' : 'bg-white/50'
-                    }`}
-                  />
-                ))}
+              <>
+                <Button
+                  onClick={() => setSelectedMediaIndex(prev => Math.max(0, prev - 1))}
+                  disabled={selectedMediaIndex === 0}
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-2 sm:left-4 z-50 bg-purple-600 hover:bg-purple-700 text-white rounded-full disabled:opacity-30 shadow-lg"
+                >
+                  <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
+                </Button>
+                <Button
+                  onClick={() => setSelectedMediaIndex(prev => Math.min(post.media_attachments.length - 1, prev + 1))}
+                  disabled={selectedMediaIndex === post.media_attachments.length - 1}
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 sm:right-4 z-50 bg-purple-600 hover:bg-purple-700 text-white rounded-full disabled:opacity-30 shadow-lg"
+                >
+                  <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
+                </Button>
+              </>
+            )}
+
+            {/* Counter */}
+            {post.media_attachments && post.media_attachments.length > 1 && (
+              <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-50 bg-purple-600 text-white px-3 py-1 rounded-full text-sm shadow-lg">
+                {selectedMediaIndex + 1} / {post.media_attachments.length}
+              </div>
+            )}
+
+            {/* Media Content */}
+            <div className="relative w-full h-full flex items-center justify-center p-4 sm:p-8">
+              {post.media_attachments?.[selectedMediaIndex]?.media_type === 'image' ? (
+                <img
+                  src={post.media_attachments[selectedMediaIndex].media_url}
+                  alt={post.media_attachments[selectedMediaIndex].caption || 'Media'}
+                  className="max-w-full max-h-[80vh] w-auto h-auto object-contain"
+                />
+              ) : (
+                <video
+                  src={post.media_attachments?.[selectedMediaIndex]?.media_url}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="max-w-full max-h-[80vh] w-auto h-auto"
+                />
+              )}
+            </div>
+
+            {/* Caption */}
+            {post.media_attachments?.[selectedMediaIndex]?.caption && (
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 sm:p-6">
+                <p className="text-white text-sm sm:text-base text-center">
+                  {post.media_attachments[selectedMediaIndex].caption}
+                </p>
               </div>
             )}
           </div>

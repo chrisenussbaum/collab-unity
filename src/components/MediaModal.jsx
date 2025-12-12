@@ -73,14 +73,14 @@ export default function MediaModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 overflow-hidden bg-black/95 border-none">
+      <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 overflow-hidden bg-transparent border-2 border-purple-300">
         <div className="relative w-full h-full flex items-center justify-center min-h-[300px]">
           {/* Close Button */}
           <Button
             onClick={onClose}
             variant="ghost"
             size="icon"
-            className="absolute top-2 right-2 sm:top-4 sm:right-4 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full"
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 z-50 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg"
           >
             <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </Button>
@@ -93,7 +93,7 @@ export default function MediaModal({
                 disabled={currentIndex === 0}
                 variant="ghost"
                 size="icon"
-                className="absolute left-2 sm:left-4 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full disabled:opacity-30"
+                className="absolute left-2 sm:left-4 z-50 bg-purple-600 hover:bg-purple-700 text-white rounded-full disabled:opacity-30 shadow-lg"
               >
                 <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
               </Button>
@@ -102,7 +102,7 @@ export default function MediaModal({
                 disabled={currentIndex === allMedia.length - 1}
                 variant="ghost"
                 size="icon"
-                className="absolute right-2 sm:right-4 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full disabled:opacity-30"
+                className="absolute right-2 sm:right-4 z-50 bg-purple-600 hover:bg-purple-700 text-white rounded-full disabled:opacity-30 shadow-lg"
               >
                 <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
               </Button>
@@ -111,7 +111,7 @@ export default function MediaModal({
 
           {/* Counter */}
           {hasMultiple && (
-            <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-50 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+            <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-50 bg-purple-600 text-white px-3 py-1 rounded-full text-sm shadow-lg">
               {currentIndex + 1} / {allMedia.length}
             </div>
           )}
