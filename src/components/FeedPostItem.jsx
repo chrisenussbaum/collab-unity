@@ -366,7 +366,7 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
             {post.post_type === 'status_update' && post.media_attachments && post.media_attachments.length > 0 && (
               <div className="mt-4">
                 {post.media_attachments.length === 1 ? (
-                  <div className="relative group cursor-pointer rounded-lg overflow-hidden">
+                  <div className="relative group cursor-pointer rounded-lg overflow-hidden bg-gray-100">
                     {post.media_attachments[0].media_type === 'image' ? (
                       <img
                         src={post.media_attachments[0].media_url}
@@ -374,7 +374,7 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
                         className="w-full h-64 sm:h-96 object-cover hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
-                      <div className="relative w-full h-64 sm:h-96 bg-gray-900">
+                      <div className="relative w-full h-64 sm:h-96">
                         {post.media_attachments[0].thumbnail_url ? (
                           <img
                             src={post.media_attachments[0].thumbnail_url}
@@ -382,13 +382,13 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Video className="w-12 h-12 text-gray-400" />
+                          <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                            <Video className="w-16 h-16 text-gray-400" />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                          <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
-                            <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-gray-800 border-b-[8px] border-b-transparent ml-1"></div>
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/20 transition-colors">
+                          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                            <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[16px] border-l-gray-800 border-b-[10px] border-b-transparent ml-1"></div>
                           </div>
                         </div>
                       </div>
@@ -397,7 +397,7 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
                 ) : (
                   <HorizontalScrollContainer showArrows={post.media_attachments.length > 1}>
                     {post.media_attachments.map((media, index) => (
-                      <div key={index} className="flex-shrink-0 w-[280px] sm:w-[320px] relative group cursor-pointer rounded-lg overflow-hidden">
+                      <div key={index} className="flex-shrink-0 w-[280px] sm:w-[320px] relative group cursor-pointer rounded-lg overflow-hidden bg-gray-100">
                         {media.media_type === 'image' ? (
                           <img
                             src={media.media_url}
@@ -405,7 +405,7 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
                             className="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
-                          <div className="relative w-full h-48 sm:h-64 bg-gray-900">
+                          <div className="relative w-full h-48 sm:h-64">
                             {media.thumbnail_url ? (
                               <img
                                 src={media.thumbnail_url}
@@ -413,13 +413,13 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center">
+                              <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
                                 <Video className="w-12 h-12 text-gray-400" />
                               </div>
                             )}
-                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                              <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
-                                <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-gray-800 border-b-[8px] border-b-transparent ml-1"></div>
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/20 transition-colors">
+                              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                <div className="w-0 h-0 border-t-[9px] border-t-transparent border-l-[14px] border-l-gray-800 border-b-[9px] border-b-transparent ml-1"></div>
                               </div>
                             </div>
                           </div>
