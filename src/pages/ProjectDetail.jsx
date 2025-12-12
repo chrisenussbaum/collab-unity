@@ -64,7 +64,7 @@ import { Input } from "@/components/ui/input";
 import ProjectApplicationsManager from "../components/ProjectApplicationsManager";
 import ProjectMembershipManager from "../components/ProjectMembershipManager";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
-import { UploadFile } from "@/functions/UploadFile";
+import { UploadFile } from "@/integrations/Core";
 import ProjectFundingCard from "../components/ProjectFundingCard";
 import CommunicationsPanel from '../components/CommunicationsPanel';
 import SocialsPanel from '../components/SocialsPanel';
