@@ -16,6 +16,8 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
   const [isSaving, setIsSaving] = useState(false);
 
   const isOwner = currentUser && project.created_by === currentUser.email;
+  const isCollaborator = currentUser && project.collaborator_emails?.includes(currentUser.email);
+  const canEdit = isOwner || isCollaborator;
   const projectLinks = project.project_urls || [];
 
   useEffect(() => {
@@ -154,7 +156,7 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
     setEditedLinks(updatedLinks);
   };
 
-  if (projectLinks.length === 0 && !isOwner) {
+  if (projectLinks.length === 0 && !canEdit) {
     return null;
   }
 
@@ -167,7 +169,7 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
               <LinkIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-600" />
               Showcase Links
             </CardTitle>
-            {isOwner && (
+            {canEdit && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -183,7 +185,7 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
           {projectLinks.length === 0 ? (
             <div className="text-center py-4">
               <p className="text-sm text-gray-500 mb-3">No feed project links added yet</p>
-              {isOwner && (
+              {canEdit && (
                 <Button
                   variant="outline"
                   size="sm"
