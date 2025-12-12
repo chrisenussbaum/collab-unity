@@ -460,28 +460,27 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
 
               {/* Media Attachments for Status Updates */}
               {post.media_attachments && post.media_attachments.length > 0 && (
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                  {post.media_attachments.map((media, index) => (
+                <div className="mt-4">
+                  {post.media_attachments.length === 1 ? (
                     <div 
-                      key={index} 
                       className="relative group cursor-pointer rounded-lg overflow-hidden"
                       onClick={() => {
-                        setSelectedMediaIndex(index);
+                        setSelectedMediaIndex(0);
                         setShowMediaModal(true);
                       }}
                     >
-                      {media.media_type === 'image' ? (
+                      {post.media_attachments[0].media_type === 'image' ? (
                         <img
-                          src={media.media_url}
-                          alt={media.caption || `Media ${index + 1}`}
-                          className="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300"
+                          src={post.media_attachments[0].media_url}
+                          alt={post.media_attachments[0].caption || 'Media'}
+                          className="w-full h-64 sm:h-96 object-cover hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
-                        <div className="relative w-full h-48 sm:h-64 bg-gray-900">
-                          {media.thumbnail_url ? (
+                        <div className="relative w-full h-64 sm:h-96 bg-gray-900">
+                          {post.media_attachments[0].thumbnail_url ? (
                             <img
-                              src={media.thumbnail_url}
-                              alt={media.caption || `Video ${index + 1}`}
+                              src={post.media_attachments[0].thumbnail_url}
+                              alt={post.media_attachments[0].caption || 'Video'}
                               className="w-full h-full object-cover"
                             />
                           ) : (
@@ -497,7 +496,47 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
                         </div>
                       )}
                     </div>
-                  ))}
+                  ) : (
+                    <HorizontalScrollContainer showArrows={post.media_attachments.length > 1}>
+                      {post.media_attachments.map((media, index) => (
+                        <div 
+                          key={index} 
+                          className="flex-shrink-0 w-[280px] sm:w-[320px] relative group cursor-pointer rounded-lg overflow-hidden"
+                          onClick={() => {
+                            setSelectedMediaIndex(index);
+                            setShowMediaModal(true);
+                          }}
+                        >
+                          {media.media_type === 'image' ? (
+                            <img
+                              src={media.media_url}
+                              alt={media.caption || `Media ${index + 1}`}
+                              className="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="relative w-full h-48 sm:h-64 bg-gray-900">
+                              {media.thumbnail_url ? (
+                                <img
+                                  src={media.thumbnail_url}
+                                  alt={media.caption || `Video ${index + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Video className="w-12 h-12 text-gray-400" />
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
+                                  <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-gray-800 border-b-[8px] border-b-transparent ml-1"></div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </HorizontalScrollContainer>
+                  )}
                 </div>
               )}
 
