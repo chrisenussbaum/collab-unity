@@ -112,6 +112,8 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
   const [isDeleting, setIsDeleting] = useState(false);
   const [relatedProject, setRelatedProject] = useState(null);
   const commentsRef = useRef(null);
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+  const [showMediaModal, setShowMediaModal] = useState(false);
 
   const isOwner = currentUser && post.created_by === currentUser.email;
 
@@ -295,6 +297,40 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
         isLoading={isDeleting}
       />
 
+      {/* Media Modal */}
+      <Dialog open={showMediaModal} onOpenChange={setShowMediaModal}>
+        <DialogContent className="max-w-4xl p-0">
+          <div className="relative">
+            {post.media_attachments?.[selectedMediaIndex]?.media_type === 'image' ? (
+              <img
+                src={post.media_attachments[selectedMediaIndex].media_url}
+                alt={post.media_attachments[selectedMediaIndex].caption || 'Media'}
+                className="w-full h-auto max-h-[80vh] object-contain"
+              />
+            ) : (
+              <video
+                src={post.media_attachments?.[selectedMediaIndex]?.media_url}
+                controls
+                className="w-full h-auto max-h-[80vh]"
+              />
+            )}
+            {post.media_attachments && post.media_attachments.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                {post.media_attachments.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedMediaIndex(idx)}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      idx === selectedMediaIndex ? 'bg-white' : 'bg-white/50'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Card className={`cu-card mb-6 overflow-hidden border-t-4 ${currentPostType.color} hover:shadow-lg transition-shadow duration-300`}>
         <CardHeader className="px-3 sm:px-4 md:px-6 pb-3">
           <div className="flex items-start justify-between space-x-3">
@@ -380,17 +416,46 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
                 {post.content}
               </p>
 
-              {post.key_points && post.key_points.length > 0 && (
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <h4 className="font-semibold text-sm text-gray-700 mb-2">Key Points:</h4>
-                  <ul className="space-y-2">
-                    {post.key_points.map((point, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
-                        <span className="text-blue-600 mt-1">•</span>
-                        <span>{point}</span>
-                      </li>
-                    ))}
-                  </ul>
+              {/* Media Attachments for Status Updates */}
+              {post.media_attachments && post.media_attachments.length > 0 && (
+                <div className="grid grid-cols-2 gap-2 mt-4">
+                  {post.media_attachments.map((media, index) => (
+                    <div 
+                      key={index} 
+                      className="relative group cursor-pointer rounded-lg overflow-hidden"
+                      onClick={() => {
+                        setSelectedMediaIndex(index);
+                        setShowMediaModal(true);
+                      }}
+                    >
+                      {media.media_type === 'image' ? (
+                        <img
+                          src={media.media_url}
+                          alt={media.caption || `Media ${index + 1}`}
+                          className="w-full h-48 sm:h-64 object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="relative w-full h-48 sm:h-64 bg-gray-900">
+                          {media.thumbnail_url ? (
+                            <img
+                              src={media.thumbnail_url}
+                              alt={media.caption || `Video ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Video className="w-12 h-12 text-gray-400" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                            <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
+                              <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-gray-800 border-b-[8px] border-b-transparent ml-1"></div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
 
