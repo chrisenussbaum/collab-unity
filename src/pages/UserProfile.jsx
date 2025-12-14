@@ -766,7 +766,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
       }
 
       if (!targetUser) {
-        console.log(`User profile not found - username: ${username}, emailParam: ${emailParam}`);
+        console.log(`User profile not found - username: ${username}, emailParam: ${emailParam}, propCurrentUser: ${!!propCurrentUser}`);
         setProfileUser(null);
         setIsLoading(false);
         return;
