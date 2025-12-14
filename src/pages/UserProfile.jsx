@@ -765,26 +765,32 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         }
       }
 
-      if (targetUser) {
-        // Normalize user data to ensure portfolio_items and followed_projects are arrays
-        const normalizedUser = {
-          ...targetUser,
-          portfolio_items: targetUser.portfolio_items || [],
-          followed_projects: targetUser.followed_projects || [],
-          skills: targetUser.skills || [],
-          interests: targetUser.interests || [],
-          tools_technologies: targetUser.tools_technologies || [],
-          education: targetUser.education || [],
-          awards_certifications: targetUser.awards_certifications || []
-        };
+      if (!targetUser) {
+        console.log(`User profile not found - username: ${username}, emailParam: ${emailParam}`);
+        setProfileUser(null);
+        setIsLoading(false);
+        return;
+      }
 
-        setProfileUser(normalizedUser);
+      // Normalize user data to ensure portfolio_items and followed_projects are arrays
+      const normalizedUser = {
+        ...targetUser,
+        portfolio_items: targetUser.portfolio_items || [],
+        followed_projects: targetUser.followed_projects || [],
+        skills: targetUser.skills || [],
+        interests: targetUser.interests || [],
+        tools_technologies: targetUser.tools_technologies || [],
+        education: targetUser.education || [],
+        awards_certifications: targetUser.awards_certifications || []
+      };
 
-        if (propCurrentUser && propCurrentUser.email === normalizedUser.email && setCurrentUser) {
-          setCurrentUser(normalizedUser);
-        }
+      setProfileUser(normalizedUser);
 
-        const isOwnerCheck = propCurrentUser && propCurrentUser.email === normalizedUser.email;
+      if (propCurrentUser && propCurrentUser.email === normalizedUser.email && setCurrentUser) {
+        setCurrentUser(normalizedUser);
+      }
+
+      const isOwnerCheck = propCurrentUser && propCurrentUser.email === normalizedUser.email;
 
         try {
           const createdProjects = await base44.entities.Project.filter({ created_by: normalizedUser.email });
@@ -900,18 +906,9 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
           setCollaboratorReviews([]);
           setSharedProjects([]);
         }
-      } else {
-        console.log(`User profile not found - username: ${username}, emailParam: ${emailParam}`);
-        // Don't redirect if we're still loading or no params provided
-        setProfileUser(null);
-        setIsLoading(false);
-        return;
-      }
     } catch (error) {
       console.error("Error loading profile data:", error);
-      // Don't auto-redirect on error - let the user see the error state
       setProfileUser(null);
-    } finally {
       setIsLoading(false);
     }
   }, [username, emailParam, navigate, propCurrentUser, setCurrentUser, loadFollowedProjectsStable]);
