@@ -909,6 +909,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     } catch (error) {
       console.error("Error loading profile data:", error);
       setProfileUser(null);
+    } finally {
       setIsLoading(false);
     }
   }, [username, emailParam, navigate, propCurrentUser, setCurrentUser, loadFollowedProjectsStable]);
