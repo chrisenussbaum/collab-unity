@@ -901,13 +901,16 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
           setSharedProjects([]);
         }
       } else {
-        console.log(`User profile not found`);
-        navigate(createPageUrl("Discover"));
+        console.log(`User profile not found - username: ${username}, emailParam: ${emailParam}`);
+        // Don't redirect if we're still loading or no params provided
+        setProfileUser(null);
+        setIsLoading(false);
         return;
       }
     } catch (error) {
       console.error("Error loading profile data:", error);
-      navigate(createPageUrl("Discover"));
+      // Don't auto-redirect on error - let the user see the error state
+      setProfileUser(null);
     } finally {
       setIsLoading(false);
     }
