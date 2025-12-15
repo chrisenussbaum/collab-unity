@@ -810,8 +810,13 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
 
           const visibleProjects = uniqueProjects.filter(project => {
             if (isOwnerCheck) return true;
-            return project.is_visible_on_feed ||
-                   (propCurrentUser && project.collaborator_emails && project.collaborator_emails.includes(propCurrentUser.email));
+            // For others viewing the profile: only show public projects OR projects they're collaborating on
+            if (!project.is_visible_on_feed) {
+              // Private project - only show if current user is a collaborator
+              return propCurrentUser && project.collaborator_emails && project.collaborator_emails.includes(propCurrentUser.email);
+            }
+            // Public project - always visible
+            return true;
           });
           setUserProjects(visibleProjects);
 
