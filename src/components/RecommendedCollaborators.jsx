@@ -115,10 +115,10 @@ export default function RecommendedCollaborators({ currentUser, profileUser, lim
 
         setRecommendations(topRecommendations);
       } catch (error) {
-        // Only log and show error if component is still mounted
+        // Silently handle errors - just set empty recommendations
         if (isMounted) {
-          console.error("Error loading recommendations:", error);
-          toast.error("Failed to load recommendations");
+          console.warn("Could not load recommendations:", error);
+          setRecommendations([]);
         }
       } finally {
         if (isMounted) {
