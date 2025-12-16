@@ -737,6 +737,17 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         } catch (error) {
           console.error("Error fetching user by username:", error);
         }
+        
+        // If username lookup failed but current user's username matches, use current user
+        if (!targetUser && propCurrentUser && propCurrentUser.username === username) {
+          try {
+            const freshUser = await base44.auth.me();
+            targetUser = freshUser;
+          } catch (error) {
+            console.error("Error fetching current user:", error);
+            targetUser = propCurrentUser;
+          }
+        }
       }
 
       if (!targetUser && emailParam) {
