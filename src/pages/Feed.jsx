@@ -695,25 +695,14 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
                   </span>
                 )}
               </Button>
-              <div className="flex-1 flex justify-center">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors cu-text-responsive-sm"
-                  onClick={handleCommentClick}
-                >
-                  <MessageCircle className="cu-icon-sm" />
-                  <span className="hidden sm:inline">Comment</span>
-                </Button>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex items-center space-x-2 text-gray-600 hover:text-blue-500 transition-colors cu-text-responsive-sm"
-                onClick={handleShare}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors cu-text-responsive-sm"
+                onClick={handleCommentClick}
               >
-                <Share2 className="cu-icon-sm" />
-                <span className="hidden sm:inline">Share</span>
+                <MessageCircle className="cu-icon-sm" />
+                <span className="hidden sm:inline">Comment</span>
               </Button>
             </div>
             <FeedComments
