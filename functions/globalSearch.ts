@@ -4,6 +4,14 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         
+        // Get current user for private project filtering
+        let currentUser = null;
+        try {
+            currentUser = await base44.auth.me();
+        } catch (error) {
+            // User not authenticated - will only see public projects
+        }
+        
         // Handle both URL params (GET) and request body (POST)
         let query = '';
         
@@ -34,10 +42,18 @@ Deno.serve(async (req) => {
             return arr.some(item => item.toLowerCase().includes(term));
         };
 
-        // Search Projects (both public and private)
+        // Search Projects (filter by access)
         const allProjects = await base44.asServiceRole.entities.Project.list();
         
         const matchedProjects = allProjects.filter(project => {
+            // Filter out private projects user is not a collaborator of
+            if (project.is_visible_on_feed === false) {
+                // If project is private, only show if user is a collaborator
+                if (!currentUser || !project.collaborator_emails?.includes(currentUser.email)) {
+                    return false;
+                }
+            }
+            
             // Search by title (most important - check first)
             if (project.title?.toLowerCase().includes(searchTerm)) return true;
             
