@@ -1151,7 +1151,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                           className={`cursor-pointer transition-colors ${
                             selectedSkills.includes(skill)
                               ? 'bg-purple-100 text-purple-800 border-purple-300'
-                              : 'hover:bg-gray-100'
+                              : 'bg-white hover:bg-gray-100'
                           }`}
                           onClick={() => toggleSkill(skill)}
                         >
@@ -1173,7 +1173,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                           className={`cursor-pointer transition-colors ${
                             selectedIndustries.includes(industry)
                               ? 'bg-indigo-100 text-indigo-800 border-indigo-300'
-                              : 'hover:bg-gray-100'
+                              : 'bg-white hover:bg-gray-100'
                           }`}
                           onClick={() => toggleIndustry(industry)}
                         >
@@ -1476,7 +1476,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                           className={`cursor-pointer transition-colors ${
                             selectedSkills.includes(skill)
                               ? 'bg-purple-100 text-purple-800 border-purple-300'
-                              : 'hover:bg-gray-100'
+                              : 'bg-white hover:bg-gray-100'
                           }`}
                           onClick={() => toggleSkill(skill)}
                         >
