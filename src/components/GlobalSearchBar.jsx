@@ -151,6 +151,7 @@ export default function GlobalSearchBar({ className = "", placeholder = "Search.
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.trim().length >= 2 && setShowResults(true)}
           className="pl-9 sm:pl-10 pr-9 sm:pr-10"
+          data-global-search
         />
         {isSearching && (
           <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5 animate-spin" />

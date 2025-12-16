@@ -208,6 +208,18 @@ export default function MyProjects({ currentUser, authIsLoading }) {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 sm:mb-8"
         >
+          {/* Search Bar - Above tabs */}
+          <div className="relative mb-6">
+            <Input
+              type="text"
+              placeholder="Search..."
+              className="pl-10 bg-white"
+              onClick={() => document.querySelector('[data-global-search]')?.focus()}
+              readOnly
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          </div>
+
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">

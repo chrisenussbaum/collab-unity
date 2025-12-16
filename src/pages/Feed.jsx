@@ -2628,6 +2628,23 @@ export default function Feed({ currentUser, authIsLoading }) {
                     </div>
                   </Link>
                 </motion.div>
+
+                {/* Search Bar - Below "Got an Idea?" */}
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className="relative"
+                >
+                  <Input
+                    type="text"
+                    placeholder="Search..."
+                    className="pl-10 bg-white"
+                    onClick={() => document.querySelector('[data-global-search]')?.focus()}
+                    readOnly
+                  />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                </motion.div>
               </>
             )}
 
