@@ -1781,6 +1781,7 @@ export default function Feed({ currentUser, authIsLoading }) {
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [inlineAds, setInlineAds] = useState([]);
   const [allCollaboratorProfiles, setAllCollaboratorProfiles] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Use ref for synchronous tracking of loaded item IDs to prevent race conditions
   const loadedItemIdsRef = useRef(new Set());
@@ -2319,8 +2320,27 @@ export default function Feed({ currentUser, authIsLoading }) {
     }
   }, [projects, feedPosts]);
   
-  // filteredItems now just returns allFeedItems as search bar is removed
-  const displayedItems = allFeedItems;
+  // Filter feed items based on search query
+  const displayedItems = React.useMemo(() => {
+    if (!searchQuery.trim()) return allFeedItems;
+    
+    const query = searchQuery.toLowerCase();
+    return allFeedItems.filter(item => {
+      if (item.itemType === 'project') {
+        return item.title?.toLowerCase().includes(query) ||
+               item.description?.toLowerCase().includes(query) ||
+               item.location?.toLowerCase().includes(query) ||
+               item.industry?.toLowerCase().includes(query) ||
+               item.area_of_interest?.toLowerCase().includes(query) ||
+               item.skills_needed?.some(skill => skill.toLowerCase().includes(query));
+      } else {
+        // FeedPost
+        return item.title?.toLowerCase().includes(query) ||
+               item.content?.toLowerCase().includes(query) ||
+               item.tags?.some(tag => tag.toLowerCase().includes(query));
+      }
+    });
+  }, [allFeedItems, searchQuery]);
 
   useEffect(() => {
     const checkUserProjects = async () => {
@@ -2502,10 +2522,10 @@ export default function Feed({ currentUser, authIsLoading }) {
                 >
                   <Input
                     type="text"
-                    placeholder="Search..."
+                    placeholder="Search posts and projects..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 bg-white"
-                    onClick={() => document.querySelector('[data-global-search]')?.focus()}
-                    readOnly
                   />
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </motion.div>
@@ -2655,10 +2675,10 @@ export default function Feed({ currentUser, authIsLoading }) {
                 >
                   <Input
                     type="text"
-                    placeholder="Search..."
+                    placeholder="Search posts and projects..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 bg-white"
-                    onClick={() => document.querySelector('[data-global-search]')?.focus()}
-                    readOnly
                   />
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </motion.div>
@@ -2806,10 +2826,10 @@ export default function Feed({ currentUser, authIsLoading }) {
                 >
                   <Input
                     type="text"
-                    placeholder="Search..."
+                    placeholder="Search posts and projects..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 bg-white"
-                    onClick={() => document.querySelector('[data-global-search]')?.focus()}
-                    readOnly
                   />
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </motion.div>
