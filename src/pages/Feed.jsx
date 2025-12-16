@@ -430,10 +430,6 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
                     Delete Post
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={handleShare}>
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Share
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
