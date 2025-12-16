@@ -1057,7 +1057,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   </div>
                   
                   <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-[180px] bg-white">
                       <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1069,7 +1069,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   </Select>
 
                   <Select value={projectTypeFilter} onValueChange={setProjectTypeFilter}>
-                    <SelectTrigger className="w-[160px]">
+                    <SelectTrigger className="w-[160px] bg-white">
                       <SelectValue placeholder="Project Type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1080,7 +1080,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   </Select>
 
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-[180px] bg-white">
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1096,7 +1096,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                       variant={showOnlyMatching ? "default" : "outline"}
                       size="sm"
                       onClick={() => setShowOnlyMatching(!showOnlyMatching)}
-                      className={showOnlyMatching ? "bg-purple-600 hover:bg-purple-700 text-white" : ""}
+                      className={showOnlyMatching ? "bg-purple-600 hover:bg-purple-700 text-white" : "bg-white"}
                     >
                       Show Only Matching
                     </Button>
