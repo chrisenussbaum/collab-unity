@@ -414,14 +414,14 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
                 </div>
               </div>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="flex-shrink-0">
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {isOwner && (
+            {isOwner && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="flex-shrink-0">
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
                   <DropdownMenuItem 
                     onClick={() => setShowDeleteConfirm(true)}
                     className="text-red-600 focus:text-red-600"
@@ -429,9 +429,9 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete Post
                   </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </CardHeader>
 
