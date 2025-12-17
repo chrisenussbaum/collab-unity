@@ -867,7 +867,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
             className="text-center"
           >
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
-              Where Ideas <span className="text-yellow-400">Happen</span>
+              Where <span className="text-yellow-400">Ideas</span> Happen
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-purple-100 mb-8 sm:mb-10 max-w-3xl mx-auto px-4">
               Connect with talented professionals, collaborate on meaningful projects,
