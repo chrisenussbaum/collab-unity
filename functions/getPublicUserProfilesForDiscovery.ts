@@ -14,16 +14,15 @@ Deno.serve(async (req) => {
 
         const allUsers = await base44.asServiceRole.entities.User.list();
 
-        // Filter to only include users who have completed their profile beyond just required fields
+        const DEFAULT_COVER_IMAGE = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/cd4694e0a_purple-background.jpg';
+
+        // Filter to only include users who have username, name, and profile photo
         const publicUsers = (allUsers || []).filter(u => {
             const hasUsername = u.username && u.username.trim() !== '';
-            const hasBio = u.bio && u.bio.trim() !== '';
-            const hasSkills = u.skills && u.skills.length > 0;
-            const hasInterests = u.interests && u.interests.length > 0;
-            const hasTools = u.tools_technologies && u.tools_technologies.length > 0;
+            const hasName = u.full_name && u.full_name.trim() !== '';
+            const hasProfileImage = u.profile_image && u.profile_image.trim() !== '';
             
-            // User must have username AND at least one additional field filled out
-            return hasUsername && (hasBio || hasSkills || hasInterests || hasTools);
+            return hasUsername && hasName && hasProfileImage;
         });
 
         const publicProfiles = publicUsers.map(u => ({
@@ -32,7 +31,7 @@ Deno.serve(async (req) => {
             email: u.email,
             full_name: u.full_name || '',
             profile_image: u.profile_image || '',
-            cover_image: u.cover_image || '',
+            cover_image: u.cover_image || DEFAULT_COVER_IMAGE,
             location: u.location || '',
             bio: u.bio || '',
             skills: u.skills || [],
