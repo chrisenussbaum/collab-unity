@@ -1890,16 +1890,12 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
             <Card className="cu-card mb-4 sm:mb-6 md:mb-8 overflow-hidden">
               <CardContent className="p-0">
                 <div className="h-32 sm:h-40 md:h-48 lg:h-64 relative overflow-hidden group">
-                  {profileUser?.cover_image ? (
-                    <ClickableImage
-                      src={profileUser.cover_image}
-                      alt="Cover"
-                      caption={`${profileUser.full_name || 'User'}'s Cover Photo`}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-r from-purple-400 via-pink-500 to-red-500" />
-                  )}
+                  <ClickableImage
+                    src={profileUser?.cover_image || DEFAULT_COVER_IMAGE}
+                    alt="Cover"
+                    caption={`${profileUser.full_name || 'User'}'s Cover Photo`}
+                    className="w-full h-full object-cover"
+                  />
                   <div className="absolute inset-0 bg-black bg-opacity-20" />
                   
                   {isOwner && (
