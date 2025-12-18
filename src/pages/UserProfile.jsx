@@ -629,6 +629,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
   const emailParam = searchParams.get("email");
 
   const [profileUser, setProfileUser] = useState(null);
+  const DEFAULT_COVER_IMAGE = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/cd4694e0a_purple-background.jpg';
   const [userProjects, setUserProjects] = useState([]);
   const [displayedProjectsCount, setDisplayedProjectsCount] = useState(3);
   const [followedProjects, setFollowedProjects] = useState([]);
