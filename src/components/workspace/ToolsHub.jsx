@@ -167,6 +167,7 @@ export default function ToolsHub({ project, onProjectUpdate, isCollaborator, isP
   const [communityTools, setCommunityTools] = useState([]);
   const [isLoadingCommunityTools, setIsLoadingCommunityTools] = useState(false);
   const [isSavingCommunityTool, setIsSavingCommunityTool] = useState(false);
+  const [connectingConnector, setConnectingConnector] = useState(null);
 
   useEffect(() => {
     setTools(project?.project_tools || []);
@@ -453,9 +454,30 @@ export default function ToolsHub({ project, onProjectUpdate, isCollaborator, isP
     }
   };
 
-  const handleOpenIntegration = (connector) => {
-    // Simply open the connector URL in a new tab
-    window.open(connector.url, '_blank', 'noopener,noreferrer');
+  const handleConnectIntegration = async (connector) => {
+    const toolInList = tools.find(t => t.name.toLowerCase() === connector.name.toLowerCase());
+    if (!toolInList) {
+      toast.error("Please add this connector to your tools first");
+      return;
+    }
+
+    setConnectingConnector(connector.integration_type);
+    try {
+      // Use the request_oauth_authorization function via base44.integrations
+      await base44.integrations.requestOAuthAuthorization({
+        integration_type: connector.integration_type,
+        reason: connector.reason,
+        scopes: connector.scopes
+      });
+      
+      // The authorization will redirect the user, so this won't execute
+      // but if it does, show success message
+      toast.success(`${connector.name} connected successfully!`);
+    } catch (error) {
+      console.error(`Error connecting ${connector.name}:`, error);
+      toast.error(`Failed to connect ${connector.name}. Please try again.`);
+      setConnectingConnector(null);
+    }
   };
 
   return (
@@ -496,7 +518,7 @@ export default function ToolsHub({ project, onProjectUpdate, isCollaborator, isP
             </Badge>
           </div>
           <p className="text-xs text-gray-600 bg-purple-50 p-3 rounded-lg border border-purple-100">
-            💡 Add connectors to track which services your team uses. Click "Open" to access the service directly.
+            💡 Add connectors to your tools, then click "Connect" to authorize and sync your data
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {BASE44_CONNECTORS.map((connector) => {
@@ -566,10 +588,20 @@ export default function ToolsHub({ project, onProjectUpdate, isCollaborator, isP
                             size="sm"
                             variant="outline"
                             className="w-full text-xs h-8 bg-blue-600 text-white border-blue-600 hover:bg-blue-700 transition-colors"
-                            onClick={() => handleOpenIntegration(connector)}
+                            onClick={() => handleConnectIntegration(connector)}
+                            disabled={isConnecting}
                           >
-                            <ExternalLink className="w-3 h-3 mr-1" />
-                            Open
+                            {isConnecting ? (
+                              <>
+                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                Connecting...
+                              </>
+                            ) : (
+                              <>
+                                <Plug className="w-3 h-3 mr-1" />
+                                Connect
+                              </>
+                            )}
                           </Button>
                         )}
                       </div>
