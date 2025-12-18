@@ -501,6 +501,7 @@ export default function ToolsHub({ project, onProjectUpdate, isCollaborator, isP
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {BASE44_CONNECTORS.map((connector) => {
               const alreadyAdded = tools.some(t => t.name.toLowerCase() === connector.name.toLowerCase());
+              const isConnecting = connectingConnector === connector.integration_type;
               
               return (
                 <Card 
