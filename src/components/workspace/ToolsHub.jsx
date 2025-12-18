@@ -11,73 +11,95 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ALL_TOOLS } from "../constants";
 import { base44 } from "@/api/base44Client";
 
-// Base44 App Connectors - these are just shown as available tools to add
+// Base44 App Connectors with OAuth integration
 const BASE44_CONNECTORS = [
   {
     name: "Salesforce",
+    integration_type: "salesforce",
     url: "https://www.salesforce.com",
     description: "Automate and sync CRM records.",
-    category: "CRM"
+    scopes: ["api", "refresh_token", "offline_access"],
+    reason: "To access and sync your Salesforce CRM data"
   },
   {
     name: "Slack",
+    integration_type: "slack",
     url: "https://slack.com",
     description: "Send updates and notifications to your team.",
-    category: "Communication"
+    scopes: ["chat:write", "channels:read", "users:read"],
+    reason: "To send messages and read channel information"
   },
   {
     name: "Notion",
+    integration_type: "notion",
     url: "https://www.notion.so",
     description: "Organize and sync knowledge or project data.",
-    category: "Productivity"
+    scopes: ["read_content", "update_content"],
+    reason: "To read and update your Notion workspace"
   },
   {
     name: "Google Calendar",
+    integration_type: "googlecalendar",
     url: "https://calendar.google.com",
     description: "Manage your schedule and calendar events.",
-    category: "Productivity"
+    scopes: ["https://www.googleapis.com/auth/calendar"],
+    reason: "To view and manage your calendar events"
   },
   {
     name: "Google Drive",
+    integration_type: "googledrive",
     url: "https://drive.google.com",
     description: "Export and back up app-generated files.",
-    category: "Productivity"
+    scopes: ["https://www.googleapis.com/auth/drive.file"],
+    reason: "To upload and manage files in Google Drive"
   },
   {
     name: "Google Sheets",
+    integration_type: "googlesheets",
     url: "https://sheets.google.com",
     description: "Sync and manage spreadsheet data.",
-    category: "Productivity"
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    reason: "To read and update Google Sheets data"
   },
   {
     name: "Google Slides",
+    integration_type: "googleslides",
     url: "https://slides.google.com",
     description: "Create and edit Google Slides presentations.",
-    category: "Productivity"
+    scopes: ["https://www.googleapis.com/auth/presentations"],
+    reason: "To create and edit Google Slides presentations"
   },
   {
     name: "Google Docs",
+    integration_type: "googledocs",
     url: "https://docs.google.com",
     description: "Create and edit documents collaboratively in real-time with your team.",
-    category: "Documentation"
+    scopes: ["https://www.googleapis.com/auth/documents"],
+    reason: "To create and edit Google Docs documents"
   },
   {
     name: "HubSpot",
+    integration_type: "hubspot",
     url: "https://www.hubspot.com",
     description: "Sync customer data, automate marketing workflows, and enhance sales productivity.",
-    category: "CRM"
+    scopes: ["crm.objects.contacts.read", "crm.objects.contacts.write"],
+    reason: "To read and update HubSpot CRM contacts"
   },
   {
     name: "LinkedIn",
+    integration_type: "linkedin",
     url: "https://www.linkedin.com",
     description: "Post updates and manage your professional profile.",
-    category: "Social"
+    scopes: ["openid", "profile", "email", "w_member_social"],
+    reason: "To post updates on your LinkedIn profile"
   },
   {
     name: "TikTok",
+    integration_type: "tiktok",
     url: "https://www.tiktok.com",
     description: "Read user profile info and stats.",
-    category: "Social"
+    scopes: ["user.info.basic", "user.info.profile"],
+    reason: "To read your TikTok profile information"
   }
 ];
 
@@ -145,6 +167,7 @@ export default function ToolsHub({ project, onProjectUpdate, isCollaborator, isP
   const [communityTools, setCommunityTools] = useState([]);
   const [isLoadingCommunityTools, setIsLoadingCommunityTools] = useState(false);
   const [isSavingCommunityTool, setIsSavingCommunityTool] = useState(false);
+  const [connectingConnector, setConnectingConnector] = useState(null);
 
   useEffect(() => {
     setTools(project?.project_tools || []);
@@ -431,6 +454,32 @@ export default function ToolsHub({ project, onProjectUpdate, isCollaborator, isP
     }
   };
 
+  const handleConnectIntegration = async (connector) => {
+    const toolInList = tools.find(t => t.name.toLowerCase() === connector.name.toLowerCase());
+    if (!toolInList) {
+      toast.error("Please add this connector to your tools first");
+      return;
+    }
+
+    setConnectingConnector(connector.integration_type);
+    try {
+      // Use the request_oauth_authorization function via base44.integrations
+      await base44.integrations.requestOAuthAuthorization({
+        integration_type: connector.integration_type,
+        reason: connector.reason,
+        scopes: connector.scopes
+      });
+      
+      // The authorization will redirect the user, so this won't execute
+      // but if it does, show success message
+      toast.success(`${connector.name} connected successfully!`);
+    } catch (error) {
+      console.error(`Error connecting ${connector.name}:`, error);
+      toast.error(`Failed to connect ${connector.name}. Please try again.`);
+      setConnectingConnector(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -456,7 +505,7 @@ export default function ToolsHub({ project, onProjectUpdate, isCollaborator, isP
         )}
       </div>
 
-      {/* Base44 App Connectors Section - Quick Add Popular Tools */}
+      {/* Base44 App Connectors Section */}
       {isCollaborator && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -468,9 +517,13 @@ export default function ToolsHub({ project, onProjectUpdate, isCollaborator, isP
               {BASE44_CONNECTORS.length} Available
             </Badge>
           </div>
+          <p className="text-xs text-gray-600 bg-purple-50 p-3 rounded-lg border border-purple-100">
+            💡 Add connectors to your tools, then click "Connect" to authorize and sync your data
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {BASE44_CONNECTORS.map((connector) => {
               const alreadyAdded = tools.some(t => t.name.toLowerCase() === connector.name.toLowerCase());
+              const isConnecting = connectingConnector === connector.integration_type;
               
               return (
                 <Card 
@@ -534,11 +587,21 @@ export default function ToolsHub({ project, onProjectUpdate, isCollaborator, isP
                           <Button
                             size="sm"
                             variant="outline"
-                            className="w-full text-xs h-8 bg-green-50 text-green-700 border-green-300 cursor-default"
-                            disabled
+                            className="w-full text-xs h-8 bg-blue-600 text-white border-blue-600 hover:bg-blue-700 transition-colors"
+                            onClick={() => handleConnectIntegration(connector)}
+                            disabled={isConnecting}
                           >
-                            <Check className="w-3 h-3 mr-1" />
-                            Added
+                            {isConnecting ? (
+                              <>
+                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                Connecting...
+                              </>
+                            ) : (
+                              <>
+                                <Plug className="w-3 h-3 mr-1" />
+                                Connect
+                              </>
+                            )}
                           </Button>
                         )}
                       </div>
