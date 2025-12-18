@@ -5,103 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, ExternalLink, Search, Trash2, Loader2, Check, Link as LinkIcon, Plug } from "lucide-react";
+import { Plus, X, ExternalLink, Search, Trash2, Loader2, Check, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ALL_TOOLS } from "../constants";
-import { base44 } from "@/api/base44Client";
-
-// Base44 App Connectors
-const BASE44_CONNECTORS = [
-  {
-    name: "Salesforce",
-    integration_type: "salesforce",
-    description: "Automate and sync CRM records.",
-    category: "CRM",
-    icon: "☁️",
-    scopes: ["api", "refresh_token", "offline_access"]
-  },
-  {
-    name: "Slack",
-    integration_type: "slack",
-    description: "Send updates and notifications to your team.",
-    category: "Communication",
-    icon: "💬",
-    scopes: ["chat:write", "channels:read", "users:read"]
-  },
-  {
-    name: "Notion",
-    integration_type: "notion",
-    description: "Organize and sync knowledge or project data.",
-    category: "Productivity",
-    icon: "📝",
-    scopes: ["read_content", "update_content"]
-  },
-  {
-    name: "Google Calendar",
-    integration_type: "googlecalendar",
-    description: "Manage your schedule and calendar events.",
-    category: "Productivity",
-    icon: "📅",
-    scopes: ["https://www.googleapis.com/auth/calendar"]
-  },
-  {
-    name: "Google Drive",
-    integration_type: "googledrive",
-    description: "Export and back up app-generated files.",
-    category: "Productivity",
-    icon: "🗂️",
-    scopes: ["https://www.googleapis.com/auth/drive.file"]
-  },
-  {
-    name: "Google Sheets",
-    integration_type: "googlesheets",
-    description: "Sync and manage spreadsheet data.",
-    category: "Productivity",
-    icon: "📊",
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"]
-  },
-  {
-    name: "Google Slides",
-    integration_type: "googleslides",
-    description: "Create and edit Google Slides presentations.",
-    category: "Productivity",
-    icon: "📽️",
-    scopes: ["https://www.googleapis.com/auth/presentations"]
-  },
-  {
-    name: "Google Docs",
-    integration_type: "googledocs",
-    description: "Create and edit documents collaboratively in real-time with your team.",
-    category: "Documentation",
-    icon: "📄",
-    scopes: ["https://www.googleapis.com/auth/documents"]
-  },
-  {
-    name: "HubSpot",
-    integration_type: "hubspot",
-    description: "Sync customer data, automate marketing workflows, and enhance sales productivity.",
-    category: "CRM",
-    icon: "🔶",
-    scopes: ["crm.objects.contacts.read", "crm.objects.contacts.write"]
-  },
-  {
-    name: "LinkedIn",
-    integration_type: "linkedin",
-    description: "Post updates and manage your professional profile.",
-    category: "Social",
-    icon: "💼",
-    scopes: ["openid", "profile", "email", "w_member_social"]
-  },
-  {
-    name: "TikTok",
-    integration_type: "tiktok",
-    description: "Read user profile info and stats.",
-    category: "Social",
-    icon: "🎵",
-    scopes: ["user.info.basic", "user.info.profile"]
-  }
-];
 
 // Tool descriptions for integration cards
 const TOOL_DESCRIPTIONS = {
@@ -167,9 +74,6 @@ export default function ToolsHub({ project, onProjectUpdate, isCollaborator, isP
   const [communityTools, setCommunityTools] = useState([]);
   const [isLoadingCommunityTools, setIsLoadingCommunityTools] = useState(false);
   const [isSavingCommunityTool, setIsSavingCommunityTool] = useState(false);
-  const [connectorStatuses, setConnectorStatuses] = useState({});
-  const [isLoadingConnectors, setIsLoadingConnectors] = useState(false);
-  const [isAuthorizing, setIsAuthorizing] = useState(null);
 
   useEffect(() => {
     setTools(project?.project_tools || []);
@@ -192,46 +96,10 @@ export default function ToolsHub({ project, onProjectUpdate, isCollaborator, isP
     }
   };
 
-  // Load community tools and connector statuses on component mount
+  // Load community tools on component mount
   useEffect(() => {
     loadCommunityTools();
-    loadConnectorStatuses();
   }, []);
-
-  const loadConnectorStatuses = async () => {
-    setIsLoadingConnectors(true);
-    try {
-      const { data } = await base44.functions.invoke('getConnectorStatus');
-      setConnectorStatuses(data?.statuses || {});
-    } catch (error) {
-      console.error("Error loading connector statuses:", error);
-      setConnectorStatuses({});
-    } finally {
-      setIsLoadingConnectors(false);
-    }
-  };
-
-  const handleIntegrateConnector = async (connector) => {
-    setIsAuthorizing(connector.integration_type);
-    try {
-      const { data } = await base44.functions.invoke('authorizeConnector', {
-        integration_type: connector.integration_type,
-        scopes: connector.scopes
-      });
-
-      if (data?.auth_url) {
-        // Redirect to OAuth authorization URL
-        window.location.href = data.auth_url;
-      } else {
-        toast.error("Failed to initiate authorization");
-        setIsAuthorizing(null);
-      }
-    } catch (error) {
-      console.error("Error authorizing connector:", error);
-      toast.error("Failed to connect to " + connector.name);
-      setIsAuthorizing(null);
-    }
-  };
 
   const loadCommunityTools = async () => {
     setIsLoadingCommunityTools(true);
@@ -517,89 +385,9 @@ export default function ToolsHub({ project, onProjectUpdate, isCollaborator, isP
         )}
       </div>
 
-      {/* Base44 App Connectors Section */}
-      <div className="space-y-4">
-        <h4 className="text-sm font-medium text-gray-700 flex items-center">
-          <Plug className="w-4 h-4 mr-2 text-purple-600" />
-          App Connectors ({Object.values(connectorStatuses).filter(s => s.connected).length}/{BASE44_CONNECTORS.length})
-        </h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {BASE44_CONNECTORS.map((connector) => {
-            const isConnected = connectorStatuses[connector.integration_type]?.connected;
-            const isAuthorizingThis = isAuthorizing === connector.integration_type;
-
-            return (
-              <Card 
-                key={connector.integration_type}
-                className={`${
-                  isConnected 
-                    ? 'bg-green-50 border-green-200 border-2' 
-                    : 'bg-gray-50 hover:bg-white hover:shadow-md border hover:border-purple-200'
-                } transition-all`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border shadow-sm flex-shrink-0">
-                      <span className="text-xl">{connector.icon}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-semibold text-sm text-gray-900 truncate">
-                          {connector.name}
-                        </h4>
-                        {isConnected && (
-                          <Badge className="bg-green-600 text-white text-[10px] py-0 px-1.5 ml-2 flex-shrink-0">
-                            <Check className="w-2.5 h-2.5 mr-0.5" />
-                            Connected
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500 line-clamp-2 mb-3">
-                        {connector.description}
-                      </p>
-                      {!isConnected ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full text-xs h-8 bg-purple-600 text-white border-purple-600 hover:bg-purple-700 hover:text-white transition-colors"
-                          onClick={() => handleIntegrateConnector(connector)}
-                          disabled={isAuthorizingThis || isLoadingConnectors}
-                        >
-                          {isAuthorizingThis ? (
-                            <>
-                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                              Connecting...
-                            </>
-                          ) : (
-                            <>
-                              <Plug className="w-3 h-3 mr-1" />
-                              Integrate
-                            </>
-                          )}
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full text-xs h-8 bg-green-50 text-green-700 border-green-300 cursor-default"
-                          disabled
-                        >
-                          <Check className="w-3 h-3 mr-1" />
-                          Connected
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Integrated Tools Section */}
       <div className="space-y-4">
-        <h4 className="text-sm font-medium text-gray-700">Custom Tools ({tools.length})</h4>
+        <h4 className="text-sm font-medium text-gray-700">Integrated Tools ({tools.length})</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <AnimatePresence>
             {tools.length === 0 ? (
