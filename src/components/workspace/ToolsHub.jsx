@@ -11,95 +11,73 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ALL_TOOLS } from "../constants";
 import { base44 } from "@/api/base44Client";
 
-// Base44 App Connectors with proper URLs for favicon fetching
+// Base44 App Connectors - these are just shown as available tools to add
 const BASE44_CONNECTORS = [
   {
     name: "Salesforce",
-    integration_type: "salesforce",
     url: "https://www.salesforce.com",
     description: "Automate and sync CRM records.",
-    category: "CRM",
-    scopes: ["api", "refresh_token", "offline_access"]
+    category: "CRM"
   },
   {
     name: "Slack",
-    integration_type: "slack",
     url: "https://slack.com",
     description: "Send updates and notifications to your team.",
-    category: "Communication",
-    scopes: ["chat:write", "channels:read", "users:read"]
+    category: "Communication"
   },
   {
     name: "Notion",
-    integration_type: "notion",
     url: "https://www.notion.so",
     description: "Organize and sync knowledge or project data.",
-    category: "Productivity",
-    scopes: ["read_content", "update_content"]
+    category: "Productivity"
   },
   {
     name: "Google Calendar",
-    integration_type: "googlecalendar",
     url: "https://calendar.google.com",
     description: "Manage your schedule and calendar events.",
-    category: "Productivity",
-    scopes: ["https://www.googleapis.com/auth/calendar"]
+    category: "Productivity"
   },
   {
     name: "Google Drive",
-    integration_type: "googledrive",
     url: "https://drive.google.com",
     description: "Export and back up app-generated files.",
-    category: "Productivity",
-    scopes: ["https://www.googleapis.com/auth/drive.file"]
+    category: "Productivity"
   },
   {
     name: "Google Sheets",
-    integration_type: "googlesheets",
     url: "https://sheets.google.com",
     description: "Sync and manage spreadsheet data.",
-    category: "Productivity",
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"]
+    category: "Productivity"
   },
   {
     name: "Google Slides",
-    integration_type: "googleslides",
     url: "https://slides.google.com",
     description: "Create and edit Google Slides presentations.",
-    category: "Productivity",
-    scopes: ["https://www.googleapis.com/auth/presentations"]
+    category: "Productivity"
   },
   {
     name: "Google Docs",
-    integration_type: "googledocs",
     url: "https://docs.google.com",
     description: "Create and edit documents collaboratively in real-time with your team.",
-    category: "Documentation",
-    scopes: ["https://www.googleapis.com/auth/documents"]
+    category: "Documentation"
   },
   {
     name: "HubSpot",
-    integration_type: "hubspot",
     url: "https://www.hubspot.com",
     description: "Sync customer data, automate marketing workflows, and enhance sales productivity.",
-    category: "CRM",
-    scopes: ["crm.objects.contacts.read", "crm.objects.contacts.write"]
+    category: "CRM"
   },
   {
     name: "LinkedIn",
-    integration_type: "linkedin",
     url: "https://www.linkedin.com",
     description: "Post updates and manage your professional profile.",
-    category: "Social",
-    scopes: ["openid", "profile", "email", "w_member_social"]
+    category: "Social"
   },
   {
     name: "TikTok",
-    integration_type: "tiktok",
     url: "https://www.tiktok.com",
     description: "Read user profile info and stats.",
-    category: "Social",
-    scopes: ["user.info.basic", "user.info.profile"]
+    category: "Social"
   }
 ];
 
@@ -478,94 +456,100 @@ export default function ToolsHub({ project, onProjectUpdate, isCollaborator, isP
         )}
       </div>
 
-      {/* Base44 App Connectors Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium text-gray-700 flex items-center">
-            <Plug className="w-4 h-4 mr-2 text-purple-600" />
-            App Connectors
-          </h4>
-          <Badge variant="secondary" className="text-xs">
-            {BASE44_CONNECTORS.length} Available
-          </Badge>
+      {/* Base44 App Connectors Section - Quick Add Popular Tools */}
+      {isCollaborator && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-medium text-gray-700 flex items-center">
+              <Plug className="w-4 h-4 mr-2 text-purple-600" />
+              Popular Integrations
+            </h4>
+            <Badge variant="secondary" className="text-xs">
+              {BASE44_CONNECTORS.length} Available
+            </Badge>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {BASE44_CONNECTORS.map((connector) => {
+              const alreadyAdded = tools.some(t => t.name.toLowerCase() === connector.name.toLowerCase());
+              
+              return (
+                <Card 
+                  key={connector.name}
+                  className={`${
+                    alreadyAdded 
+                      ? 'bg-green-50 border-green-200 border-2' 
+                      : 'bg-gray-50 hover:bg-white hover:shadow-md border hover:border-purple-200'
+                  } transition-all`}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border shadow-sm flex-shrink-0 overflow-hidden">
+                        {getFaviconUrl(connector.url) ? (
+                          <img 
+                            src={getFaviconUrl(connector.url)} 
+                            alt={connector.name}
+                            className="w-6 h-6"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'block';
+                            }}
+                          />
+                        ) : null}
+                        <span className={`text-xl ${getFaviconUrl(connector.url) ? 'hidden' : 'block'}`}>{getToolIcon(connector.name)}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-semibold text-sm text-gray-900 truncate">
+                            {connector.name}
+                          </h4>
+                          {alreadyAdded && (
+                            <Badge className="bg-green-600 text-white text-[10px] py-0 px-1.5 ml-2 flex-shrink-0">
+                              <Check className="w-2.5 h-2.5 mr-0.5" />
+                              Added
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 line-clamp-2 mb-3">
+                          {connector.description}
+                        </p>
+                        {!alreadyAdded ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full text-xs h-8 bg-purple-600 text-white border-purple-600 hover:bg-purple-700 transition-colors"
+                            onClick={async () => {
+                              const newTool = {
+                                name: connector.name,
+                                url: connector.url,
+                                icon: getToolIcon(connector.name)
+                              };
+                              const updatedTools = [...tools, newTool];
+                              await updateProjectTools(updatedTools, `${connector.name} added to your tools!`);
+                            }}
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Add to Tools
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full text-xs h-8 bg-green-50 text-green-700 border-green-300 cursor-default"
+                            disabled
+                          >
+                            <Check className="w-3 h-3 mr-1" />
+                            Added
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
-        <p className="text-xs text-gray-600 bg-purple-50 p-3 rounded-lg border border-purple-100">
-          💡 These integrations connect directly with your accounts. Add them to your project tools below to track which services your team uses.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {BASE44_CONNECTORS.map((connector) => (
-            <Card 
-              key={connector.integration_type}
-              className="bg-gray-50 hover:bg-white hover:shadow-md border hover:border-purple-200 transition-all cursor-pointer"
-              onClick={() => {
-                // Add connector as a regular tool
-                const toolExists = tools.some(t => t.name.toLowerCase() === connector.name.toLowerCase());
-                if (!toolExists) {
-                  const newTool = {
-                    name: connector.name,
-                    url: connector.url,
-                    icon: getToolIcon(connector.name)
-                  };
-                  const updatedTools = [...tools, newTool];
-                  updateProjectTools(updatedTools, `${connector.name} added to your tools!`);
-                } else {
-                  toast.info(`${connector.name} is already in your tools`);
-                }
-              }}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border shadow-sm flex-shrink-0 overflow-hidden">
-                    {getFaviconUrl(connector.url) ? (
-                      <img 
-                        src={getFaviconUrl(connector.url)} 
-                        alt={connector.name}
-                        className="w-6 h-6"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'block';
-                        }}
-                      />
-                    ) : null}
-                    <span className={`text-xl ${getFaviconUrl(connector.url) ? 'hidden' : 'block'}`}>{getToolIcon(connector.name)}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-sm text-gray-900 truncate mb-1">
-                      {connector.name}
-                    </h4>
-                    <p className="text-xs text-gray-500 line-clamp-2 mb-3">
-                      {connector.description}
-                    </p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full text-xs h-8 group-hover:bg-purple-600 group-hover:text-white group-hover:border-purple-600 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const toolExists = tools.some(t => t.name.toLowerCase() === connector.name.toLowerCase());
-                        if (!toolExists) {
-                          const newTool = {
-                            name: connector.name,
-                            url: connector.url,
-                            icon: getToolIcon(connector.name)
-                          };
-                          const updatedTools = [...tools, newTool];
-                          updateProjectTools(updatedTools, `${connector.name} added to your tools!`);
-                        } else {
-                          toast.info(`${connector.name} is already in your tools`);
-                        }
-                      }}
-                    >
-                      <Plus className="w-3 h-3 mr-1" />
-                      Add to Tools
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Integrated Tools Section */}
       <div className="space-y-4">
