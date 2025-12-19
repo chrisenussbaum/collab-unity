@@ -1335,96 +1335,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     );
   }
 
-  const isOwner = propCurrentUser && profileUser && propCurrentUser.email === profileUser.email;
-
-  const displayedProjects = userProjects?.slice(0, displayedProjectsCount) || [];
-  const displayedFollowed = followedProjects?.slice(0, displayedFollowedCount) || [];
-
-  const loadMoreProjects = () => {
-    const newCount = Math.min(displayedProjectsCount + 3, userProjects.length);
-    setDisplayedProjectsCount(newCount);
-  };
-
-  const showLessProjects = () => {
-    setDisplayedProjectsCount(3);
-  };
-
-  const loadMoreFollowed = () => {
-    const newCount = Math.min(displayedFollowedCount + 3, followedProjects.length);
-    setDisplayedFollowedCount(newCount);
-  };
-
-  const showLessFollowed = () => {
-    setDisplayedFollowedCount(3);
-  };
-
-  const handleShareProfile = () => {
-    if (!profileUser) return;
-
-    let url;
-    if (profileUser.username) {
-      url = `${window.location.origin}${createPageUrl(`UserProfile?username=${profileUser.username}`)}`;
-    } else {
-      url = `${window.location.origin}${createPageUrl(`UserProfile?email=${profileUser.email}`)}`;
-    }
-
-    navigator.clipboard.writeText(url).then(() => {
-      toast.success("Profile link copied!");
-    }).catch(err => {
-      toast.error("Failed to copy link.");
-      console.error('Failed to copy: ', err);
-    });
-  };
-
-  const handleOpenEditModal = (section) => {
-    if (!profileUser) return;
-    if (section === 'skills') {
-      setEditSkills([...(profileUser.skills || [])]);
-    } else if (section === 'interests') {
-      setEditInterests([...(profileUser.interests || [])]);
-    } else if (section === 'tools') {
-      setEditTools([...(profileUser.tools_technologies || [])]);
-    }
-    setEditingSection(section);
-  };
-
-  const handleCloseEditModal = () => {
-    setEditingSection(null);
-    setEditSkills([]);
-    setEditInterests([]);
-    setEditTools([]);
-  };
-
-  const calculateAverageRating = () => {
-    if (!collaboratorReviews || collaboratorReviews.length === 0) return 0;
-    const sum = collaboratorReviews.reduce((acc, r) => acc + r.overall_rating, 0);
-    return (sum / collaboratorReviews.length).toFixed(1);
-  };
-
-  const getEndorsementCount = (skill) => {
-    return skillEndorsements.filter(e => e.skill === skill).length;
-  };
-
-  const hasEndorsedSkill = (skill) => {
-    if (!propCurrentUser) return false;
-    return skillEndorsements.some(e => 
-      e.skill === skill && e.endorser_email === propCurrentUser.email
-    );
-  };
-
-  const renderStars = (rating) => {
-    return (
-      <div className="flex items-center gap-0.5">
-        {[1, 2, 3, 4, 5].map(star => (
-          <Star
-            key={star}
-            className={`w-4 h-4 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-          />
-        ))}
-      </div>
-    );
-  };
-
   return (
     <>
       <input
@@ -2620,23 +2530,11 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                         </div>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        {isLoadingEndorsements ? (
-                            <div className="flex items-center justify-center py-4">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                                <span className="ml-3 text-sm text-gray-500">Loading skills...</span>
-                            </div>
-                        ) : (
-                            <div className="flex flex-wrap gap-2">
-                            {profileUser.skills.map(skill => {
-                                const getEndorsementCount = (skill) => skillEndorsements.filter(e => e.skill === skill).length;
-                                const hasEndorsedSkill = (skill) => {
-                                  if (!propCurrentUser) return false;
-                                  return skillEndorsements.some(e => e.skill === skill && e.endorser_email === propCurrentUser.email);
-                                };
-                                
-                                const endorsementCount = getEndorsementCount(skill);
-                                const isEndorsed = hasEndorsedSkill(skill);
-                                const hasEndorsements = endorsementCount > 0;
+                       <div className="flex flex-wrap gap-2">
+                         {profileUser.skills.map(skill => {
+                           const endorsementCount = skillEndorsements.filter(e => e.skill === skill).length;
+                           const isEndorsed = propCurrentUser ? skillEndorsements.some(e => e.skill === skill && e.endorser_email === propCurrentUser.email) : false;
+                           const hasEndorsements = endorsementCount > 0;
                                 
                                 return (
                                 <div key={skill} className="relative group">
@@ -2686,10 +2584,9 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                                     </button>
                                     )}
                                 </div>
-                                );
-                            })}
-                            </div>
-                        )}
+                            );
+                          })}
+                        </div>
 
                         {!isOwner && propCurrentUser && (profileUser.skills && profileUser.skills.length > 0) && (
                           <p className="text-xs text-gray-500 mt-3 text-center">
