@@ -162,19 +162,19 @@ export default function Chat({ currentUser, authIsLoading }) {
 
   // Handle deep linking from notifications
   useEffect(() => {
-    if (!currentUser || conversations.length === 0) return;
+    if (!currentUser || isLoading) return;
 
     const params = new URLSearchParams(location.search);
     const conversationId = params.get('conversation');
     
-    if (conversationId) {
+    if (conversationId && conversations.length > 0) {
       const conversation = conversations.find(c => c.id === conversationId);
-      if (conversation) {
+      if (conversation && (!selectedConversation || selectedConversation.id !== conversationId)) {
         handleSelectConversation(conversation);
         navigate(createPageUrl('Chat'), { replace: true });
       }
     }
-  }, [currentUser, conversations, location.search]);
+  }, [currentUser, conversations, location.search, isLoading]);
 
   // Fetch messages for the selected conversation
   const fetchMessages = async (conversationId) => {
@@ -190,8 +190,12 @@ export default function Chat({ currentUser, authIsLoading }) {
 
   // Handle sending a message
   const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !selectedConversation) return;
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    if (!newMessage.trim() || !selectedConversation || isSending) return;
 
     setIsSending(true);
     const messageContent = newMessage.trim();
@@ -216,33 +220,36 @@ export default function Chat({ currentUser, authIsLoading }) {
         ? selectedConversation.participant_2_email
         : selectedConversation.participant_1_email;
 
-      // Update conversation without awaiting
-      base44.entities.Conversation.update(selectedConversation.id, {
-        last_message: messageContent.substring(0, 100),
-        last_message_time: new Date().toISOString(),
-        [otherParticipantUnreadField]: (selectedConversation[otherParticipantUnreadField] || 0) + 1
-      }).catch(err => console.error("Error updating conversation:", err));
-
-      // Create notification without awaiting
-      base44.entities.Notification.create({
-        user_email: otherParticipantEmail,
-        title: `New message from ${currentUser.full_name}`,
-        message: messageContent.substring(0, 100),
-        type: 'direct_message',
-        related_entity_id: selectedConversation.id,
-        actor_email: currentUser.email,
-        actor_name: currentUser.full_name,
-        metadata: {
-          conversation_id: selectedConversation.id,
-          sender_profile_image: currentUser.profile_image,
-          message_preview: messageContent.substring(0, 100)
-        }
-      }).catch(err => console.error("Error creating notification:", err));
+      // Update conversation and refresh list in background
+      Promise.all([
+        base44.entities.Conversation.update(selectedConversation.id, {
+          last_message: messageContent.substring(0, 100),
+          last_message_time: new Date().toISOString(),
+          [otherParticipantUnreadField]: (selectedConversation[otherParticipantUnreadField] || 0) + 1
+        }),
+        base44.entities.Notification.create({
+          user_email: otherParticipantEmail,
+          title: `New message from ${currentUser.full_name}`,
+          message: messageContent.substring(0, 100),
+          type: 'direct_message',
+          related_entity_id: selectedConversation.id,
+          actor_email: currentUser.email,
+          actor_name: currentUser.full_name,
+          metadata: {
+            conversation_id: selectedConversation.id,
+            sender_profile_image: currentUser.profile_image,
+            message_preview: messageContent.substring(0, 100)
+          }
+        })
+      ]).then(() => {
+        queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'none' });
+      }).catch(err => console.error("Error in background updates:", err));
 
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
       setNewMessage(messageContent);
+      setMessages(prev => prev.slice(0, -1));
     } finally {
       setIsSending(false);
     }
