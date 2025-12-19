@@ -1082,25 +1082,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     }
   };
 
-  const handleOpenEditModal = (section) => {
-    if (!profileUser) return;
-    if (section === 'skills') {
-      setEditSkills([...(profileUser.skills || [])]);
-    } else if (section === 'interests') {
-      setEditInterests([...(profileUser.interests || [])]);
-    } else if (section === 'tools') {
-      setEditTools([...(profileUser.tools_technologies || [])]);
-    }
-    setEditingSection(section);
-  };
-
-  const handleCloseEditModal = () => {
-    setEditingSection(null);
-    setEditSkills([]);
-    setEditInterests([]);
-    setEditTools([]);
-  };
-
   const handleSaveEdit = async () => {
     if (!propCurrentUser || !isOwner) return;
 
