@@ -28,7 +28,8 @@ const IDEATION_TOOLS = [
     description: 'Rich text notes for capturing ideas and plans',
     icon: StickyNote,
     color: 'bg-amber-100 text-amber-700 border-amber-300',
-    iconBg: 'bg-amber-500'
+    iconBg: 'bg-amber-500',
+    isBuiltIn: true
   },
   {
     id: 'mindmap',
@@ -64,17 +65,25 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
   const [activeToolInstance, setActiveToolInstance] = useState(null);
   const [toolInstances, setToolInstances] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasNotesSaved, setHasNotesSaved] = useState(false);
 
   useEffect(() => {
     loadToolInstances();
+    checkNotesSaved();
   }, [project.id]);
+
+  const checkNotesSaved = () => {
+    // Check if project has saved notes
+    const hasNotes = project?.project_ideation && project.project_ideation.trim() !== '' && project.project_ideation !== '<p><br></p>';
+    setHasNotesSaved(hasNotes);
+  };
 
   const loadToolInstances = async () => {
     setIsLoading(true);
     try {
       const instances = await base44.entities.ProjectIDE.filter({
         project_id: project.id,
-        ide_type: { $in: ['ideation_notes', 'ideation_mindmap', 'ideation_whiteboard', 'ideation_kanban'] },
+        ide_type: { $in: ['ideation_mindmap', 'ideation_whiteboard', 'ideation_kanban'] },
         is_active: true
       }, '-created_date', 50);
       setToolInstances(instances || []);
@@ -87,47 +96,35 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
   };
 
   const handleToolSelect = (tool) => {
-    // Show existing instances or create new
-    const existingInstances = toolInstances.filter(i => 
-      i.ide_type === `ideation_${tool.type}`
-    );
-    
-    if (existingInstances.length === 0 && isCollaborator) {
-      // No instances exist and user can create - create first one automatically
-      handleCreateInstance(tool);
-    } else if (existingInstances.length === 1) {
-      // Single instance exists - open it directly
-      setActiveToolType(tool.type);
-      setActiveToolInstance(existingInstances[0]);
-    } else {
-      // Multiple instances or no permission to create - show picker
+    if (tool.isBuiltIn) {
       setActiveToolType(tool.type);
       setActiveToolInstance(null);
+    } else {
+      // Show existing instances or create new
+      const existingInstances = toolInstances.filter(i => 
+        i.ide_type === `ideation_${tool.type}`
+      );
+      
+      if (existingInstances.length === 0) {
+        handleCreateInstance(tool);
+      } else if (existingInstances.length === 1) {
+        setActiveToolType(tool.type);
+        setActiveToolInstance(existingInstances[0]);
+      } else {
+        // Multiple instances - let user choose
+        setActiveToolType(tool.type);
+        setActiveToolInstance(null);
+      }
     }
   };
 
   const handleCreateInstance = async (tool) => {
-    if (!isCollaborator) {
-      toast.error("You don't have permission to create ideation tools");
-      return;
-    }
-
     try {
-      const timestamp = new Date().toLocaleString();
-      const instanceCount = toolInstances.filter(i => i.ide_type === `ideation_${tool.type}`).length + 1;
-      
-      let defaultContent;
-      if (tool.type === 'notes') {
-        defaultContent = '';
-      } else {
-        defaultContent = JSON.stringify({ nodes: [], edges: [], items: [] });
-      }
-
       const newInstance = await base44.entities.ProjectIDE.create({
         project_id: project.id,
         ide_type: `ideation_${tool.type}`,
-        title: `${tool.title} ${instanceCount > 1 ? instanceCount : ''} - ${timestamp}`,
-        content: defaultContent,
+        title: `${tool.title} - ${new Date().toLocaleDateString()}`,
+        content: JSON.stringify({ nodes: [], edges: [], items: [] }),
         last_modified_by: currentUser.email,
         is_active: true
       });
@@ -161,7 +158,7 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
   };
 
   // Render active tool
-  if (activeToolType === 'notes' && activeToolInstance) {
+  if (activeToolType === 'notes') {
     return (
       <div className="space-y-4">
         <Button variant="ghost" size="sm" onClick={handleBack} className="mb-2">
@@ -169,12 +166,9 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
           Back to Ideation Hub
         </Button>
         <IdeationNotes 
-          instance={activeToolInstance}
           project={project} 
           currentUser={currentUser} 
           isCollaborator={isCollaborator}
-          onBack={handleBack}
-          onSave={handleSaveInstance}
         />
       </div>
     );
@@ -298,8 +292,8 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {IDEATION_TOOLS.map(tool => {
           const Icon = tool.icon;
-          const instanceCount = toolInstances.filter(i => i.ide_type === `ideation_${tool.type}`).length;
-          const showSavedBadge = instanceCount > 0;
+          const instanceCount = tool.isBuiltIn ? null : toolInstances.filter(i => i.ide_type === `ideation_${tool.type}`).length;
+          const showSavedBadge = tool.isBuiltIn ? hasNotesSaved : (instanceCount !== null && instanceCount > 0);
           
           return (
             <div
@@ -313,7 +307,7 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
                 </div>
                 {showSavedBadge && (
                   <Badge variant="secondary" className="text-xs">
-                    {instanceCount} saved
+                    {tool.isBuiltIn ? 'saved' : `${instanceCount} saved`}
                   </Badge>
                 )}
               </div>
