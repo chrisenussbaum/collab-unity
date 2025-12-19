@@ -277,6 +277,8 @@ export default function Layout({ children, currentPageName }) {
         // Only redirect to onboarding if user hasn't completed it AND is not already on onboarding page
         // Also redirect if profile_image is missing, even if onboarding flag is true
         if ((!user.has_completed_onboarding || !user.profile_image) && location.pathname !== createPageUrl("Onboarding")) {
+          // Store the intended destination for post-onboarding redirect
+          sessionStorage.setItem('postOnboardingRedirect', window.location.pathname + window.location.search);
           setHasNavigated(true);
           navigate(createPageUrl("Onboarding"), { replace: true });
           return;
@@ -294,13 +296,14 @@ export default function Layout({ children, currentPageName }) {
         setCurrentUser(null);
         setAuthChecked(true);
         
-        // Only redirect to Welcome if user is trying to access a protected route
-        // AND is not already on a public route AND not already on Welcome page
+        // Store the intended destination for post-login/post-onboarding redirect
         const currentPath = location.pathname;
         const welcomePath = createPageUrl("Welcome");
         const isOnPublicPage = isPublicRoute || currentPath === welcomePath || currentPath.startsWith(welcomePath);
         
         if (!isOnPublicPage) {
+          // Save where they were trying to go
+          sessionStorage.setItem('postOnboardingRedirect', window.location.pathname + window.location.search);
           setHasNavigated(true);
           navigate(welcomePath, { replace: true });
         }
