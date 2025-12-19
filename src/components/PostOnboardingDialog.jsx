@@ -16,7 +16,15 @@ export default function PostOnboardingDialog({ isOpen, onClose, currentUser }) {
   // Force a full page reload to ensure Layout fetches updated user data
   const handleNavigation = (path) => {
     onClose();
-    window.location.href = path;
+    
+    // Check if there's a stored redirect URL from pre-onboarding navigation
+    const redirectUrl = sessionStorage.getItem('postOnboardingRedirect');
+    if (redirectUrl) {
+      sessionStorage.removeItem('postOnboardingRedirect');
+      window.location.href = redirectUrl;
+    } else {
+      window.location.href = path;
+    }
   };
 
   const options = [
