@@ -41,6 +41,7 @@ export default function Chat({ currentUser, authIsLoading }) {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const pollIntervalRef = useRef(null);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -120,6 +121,16 @@ export default function Chat({ currentUser, authIsLoading }) {
   useEffect(() => {
     if (currentUser && !authIsLoading) {
       loadConversations();
+      
+      // Poll for new conversations every 5 seconds
+      const pollInterval = setInterval(loadConversations, 5000);
+      pollIntervalRef.current = pollInterval;
+      
+      return () => {
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+        }
+      };
     }
   }, [currentUser, authIsLoading]);
 
