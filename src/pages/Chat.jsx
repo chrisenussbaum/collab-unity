@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +23,8 @@ import { createPageUrl } from "@/utils";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 
 export default function Chat({ currentUser, authIsLoading }) {
+  const [conversations, setConversations] = useState([]);
+  const [userProfiles, setUserProfiles] = useState({});
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -38,12 +39,12 @@ export default function Chat({ currentUser, authIsLoading }) {
   const [conversationToDelete, setConversationToDelete] = useState(null);
   const [showDeleteConversationDialog, setShowDeleteConversationDialog] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const pollIntervalRef = useRef(null);
 
   const navigate = useNavigate();
   const location = useLocation();
-  const queryClient = useQueryClient();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -53,12 +54,12 @@ export default function Chat({ currentUser, authIsLoading }) {
     scrollToBottom();
   }, [messages]);
 
-  // Use React Query for conversations with real-time polling
-  const { data: conversationsData, isLoading } = useQuery({
-    queryKey: ['conversations', currentUser?.email],
-    queryFn: async () => {
-      if (!currentUser) return { conversations: [], userProfiles: {} };
-
+  // Load conversations
+  const loadConversations = async () => {
+    if (!currentUser) return;
+    
+    setIsLoading(true);
+    try {
       const [conv1, conv2] = await Promise.all([
         base44.entities.Conversation.filter({
           participant_1_email: currentUser.email
@@ -104,24 +105,34 @@ export default function Chat({ currentUser, authIsLoading }) {
         const otherEmail = conv.participant_1_email === currentUser.email 
           ? conv.participant_2_email 
           : conv.participant_1_email;
-        return profilesMap[otherEmail]; // Only keep conversations where we found the user profile
+        return profilesMap[otherEmail];
       });
 
-      return { 
-        conversations: validConversations, 
-        userProfiles: profilesMap 
-      };
-    },
-    enabled: !authIsLoading && !!currentUser,
-    initialData: { conversations: [], userProfiles: {} },
-    staleTime: 10 * 1000, // 10 seconds for chat (needs to be fresh)
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5000, // Poll every 5 seconds for new messages
-    refetchOnWindowFocus: true,
-  });
+      setConversations(validConversations);
+      setUserProfiles(profilesMap);
+    } catch (error) {
+      console.error("Error loading conversations:", error);
+      toast.error("Failed to load conversations");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const conversations = conversationsData?.conversations || [];
-  const userProfiles = conversationsData?.userProfiles || {};
+  useEffect(() => {
+    if (currentUser && !authIsLoading) {
+      loadConversations();
+      
+      // Poll for new conversations every 5 seconds
+      const pollInterval = setInterval(loadConversations, 5000);
+      pollIntervalRef.current = pollInterval;
+      
+      return () => {
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+        }
+      };
+    }
+  }, [currentUser, authIsLoading]);
 
   // Load messages when conversation is selected - LOCAL LOADING
   const handleSelectConversation = async (conversation) => {
@@ -239,7 +250,7 @@ export default function Chat({ currentUser, authIsLoading }) {
       });
 
       await fetchMessages(selectedConversation.id);
-      queryClient.invalidateQueries(['conversations']);
+      await loadConversations();
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
@@ -277,7 +288,7 @@ export default function Chat({ currentUser, authIsLoading }) {
 
       setShowDeleteDialog(false);
       setMessageToDelete(null);
-      queryClient.invalidateQueries(['conversations']);
+      await loadConversations();
     } catch (error) {
       console.error("Error deleting message:", error);
       toast.error("Failed to delete message");
@@ -314,7 +325,7 @@ export default function Chat({ currentUser, authIsLoading }) {
         setMessages([]);
       }
 
-      queryClient.invalidateQueries(['conversations']);
+      await loadConversations();
       setShowDeleteConversationDialog(false);
       setConversationToDelete(null);
     } catch (error) {
@@ -355,7 +366,7 @@ export default function Chat({ currentUser, authIsLoading }) {
       }
 
       setShowNewChatDialog(false);
-      queryClient.invalidateQueries(['conversations']);
+      await loadConversations();
       handleSelectConversation(conversation);
     } catch (error) {
       console.error("Error starting conversation:", error);
