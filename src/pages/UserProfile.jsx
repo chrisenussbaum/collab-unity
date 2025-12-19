@@ -1304,8 +1304,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     }
   };
 
-  const isOwner = propCurrentUser && profileUser && propCurrentUser.email === profileUser.email;
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -1341,9 +1339,10 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     );
   }
 
+  const isOwner = propCurrentUser && profileUser && propCurrentUser.email === profileUser.email;
+
   const displayedProjects = userProjects?.slice(0, displayedProjectsCount) || [];
   const displayedFollowed = followedProjects?.slice(0, displayedFollowedCount) || [];
-  const averageRating = calculateAverageRating();
 
   const loadMoreProjects = () => {
     const newCount = Math.min(displayedProjectsCount + 3, userProjects.length);
