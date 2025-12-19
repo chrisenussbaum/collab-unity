@@ -24,7 +24,6 @@ import {
   Trash2,
   GripVertical
 } from 'lucide-react';
-import { ActivityLog } from '@/entities/all';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -36,7 +35,7 @@ const CARD_TYPES = [
   { id: 'question', label: 'Question', icon: '❓', color: 'bg-purple-50 border-purple-300' },
 ];
 
-export default function IdeationKanban({ instance, project, currentUser, isCollaborator, onBack, onSave, onDelete }) {
+export default function IdeationKanban({ instance, project, currentUser, isCollaborator, onBack, onSave }) {
   const [cards, setCards] = useState([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newCard, setNewCard] = useState({ type: 'idea', title: '', description: '' });
@@ -83,17 +82,6 @@ export default function IdeationKanban({ instance, project, currentUser, isColla
         content,
         last_modified_by: currentUser.email
       });
-
-      await ActivityLog.create({
-        project_id: project.id,
-        user_email: currentUser.email,
-        user_name: currentUser.full_name || currentUser.email,
-        action_type: 'ideation_updated',
-        action_description: `updated idea board "${instance.title}"`,
-        entity_type: 'ideation',
-        entity_id: instance.id
-      });
-
       setHasUnsavedChanges(false);
       toast.success("Saved!");
       if (onSave) onSave({ ...instance, content });
@@ -101,12 +89,6 @@ export default function IdeationKanban({ instance, project, currentUser, isColla
       toast.error("Failed to save");
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleDeleteBoard = () => {
-    if (onDelete) {
-      onDelete(instance.id, 'kanban');
     }
   };
 
@@ -261,20 +243,10 @@ export default function IdeationKanban({ instance, project, currentUser, isColla
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </Button>
           {isCollaborator && (
-            <>
-              <Button size="sm" onClick={handleSave} disabled={isSaving} className="bg-green-600 hover:bg-green-700">
-                <Save className="w-4 h-4 mr-1" />
-                {isSaving ? 'Saving...' : 'Save'}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDeleteBoard}
-                className="text-red-600 hover:text-red-700"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </>
+            <Button size="sm" onClick={handleSave} disabled={isSaving} className="bg-green-600 hover:bg-green-700">
+              <Save className="w-4 h-4 mr-1" />
+              {isSaving ? 'Saving...' : 'Save'}
+            </Button>
           )}
         </div>
       </div>

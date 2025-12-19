@@ -19,13 +19,12 @@ import {
   ZoomIn,
   ZoomOut
 } from 'lucide-react';
-import { ActivityLog } from '@/entities/all';
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
 const COLORS = ['#000000', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#6B7280'];
 
-export default function WhiteboardTool({ instance, project, currentUser, isCollaborator, onBack, onSave, onDelete }) {
+export default function WhiteboardTool({ instance, project, currentUser, isCollaborator, onBack, onSave }) {
   const [tool, setTool] = useState('pen');
   const [color, setColor] = useState('#000000');
   const [strokeWidth, setStrokeWidth] = useState(3);
@@ -84,17 +83,6 @@ export default function WhiteboardTool({ instance, project, currentUser, isColla
         content,
         last_modified_by: currentUser.email
       });
-
-      await ActivityLog.create({
-        project_id: project.id,
-        user_email: currentUser.email,
-        user_name: currentUser.full_name || currentUser.email,
-        action_type: 'ideation_updated',
-        action_description: `updated whiteboard "${instance.title}"`,
-        entity_type: 'ideation',
-        entity_id: instance.id
-      });
-
       setHasUnsavedChanges(false);
       toast.success("Saved!");
       if (onSave) onSave({ ...instance, content });
@@ -102,12 +90,6 @@ export default function WhiteboardTool({ instance, project, currentUser, isColla
       toast.error("Failed to save");
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleDeleteBoard = () => {
-    if (onDelete) {
-      onDelete(instance.id, 'whiteboard');
     }
   };
 
@@ -338,20 +320,10 @@ export default function WhiteboardTool({ instance, project, currentUser, isColla
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </Button>
           {isCollaborator && (
-            <>
-              <Button size="sm" onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700">
-                <Save className="w-4 h-4 mr-1" />
-                {isSaving ? 'Saving...' : 'Save'}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDeleteBoard}
-                className="text-red-600 hover:text-red-700"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </>
+            <Button size="sm" onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700">
+              <Save className="w-4 h-4 mr-1" />
+              {isSaving ? 'Saving...' : 'Save'}
+            </Button>
           )}
         </div>
       </div>

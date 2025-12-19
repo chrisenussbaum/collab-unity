@@ -10,8 +10,7 @@ import {
   LayoutGrid,
   Plus,
   ArrowLeft,
-  Loader2,
-  Trash2
+  Loader2
 } from 'lucide-react';
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -29,7 +28,8 @@ const IDEATION_TOOLS = [
     description: 'Rich text notes for capturing ideas and plans',
     icon: StickyNote,
     color: 'bg-amber-100 text-amber-700 border-amber-300',
-    iconBg: 'bg-amber-500'
+    iconBg: 'bg-amber-500',
+    isBuiltIn: true
   },
   {
     id: 'mindmap',
@@ -65,17 +65,25 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
   const [activeToolInstance, setActiveToolInstance] = useState(null);
   const [toolInstances, setToolInstances] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasNotesSaved, setHasNotesSaved] = useState(false);
 
   useEffect(() => {
     loadToolInstances();
+    checkNotesSaved();
   }, [project.id]);
+
+  const checkNotesSaved = () => {
+    // Check if project has saved notes
+    const hasNotes = project?.project_ideation && project.project_ideation.trim() !== '' && project.project_ideation !== '<p><br></p>';
+    setHasNotesSaved(hasNotes);
+  };
 
   const loadToolInstances = async () => {
     setIsLoading(true);
     try {
       const instances = await base44.entities.ProjectIDE.filter({
         project_id: project.id,
-        ide_type: { $in: ['ideation_notes', 'ideation_mindmap', 'ideation_whiteboard', 'ideation_kanban'] },
+        ide_type: { $in: ['ideation_mindmap', 'ideation_whiteboard', 'ideation_kanban'] },
         is_active: true
       }, '-created_date', 50);
       setToolInstances(instances || []);
@@ -88,41 +96,35 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
   };
 
   const handleToolSelect = (tool) => {
-    // Show existing instances or create new
-    const existingInstances = toolInstances.filter(i => 
-      i.ide_type === `ideation_${tool.type}`
-    );
-    
-    if (existingInstances.length === 0 && isCollaborator) {
-      handleCreateInstance(tool);
-    } else if (existingInstances.length === 1) {
-      setActiveToolType(tool.type);
-      setActiveToolInstance(existingInstances[0]);
-    } else {
-      // Multiple instances - let user choose
+    if (tool.isBuiltIn) {
       setActiveToolType(tool.type);
       setActiveToolInstance(null);
+    } else {
+      // Show existing instances or create new
+      const existingInstances = toolInstances.filter(i => 
+        i.ide_type === `ideation_${tool.type}`
+      );
+      
+      if (existingInstances.length === 0) {
+        handleCreateInstance(tool);
+      } else if (existingInstances.length === 1) {
+        setActiveToolType(tool.type);
+        setActiveToolInstance(existingInstances[0]);
+      } else {
+        // Multiple instances - let user choose
+        setActiveToolType(tool.type);
+        setActiveToolInstance(null);
+      }
     }
   };
 
   const handleCreateInstance = async (tool) => {
     try {
-      let initialContent = {};
-      if (tool.type === 'notes') {
-        initialContent = { content: '' };
-      } else if (tool.type === 'mindmap') {
-        initialContent = { nodes: [], edges: [] };
-      } else if (tool.type === 'whiteboard') {
-        initialContent = { paths: [] };
-      } else if (tool.type === 'kanban') {
-        initialContent = { cards: [] };
-      }
-
       const newInstance = await base44.entities.ProjectIDE.create({
         project_id: project.id,
         ide_type: `ideation_${tool.type}`,
         title: `${tool.title} - ${new Date().toLocaleDateString()}`,
-        content: JSON.stringify(initialContent),
+        content: JSON.stringify({ nodes: [], edges: [], items: [] }),
         last_modified_by: currentUser.email,
         is_active: true
       });
@@ -134,26 +136,6 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
     } catch (error) {
       console.error("Error creating tool instance:", error);
       toast.error(`Failed to create ${tool.title}`);
-    }
-  };
-
-  const handleDeleteInstance = async (instanceId, toolType) => {
-    if (!window.confirm("Are you sure you want to delete this? This action cannot be undone.")) {
-      return;
-    }
-    
-    try {
-      await base44.entities.ProjectIDE.update(instanceId, { is_active: false });
-      setToolInstances(prev => prev.filter(i => i.id !== instanceId));
-      toast.success("Deleted successfully");
-      
-      // If we're viewing the deleted instance, go back
-      if (activeToolInstance?.id === instanceId) {
-        handleBack();
-      }
-    } catch (error) {
-      console.error("Error deleting instance:", error);
-      toast.error("Failed to delete");
     }
   };
 
@@ -176,17 +158,19 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
   };
 
   // Render active tool
-  if (activeToolType === 'notes' && activeToolInstance) {
+  if (activeToolType === 'notes') {
     return (
-      <IdeationNotes
-        instance={activeToolInstance}
-        project={project}
-        currentUser={currentUser}
-        isCollaborator={isCollaborator}
-        onBack={handleBack}
-        onSave={handleSaveInstance}
-        onDelete={handleDeleteInstance}
-      />
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" onClick={handleBack} className="mb-2">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Ideation Hub
+        </Button>
+        <IdeationNotes 
+          project={project} 
+          currentUser={currentUser} 
+          isCollaborator={isCollaborator}
+        />
+      </div>
     );
   }
 
@@ -199,7 +183,6 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
         isCollaborator={isCollaborator}
         onBack={handleBack}
         onSave={handleSaveInstance}
-        onDelete={handleDeleteInstance}
       />
     );
   }
@@ -213,7 +196,6 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
         isCollaborator={isCollaborator}
         onBack={handleBack}
         onSave={handleSaveInstance}
-        onDelete={handleDeleteInstance}
       />
     );
   }
@@ -227,7 +209,6 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
         isCollaborator={isCollaborator}
         onBack={handleBack}
         onSave={handleSaveInstance}
-        onDelete={handleDeleteInstance}
       />
     );
   }
@@ -248,7 +229,7 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {tool && <tool.icon className="w-5 h-5" />}
-              {tool?.title} Collection
+              {tool?.title} Instances
             </CardTitle>
             <CardDescription>Select an existing {tool?.title.toLowerCase()} or create a new one</CardDescription>
           </CardHeader>
@@ -257,26 +238,13 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
               {instances.map(instance => (
                 <div
                   key={instance.id}
-                  className="relative p-4 border rounded-lg hover:shadow-md cursor-pointer transition-all hover:border-purple-300 group"
                   onClick={() => handleInstanceSelect(instance)}
+                  className="p-4 border rounded-lg hover:shadow-md cursor-pointer transition-all hover:border-purple-300"
                 >
-                  <h4 className="font-medium text-gray-900 mb-1 pr-8">{instance.title}</h4>
-                  <p className="text-xs text-gray-500 mb-2">
+                  <h4 className="font-medium text-gray-900 mb-1">{instance.title}</h4>
+                  <p className="text-xs text-gray-500">
                     Last modified: {new Date(instance.updated_date).toLocaleDateString()}
                   </p>
-                  {isCollaborator && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteInstance(instance.id, tool.type);
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
                 </div>
               ))}
               
@@ -324,8 +292,8 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {IDEATION_TOOLS.map(tool => {
           const Icon = tool.icon;
-          const instanceCount = toolInstances.filter(i => i.ide_type === `ideation_${tool.type}`).length;
-          const showSavedBadge = instanceCount > 0;
+          const instanceCount = tool.isBuiltIn ? null : toolInstances.filter(i => i.ide_type === `ideation_${tool.type}`).length;
+          const showSavedBadge = tool.isBuiltIn ? hasNotesSaved : (instanceCount !== null && instanceCount > 0);
           
           return (
             <div
@@ -339,7 +307,7 @@ export default function IdeationHub({ project, currentUser, isCollaborator, isPr
                 </div>
                 {showSavedBadge && (
                   <Badge variant="secondary" className="text-xs">
-                    {instanceCount} saved
+                    {tool.isBuiltIn ? 'saved' : `${instanceCount} saved`}
                   </Badge>
                 )}
               </div>
