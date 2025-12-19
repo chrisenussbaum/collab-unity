@@ -3,9 +3,10 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { StickyNote, RefreshCw, AlertTriangle, Save } from 'lucide-react';
-import { Project, ActivityLog } from '@/entities/all';
+import { StickyNote, RefreshCw, AlertTriangle, Save, ArrowLeft, Trash2 } from 'lucide-react';
+import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import { ActivityLog } from '@/entities/all';
 
 const withRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -22,44 +23,30 @@ const withRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
   }
 };
 
-export default function IdeationNotes({ project, currentUser, isCollaborator }) {
-  const [content, setContent] = useState(project?.project_ideation || '');
+export default function IdeationNotes({ instance, project, currentUser, isCollaborator, onBack, onSave, onDelete }) {
+  const [content, setContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastSavedBy, setLastSavedBy] = useState(project?.project_ideation_metadata?.last_saved_by || null);
-  const [lastSavedAt, setLastSavedAt] = useState(project?.project_ideation_metadata?.last_saved_at || null);
-  const [isStale, setIsStale] = useState(false);
-  const [staleInfo, setStaleInfo] = useState(null);
-  const initialContentRef = useRef(project?.project_ideation || '');
-  const contentRef = useRef(project?.project_ideation || '');
+  const initialContentRef = useRef('');
+  const contentRef = useRef('');
   const isMountedRef = useRef(true);
 
   useEffect(() => {
-    const fetchFreshContent = async () => {
-      if (!project?.id) return;
+    if (instance?.content) {
       try {
-        const results = await withRetry(() => Project.filter({ id: project.id }));
-        const freshProject = results?.[0];
-        if (freshProject && isMountedRef.current) {
-          const freshContent = freshProject.project_ideation || '';
-          setContent(freshContent);
-          contentRef.current = freshContent;
-          initialContentRef.current = freshContent;
-          setHasUnsavedChanges(false);
-          if (freshProject.project_ideation_metadata) {
-            setLastSavedBy(freshProject.project_ideation_metadata.last_saved_by);
-            setLastSavedAt(freshProject.project_ideation_metadata.last_saved_at);
-          }
-          setIsStale(false);
-          setStaleInfo(null);
-        }
-      } catch (error) {
-        console.error("Error fetching fresh ideation content:", error);
+        const data = JSON.parse(instance.content);
+        const noteContent = data.content || '';
+        setContent(noteContent);
+        contentRef.current = noteContent;
+        initialContentRef.current = noteContent;
+        setHasUnsavedChanges(false);
+      } catch (e) {
+        setContent('');
+        initialContentRef.current = '';
       }
-    };
-    fetchFreshContent();
-  }, [project?.id]);
+    }
+  }, [instance?.id]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -76,18 +63,15 @@ export default function IdeationNotes({ project, currentUser, isCollaborator }) 
     if (hasUnsavedChanges && !window.confirm("You have unsaved changes. Refreshing will discard them. Continue?")) return;
     setIsRefreshing(true);
     try {
-      const results = await withRetry(() => Project.filter({ id: project.id }));
-      const freshProject = results?.[0];
-      if (freshProject && isMountedRef.current) {
-        const freshContent = freshProject.project_ideation || '';
-        setContent(freshContent);
-        contentRef.current = freshContent;
-        initialContentRef.current = freshContent;
+      const results = await withRetry(() => base44.entities.ProjectIDE.filter({ id: instance.id }));
+      const freshInstance = results?.[0];
+      if (freshInstance?.content && isMountedRef.current) {
+        const data = JSON.parse(freshInstance.content);
+        const noteContent = data.content || '';
+        setContent(noteContent);
+        contentRef.current = noteContent;
+        initialContentRef.current = noteContent;
         setHasUnsavedChanges(false);
-        if (freshProject.project_ideation_metadata) {
-          setLastSavedBy(freshProject.project_ideation_metadata.last_saved_by);
-          setLastSavedAt(freshProject.project_ideation_metadata.last_saved_at);
-        }
         toast.success("Notes refreshed!");
       }
     } catch (error) {
@@ -105,47 +89,37 @@ export default function IdeationNotes({ project, currentUser, isCollaborator }) 
     }
     setIsSaving(true);
     try {
-      const metadata = {
-        last_saved_by: currentUser.email,
-        last_saved_by_name: currentUser.full_name || currentUser.email,
-        last_saved_at: new Date().toISOString()
-      };
-      
-      // Normalize project_urls to prevent validation errors
-      const normalizedUrls = (project.project_urls || []).map(linkItem => {
-        if (typeof linkItem === 'object' && linkItem.url) {
-          return { title: linkItem.title || '', url: linkItem.url };
-        } else if (typeof linkItem === 'string') {
-          return { title: '', url: linkItem };
-        }
-        return null;
-      }).filter(link => link !== null);
-      
-      await withRetry(() => Project.update(project.id, { 
-        project_ideation: content,
-        project_ideation_metadata: metadata,
-        project_urls: normalizedUrls
+      const contentData = JSON.stringify({ content });
+      await withRetry(() => base44.entities.ProjectIDE.update(instance.id, { 
+        content: contentData,
+        last_modified_by: currentUser.email
       }));
+
       await withRetry(() => ActivityLog.create({
         project_id: project.id,
         user_email: currentUser.email,
         user_name: currentUser.full_name || currentUser.email,
         action_type: 'ideation_updated',
-        action_description: 'updated the project ideation notes',
-        entity_type: 'ideation'
+        action_description: `updated notes "${instance.title}"`,
+        entity_type: 'ideation',
+        entity_id: instance.id
       }));
+
       initialContentRef.current = content;
       setHasUnsavedChanges(false);
-      setLastSavedBy(currentUser.email);
-      setLastSavedAt(metadata.last_saved_at);
-      setIsStale(false);
       toast.success("Notes saved!");
+      if (onSave) onSave({ ...instance, content: contentData });
     } catch (error) {
-      console.error("Error saving ideation notes:", error);
-      const errorMessage = error?.message || error?.response?.data?.message || "Failed to save notes";
-      toast.error(`Save failed: ${errorMessage}`);
+      console.error("Error saving notes:", error);
+      toast.error("Failed to save notes");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(instance.id, 'notes');
     }
   };
 
@@ -168,80 +142,70 @@ export default function IdeationNotes({ project, currentUser, isCollaborator }) 
     'align', 'blockquote', 'code-block', 'link', 'image'
   ];
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const diffMins = Math.floor((Date.now() - date) / 60000);
-    if (diffMins < 1) return 'just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return date.toLocaleDateString();
-  };
-
   return (
-    <Card className="cu-card">
-      <CardHeader>
-        <div className="flex items-center justify-between flex-wrap gap-4">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+        <div className="flex items-center gap-2">
+          {hasUnsavedChanges && (
+            <span className="text-xs text-amber-600 font-medium">Unsaved changes</span>
+          )}
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+          {isCollaborator && (
+            <>
+              <Button size="sm" onClick={handleSave} disabled={isSaving || !hasUnsavedChanges} className="bg-amber-500 hover:bg-amber-600">
+                <Save className="w-4 h-4 mr-1" />
+                {isSaving ? 'Saving...' : 'Save'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDelete}
+                className="text-red-600 hover:text-red-700"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <Card className="cu-card">
+        <CardHeader>
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
               <StickyNote className="w-5 h-5 text-white" />
             </div>
             <div>
-              <CardTitle>Notes</CardTitle>
+              <CardTitle>{instance?.title || 'Notes'}</CardTitle>
               <CardDescription>Rich text notes for project planning</CardDescription>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {hasUnsavedChanges && (
-              <span className="text-xs text-amber-600 font-medium">Unsaved changes</span>
-            )}
-            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </Button>
-            {isCollaborator && (
-              <Button size="sm" onClick={handleSave} disabled={isSaving || !hasUnsavedChanges} className="bg-amber-500 hover:bg-amber-600">
-                <Save className="w-4 h-4 mr-1" />
-                {isSaving ? 'Saving...' : 'Save'}
-              </Button>
-            )}
+        </CardHeader>
+        <CardContent>
+          <div className="border rounded-lg overflow-hidden bg-white">
+            <style>{`
+              .ql-container.ql-snow { min-height: 350px; font-size: 15px; }
+              .ql-editor { min-height: 350px; padding: 16px; }
+              .ql-toolbar button:hover .ql-stroke, .ql-toolbar button.ql-active .ql-stroke { stroke: #f59e0b; }
+            `}</style>
+            <ReactQuill
+              value={content}
+              onChange={handleContentChange}
+              modules={modules}
+              formats={formats}
+              placeholder={isCollaborator ? "Start capturing your ideas..." : "No notes yet."}
+              readOnly={!isCollaborator}
+              theme="snow"
+            />
           </div>
-        </div>
-        {lastSavedBy && lastSavedAt && (
-          <div className="text-xs text-gray-500 mt-2">
-            Last saved by {lastSavedBy.split('@')[0]} {formatDate(lastSavedAt)}
-          </div>
-        )}
-      </CardHeader>
-      <CardContent>
-        {isStale && staleInfo && (
-          <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-amber-800">
-                {staleInfo.savedBy?.split('@')[0]} made changes
-              </p>
-              <p className="text-xs text-amber-600">Your changes may conflict.</p>
-            </div>
-          </div>
-        )}
-        <div className="border rounded-lg overflow-hidden bg-white">
-          <style>{`
-            .ql-container.ql-snow { min-height: 350px; font-size: 15px; }
-            .ql-editor { min-height: 350px; padding: 16px; }
-            .ql-toolbar button:hover .ql-stroke, .ql-toolbar button.ql-active .ql-stroke { stroke: #f59e0b; }
-          `}</style>
-          <ReactQuill
-            value={content}
-            onChange={handleContentChange}
-            modules={modules}
-            formats={formats}
-            placeholder={isCollaborator ? "Start capturing your ideas..." : "No notes yet."}
-            readOnly={!isCollaborator}
-            theme="snow"
-          />
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
