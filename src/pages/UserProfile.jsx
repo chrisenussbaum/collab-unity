@@ -2133,7 +2133,19 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                       <CardContent className="pt-0 space-y-4">
                         {collaboratorReviews.length > 0 ? (
                           <>
-                            {collaboratorReviews.slice(0, 3).map(review => (
+                            {collaboratorReviews.slice(0, 3).map(review => {
+                              const renderStars = (rating) => (
+                                <div className="flex items-center gap-0.5">
+                                  {[1, 2, 3, 4, 5].map(star => (
+                                    <Star
+                                      key={star}
+                                      className={`w-4 h-4 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                                    />
+                                  ))}
+                                </div>
+                              );
+
+                              return (
                               <div key={review.id} className="border-b last:border-b-0 pb-4 last:pb-0">
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center">
@@ -2161,7 +2173,8 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                                   )}
                                 </div>
                               </div>
-                            ))}
+                            );
+                            })}
                             {collaboratorReviews.length > 3 && (
                               <Button variant="outline" size="sm" className="w-full">
                                 View All {collaboratorReviews.length} Reviews
@@ -2634,6 +2647,12 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                         ) : (
                             <div className="flex flex-wrap gap-2">
                             {profileUser.skills.map(skill => {
+                                const getEndorsementCount = (skill) => skillEndorsements.filter(e => e.skill === skill).length;
+                                const hasEndorsedSkill = (skill) => {
+                                  if (!propCurrentUser) return false;
+                                  return skillEndorsements.some(e => e.skill === skill && e.endorser_email === propCurrentUser.email);
+                                };
+                                
                                 const endorsementCount = getEndorsementCount(skill);
                                 const isEndorsed = hasEndorsedSkill(skill);
                                 const hasEndorsements = endorsementCount > 0;
