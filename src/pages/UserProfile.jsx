@@ -684,33 +684,51 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
   );
 
   // Use React Query for profile data with caching
-  const { data: profileData, isLoading, error } = useQuery({
+  const { data: profileData, isLoading } = useQuery({
     queryKey: ['user-profile', username, emailParam, propCurrentUser?.email],
     queryFn: async () => {
       let targetUser = null;
 
       if (username) {
-        const { data: userData } = await getUserByUsername({ username });
-        if (userData) {
-          targetUser = userData;
+        try {
+          const { data: userData } = await getUserByUsername({ username });
+          if (userData) {
+            targetUser = userData;
+          }
+        } catch (error) {
+          console.error("Error fetching user by username:", error);
         }
         
         if (!targetUser && propCurrentUser && propCurrentUser.username === username) {
-          const freshUser = await base44.auth.me().catch(() => propCurrentUser);
-          targetUser = freshUser;
+          try {
+            const freshUser = await base44.auth.me();
+            targetUser = freshUser;
+          } catch (error) {
+            console.error("Error fetching current user:", error);
+            targetUser = propCurrentUser;
+          }
         }
       }
 
       if (!targetUser && emailParam) {
-        const { data: userData } = await getPublicUserProfiles({ emails: [emailParam] });
-        if (userData && userData.length > 0) {
-          targetUser = userData[0];
+        try {
+          const { data: userData } = await getPublicUserProfiles({ emails: [emailParam] });
+          if (userData && userData.length > 0) {
+            targetUser = userData[0];
+          }
+        } catch (error) {
+          console.error("Error fetching user by email:", error);
         }
       }
 
       if (!targetUser && !username && !emailParam && propCurrentUser) {
-        const freshUser = await base44.auth.me().catch(() => propCurrentUser);
-        targetUser = freshUser;
+        try {
+          const freshUser = await base44.auth.me();
+          targetUser = freshUser;
+        } catch (error) {
+          console.error("Error fetching current user:", error);
+          targetUser = propCurrentUser;
+        }
       }
 
       if (!targetUser) {
@@ -809,11 +827,23 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
       };
     },
     enabled: true,
+    initialData: {
+      profileUser: null,
+      userProjects: [],
+      followedProjects: [],
+      skillEndorsements: [],
+      collaboratorReviews: [],
+      sharedProjects: []
+    },
     staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
-    refetchOnMount: true,
-    retry: 1
+    retry: 1,
+    onError: (error) => {
+      console.error("Profile load error:", error);
+      toast.error("Profile not found");
+      navigate(createPageUrl("Feed"));
+    }
   });
 
   const profileUser = profileData?.profileUser;
@@ -1076,7 +1106,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
       await User.updateMyUserData(updateData);
 
       queryClient.invalidateQueries(['user-profile']);
-      toast.success(`${editingSection.charAt(0).toUpperCase() + editingSection.slice(1)} updated successfully!`);
 
       handleCloseEditModal();
     } catch (error) {
@@ -1107,7 +1136,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         // Remove endorsement
         await base44.entities.SkillEndorsement.delete(existing.id);
         queryClient.invalidateQueries(['user-profile']);
-        toast.success("Endorsement removed");
       } else {
         // Add endorsement
         const newEndorsement = await base44.entities.SkillEndorsement.create({
@@ -1119,7 +1147,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         });
 
         queryClient.invalidateQueries(['user-profile']);
-        toast.success(`Endorsed ${selectedSkillToEndorse}!`);
 
         // Create notification - wrapped in try-catch to prevent blocking
         try {
@@ -1183,7 +1210,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
 
       // Invalidate to refetch
       queryClient.invalidateQueries(['user-profile']);
-      toast.success("Review submitted successfully!");
 
       // Create notification - wrapped in try-catch to prevent blocking
       try {
@@ -1307,15 +1333,12 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-sm sm:text-base text-gray-600">Loading profile...</p>
-        </div>
+        <p className="text-sm sm:text-base">Loading profile...</p>
       </div>
     );
   }
 
-  if (error || !profileUser) {
+  if (!profileUser) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center max-w-md mx-auto">
@@ -1339,95 +1362,9 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     );
   }
 
-  const isOwner = propCurrentUser && profileUser && propCurrentUser.email === profileUser.email;
-
-  const displayedProjects = userProjects?.slice(0, displayedProjectsCount) || [];
-  const displayedFollowed = followedProjects?.slice(0, displayedFollowedCount) || [];
-
-  const loadMoreProjects = () => {
-    const newCount = Math.min(displayedProjectsCount + 3, userProjects.length);
-    setDisplayedProjectsCount(newCount);
-  };
-
-  const showLessProjects = () => {
-    setDisplayedProjectsCount(3);
-  };
-
-  const loadMoreFollowed = () => {
-    const newCount = Math.min(displayedFollowedCount + 3, followedProjects.length);
-    setDisplayedFollowedCount(newCount);
-  };
-
-  const showLessFollowed = () => {
-    setDisplayedFollowedCount(3);
-  };
-
-  const handleShareProfile = () => {
-    if (!profileUser) return;
-
-    let url;
-    if (profileUser.username) {
-      url = `${window.location.origin}${createPageUrl(`UserProfile?username=${profileUser.username}`)}`;
-    } else {
-      url = `${window.location.origin}${createPageUrl(`UserProfile?email=${profileUser.email}`)}`;
-    }
-
-    navigator.clipboard.writeText(url).then(() => {
-      toast.success("Profile link copied!");
-    }).catch(err => {
-      toast.error("Failed to copy link.");
-      console.error('Failed to copy: ', err);
-    });
-  };
-
-  const handleOpenEditModal = (section) => {
-    if (!profileUser) return;
-    if (section === 'skills') {
-      setEditSkills([...(profileUser.skills || [])]);
-    } else if (section === 'interests') {
-      setEditInterests([...(profileUser.interests || [])]);
-    } else if (section === 'tools') {
-      setEditTools([...(profileUser.tools_technologies || [])]);
-    }
-    setEditingSection(section);
-  };
-
-  const handleCloseEditModal = () => {
-    setEditingSection(null);
-    setEditSkills([]);
-    setEditInterests([]);
-    setEditTools([]);
-  };
-
-  const calculateAverageRating = () => {
-    if (!collaboratorReviews || collaboratorReviews.length === 0) return 0;
-    const sum = collaboratorReviews.reduce((acc, r) => acc + r.overall_rating, 0);
-    return (sum / collaboratorReviews.length).toFixed(1);
-  };
-
-  const getEndorsementCount = (skill) => {
-    return skillEndorsements.filter(e => e.skill === skill).length;
-  };
-
-  const hasEndorsedSkill = (skill) => {
-    if (!propCurrentUser) return false;
-    return skillEndorsements.some(e => 
-      e.skill === skill && e.endorser_email === propCurrentUser.email
-    );
-  };
-
-  const renderStars = (rating) => {
-    return (
-      <div className="flex items-center gap-0.5">
-        {[1, 2, 3, 4, 5].map(star => (
-          <Star
-            key={star}
-            className={`w-4 h-4 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-          />
-        ))}
-      </div>
-    );
-  };
+  const displayedProjects = userProjects.slice(0, displayedProjectsCount);
+  const displayedFollowed = followedProjects.slice(0, displayedFollowedCount);
+  const averageRating = calculateAverageRating();
 
   return (
     <>
