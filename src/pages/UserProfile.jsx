@@ -822,10 +822,10 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
   const skillEndorsements = profileData?.skillEndorsements || [];
   const collaboratorReviews = profileData?.collaboratorReviews || [];
   const sharedProjects = profileData?.sharedProjects || [];
-  const isOwner = propCurrentUser && profileUser && propCurrentUser.email === profileUser.email;
 
-  const displayedProjects = userProjects?.slice(0, displayedProjectsCount) || [];
-  const displayedFollowed = followedProjects?.slice(0, displayedFollowedCount) || [];
+
+
+  const isOwner = propCurrentUser && profileUser && propCurrentUser.email === profileUser.email;
 
   const loadMoreProjects = () => {
     const newCount = Math.min(displayedProjectsCount + 3, userProjects.length);
@@ -856,67 +856,24 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     }
 
     navigator.clipboard.writeText(url).then(() => {
-      toast.success("Profile link copied!");
+      // Profile link copied
     }).catch(err => {
       toast.error("Failed to copy link.");
       console.error('Failed to copy: ', err);
     });
   };
 
-  const handleOpenEditModal = (section) => {
-    if (!profileUser) return;
-    if (section === 'skills') {
-      setEditSkills([...(profileUser.skills || [])]);
-    } else if (section === 'interests') {
-      setEditInterests([...(profileUser.interests || [])]);
-    } else if (section === 'tools') {
-      setEditTools([...(profileUser.tools_technologies || [])]);
+  const handleLogout = async () => {
+    if (!propCurrentUser) return;
+
+    try {
+      const loginUrl = `${window.location.origin}/login`;
+      await User.logout(loginUrl);
+    } catch (error) {
+      console.error("Logout error:", error);
+      window.location.href = `${window.location.origin}/login`;
     }
-    setEditingSection(section);
   };
-
-  const handleCloseEditModal = () => {
-    setEditingSection(null);
-    setEditSkills([]);
-    setEditInterests([]);
-    setEditTools([]);
-  };
-
-  const calculateAverageRating = () => {
-    if (!collaboratorReviews || collaboratorReviews.length === 0) return 0;
-    const sum = collaboratorReviews.reduce((acc, r) => acc + r.overall_rating, 0);
-    return (sum / collaboratorReviews.length).toFixed(1);
-  };
-
-  const getEndorsementCount = (skill) => {
-    return skillEndorsements.filter(e => e.skill === skill).length;
-  };
-
-  const hasEndorsedSkill = (skill) => {
-    if (!propCurrentUser) return false;
-    return skillEndorsements.some(e => 
-      e.skill === skill && e.endorser_email === propCurrentUser.email
-    );
-  };
-
-  const renderStars = (rating) => {
-    return (
-      <div className="flex items-center gap-0.5">
-        {[1, 2, 3, 4, 5].map(star => (
-          <Star
-            key={star}
-            className={`w-4 h-4 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-          />
-        ))}
-      </div>
-    );
-  };
-
-  const averageRating = calculateAverageRating();
-
-
-
-
 
   const handleUpdateSocialLinks = async (socialLinks) => {
     try {
@@ -1080,6 +1037,25 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         coverPhotoInputRef.current.value = '';
       }
     }
+  };
+
+  const handleOpenEditModal = (section) => {
+    if (!profileUser) return;
+    if (section === 'skills') {
+      setEditSkills([...(profileUser.skills || [])]);
+    } else if (section === 'interests') {
+      setEditInterests([...(profileUser.interests || [])]);
+    } else if (section === 'tools') {
+      setEditTools([...(profileUser.tools_technologies || [])]);
+    }
+    setEditingSection(section);
+  };
+
+  const handleCloseEditModal = () => {
+    setEditingSection(null);
+    setEditSkills([]);
+    setEditInterests([]);
+    setEditTools([]);
   };
 
   const handleSaveEdit = async () => {
@@ -1247,7 +1223,35 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     }
   };
 
+  const getEndorsementCount = (skill) => {
+    return skillEndorsements.filter(e => e.skill === skill).length;
+  };
 
+  const hasEndorsedSkill = (skill) => {
+    if (!propCurrentUser) return false;
+    return skillEndorsements.some(e => 
+      e.skill === skill && e.endorser_email === propCurrentUser.email
+    );
+  };
+
+  const calculateAverageRating = () => {
+    if (collaboratorReviews.length === 0) return 0;
+    const sum = collaboratorReviews.reduce((acc, r) => acc + r.overall_rating, 0);
+    return (sum / collaboratorReviews.length).toFixed(1);
+  };
+
+  const renderStars = (rating) => {
+    return (
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map(star => (
+          <Star
+            key={star}
+            className={`w-4 h-4 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+          />
+        ))}
+      </div>
+    );
+  };
 
   const handleOpenGenerateResume = () => {
     if (!profileUser || !username) {
@@ -1291,7 +1295,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
       }
 
       setShowSyncDialog(false);
-      navigate(createPageUrl(`Chat?conversation=${conversation.id}`));
+      navigate(createPageUrl(`Sync?conversation=${conversation.id}`));
     } catch (error) {
       console.error("Error starting conversation:", error);
       toast.error("Failed to start conversation. Please try again.");
@@ -1334,6 +1338,96 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
       </div>
     );
   }
+
+  const isOwner = propCurrentUser && profileUser && propCurrentUser.email === profileUser.email;
+
+  const displayedProjects = userProjects?.slice(0, displayedProjectsCount) || [];
+  const displayedFollowed = followedProjects?.slice(0, displayedFollowedCount) || [];
+
+  const loadMoreProjects = () => {
+    const newCount = Math.min(displayedProjectsCount + 3, userProjects.length);
+    setDisplayedProjectsCount(newCount);
+  };
+
+  const showLessProjects = () => {
+    setDisplayedProjectsCount(3);
+  };
+
+  const loadMoreFollowed = () => {
+    const newCount = Math.min(displayedFollowedCount + 3, followedProjects.length);
+    setDisplayedFollowedCount(newCount);
+  };
+
+  const showLessFollowed = () => {
+    setDisplayedFollowedCount(3);
+  };
+
+  const handleShareProfile = () => {
+    if (!profileUser) return;
+
+    let url;
+    if (profileUser.username) {
+      url = `${window.location.origin}${createPageUrl(`UserProfile?username=${profileUser.username}`)}`;
+    } else {
+      url = `${window.location.origin}${createPageUrl(`UserProfile?email=${profileUser.email}`)}`;
+    }
+
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success("Profile link copied!");
+    }).catch(err => {
+      toast.error("Failed to copy link.");
+      console.error('Failed to copy: ', err);
+    });
+  };
+
+  const handleOpenEditModal = (section) => {
+    if (!profileUser) return;
+    if (section === 'skills') {
+      setEditSkills([...(profileUser.skills || [])]);
+    } else if (section === 'interests') {
+      setEditInterests([...(profileUser.interests || [])]);
+    } else if (section === 'tools') {
+      setEditTools([...(profileUser.tools_technologies || [])]);
+    }
+    setEditingSection(section);
+  };
+
+  const handleCloseEditModal = () => {
+    setEditingSection(null);
+    setEditSkills([]);
+    setEditInterests([]);
+    setEditTools([]);
+  };
+
+  const calculateAverageRating = () => {
+    if (!collaboratorReviews || collaboratorReviews.length === 0) return 0;
+    const sum = collaboratorReviews.reduce((acc, r) => acc + r.overall_rating, 0);
+    return (sum / collaboratorReviews.length).toFixed(1);
+  };
+
+  const getEndorsementCount = (skill) => {
+    return skillEndorsements.filter(e => e.skill === skill).length;
+  };
+
+  const hasEndorsedSkill = (skill) => {
+    if (!propCurrentUser) return false;
+    return skillEndorsements.some(e => 
+      e.skill === skill && e.endorser_email === propCurrentUser.email
+    );
+  };
+
+  const renderStars = (rating) => {
+    return (
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map(star => (
+          <Star
+            key={star}
+            className={`w-4 h-4 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+          />
+        ))}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -2024,19 +2118,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                       <CardContent className="pt-0 space-y-4">
                         {collaboratorReviews.length > 0 ? (
                           <>
-                            {collaboratorReviews.slice(0, 3).map(review => {
-                              const renderStars = (rating) => (
-                                <div className="flex items-center gap-0.5">
-                                  {[1, 2, 3, 4, 5].map(star => (
-                                    <Star
-                                      key={star}
-                                      className={`w-4 h-4 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-                                    />
-                                  ))}
-                                </div>
-                              );
-
-                              return (
+                            {collaboratorReviews.slice(0, 3).map(review => (
                               <div key={review.id} className="border-b last:border-b-0 pb-4 last:pb-0">
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center">
@@ -2064,8 +2146,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                                   )}
                                 </div>
                               </div>
-                            );
-                            })}
+                            ))}
                             {collaboratorReviews.length > 3 && (
                               <Button variant="outline" size="sm" className="w-full">
                                 View All {collaboratorReviews.length} Reviews
@@ -2252,7 +2333,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                   </Card>
 
                   {/* NEW: Following Section */}
-                  {(followedProjects.length > 0 || isOwner) && (
+                  {(followedProjects.length > 0 || isOwner || isLoadingFollowedProjects) && (
                     <Card className="cu-card">
                       <CardHeader className="pb-3 sm:pb-4">
                         <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -2268,7 +2349,12 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="pt-0 space-y-4 sm:space-y-6">
-                        {followedProjects.length > 0 ? (
+                        {isLoadingFollowedProjects ? (
+                          <div className="text-center py-8 sm:py-12">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                            <p className="text-sm text-gray-500">Loading followed projects...</p>
+                          </div>
+                        ) : followedProjects.length > 0 ? (
                           <>
                             {displayedFollowed.map(project => {
                               const isPublicProject = project.is_visible_on_feed;
@@ -2530,11 +2616,17 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                         </div>
                       </CardHeader>
                       <CardContent className="pt-0">
-                       <div className="flex flex-wrap gap-2">
-                         {profileUser.skills.map(skill => {
-                           const endorsementCount = skillEndorsements.filter(e => e.skill === skill).length;
-                           const isEndorsed = propCurrentUser ? skillEndorsements.some(e => e.skill === skill && e.endorser_email === propCurrentUser.email) : false;
-                           const hasEndorsements = endorsementCount > 0;
+                        {isLoadingEndorsements ? (
+                            <div className="flex items-center justify-center py-4">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                                <span className="ml-3 text-sm text-gray-500">Loading skills...</span>
+                            </div>
+                        ) : (
+                            <div className="flex flex-wrap gap-2">
+                            {profileUser.skills.map(skill => {
+                                const endorsementCount = getEndorsementCount(skill);
+                                const isEndorsed = hasEndorsedSkill(skill);
+                                const hasEndorsements = endorsementCount > 0;
                                 
                                 return (
                                 <div key={skill} className="relative group">
@@ -2584,9 +2676,10 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                                     </button>
                                     )}
                                 </div>
-                            );
-                          })}
-                        </div>
+                                );
+                            })}
+                            </div>
+                        )}
 
                         {!isOwner && propCurrentUser && (profileUser.skills && profileUser.skills.length > 0) && (
                           <p className="text-xs text-gray-500 mt-3 text-center">
