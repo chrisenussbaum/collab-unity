@@ -41,7 +41,6 @@ export default function Chat({ currentUser, authIsLoading }) {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
-  const lastMessageCountRef = useRef(0);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -121,40 +120,13 @@ export default function Chat({ currentUser, authIsLoading }) {
   useEffect(() => {
     if (currentUser && !authIsLoading) {
       loadConversations();
-      
-      // Poll for new conversations every 5 seconds
-      const pollInterval = setInterval(loadConversations, 5000);
-      
-      return () => clearInterval(pollInterval);
     }
   }, [currentUser, authIsLoading]);
 
-  // Poll for new messages in the selected conversation
-  useEffect(() => {
-    if (selectedConversation && currentUser) {
-      lastMessageCountRef.current = messages.length;
-      
-      // Poll for new messages every 3 seconds
-      const messagesPollInterval = setInterval(() => {
-        loadMessagesForConversation(selectedConversation, true);
-      }, 3000);
-      
-      return () => clearInterval(messagesPollInterval);
-    }
-  }, [selectedConversation?.id, currentUser]);
-
-  // Load messages when conversation is selected
+  // Load messages when conversation is selected - LOCAL LOADING
   const handleSelectConversation = async (conversation) => {
     setSelectedConversation(conversation);
-    await loadMessagesForConversation(conversation);
-  };
-
-  const loadMessagesForConversation = async (conversation, skipLoadingState = false) => {
-    if (!conversation) return;
-    
-    if (!skipLoadingState) {
-      setIsLoadingMessages(true);
-    }
+    setIsLoadingMessages(true);
     
     try {
       const msgs = await base44.entities.Message.filter({
@@ -162,12 +134,6 @@ export default function Chat({ currentUser, authIsLoading }) {
       }, "created_date");
 
       setMessages(msgs || []);
-      
-      // Only scroll if new messages arrived
-      if (msgs.length > lastMessageCountRef.current) {
-        lastMessageCountRef.current = msgs.length;
-        setTimeout(scrollToBottom, 100);
-      }
 
       const unreadMessages = msgs.filter(msg => 
         msg.sender_email !== currentUser.email && !msg.is_read
@@ -186,17 +152,13 @@ export default function Chat({ currentUser, authIsLoading }) {
           [isParticipant1 ? 'participant_1_unread_count' : 'participant_2_unread_count']: 0
         });
 
-        await loadConversations();
+        queryClient.invalidateQueries(['conversations']);
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
-      if (!skipLoadingState) {
-        toast.error("Failed to load messages");
-      }
+      toast.error("Failed to load messages");
     } finally {
-      if (!skipLoadingState) {
-        setIsLoadingMessages(false);
-      }
+      setIsLoadingMessages(false);
     }
   };
 
