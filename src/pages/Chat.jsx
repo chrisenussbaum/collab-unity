@@ -140,23 +140,21 @@ export default function Chat({ currentUser, authIsLoading }) {
       );
 
       if (unreadMessages.length > 0) {
-        for (const msg of unreadMessages) {
-          await base44.entities.Message.update(msg.id, {
+        // Mark as read without blocking UI
+        Promise.all(unreadMessages.map(msg => 
+          base44.entities.Message.update(msg.id, {
             is_read: true,
             read_at: new Date().toISOString()
-          });
-        }
+          })
+        )).catch(err => console.error("Error marking messages as read:", err));
 
         const isParticipant1 = conversation.participant_1_email === currentUser.email;
-        await base44.entities.Conversation.update(conversation.id, {
+        base44.entities.Conversation.update(conversation.id, {
           [isParticipant1 ? 'participant_1_unread_count' : 'participant_2_unread_count']: 0
-        });
-
-        queryClient.invalidateQueries(['conversations']);
+        }).catch(err => console.error("Error updating unread count:", err));
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
-      toast.error("Failed to load messages");
     } finally {
       setIsLoadingMessages(false);
     }
@@ -196,16 +194,19 @@ export default function Chat({ currentUser, authIsLoading }) {
     if (!newMessage.trim() || !selectedConversation) return;
 
     setIsSending(true);
-    try {
-      const messageContent = newMessage.trim();
-      setNewMessage("");
+    const messageContent = newMessage.trim();
+    setNewMessage("");
 
+    try {
       const createdMessage = await base44.entities.Message.create({
         conversation_id: selectedConversation.id,
         sender_email: currentUser.email,
         content: messageContent,
         is_read: false
       });
+
+      // Optimistically add message to local state
+      setMessages(prev => [...prev, createdMessage]);
 
       const isParticipant1 = selectedConversation.participant_1_email === currentUser.email;
       const otherParticipantUnreadField = isParticipant1 
@@ -215,15 +216,15 @@ export default function Chat({ currentUser, authIsLoading }) {
         ? selectedConversation.participant_2_email
         : selectedConversation.participant_1_email;
 
-      await base44.entities.Conversation.update(selectedConversation.id, {
+      // Update conversation without awaiting
+      base44.entities.Conversation.update(selectedConversation.id, {
         last_message: messageContent.substring(0, 100),
         last_message_time: new Date().toISOString(),
         [otherParticipantUnreadField]: (selectedConversation[otherParticipantUnreadField] || 0) + 1
-      });
+      }).catch(err => console.error("Error updating conversation:", err));
 
-      // Create notification for the other user
-      const otherUserProfile = userProfiles[otherParticipantEmail];
-      await base44.entities.Notification.create({
+      // Create notification without awaiting
+      base44.entities.Notification.create({
         user_email: otherParticipantEmail,
         title: `New message from ${currentUser.full_name}`,
         message: messageContent.substring(0, 100),
@@ -236,14 +237,12 @@ export default function Chat({ currentUser, authIsLoading }) {
           sender_profile_image: currentUser.profile_image,
           message_preview: messageContent.substring(0, 100)
         }
-      });
+      }).catch(err => console.error("Error creating notification:", err));
 
-      await fetchMessages(selectedConversation.id);
-      queryClient.invalidateQueries(['conversations']);
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
-      setNewMessage(newMessage);
+      setNewMessage(messageContent);
     } finally {
       setIsSending(false);
     }
