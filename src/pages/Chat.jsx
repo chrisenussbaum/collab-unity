@@ -113,11 +113,11 @@ export default function Chat({ currentUser, authIsLoading }) {
       };
     },
     enabled: !authIsLoading && !!currentUser,
-    initialData: { conversations: [], userProfiles: {} },
-    staleTime: 10 * 1000, // 10 seconds for chat (needs to be fresh)
-    gcTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes - keep cached data fresh longer
+    gcTime: 10 * 60 * 1000, // 10 minutes cache
     refetchInterval: 5000, // Poll every 5 seconds for new messages
     refetchOnWindowFocus: true,
+    refetchOnMount: false, // Don't refetch on mount if we have cached data
   });
 
   const conversations = conversationsData?.conversations || [];
