@@ -229,12 +229,13 @@ export default function Chat({ currentUser, authIsLoading }) {
         }),
         base44.entities.Notification.create({
           user_email: otherParticipantEmail,
-          title: `New message from ${currentUser.full_name}`,
+          title: `New message from ${currentUser.full_name || currentUser.email}`,
           message: messageContent.substring(0, 100),
           type: 'direct_message',
           related_entity_id: selectedConversation.id,
           actor_email: currentUser.email,
-          actor_name: currentUser.full_name,
+          actor_name: currentUser.full_name || currentUser.email,
+          read: false,
           metadata: {
             conversation_id: selectedConversation.id,
             sender_profile_image: currentUser.profile_image,
