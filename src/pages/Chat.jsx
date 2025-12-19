@@ -113,6 +113,7 @@ export default function Chat({ currentUser, authIsLoading }) {
       };
     },
     enabled: !authIsLoading && !!currentUser,
+    initialData: { conversations: [], userProfiles: {} },
     staleTime: 10 * 1000, // 10 seconds for chat (needs to be fresh)
     gcTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 5000, // Poll every 5 seconds for new messages
