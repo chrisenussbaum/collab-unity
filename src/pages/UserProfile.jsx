@@ -1517,7 +1517,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
       }
 
       setShowSyncDialog(false);
-      navigate(createPageUrl(`Sync?conversation=${conversation.id}`));
+      navigate(createPageUrl(`Chat?conversation=${conversation.id}`));
     } catch (error) {
       console.error("Error starting conversation:", error);
       toast.error("Failed to start conversation. Please try again.");

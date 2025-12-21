@@ -1,57 +1,59 @@
+import AboutUs from './pages/AboutUs';
+import AdminVerificationPanel from './pages/AdminVerificationPanel';
+import Advertise from './pages/Advertise';
+import Chat from './pages/Chat';
+import Contact from './pages/Contact';
+import CreateAd from './pages/CreateAd';
 import CreateProject from './pages/CreateProject';
+import Discover from './pages/Discover';
+import EditProfile from './pages/EditProfile';
+import EditProject from './pages/EditProject';
+import FeatureRequest from './pages/FeatureRequest';
+import Feed from './pages/Feed';
+import Home from './pages/Home';
+import JoinProjects from './pages/JoinProjects';
 import MyProjects from './pages/MyProjects';
 import Notifications from './pages/Notifications';
-import ProjectDetail from './pages/ProjectDetail';
-import EditProject from './pages/EditProject';
-import UserProfile from './pages/UserProfile';
-import EditProfile from './pages/EditProfile';
-import Feed from './pages/Feed';
-import Discover from './pages/Discover';
-import Advertise from './pages/Advertise';
-import CreateAd from './pages/CreateAd';
-import AdminVerificationPanel from './pages/AdminVerificationPanel';
 import Onboarding from './pages/Onboarding';
-import UserProjects from './pages/UserProjects';
-import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
-import JoinProjects from './pages/JoinProjects';
-import Welcome from './pages/Welcome';
-import Contact from './pages/Contact';
-import SupportCU from './pages/SupportCU';
+import ProjectDetail from './pages/ProjectDetail';
 import ReportBug from './pages/ReportBug';
-import FeatureRequest from './pages/FeatureRequest';
+import SupportCU from './pages/SupportCU';
+import TermsOfService from './pages/TermsOfService';
 import Testimonials from './pages/Testimonials';
-import AboutUs from './pages/AboutUs';
-import Chat from './pages/Chat';
+import UserProfile from './pages/UserProfile';
+import UserProjects from './pages/UserProjects';
+import Welcome from './pages/Welcome';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AboutUs": AboutUs,
+    "AdminVerificationPanel": AdminVerificationPanel,
+    "Advertise": Advertise,
+    "Chat": Chat,
+    "Contact": Contact,
+    "CreateAd": CreateAd,
     "CreateProject": CreateProject,
+    "Discover": Discover,
+    "EditProfile": EditProfile,
+    "EditProject": EditProject,
+    "FeatureRequest": FeatureRequest,
+    "Feed": Feed,
+    "Home": Home,
+    "JoinProjects": JoinProjects,
     "MyProjects": MyProjects,
     "Notifications": Notifications,
-    "ProjectDetail": ProjectDetail,
-    "EditProject": EditProject,
-    "UserProfile": UserProfile,
-    "EditProfile": EditProfile,
-    "Feed": Feed,
-    "Discover": Discover,
-    "Advertise": Advertise,
-    "CreateAd": CreateAd,
-    "AdminVerificationPanel": AdminVerificationPanel,
     "Onboarding": Onboarding,
-    "UserProjects": UserProjects,
-    "TermsOfService": TermsOfService,
     "PrivacyPolicy": PrivacyPolicy,
-    "JoinProjects": JoinProjects,
-    "Welcome": Welcome,
-    "Contact": Contact,
-    "SupportCU": SupportCU,
+    "ProjectDetail": ProjectDetail,
     "ReportBug": ReportBug,
-    "FeatureRequest": FeatureRequest,
+    "SupportCU": SupportCU,
+    "TermsOfService": TermsOfService,
     "Testimonials": Testimonials,
-    "AboutUs": AboutUs,
-    "Chat": Chat,
+    "UserProfile": UserProfile,
+    "UserProjects": UserProjects,
+    "Welcome": Welcome,
 }
 
 export const pagesConfig = {
