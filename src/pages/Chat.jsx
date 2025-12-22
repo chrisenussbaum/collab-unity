@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, Send, Search, Plus, Users, Trash2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { MessageCircle, Send, Search, Plus, Users, Trash2, Smile, MoreVertical, Settings } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -17,11 +17,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import { getAllPublicUserProfiles } from "@/functions/getAllPublicUserProfiles";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
+import MessageBubble from "@/components/chat/MessageBubble";
+import MediaAttachmentButton from "@/components/chat/MediaAttachmentButton";
+import NewGroupChatDialog from "@/components/chat/NewGroupChatDialog";
+import TypingIndicator from "@/components/chat/TypingIndicator";
+import EmojiPicker from "emoji-picker-react";
 
 export default function Chat({ currentUser, authIsLoading }) {
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -30,6 +41,7 @@ export default function Chat({ currentUser, authIsLoading }) {
   const [isSending, setIsSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
+  const [showNewGroupDialog, setShowNewGroupDialog] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState(null);
@@ -38,8 +50,13 @@ export default function Chat({ currentUser, authIsLoading }) {
   const [conversationToDelete, setConversationToDelete] = useState(null);
   const [showDeleteConversationDialog, setShowDeleteConversationDialog] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingUsers, setTypingUsers] = useState([]);
   const messagesEndRef = useRef(null);
-  const pollIntervalRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const emojiPickerRef = useRef(null);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,22 +70,69 @@ export default function Chat({ currentUser, authIsLoading }) {
     scrollToBottom();
   }, [messages]);
 
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Poll for typing indicators
+  useEffect(() => {
+    if (!selectedConversation || !currentUser) return;
+
+    const pollTyping = async () => {
+      try {
+        const cutoffTime = new Date(Date.now() - 5000).toISOString();
+        const indicators = await base44.entities.TypingIndicator.filter({
+          conversation_id: selectedConversation.id,
+          last_typing_at: { $gte: cutoffTime }
+        });
+
+        const typingUserNames = indicators
+          .filter(ind => ind.user_email !== currentUser.email)
+          .map(ind => ind.user_name);
+
+        setTypingUsers(typingUserNames);
+      } catch (error) {
+        console.error("Error fetching typing indicators:", error);
+      }
+    };
+
+    const interval = setInterval(pollTyping, 2000);
+    return () => clearInterval(interval);
+  }, [selectedConversation, currentUser]);
+
   // Use React Query for conversations with real-time polling
   const { data: conversationsData, isLoading } = useQuery({
     queryKey: ['conversations', currentUser?.email],
     queryFn: async () => {
       if (!currentUser) return { conversations: [], userProfiles: {} };
 
+      // Fetch direct chats
       const [conv1, conv2] = await Promise.all([
         base44.entities.Conversation.filter({
+          conversation_type: "direct",
           participant_1_email: currentUser.email
         }, "-last_message_time"),
         base44.entities.Conversation.filter({
+          conversation_type: "direct",
           participant_2_email: currentUser.email
         }, "-last_message_time")
       ]);
 
-      const allConversations = [...conv1, ...conv2];
+      // Fetch group chats
+      const groupChats = await base44.entities.Conversation.filter({
+        conversation_type: "group",
+        participants: { $in: [currentUser.email] }
+      }, "-last_message_time");
+
+      const allConversations = [...conv1, ...conv2, ...groupChats];
       const uniqueConversations = allConversations.reduce((acc, current) => {
         if (!acc.find(item => item.id === current.id)) {
           acc.push(current);
@@ -81,16 +145,24 @@ export default function Chat({ currentUser, authIsLoading }) {
       );
 
       // Fetch user profiles for all conversation participants
-      const otherEmails = uniqueConversations.map(conv => 
-        conv.participant_1_email === currentUser.email 
-          ? conv.participant_2_email 
-          : conv.participant_1_email
-      );
+      const participantEmails = new Set();
+      
+      uniqueConversations.forEach(conv => {
+        if (conv.conversation_type === 'group' && conv.participants) {
+          conv.participants.forEach(email => participantEmails.add(email));
+        } else {
+          const otherEmail = conv.participant_1_email === currentUser.email 
+            ? conv.participant_2_email 
+            : conv.participant_1_email;
+          if (otherEmail) participantEmails.add(otherEmail);
+        }
+      });
       
       let profilesMap = {};
-      if (otherEmails.length > 0) {
+      const emailsArray = Array.from(participantEmails);
+      if (emailsArray.length > 0) {
         try {
-          const { data: profiles } = await getPublicUserProfiles({ emails: otherEmails });
+          const { data: profiles } = await getPublicUserProfiles({ emails: emailsArray });
           (profiles || []).forEach(profile => {
             profilesMap[profile.email] = profile;
           });
@@ -99,12 +171,15 @@ export default function Chat({ currentUser, authIsLoading }) {
         }
       }
 
-      // Filter out conversations where the other user no longer exists
+      // Filter out invalid conversations
       const validConversations = uniqueConversations.filter(conv => {
+        if (conv.conversation_type === 'group') {
+          return conv.participants && conv.participants.length >= 2;
+        }
         const otherEmail = conv.participant_1_email === currentUser.email 
           ? conv.participant_2_email 
           : conv.participant_1_email;
-        return profilesMap[otherEmail]; // Only keep conversations where we found the user profile
+        return profilesMap[otherEmail];
       });
 
       return { 
@@ -113,17 +188,17 @@ export default function Chat({ currentUser, authIsLoading }) {
       };
     },
     enabled: !authIsLoading && !!currentUser,
-    staleTime: 2 * 60 * 1000, // 2 minutes - keep cached data fresh longer
-    gcTime: 10 * 60 * 1000, // 10 minutes cache
-    refetchInterval: 5000, // Poll every 5 seconds for new messages
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchInterval: 5000,
     refetchOnWindowFocus: true,
-    refetchOnMount: false, // Don't refetch on mount if we have cached data
+    refetchOnMount: false,
   });
 
   const conversations = conversationsData?.conversations || [];
   const userProfiles = conversationsData?.userProfiles || {};
 
-  // Load messages when conversation is selected - LOCAL LOADING
+  // Load messages when conversation is selected
   const handleSelectConversation = async (conversation) => {
     setSelectedConversation(conversation);
     setIsLoadingMessages(true);
@@ -135,23 +210,33 @@ export default function Chat({ currentUser, authIsLoading }) {
 
       setMessages(msgs || []);
 
+      // Mark messages as read
       const unreadMessages = msgs.filter(msg => 
-        msg.sender_email !== currentUser.email && !msg.is_read
+        msg.sender_email !== currentUser.email && 
+        (!msg.is_read || (msg.read_by && !msg.read_by.includes(currentUser.email)))
       );
 
       if (unreadMessages.length > 0) {
-        // Mark as read without blocking UI
-        Promise.all(unreadMessages.map(msg => 
-          base44.entities.Message.update(msg.id, {
-            is_read: true,
-            read_at: new Date().toISOString()
-          })
-        )).catch(err => console.error("Error marking messages as read:", err));
+        Promise.all(unreadMessages.map(msg => {
+          const updateData = conversation.conversation_type === 'group'
+            ? { read_by: [...(msg.read_by || []), currentUser.email] }
+            : { is_read: true, read_at: new Date().toISOString() };
+          
+          return base44.entities.Message.update(msg.id, updateData);
+        })).catch(err => console.error("Error marking messages as read:", err));
 
-        const isParticipant1 = conversation.participant_1_email === currentUser.email;
-        base44.entities.Conversation.update(conversation.id, {
-          [isParticipant1 ? 'participant_1_unread_count' : 'participant_2_unread_count']: 0
-        }).catch(err => console.error("Error updating unread count:", err));
+        // Update conversation unread count
+        if (conversation.conversation_type === 'group') {
+          const unreadCounts = { ...(conversation.unread_counts || {}) };
+          unreadCounts[currentUser.email] = 0;
+          base44.entities.Conversation.update(conversation.id, { unread_counts: unreadCounts })
+            .catch(err => console.error("Error updating unread count:", err));
+        } else {
+          const isParticipant1 = conversation.participant_1_email === currentUser.email;
+          base44.entities.Conversation.update(conversation.id, {
+            [isParticipant1 ? 'participant_1_unread_count' : 'participant_2_unread_count']: 0
+          }).catch(err => console.error("Error updating unread count:", err));
+        }
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -176,84 +261,206 @@ export default function Chat({ currentUser, authIsLoading }) {
     }
   }, [currentUser, conversations, location.search, isLoading]);
 
-  // Fetch messages for the selected conversation
-  const fetchMessages = async (conversationId) => {
+  // Handle typing indicator
+  const handleTyping = async () => {
+    if (!selectedConversation || !currentUser || isTyping) return;
+
+    setIsTyping(true);
+
     try {
-      const msgs = await base44.entities.Message.filter({
-        conversation_id: conversationId
-      }, "created_date");
-      setMessages(msgs || []);
+      // Find or create typing indicator
+      const existing = await base44.entities.TypingIndicator.filter({
+        conversation_id: selectedConversation.id,
+        user_email: currentUser.email
+      });
+
+      if (existing.length > 0) {
+        await base44.entities.TypingIndicator.update(existing[0].id, {
+          last_typing_at: new Date().toISOString()
+        });
+      } else {
+        await base44.entities.TypingIndicator.create({
+          conversation_id: selectedConversation.id,
+          user_email: currentUser.email,
+          user_name: currentUser.full_name || currentUser.email,
+          last_typing_at: new Date().toISOString()
+        });
+      }
     } catch (error) {
-      console.error("Error fetching messages:", error);
+      console.error("Error updating typing indicator:", error);
+    }
+
+    // Clear typing after 3 seconds
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+    }, 3000);
+  };
+
+  const handleMessageChange = (e) => {
+    setNewMessage(e.target.value);
+    handleTyping();
+  };
+
+  const handleMediaSelect = async (file, mediaType) => {
+    setIsUploadingMedia(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      
+      // Send message with media
+      await sendMessage({
+        media_url: file_url,
+        media_type: mediaType,
+        media_name: file.name,
+        media_size: file.size
+      });
+    } catch (error) {
+      console.error("Error uploading media:", error);
+      toast.error("Failed to upload media");
+    } finally {
+      setIsUploadingMedia(false);
     }
   };
 
+  const handleEmojiClick = (emojiData) => {
+    setNewMessage(prev => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
+  };
+
   // Handle sending a message
+  const sendMessage = async (mediaData = null) => {
+    if ((!newMessage.trim() && !mediaData) || !selectedConversation || isSending) return;
+
+    setIsSending(true);
+    const messageContent = newMessage.trim();
+    if (!mediaData) setNewMessage("");
+
+    try {
+      const messageData = {
+        conversation_id: selectedConversation.id,
+        sender_email: currentUser.email,
+        content: messageContent,
+        is_read: false,
+        ...(mediaData && {
+          media_url: mediaData.media_url,
+          media_type: mediaData.media_type,
+          media_name: mediaData.media_name,
+          media_size: mediaData.media_size
+        }),
+        ...(selectedConversation.conversation_type === 'group' && {
+          read_by: []
+        })
+      };
+
+      const createdMessage = await base44.entities.Message.create(messageData);
+
+      // Optimistically add message to local state
+      setMessages(prev => [...prev, createdMessage]);
+
+      const isGroup = selectedConversation.conversation_type === 'group';
+
+      // Update conversation
+      const lastMessagePreview = messageContent || 
+        (mediaData?.media_type === 'image' ? '📷 Image' : 
+         mediaData?.media_type === 'video' ? '🎥 Video' : 
+         mediaData?.media_type === 'file' ? `📎 ${mediaData.media_name}` : '');
+
+      const conversationUpdate = {
+        last_message: lastMessagePreview.substring(0, 100),
+        last_message_time: new Date().toISOString()
+      };
+
+      if (isGroup) {
+        const unreadCounts = { ...(selectedConversation.unread_counts || {}) };
+        selectedConversation.participants?.forEach(email => {
+          if (email !== currentUser.email) {
+            unreadCounts[email] = (unreadCounts[email] || 0) + 1;
+          }
+        });
+        conversationUpdate.unread_counts = unreadCounts;
+
+        // Create notifications for all group members
+        const notificationPromises = selectedConversation.participants
+          ?.filter(email => email !== currentUser.email)
+          .map(email => 
+            base44.entities.Notification.create({
+              user_email: email,
+              title: `${selectedConversation.group_name || 'Group Chat'}`,
+              message: `${currentUser.full_name || currentUser.email}: ${lastMessagePreview}`,
+              type: 'direct_message',
+              related_entity_id: selectedConversation.id,
+              actor_email: currentUser.email,
+              actor_name: currentUser.full_name || currentUser.email,
+              read: false,
+              metadata: {
+                conversation_id: selectedConversation.id,
+                sender_profile_image: currentUser.profile_image,
+                message_preview: lastMessagePreview,
+                is_group: true,
+                group_name: selectedConversation.group_name
+              }
+            })
+          );
+
+        Promise.all([
+          base44.entities.Conversation.update(selectedConversation.id, conversationUpdate),
+          ...(notificationPromises || [])
+        ]).then(() => {
+          queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'none' });
+        }).catch(err => console.error("Error in background updates:", err));
+
+      } else {
+        const isParticipant1 = selectedConversation.participant_1_email === currentUser.email;
+        const otherParticipantUnreadField = isParticipant1 
+          ? 'participant_2_unread_count' 
+          : 'participant_1_unread_count';
+        const otherParticipantEmail = isParticipant1
+          ? selectedConversation.participant_2_email
+          : selectedConversation.participant_1_email;
+
+        conversationUpdate[otherParticipantUnreadField] = 
+          (selectedConversation[otherParticipantUnreadField] || 0) + 1;
+
+        Promise.all([
+          base44.entities.Conversation.update(selectedConversation.id, conversationUpdate),
+          base44.entities.Notification.create({
+            user_email: otherParticipantEmail,
+            title: `New message from ${currentUser.full_name || currentUser.email}`,
+            message: lastMessagePreview,
+            type: 'direct_message',
+            related_entity_id: selectedConversation.id,
+            actor_email: currentUser.email,
+            actor_name: currentUser.full_name || currentUser.email,
+            read: false,
+            metadata: {
+              conversation_id: selectedConversation.id,
+              sender_profile_image: currentUser.profile_image,
+              message_preview: lastMessagePreview
+            }
+          })
+        ]).then(() => {
+          queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'none' });
+        }).catch(err => console.error("Error in background updates:", err));
+      }
+
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message");
+      if (!mediaData) setNewMessage(messageContent);
+      setMessages(prev => prev.slice(0, -1));
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   const handleSendMessage = async (e) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-    
-    if (!newMessage.trim() || !selectedConversation || isSending) return;
-
-    setIsSending(true);
-    const messageContent = newMessage.trim();
-    setNewMessage("");
-
-    try {
-      const createdMessage = await base44.entities.Message.create({
-        conversation_id: selectedConversation.id,
-        sender_email: currentUser.email,
-        content: messageContent,
-        is_read: false
-      });
-
-      // Optimistically add message to local state
-      setMessages(prev => [...prev, createdMessage]);
-
-      const isParticipant1 = selectedConversation.participant_1_email === currentUser.email;
-      const otherParticipantUnreadField = isParticipant1 
-        ? 'participant_2_unread_count' 
-        : 'participant_1_unread_count';
-      const otherParticipantEmail = isParticipant1
-        ? selectedConversation.participant_2_email
-        : selectedConversation.participant_1_email;
-
-      // Update conversation and refresh list in background
-      Promise.all([
-        base44.entities.Conversation.update(selectedConversation.id, {
-          last_message: messageContent.substring(0, 100),
-          last_message_time: new Date().toISOString(),
-          [otherParticipantUnreadField]: (selectedConversation[otherParticipantUnreadField] || 0) + 1
-        }),
-        base44.entities.Notification.create({
-          user_email: otherParticipantEmail,
-          title: `New message from ${currentUser.full_name || currentUser.email}`,
-          message: messageContent.substring(0, 100),
-          type: 'direct_message',
-          related_entity_id: selectedConversation.id,
-          actor_email: currentUser.email,
-          actor_name: currentUser.full_name || currentUser.email,
-          read: false,
-          metadata: {
-            conversation_id: selectedConversation.id,
-            sender_profile_image: currentUser.profile_image,
-            message_preview: messageContent.substring(0, 100)
-          }
-        })
-      ]).then(() => {
-        queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'none' });
-      }).catch(err => console.error("Error in background updates:", err));
-
-    } catch (error) {
-      console.error("Error sending message:", error);
-      toast.error("Failed to send message");
-      setNewMessage(messageContent);
-      setMessages(prev => prev.slice(0, -1));
-    } finally {
-      setIsSending(false);
-    }
+    await sendMessage();
   };
 
   // Handle message deletion
@@ -264,15 +471,13 @@ export default function Chat({ currentUser, authIsLoading }) {
     try {
       await base44.entities.Message.delete(messageToDelete.id);
       
-      // Update local state
       setMessages(prev => prev.filter(m => m.id !== messageToDelete.id));
       
-      // Update conversation last message if this was the last message
       const remainingMessages = messages.filter(m => m.id !== messageToDelete.id);
       if (remainingMessages.length > 0) {
         const lastMsg = remainingMessages[remainingMessages.length - 1];
         await base44.entities.Conversation.update(selectedConversation.id, {
-          last_message: lastMsg.content.substring(0, 100),
+          last_message: lastMsg.content?.substring(0, 100) || '',
           last_message_time: lastMsg.created_date
         });
       } else {
@@ -293,13 +498,12 @@ export default function Chat({ currentUser, authIsLoading }) {
     }
   };
 
-  // Handle conversation deletion (only for conversations with no messages)
+  // Handle conversation deletion
   const handleDeleteConversation = async () => {
     if (!conversationToDelete) return;
 
     setIsDeleting(true);
     try {
-      // Check if conversation has messages
       const msgs = await base44.entities.Message.filter({
         conversation_id: conversationToDelete.id
       });
@@ -312,10 +516,8 @@ export default function Chat({ currentUser, authIsLoading }) {
         return;
       }
 
-      // Delete the conversation
       await base44.entities.Conversation.delete(conversationToDelete.id);
       
-      // Clear selected conversation if it was the one being deleted
       if (selectedConversation?.id === conversationToDelete.id) {
         setSelectedConversation(null);
         setMessages([]);
@@ -332,15 +534,17 @@ export default function Chat({ currentUser, authIsLoading }) {
     }
   };
 
-  // Start a new conversation
+  // Start a new direct conversation
   const handleStartConversation = async (otherUser) => {
     try {
       const existingConv1 = await base44.entities.Conversation.filter({
+        conversation_type: "direct",
         participant_1_email: currentUser.email,
         participant_2_email: otherUser.email
       });
 
       const existingConv2 = await base44.entities.Conversation.filter({
+        conversation_type: "direct",
         participant_1_email: otherUser.email,
         participant_2_email: currentUser.email
       });
@@ -352,6 +556,7 @@ export default function Chat({ currentUser, authIsLoading }) {
         conversation = existingConv2[0];
       } else {
         conversation = await base44.entities.Conversation.create({
+          conversation_type: "direct",
           participant_1_email: currentUser.email,
           participant_2_email: otherUser.email,
           last_message: "",
@@ -367,6 +572,56 @@ export default function Chat({ currentUser, authIsLoading }) {
     } catch (error) {
       console.error("Error starting conversation:", error);
       toast.error("Failed to start conversation");
+    }
+  };
+
+  // Create group chat
+  const handleCreateGroup = async ({ groupName, groupImage, participants }) => {
+    try {
+      const participantEmails = [currentUser.email, ...participants.map(u => u.email)];
+      const unreadCounts = {};
+      participantEmails.forEach(email => {
+        unreadCounts[email] = 0;
+      });
+
+      const conversation = await base44.entities.Conversation.create({
+        conversation_type: "group",
+        group_name: groupName,
+        group_image: groupImage || "",
+        participants: participantEmails,
+        admin_emails: [currentUser.email],
+        last_message: "",
+        last_message_time: new Date().toISOString(),
+        unread_counts: unreadCounts
+      });
+
+      // Send notifications to all group members
+      await Promise.all(
+        participants.map(user =>
+          base44.entities.Notification.create({
+            user_email: user.email,
+            title: "Added to Group Chat",
+            message: `${currentUser.full_name || currentUser.email} added you to "${groupName}"`,
+            type: 'direct_message',
+            related_entity_id: conversation.id,
+            actor_email: currentUser.email,
+            actor_name: currentUser.full_name || currentUser.email,
+            read: false,
+            metadata: {
+              conversation_id: conversation.id,
+              is_group: true,
+              group_name: groupName
+            }
+          })
+        )
+      );
+
+      setShowNewGroupDialog(false);
+      queryClient.invalidateQueries(['conversations']);
+      handleSelectConversation(conversation);
+    } catch (error) {
+      console.error("Error creating group:", error);
+      toast.error("Failed to create group");
     }
   };
 
@@ -386,33 +641,69 @@ export default function Chat({ currentUser, authIsLoading }) {
     }
   };
 
-  // Get other participant info
-  const getOtherParticipant = (conversation) => {
+  const handleOpenNewGroupDialog = async () => {
+    setShowNewGroupDialog(true);
+    if (allUsers.length === 0) {
+      setIsLoadingUsers(true);
+      try {
+        const { data: users } = await getAllPublicUserProfiles();
+        const filteredUsers = users.filter(u => u.email !== currentUser.email);
+        setAllUsers(filteredUsers);
+      } catch (error) {
+        console.error("Error loading users:", error);
+        toast.error("Failed to load users");
+      } finally {
+        setIsLoadingUsers(false);
+      }
+    }
+  };
+
+  // Get conversation display info
+  const getConversationInfo = (conversation) => {
+    if (conversation.conversation_type === 'group') {
+      return {
+        name: conversation.group_name || 'Group Chat',
+        image: conversation.group_image,
+        isGroup: true,
+        participantCount: conversation.participants?.length || 0
+      };
+    }
+
     const otherEmail = conversation.participant_1_email === currentUser.email
       ? conversation.participant_2_email
       : conversation.participant_1_email;
     
-    return userProfiles[otherEmail] || {
+    const otherUser = userProfiles[otherEmail] || {
       email: otherEmail,
       full_name: otherEmail.split('@')[0],
       profile_image: null
+    };
+
+    return {
+      name: otherUser.full_name,
+      image: otherUser.profile_image,
+      username: otherUser.username || otherEmail.split('@')[0],
+      isGroup: false
     };
   };
 
   // Get unread count for current user
   const getUnreadCount = (conversation) => {
+    if (conversation.conversation_type === 'group') {
+      return conversation.unread_counts?.[currentUser.email] || 0;
+    }
     const isParticipant1 = conversation.participant_1_email === currentUser.email;
     return isParticipant1 
       ? conversation.participant_1_unread_count 
       : conversation.participant_2_unread_count;
   };
 
-  // Filter users for search
-  const filteredUsers = allUsers.filter(user =>
-    user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.username?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter conversations by search
+  const filteredConversations = conversations.filter(conv => {
+    if (!searchQuery.trim()) return true;
+    const info = getConversationInfo(conv);
+    return info.name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   if (authIsLoading || isLoading) {
     return (
@@ -440,54 +731,57 @@ export default function Chat({ currentUser, authIsLoading }) {
     );
   }
 
+  const selectedInfo = selectedConversation ? getConversationInfo(selectedConversation) : null;
+
   return (
     <>
       <div className="cu-container py-6 sm:py-8">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
-                <MessageCircle className="w-8 h-8 mr-3 text-purple-600" />
-                Chat
-              </h1>
-              <p className="text-gray-600 mt-1">Chat with collaborators and community members</p>
-            </div>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+              <MessageCircle className="w-8 h-8 mr-3 text-purple-600" />
+              Chat
+            </h1>
+            <p className="text-gray-600 mt-1">Messages and group conversations</p>
+          </div>
+          <div className="flex items-center space-x-2">
             <Button className="cu-button" onClick={handleOpenNewChatDialog}>
               <Plus className="w-4 h-4 mr-2" />
-              New Chat
+              <span className="hidden sm:inline">New Chat</span>
+            </Button>
+            <Button variant="outline" onClick={handleOpenNewGroupDialog}>
+              <Users className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">New Group</span>
             </Button>
           </div>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Conversations List */}
           <Card className="cu-card lg:col-span-1">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Messages</CardTitle>
-              <div className="relative mt-2">
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   placeholder="Search conversations..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9"
                 />
               </div>
             </CardHeader>
             <CardContent className="p-0">
               <ScrollArea className="h-[600px]">
-                {conversations.length === 0 ? (
+                {filteredConversations.length === 0 ? (
                   <div className="text-center py-12 px-4">
                     <Users className="w-12 h-12 mx-auto text-gray-300 mb-3" />
                     <p className="text-gray-500 text-sm">No conversations yet</p>
-                    <p className="text-gray-400 text-xs mt-1">Start chatting with your collaborators!</p>
+                    <p className="text-gray-400 text-xs mt-1">Start chatting!</p>
                   </div>
                 ) : (
                   <div className="divide-y">
-                    {conversations.map((conv) => {
-                      const otherUser = getOtherParticipant(conv);
+                    {filteredConversations.map((conv) => {
+                      const info = getConversationInfo(conv);
                       const unreadCount = getUnreadCount(conv);
                       const hasNoMessages = !conv.last_message || conv.last_message.trim() === "";
                       
@@ -502,16 +796,23 @@ export default function Chat({ currentUser, authIsLoading }) {
                             onClick={() => handleSelectConversation(conv)}
                             className="flex-1 flex items-start space-x-3 text-left"
                           >
-                            <Avatar className="w-10 h-10">
-                              <AvatarImage src={otherUser.profile_image} />
-                              <AvatarFallback className="bg-purple-100 text-purple-600">
-                                {otherUser.full_name?.[0] || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
+                            <div className="relative">
+                              <Avatar className="w-10 h-10">
+                                <AvatarImage src={info.image} />
+                                <AvatarFallback className="bg-purple-100 text-purple-600">
+                                  {info.isGroup ? <Users className="w-5 h-5" /> : info.name?.[0] || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              {info.isGroup && (
+                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center border-2 border-white">
+                                  <Users className="w-3 h-3 text-white" />
+                                </div>
+                              )}
+                            </div>
                             <div className="flex-1 min-w-0 py-1 pr-2">
                               <div className="flex items-center justify-between mb-1">
                                 <p className="font-medium text-gray-900 truncate">
-                                  {otherUser.full_name}
+                                  {info.name}
                                 </p>
                                 {unreadCount > 0 && (
                                   <Badge className="bg-purple-600 text-white ml-2">
@@ -519,6 +820,11 @@ export default function Chat({ currentUser, authIsLoading }) {
                                   </Badge>
                                 )}
                               </div>
+                              {info.isGroup && (
+                                <p className="text-xs text-gray-500 mb-1">
+                                  {info.participantCount} members
+                                </p>
+                              )}
                               <p className="text-sm text-gray-600 line-clamp-1">
                                 {conv.last_message || "Start a conversation"}
                               </p>
@@ -559,27 +865,50 @@ export default function Chat({ currentUser, authIsLoading }) {
                 <div className="text-center">
                   <MessageCircle className="w-16 h-16 mx-auto text-gray-300 mb-4" />
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Select a conversation</h3>
-                  <p className="text-gray-600">Choose a conversation from the left to start chatting</p>
+                  <p className="text-gray-600">Choose a conversation to start chatting</p>
                 </div>
               </div>
             ) : (
               <>
                 <CardHeader className="border-b">
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={getOtherParticipant(selectedConversation).profile_image} />
-                      <AvatarFallback className="bg-purple-100 text-purple-600">
-                        {getOtherParticipant(selectedConversation).full_name?.[0] || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {getOtherParticipant(selectedConversation).full_name}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        @{getOtherParticipant(selectedConversation).username || getOtherParticipant(selectedConversation).email.split('@')[0]}
-                      </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="w-10 h-10">
+                        <AvatarImage src={selectedInfo.image} />
+                        <AvatarFallback className="bg-purple-100 text-purple-600">
+                          {selectedInfo.isGroup ? <Users className="w-5 h-5" /> : selectedInfo.name?.[0] || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">
+                          {selectedInfo.name}
+                        </h3>
+                        {selectedInfo.isGroup ? (
+                          <p className="text-sm text-gray-500">
+                            {selectedInfo.participantCount} members
+                          </p>
+                        ) : (
+                          <p className="text-sm text-gray-500">
+                            @{selectedInfo.username}
+                          </p>
+                        )}
+                      </div>
                     </div>
+                    {selectedInfo.isGroup && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="w-5 h-5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Settings className="w-4 h-4 mr-2" />
+                            Group Settings
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                 </CardHeader>
 
@@ -605,70 +934,81 @@ export default function Chat({ currentUser, authIsLoading }) {
                             profile_image: null
                           };
 
+                          // Check if should show avatar (first message from user or different sender than previous)
+                          const showAvatar = index === 0 || 
+                            messages[index - 1].sender_email !== message.sender_email;
+
+                          const isRead = selectedInfo.isGroup 
+                            ? message.read_by && message.read_by.length > 0
+                            : message.is_read;
+
                           return (
-                            <motion.div
+                            <MessageBubble
                               key={message.id}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4 group`}
-                            >
-                              <div className={`flex items-end space-x-2 max-w-[70%] ${isOwn ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                                {!isOwn && (
-                                  <Avatar className="w-8 h-8">
-                                    <AvatarImage src={senderProfile.profile_image} />
-                                    <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
-                                      {senderProfile.full_name?.[0] || 'U'}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                )}
-                                <div className="relative">
-                                  <div className={`rounded-2xl px-4 py-2 ${
-                                    isOwn 
-                                      ? 'bg-purple-600 text-white' 
-                                      : 'bg-gray-100 text-gray-900'
-                                  }`}>
-                                    <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                                  </div>
-                                  <div className="flex items-center justify-between mt-1 px-2">
-                                    <p className="text-xs text-gray-400">
-                                      {formatDistanceToNow(new Date(message.created_date), { addSuffix: true })}
-                                    </p>
-                                    {isOwn && (
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => {
-                                          setMessageToDelete(message);
-                                          setShowDeleteDialog(true);
-                                        }}
-                                        className="h-6 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                      >
-                                        <Trash2 className="w-3 h-3 text-red-500" />
-                                      </Button>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </motion.div>
+                              message={message}
+                              isOwn={isOwn}
+                              senderProfile={senderProfile}
+                              onDelete={(msg) => {
+                                setMessageToDelete(msg);
+                                setShowDeleteDialog(true);
+                              }}
+                              showAvatar={showAvatar}
+                              isGroupChat={selectedInfo.isGroup}
+                              isRead={isRead}
+                            />
                           );
                         })}
                       </AnimatePresence>
                     )}
+                    
+                    {/* Typing Indicator */}
+                    <TypingIndicator users={typingUsers} />
+                    
                     <div ref={messagesEndRef} />
                   </ScrollArea>
 
                   <div className="border-t p-4">
-                    <form onSubmit={handleSendMessage} className="flex space-x-2">
+                    <form onSubmit={handleSendMessage} className="flex items-end space-x-2">
+                      <div className="flex items-center space-x-1">
+                        <MediaAttachmentButton 
+                          onMediaSelect={handleMediaSelect}
+                          isUploading={isUploadingMedia}
+                          disabled={isSending}
+                        />
+                        
+                        <div className="relative" ref={emojiPickerRef}>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                            disabled={isSending}
+                            className="text-gray-500 hover:text-purple-600"
+                          >
+                            <Smile className="w-5 h-5" />
+                          </Button>
+                          {showEmojiPicker && (
+                            <div className="absolute bottom-12 left-0 z-50">
+                              <EmojiPicker
+                                onEmojiClick={handleEmojiClick}
+                                width={320}
+                                height={400}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                       <Input
                         placeholder="Type a message..."
                         value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        disabled={isSending}
+                        onChange={handleMessageChange}
+                        disabled={isSending || isUploadingMedia}
                         className="flex-1"
                       />
                       <Button 
                         type="submit" 
-                        disabled={!newMessage.trim() || isSending}
+                        disabled={(!newMessage.trim() && !isUploadingMedia) || isSending}
                         className="cu-button"
                       >
                         <Send className="w-4 h-4" />
@@ -708,7 +1048,7 @@ export default function Chat({ currentUser, authIsLoading }) {
         isLoading={isDeleting}
       />
 
-      {/* New Chat Dialog */}
+      {/* New Direct Chat Dialog */}
       <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -732,39 +1072,59 @@ export default function Chat({ currentUser, authIsLoading }) {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
                   <p className="text-sm text-gray-500">Loading users...</p>
                 </div>
-              ) : filteredUsers.length === 0 ? (
+              ) : allUsers.filter(user =>
+                  user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  user.username?.toLowerCase().includes(searchQuery.toLowerCase())
+                ).length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="w-12 h-12 mx-auto text-gray-300 mb-2" />
                   <p className="text-sm text-gray-500">No collaborators found</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {filteredUsers.map((user) => (
-                    <button
-                      key={user.email}
-                      onClick={() => handleStartConversation(user)}
-                      className="w-full p-3 hover:bg-gray-50 rounded-lg transition-colors flex items-center space-x-3 text-left"
-                    >
-                      <Avatar className="w-10 h-10">
-                        <AvatarImage src={user.profile_image} />
-                        <AvatarFallback className="bg-purple-100 text-purple-600">
-                          {user.full_name?.[0] || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{user.full_name}</p>
-                        <p className="text-sm text-gray-500 truncate">
-                          @{user.username || user.email.split('@')[0]}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
+                  {allUsers
+                    .filter(user =>
+                      user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      user.username?.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                    .map((user) => (
+                      <button
+                        key={user.email}
+                        onClick={() => handleStartConversation(user)}
+                        className="w-full p-3 hover:bg-gray-50 rounded-lg transition-colors flex items-center space-x-3 text-left"
+                      >
+                        <Avatar className="w-10 h-10">
+                          <AvatarImage src={user.profile_image} />
+                          <AvatarFallback className="bg-purple-100 text-purple-600">
+                            {user.full_name?.[0] || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 truncate">{user.full_name}</p>
+                          <p className="text-sm text-gray-500 truncate">
+                            @{user.username || user.email.split('@')[0]}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
                 </div>
               )}
             </ScrollArea>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* New Group Chat Dialog */}
+      <NewGroupChatDialog
+        isOpen={showNewGroupDialog}
+        onClose={() => setShowNewGroupDialog(false)}
+        allUsers={allUsers}
+        currentUser={currentUser}
+        onCreateGroup={handleCreateGroup}
+        isLoading={isLoadingUsers}
+      />
     </>
   );
 }
