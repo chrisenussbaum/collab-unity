@@ -755,9 +755,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
   // Funding Dialog State
   const [showFundingDialog, setShowFundingDialog] = useState(false);
 
-  // Collaborator profiles state
-  const [collaboratorProfiles, setCollaboratorProfiles] = useState([]);
-
   const isOwnProject = currentUser && project.created_by === currentUser.email;
 
   const statusConfig = {
@@ -796,28 +793,15 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
     }
   }, [hasLinks, hasHighlights, hasIDEs]);
 
-  // Fetch collaborator profiles
-  useEffect(() => {
-    const fetchCollaboratorProfiles = async () => {
-      if (!project.collaborator_emails || project.collaborator_emails.length === 0) {
-        setCollaboratorProfiles([]); // Ensure it's reset if no collaborators
-        return;
-      }
-
-      try {
-        // Get the first 3 collaborator emails
-        const emailsToFetch = project.collaborator_emails.slice(0, 3);
-        const { data: profiles } = await withRetry(() => 
-          getPublicUserProfiles({ emails: emailsToFetch })
-        );
-        setCollaboratorProfiles(profiles || []);
-      } catch (error) {
-        console.error("Error fetching collaborator profiles:", error);
-      }
-    };
-
-    fetchCollaboratorProfiles();
-  }, [project.collaborator_emails]);
+  // Get collaborator profiles from the passed map
+  const collaboratorProfiles = React.useMemo(() => {
+    if (!project.collaborator_emails || !collaboratorProfilesMap) return [];
+    
+    return project.collaborator_emails
+      .slice(0, 3)
+      .map(email => collaboratorProfilesMap[email])
+      .filter(Boolean); // Remove undefined entries
+  }, [project.collaborator_emails, collaboratorProfilesMap]);
 
   // Initialize following state
   useEffect(() => {
