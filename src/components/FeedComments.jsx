@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useImperativeHandle, forwardRef, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -670,74 +669,83 @@ const FeedComments = forwardRef(({ project, currentUser, context = "feed" }, ref
       : createPageUrl(`UserProfile?email=${comment.user_email}`);
 
     const isCommentOwner = currentUser && currentUser.email === comment.user_email;
-    const repliesExpanded = expandedReplies.has(comment.id);
-    const replyCount = comment.replies?.length || 0;
+    const isEditing = editingComment === comment.id;
+    const isReplying = replyingTo === comment.id;
+
+    const replies = comment.replies || [];
 
     return (
-      <div key={comment.id} className={`${isReply ? 'ml-12' : ''}`}>
-        <div className="flex items-start space-x-3 group">
-          <Link to={profileUrl}>
-            <Avatar className="w-9 h-9 cursor-pointer border-2 border-white shadow">
+      <div 
+        key={comment.id} 
+        className={`flex items-start space-x-2 sm:space-x-3 transition-colors duration-300 relative 
+        ${isReply ? 'ml-3 sm:ml-4 pt-3 border-l-2 border-gray-200 pl-3' : ''}
+        ${isEditing ? 'bg-purple-50 rounded-xl p-2 -mx-2 -my-1' : ''}
+        ${isReplying ? 'bg-blue-50 rounded-xl p-2 -mx-2 -my-1' : ''}
+        `}
+      >
+        <div className="flex items-start space-x-3 group flex-1">
+          <Link to={profileUrl} className="flex-shrink-0">
+            <Avatar className="w-8 h-8 sm:w-9 sm:h-9 mt-1 border-2 border-white shadow-sm">
               <AvatarImage src={comment.user_avatar || commenterProfile?.profile_image} className="object-cover" />
-              <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-sm font-medium">
+              <AvatarFallback className="text-xs sm:text-sm bg-gradient-to-br from-purple-400 to-purple-600 text-white font-medium">
                 {displayName[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </Link>
 
           <div className="flex-1 min-w-0">
-            <div className={`rounded-2xl px-4 py-3 border border-gray-100 ${
-              comment.is_pinned
-                ? 'bg-gradient-to-r from-purple-50 via-white to-purple-50 border-l-4 border-purple-500 shadow-sm'
-                : 'bg-gray-50 hover:bg-gray-100 transition-colors'
-            } ${isReply ? 'bg-gray-50/50' : ''}`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center space-x-2">
-                  <Link to={profileUrl} className="font-semibold text-sm text-gray-900 hover:text-purple-600 transition-colors">
-                    {displayName}
-                  </Link>
-                  <span className="text-xs text-gray-500">
-                    {formatDistanceToNow(new Date(comment.created_date), { addSuffix: true })}
-                  </span>
-                  {comment.is_pinned && (
-                    <span className="flex items-center gap-1 text-xs text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full font-medium">
-                      <Pin className="w-3 h-3" /> Pinned
-                    </span>
-                  )}
-                </div>
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 min-w-0">
+                <Link to={profileUrl} className="font-semibold text-sm sm:text-base text-gray-900 truncate hover:text-purple-600 transition-colors">
+                  {displayName}
+                </Link>
+                <span className="text-xs text-gray-500 flex-shrink-0">
+                  {formatDistanceToNow(new Date(comment.created_date), { addSuffix: true })}
+                </span>
+                {comment.is_pinned && (
+                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800 text-xs flex-shrink-0 border-yellow-300">
+                    <Pin className="w-3 h-3 mr-1" />
+                    Pinned
+                  </Badge>
+                )}
+              </div>
+              <div className="relative">
                 {canEditOrDelete(comment) && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" className="w-7 h-7 sm:w-8 sm:h-8 text-gray-500 hover:text-gray-900">
                         <MoreHorizontal className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" className="w-48">
                       {isCommentOwner && (
-                        <DropdownMenuItem onClick={() => { setEditingComment(comment.id); setEditingContent(comment.content); }}>
-                          <Edit className="w-3 h-3 mr-2" /> Edit
+                        <DropdownMenuItem onClick={() => { setEditingComment(comment.id); setEditingContent(comment.content); }} className="cursor-pointer">
+                          <Edit className="w-4 h-4 mr-2" />
+                          <span>Edit Comment</span>
                         </DropdownMenuItem>
                       )}
                       {canPinUnpin(comment) && !isReply && (
-                          comment.is_pinned ? (
-                              <DropdownMenuItem onClick={() => handleUnpinComment(comment.id)}>
-                                  <PinOff className="w-3 h-3 mr-2" /> Unpin
-                              </DropdownMenuItem>
-                          ) : (
-                              <DropdownMenuItem onClick={() => handlePinComment(comment.id)}>
-                                  <Pin className="w-3 h-3 mr-2" /> Pin
-                              </DropdownMenuItem>
-                          )
+                        <DropdownMenuItem
+                          onClick={() => comment.is_pinned ? handleUnpinComment(comment.id) : handlePinComment(comment.id)}
+                          className="cursor-pointer"
+                        >
+                          <Pin className={`w-4 h-4 mr-2 ${comment.is_pinned ? 'text-purple-600' : ''}`} />
+                          <span>{comment.is_pinned ? 'Unpin Comment' : 'Pin Comment'}</span>
+                        </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem onClick={() => setDeleteConfirm({ isOpen: true, commentId: comment.id })} className="text-red-600">
-                        <Trash2 className="w-3 h-3 mr-2" /> Delete
+                      <DropdownMenuItem 
+                        onClick={() => setDeleteConfirm({ isOpen: true, commentId: comment.id })} 
+                        className="text-red-600 focus:text-red-700 focus:bg-red-50 cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        <span>Delete Comment</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
               </div>
-              {editingComment === comment.id ? (
+            </div>
+            {isEditing ? (
                 <div className="space-y-2 p-3 bg-white rounded-lg border border-purple-200">
                   <Textarea
                     value={editingContent}
@@ -787,14 +795,14 @@ const FeedComments = forwardRef(({ project, currentUser, context = "feed" }, ref
               )}
             </div>
 
-            {/* Reply Form */}
-            {replyingTo === comment.id && (
+            {isReplying && currentUser && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
-                className="ml-0 mt-2"
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-3 space-y-2 p-3 bg-purple-50 rounded-lg border border-purple-100"
               >
-                <div className="flex items-start space-x-3 p-4 bg-purple-50 rounded-xl border border-purple-100">
+                <div className="flex items-start space-x-3">
                   <Avatar className="w-8 h-8 mt-1">
                     <AvatarImage src={currentUser?.profile_image} className="object-cover" />
                     <AvatarFallback className="bg-purple-100 text-purple-600 text-xs">
@@ -804,43 +812,52 @@ const FeedComments = forwardRef(({ project, currentUser, context = "feed" }, ref
                   <div className="flex-1 space-y-2 relative">
                     <Textarea
                       ref={replyTextareaRef}
-                      placeholder={`Reply to ${comment.user_name}...`}
+                      placeholder={`Replying to ${displayName}...`}
                       value={replyContent}
                       onChange={(e) => handleTextareaChange(e, true)}
-                      onKeyDown={(e) => handleTextareaKeyDown(e, true)} // Add keydown handler for replies
-                      rows={2}
-                      className="resize-none text-sm border-purple-200 focus:border-purple-400 bg-white"
+                      onKeyDown={(e) => handleTextareaKeyDown(e, true)}
+                      rows={3}
+                      className="text-sm resize-none border-purple-200 focus:border-purple-400 bg-white"
                     />
 
-                    {/* Render mention suggestions for reply */}
                     {renderMentionSuggestions(true)}
-
-                    <div className="flex justify-end space-x-2">
-                      <Button size="sm" variant="outline" onClick={() => { setReplyingTo(null); setReplyContent(""); }} className="h-8">
-                        Cancel
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handlePostComment(comment.id)}
-                        disabled={isPosting || !replyContent.trim()}
-                        className="cu-button h-8"
-                      >
-                        <Send className="w-3 h-3 mr-1" />
-                        Reply
-                      </Button>
-                    </div>
                   </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setReplyingTo(null); setReplyContent(""); }}
+                    className="h-8"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handlePostComment(comment.id)}
+                    disabled={!replyContent.trim() || isPosting}
+                    className="cu-button h-8"
+                  >
+                    <Send className="w-3 h-3 mr-1" />
+                    Reply
+                  </Button>
                 </div>
               </motion.div>
             )}
 
-            {/* Nested Replies */}
-            {repliesExpanded && comment.replies && comment.replies.length > 0 && (
-              <AnimatePresence>
-                <div className="mt-2 space-y-2">
-                  {comment.replies.map(reply => renderComment(reply, true))}
-                </div>
-              </AnimatePresence>
+            {replies.length > 0 && (
+              <div className="mt-3 space-y-3">
+                {replies.map(reply => (
+                  <motion.div
+                    key={reply.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, height: 0 }}
+                  >
+                    {renderComment(reply, true)}
+                  </motion.div>
+                ))}
+              </div>
             )}
           </div>
         </div>
