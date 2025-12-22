@@ -111,7 +111,7 @@ export default function Chat({ currentUser, authIsLoading }) {
   }, [selectedConversation, currentUser]);
 
   // Use React Query for conversations with real-time polling
-  const { data: conversationsData, isLoading } = useQuery({
+  const { data: conversationsData, isLoading, isFetching } = useQuery({
     queryKey: ['conversations', currentUser?.email],
     queryFn: async () => {
       if (!currentUser) return { conversations: [], userProfiles: {} };
@@ -194,6 +194,7 @@ export default function Chat({ currentUser, authIsLoading }) {
     refetchInterval: 5000,
     refetchOnWindowFocus: true,
     refetchOnMount: false,
+    keepPreviousData: true,
   });
 
   const conversations = conversationsData?.conversations || [];
@@ -846,7 +847,12 @@ export default function Chat({ currentUser, authIsLoading }) {
             </CardHeader>
             <CardContent className="p-0">
               <ScrollArea className="h-[600px]">
-                {filteredConversations.length === 0 ? (
+                {isLoading ? (
+                  <div className="text-center py-12 px-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
+                    <p className="text-gray-500 text-sm">Loading conversations...</p>
+                  </div>
+                ) : filteredConversations.length === 0 ? (
                   <div className="text-center py-12 px-4">
                     <Users className="w-12 h-12 mx-auto text-gray-300 mb-3" />
                     <p className="text-gray-500 text-sm">No conversations yet</p>
