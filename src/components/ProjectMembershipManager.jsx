@@ -192,10 +192,12 @@ export default function ProjectMembershipManager({
         }
       });
 
+      toast.success(`${memberToRemove.full_name || memberToRemove.email} has been removed from the project.`);
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error("Error removing member:", error);
-      toast.error("Failed to remove member. Please try again.");
+      const errorMessage = error?.message || "Failed to remove member. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setIsRemoving(false);
       setShowRemoveConfirm(false);
