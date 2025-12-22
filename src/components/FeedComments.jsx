@@ -746,51 +746,43 @@ const FeedComments = forwardRef(({ project, currentUser, context = "feed" }, ref
               </div>
             </div>
             {isEditing ? (
-                <div className="space-y-2 p-3 bg-white rounded-lg border border-purple-200">
-                  <Textarea
-                    value={editingContent}
-                    onChange={(e) => setEditingContent(e.target.value)}
-                    rows={2}
-                    className="resize-none text-sm border-purple-200 focus:border-purple-400"
-                  />
-                  <div className="flex justify-end space-x-2">
-                    <Button size="sm" variant="outline" onClick={() => setEditingComment(null)} className="h-8">
-                      Cancel
-                    </Button>
-                    <Button size="sm" className="cu-button h-8" onClick={() => handleUpdateComment(comment.id)}>
-                      Save
-                    </Button>
-                  </div>
+              <div className="mt-2 space-y-2">
+                <Textarea
+                  value={editingContent}
+                  onChange={(e) => setEditingContent(e.target.value)}
+                  rows={3}
+                  className="w-full text-sm sm:text-base border-purple-200 focus:border-purple-400"
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" size="sm" onClick={() => setEditingComment(null)} className="h-8">
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={() => handleUpdateComment(comment.id)} disabled={!editingContent.trim()} className="cu-button h-8">
+                    <Edit className="w-3 h-3 mr-2" />
+                    Save
+                  </Button>
                 </div>
-              ) : (
-                <>
-                  <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
-                    {renderWithMentions(comment.content, commentProfiles)}
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="flex items-center space-x-4 mt-2">
-              {!isReply && (
+              </div>
+            ) : (
+              <div className="mt-1 text-sm sm:text-base text-gray-700 leading-relaxed bg-white rounded-lg px-3 py-2 shadow-sm relative break-words whitespace-pre-wrap">
+                {renderWithMentions(comment.content, commentProfiles)}
+              </div>
+            )}
+
+            <div className="mt-2 flex items-center gap-3">
+              {!isEditing && currentUser && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-xs text-gray-600 hover:text-purple-600 hover:bg-purple-50"
-                  onClick={() => setReplyingTo(comment.id)}
+                  onClick={() => {
+                    setReplyingTo(comment.id);
+                    setReplyContent("");
+                    setTimeout(() => replyTextareaRef.current?.focus(), 100);
+                  }}
+                  className="h-7 px-2 text-xs sm:text-sm text-gray-600 hover:text-purple-600 hover:bg-purple-50"
                 >
-                  <MessageCircle className="w-3 h-3 mr-1" />
+                  <CornerDownRight className="w-3 h-3 mr-1" />
                   Reply
-                </Button>
-              )}
-              {replyCount > 0 && !isReply && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 font-medium"
-                  onClick={() => toggleReplies(comment.id)}
-                >
-                  {repliesExpanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
-                  {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
                 </Button>
               )}
             </div>
