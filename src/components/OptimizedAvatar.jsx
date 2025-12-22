@@ -43,11 +43,9 @@ const OptimizedAvatar = ({
       params.append('height', avatarSize);
       params.append('quality', '90'); // Higher quality for profile images
       params.append('format', 'webp');
-      params.append('t', Date.now()); // Cache busting parameter
       
       return `${transformUrl}?${params.toString()}`;
     } catch (e) {
-      console.error('Error optimizing avatar URL:', e);
       return originalUrl;
     }
   };
