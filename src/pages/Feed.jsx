@@ -1989,8 +1989,8 @@ export default function Feed({ currentUser, authIsLoading }) {
     },
     enabled: !authIsLoading,
     staleTime: 0,
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    gcTime: 0,
+    refetchOnWindowFocus: true,
     refetchOnMount: 'always',
   });
 
