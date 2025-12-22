@@ -31,6 +31,7 @@ import ConfirmationDialog from "@/components/ConfirmationDialog";
 import MessageBubble from "@/components/chat/MessageBubble";
 import MediaAttachmentButton from "@/components/chat/MediaAttachmentButton";
 import NewGroupChatDialog from "@/components/chat/NewGroupChatDialog";
+import GroupSettingsDialog from "@/components/chat/GroupSettingsDialog";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import EmojiPicker from "emoji-picker-react";
 
@@ -54,6 +55,7 @@ export default function Chat({ currentUser, authIsLoading }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState([]);
+  const [showGroupSettings, setShowGroupSettings] = useState(false);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const emojiPickerRef = useRef(null);
@@ -698,6 +700,79 @@ export default function Chat({ currentUser, authIsLoading }) {
   };
 
   // Filter conversations by search
+  const handleUpdateGroup = async (updateData) => {
+    if (!selectedConversation) return;
+
+    try {
+      await base44.entities.Conversation.update(selectedConversation.id, updateData);
+      
+      // Update local state
+      setSelectedConversation(prev => ({ ...prev, ...updateData }));
+      
+      queryClient.invalidateQueries(['conversations']);
+    } catch (error) {
+      console.error("Error updating group:", error);
+      throw error;
+    }
+  };
+
+  const handleLeaveGroup = async () => {
+    if (!selectedConversation) return;
+
+    try {
+      const updatedParticipants = selectedConversation.participants.filter(
+        email => email !== currentUser.email
+      );
+      const updatedAdmins = selectedConversation.admin_emails?.filter(
+        email => email !== currentUser.email
+      ) || [];
+      const unreadCounts = { ...(selectedConversation.unread_counts || {}) };
+      delete unreadCounts[currentUser.email];
+
+      await base44.entities.Conversation.update(selectedConversation.id, {
+        participants: updatedParticipants,
+        admin_emails: updatedAdmins,
+        unread_counts: unreadCounts
+      });
+
+      setShowGroupSettings(false);
+      setSelectedConversation(null);
+      setMessages([]);
+      queryClient.invalidateQueries(['conversations']);
+      toast.success("Left group successfully");
+    } catch (error) {
+      console.error("Error leaving group:", error);
+      toast.error("Failed to leave group");
+    }
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!selectedConversation) return;
+
+    try {
+      // Delete all messages first
+      const msgs = await base44.entities.Message.filter({
+        conversation_id: selectedConversation.id
+      });
+
+      if (msgs.length > 0) {
+        await Promise.all(msgs.map(msg => base44.entities.Message.delete(msg.id)));
+      }
+
+      // Delete the conversation
+      await base44.entities.Conversation.delete(selectedConversation.id);
+
+      setShowGroupSettings(false);
+      setSelectedConversation(null);
+      setMessages([]);
+      queryClient.invalidateQueries(['conversations']);
+      toast.success("Group deleted successfully");
+    } catch (error) {
+      console.error("Error deleting group:", error);
+      toast.error("Failed to delete group");
+    }
+  };
+
   const filteredConversations = conversations.filter(conv => {
     if (!searchQuery.trim()) return true;
     const info = getConversationInfo(conv);
@@ -901,7 +976,7 @@ export default function Chat({ currentUser, authIsLoading }) {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setShowGroupSettings(true)}>
                             <Settings className="w-4 h-4 mr-2" />
                             Group Settings
                           </DropdownMenuItem>
@@ -1123,6 +1198,19 @@ export default function Chat({ currentUser, authIsLoading }) {
         currentUser={currentUser}
         onCreateGroup={handleCreateGroup}
         isLoading={isLoadingUsers}
+      />
+
+      {/* Group Settings Dialog */}
+      <GroupSettingsDialog
+        isOpen={showGroupSettings}
+        onClose={() => setShowGroupSettings(false)}
+        conversation={selectedConversation}
+        currentUser={currentUser}
+        userProfiles={userProfiles}
+        onUpdateGroup={handleUpdateGroup}
+        onLeaveGroup={handleLeaveGroup}
+        onDeleteGroup={handleDeleteGroup}
+        allUsers={allUsers}
       />
     </>
   );
