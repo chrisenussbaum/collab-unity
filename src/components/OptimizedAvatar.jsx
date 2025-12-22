@@ -18,7 +18,7 @@ const OptimizedAvatar = ({
   // Check if the image is from Supabase storage
   const isSupabaseImage = src?.includes('.supabase.co/storage/v1/object/public/');
   
-  // Generate optimized avatar URL
+  // Generate optimized avatar URL with cache busting
   const getOptimizedAvatarUrl = (originalUrl) => {
     if (!isSupabaseImage || !originalUrl) return originalUrl;
     
@@ -43,9 +43,11 @@ const OptimizedAvatar = ({
       params.append('height', avatarSize);
       params.append('quality', '90'); // Higher quality for profile images
       params.append('format', 'webp');
+      params.append('t', Date.now()); // Cache busting parameter
       
       return `${transformUrl}?${params.toString()}`;
     } catch (e) {
+      console.error('Error optimizing avatar URL:', e);
       return originalUrl;
     }
   };
