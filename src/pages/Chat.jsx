@@ -114,23 +114,22 @@ export default function Chat({ currentUser, authIsLoading }) {
     queryFn: async () => {
       if (!currentUser) return { conversations: [], userProfiles: {} };
 
-      // Fetch direct chats
+      // Fetch direct chats (backward compatible - works with old conversations too)
       const [conv1, conv2] = await Promise.all([
         base44.entities.Conversation.filter({
-          conversation_type: "direct",
           participant_1_email: currentUser.email
         }, "-last_message_time"),
         base44.entities.Conversation.filter({
-          conversation_type: "direct",
           participant_2_email: currentUser.email
         }, "-last_message_time")
       ]);
 
       // Fetch group chats
       const groupChats = await base44.entities.Conversation.filter({
-        conversation_type: "group",
-        participants: { $in: [currentUser.email] }
-      }, "-last_message_time");
+        conversation_type: "group"
+      }, "-last_message_time").then(chats => 
+        chats.filter(chat => chat.participants?.includes(currentUser.email))
+      );
 
       const allConversations = [...conv1, ...conv2, ...groupChats];
       const uniqueConversations = allConversations.reduce((acc, current) => {
