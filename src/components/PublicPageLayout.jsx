@@ -21,6 +21,7 @@ export default function PublicPageLayout({ children, currentLanguage, onLanguage
       legal: "Legal",
       featureRequest: "Feature Request",
       testimonials: "Testimonials",
+      support: "Support",
       login: "Log In",
       signup: "Sign Up",
       termsOfService: "Terms of Service",
@@ -34,6 +35,7 @@ export default function PublicPageLayout({ children, currentLanguage, onLanguage
       legal: "Legal",
       featureRequest: "Solicitud de Función",
       testimonials: "Testimonios",
+      support: "Apoyar",
       login: "Iniciar Sesión",
       signup: "Registrarse",
       termsOfService: "Términos de Servicio",
@@ -47,6 +49,7 @@ export default function PublicPageLayout({ children, currentLanguage, onLanguage
       legal: "Juridique",
       featureRequest: "Demande de Fonctionnalité",
       testimonials: "Témoignages",
+      support: "Soutenir",
       login: "Connexion",
       signup: "S'inscrire",
       termsOfService: "Conditions d'Utilisation",
@@ -78,6 +81,11 @@ export default function PublicPageLayout({ children, currentLanguage, onLanguage
               <Link to={createPageUrl("Testimonials")}>
                 <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
                   {t.testimonials}
+                </Button>
+              </Link>
+              <Link to={createPageUrl("Support")}>
+                <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
+                  {t.support}
                 </Button>
               </Link>
               <Link to={createPageUrl("FeatureRequest")}>
