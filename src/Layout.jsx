@@ -410,7 +410,8 @@ export default function Layout({ children, currentPageName }) {
     createPageUrl("Demos"),
     createPageUrl("AboutUs"),
     createPageUrl("FeatureRequest"),
-    createPageUrl("Testimonials")
+    createPageUrl("Testimonials"),
+    createPageUrl("Support")
   ];
 
   if (publicPagesWithoutLayout.some(route => location.pathname.startsWith(route))) {
