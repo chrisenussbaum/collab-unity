@@ -808,6 +808,7 @@ const translations = {
       legal: "Legal",
       featureRequest: "Feature Request",
       testimonials: "Testimonials",
+      support: "Support",
       login: "Log In",
       signup: "Sign Up",
       termsOfService: "Terms of Service",
@@ -850,6 +851,7 @@ const translations = {
       legal: "Legal",
       featureRequest: "Solicitud de Función",
       testimonials: "Testimonios",
+      support: "Apoyar",
       login: "Iniciar Sesión",
       signup: "Registrarse",
       termsOfService: "Términos de Servicio",
@@ -892,6 +894,7 @@ const translations = {
       legal: "Juridique",
       featureRequest: "Demande de Fonctionnalité",
       testimonials: "Témoignages",
+      support: "Soutenir",
       login: "Connexion",
       signup: "S'inscrire",
       termsOfService: "Conditions d'Utilisation",
@@ -1063,7 +1066,7 @@ export default function Welcome() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-indigo-50">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
+      <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
@@ -1079,6 +1082,11 @@ export default function Welcome() {
               <Link to={createPageUrl("Testimonials")}>
                 <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
                   {t.nav.testimonials}
+                </Button>
+              </Link>
+              <Link to={createPageUrl("Support")}>
+                <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
+                  {t.nav.support}
                 </Button>
               </Link>
               <Link to={createPageUrl("FeatureRequest")}>
@@ -1144,6 +1152,11 @@ export default function Welcome() {
               <Link to={createPageUrl("Testimonials")} onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-purple-600">
                   {t.nav.testimonials}
+                </Button>
+              </Link>
+              <Link to={createPageUrl("Support")} onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-purple-600">
+                  {t.nav.support}
                 </Button>
               </Link>
               <Link to={createPageUrl("FeatureRequest")} onClick={() => setMobileMenuOpen(false)}>
