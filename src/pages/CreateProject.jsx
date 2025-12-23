@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Loader2, PenLine, Image, Video, Wrench } from "lucide-react";
+import { Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Loader2, PenLine, Image, Video, Wrench, DollarSign } from "lucide-react";
 import { motion } from "framer-motion";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import ArrayInputWithSearch from "@/components/ArrayInputWithSearch";
@@ -68,6 +68,9 @@ export default function CreateProject() {
     is_visible_on_feed: false,
     template_id: "",
     project_instructions: null,
+    paypal_link: "",
+    venmo_link: "",
+    cashapp_link: "",
   });
 
   const [newLink, setNewLink] = useState("");
@@ -149,6 +152,9 @@ export default function CreateProject() {
       is_visible_on_feed: false,
       template_id: "",
       project_instructions: null,
+      paypal_link: "",
+      venmo_link: "",
+      cashapp_link: "",
     });
     setCurrentStep(1);
   };
@@ -407,11 +413,9 @@ export default function CreateProject() {
     if (currentStep === 2) {
       if (!formData.area_of_interest.trim()) newErrors.area_of_interest = "Area of interest is required.";
       if (formData.area_of_interest.trim().length > 20) newErrors.area_of_interest = "Area of interest must be 20 characters or less.";
-      if (!formData.location.trim()) newErrors.location = "Location is required."; 
       if (formData.skills_needed.length === 0) newErrors.skills_needed = "At least one skill is required.";
       if (formData.tools_needed.length === 0) newErrors.tools_needed = "At least one tool is required.";
     }
-    // Step 3 is optional - no validation needed
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -446,7 +450,7 @@ export default function CreateProject() {
 
   const nextStep = () => {
     if (validateStep()) {
-      if (currentStep < 3) setCurrentStep(currentStep + 1);
+      if (currentStep < 2) setCurrentStep(currentStep + 1);
     }
   };
 
@@ -589,7 +593,6 @@ export default function CreateProject() {
                 <span>
                   {currentStep === 1 && "Project Information"}
                   {currentStep === 2 && "Collaboration Requirements"}
-                  {currentStep === 3 && "Assets & Tools (Optional)"}
                 </span>
               </CardTitle>
             </CardHeader>
@@ -719,6 +722,44 @@ export default function CreateProject() {
                       {errors.industry && <p className="text-sm text-red-500 mt-1">{errors.industry}</p>}
                     </div>
                   </div>
+
+                  <div className="space-y-3 pt-4 border-t">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <DollarSign className="w-4 h-4" />
+                      Project Funding (Optional)
+                    </Label>
+                    <p className="text-xs text-gray-500">Add funding links to help support your project</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="paypal_link" className="text-xs font-medium text-gray-600">PayPal Link</Label>
+                        <Input
+                          id="paypal_link"
+                          placeholder="https://paypal.me/..."
+                          value={formData.paypal_link}
+                          onChange={(e) => handleInputChange("paypal_link", e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="venmo_link" className="text-xs font-medium text-gray-600">Venmo Link</Label>
+                        <Input
+                          id="venmo_link"
+                          placeholder="https://venmo.com/..."
+                          value={formData.venmo_link}
+                          onChange={(e) => handleInputChange("venmo_link", e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="cashapp_link" className="text-xs font-medium text-gray-600">CashApp Link</Label>
+                        <Input
+                          id="cashapp_link"
+                          placeholder="https://cash.app/$..."
+                          value={formData.cashapp_link}
+                          onChange={(e) => handleInputChange("cashapp_link", e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </motion.div>
               )}
 
@@ -749,16 +790,14 @@ export default function CreateProject() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="location" className="text-sm font-medium">
-                        Location *
+                        Location
                       </Label>
                       <Input
                         id="location"
                         placeholder="e.g., Seattle, WA or Remote"
                         value={formData.location}
                         onChange={(e) => handleInputChange("location", e.target.value)}
-                        className={errors.location ? 'border-red-500' : ''}
                       />
-                      {errors.location && <p className="text-sm text-red-500 mt-1">{errors.location}</p>}
                     </div>
                   </div>
 
@@ -784,201 +823,7 @@ export default function CreateProject() {
                 </motion.div>
               )}
 
-              {currentStep === 3 && (
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-8"
-                >
-                  <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                    These fields are optional. You can add media, tools, and links now or later from your project workspace.
-                  </p>
 
-                  {/* Project Media */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium flex items-center gap-2">
-                      <Image className="w-4 h-4" />
-                      Project Media (Images & Videos)
-                    </Label>
-                    
-                    {formData.highlights.length > 0 && (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {formData.highlights.map((highlight, index) => (
-                          <div key={index} className="relative group aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                            {highlight.media_type === 'video' ? (
-                              highlight.thumbnail_url ? (
-                                <img 
-                                  src={highlight.thumbnail_url} 
-                                  alt={highlight.file_name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <video 
-                                  src={highlight.media_url} 
-                                  className="w-full h-full object-cover"
-                                />
-                              )
-                            ) : (
-                              <img 
-                                src={highlight.media_url} 
-                                alt={highlight.file_name}
-                                className="w-full h-full object-cover"
-                              />
-                            )}
-                            {/* Video play icon overlay */}
-                            {highlight.media_type === 'video' && (
-                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                                  <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-gray-800 border-b-[6px] border-b-transparent ml-1"></div>
-                                </div>
-                              </div>
-                            )}
-                            <div className="absolute top-1 left-1">
-                              <Badge variant="secondary" className="text-xs bg-black/70 text-white border-0">
-                                {highlight.media_type === 'video' ? <Video className="w-3 h-3" /> : <Image className="w-3 h-3" />}
-                              </Badge>
-                            </div>
-                            {/* Uploader avatar */}
-                            {currentUser?.profile_image && (
-                              <div className="absolute top-1 right-8 mr-1">
-                                <img 
-                                  src={currentUser.profile_image} 
-                                  alt="Uploader"
-                                  className="w-6 h-6 rounded-full border-2 border-white shadow-lg object-cover"
-                                />
-                              </div>
-                            )}
-                            <button
-                              onClick={() => removeHighlight(index)}
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => mediaInputRef.current?.click()}
-                      disabled={isUploadingMedia}
-                      className="w-full border-dashed"
-                    >
-                      {isUploadingMedia ? (
-                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...</>
-                      ) : (
-                        <><UploadCloud className="w-4 h-4 mr-2" /> Upload Images or Videos</>
-                      )}
-                    </Button>
-                  </div>
-
-                  {/* Project Tools */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium flex items-center gap-2">
-                      <Wrench className="w-4 h-4" />
-                      Project Tools & Platforms
-                    </Label>
-                    
-                    {formData.project_tools.length > 0 && (
-                      <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-gray-50/50">
-                        {formData.project_tools.map((tool, index) => (
-                          <Badge key={index} variant="secondary" className="flex items-center text-sm py-1 px-3">
-                            {tool.icon} {tool.name}
-                            {tool.url && (
-                              <a href={tool.url} target="_blank" rel="noopener noreferrer" className="ml-1 text-purple-600">
-                                <LinkIcon className="w-3 h-3" />
-                              </a>
-                            )}
-                            <button onClick={() => removeProjectTool(index)} className="ml-2 hover:text-red-500">
-                              <X className="w-3 h-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                    
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <Input
-                        placeholder="Tool name (e.g., Figma, Slack)"
-                        value={newToolName}
-                        onChange={(e) => setNewToolName(e.target.value)}
-                        className="flex-1"
-                      />
-                      <Input
-                        placeholder="URL (optional)"
-                        value={newToolUrl}
-                        onChange={(e) => setNewToolUrl(e.target.value)}
-                        className="flex-1"
-                      />
-                      <Button type="button" variant="outline" onClick={addProjectTool} disabled={!newToolName.trim()}>
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Project Links */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium flex items-center gap-2">
-                      <LinkIcon className="w-4 h-4" />
-                      Project Showcase Links
-                    </Label>
-                    
-                    {formData.project_urls.length > 0 && (
-                      <div className="flex flex-col gap-3 p-3 border rounded-lg bg-gray-50/50">
-                        {formData.project_urls.map((link, index) => (
-                          <div key={index} className="flex items-start justify-between gap-2 p-2 bg-white rounded border">
-                            <div className="flex-1 min-w-0">
-                              {link.title && (
-                                <p className="font-medium text-sm text-gray-900 mb-1">{link.title}</p>
-                              )}
-                              <a 
-                                href={link.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="text-purple-600 hover:underline text-xs truncate block"
-                              >
-                                <LinkIcon className="inline w-3 h-3 mr-1 text-gray-500" />
-                                {link.url}
-                              </a>
-                            </div>
-                            <button 
-                              onClick={() => removeLink(index)} 
-                              className="flex-shrink-0 text-gray-500 hover:text-red-500 p-1"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    <div className="space-y-2">
-                      <Input
-                        placeholder="Link title (e.g., Live Demo, GitHub Repo, Live Stream)"
-                        value={newLinkTitle}
-                        onChange={(e) => setNewLinkTitle(e.target.value)}
-                      />
-                      <div className="flex space-x-2">
-                        <Input
-                          placeholder="https://yourproject.com..."
-                          value={newLink}
-                          onChange={(e) => setNewLink(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addLink())}
-                        />
-                        <Button type="button" variant="outline" onClick={addLink} disabled={!newLink || formData.project_urls.length >= 10}>
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Add titled showcase links to your project (Max 10)
-                    </p>
-                  </div>
-                </motion.div>
-              )}
 
               <div className="flex justify-between pt-6 border-t">
                 <Button
@@ -989,24 +834,13 @@ export default function CreateProject() {
                 </Button>
 
                 <div className="flex space-x-3">
-                  {currentStep < 3 ? (
-                    <>
-                      {currentStep === 2 && (
-                        <Button
-                          variant="outline"
-                          onClick={handleSubmit}
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? "Creating..." : "Skip & Publish"}
-                        </Button>
-                      )}
-                      <Button
-                        onClick={nextStep}
-                        className="cu-button"
-                      >
-                        Next Step
-                      </Button>
-                    </>
+                  {currentStep < 2 ? (
+                    <Button
+                      onClick={nextStep}
+                      className="cu-button"
+                    >
+                      Next Step
+                    </Button>
                   ) : (
                     <Button
                       onClick={handleSubmit}

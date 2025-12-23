@@ -99,7 +99,9 @@ export default function EditProject({ currentUser, authIsLoading }) {
             skills_needed: fetchedProject.skills_needed || [],
             tools_needed: fetchedProject.tools_needed || [],
             logo_url: fetchedProject.logo_url || "",
-            // Removed funding links as they are no longer editable on this page
+            paypal_link: fetchedProject.paypal_link || "",
+            venmo_link: fetchedProject.venmo_link || "",
+            cashapp_link: fetchedProject.cashapp_link || "",
           });
         } else {
           toast.error("Project not found.");
@@ -474,6 +476,44 @@ export default function EditProject({ currentUser, authIsLoading }) {
                 <p className="text-xs text-gray-500 text-center">
                   Add links to showcase/demo the current state of your project. For repositories, documents, and other resources, use the Assets tab after creating the project. (Max 10 URLs)
                 </p>
+              </div>
+
+              <div className="space-y-3 pt-4 border-t">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  Project Funding (Optional)
+                </Label>
+                <p className="text-xs text-gray-500">Add funding links to help support your project</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="paypal_link" className="text-xs font-medium text-gray-600">PayPal Link</Label>
+                    <Input
+                      id="paypal_link"
+                      placeholder="https://paypal.me/..."
+                      value={formData.paypal_link}
+                      onChange={(e) => handleInputChange("paypal_link", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="venmo_link" className="text-xs font-medium text-gray-600">Venmo Link</Label>
+                    <Input
+                      id="venmo_link"
+                      placeholder="https://venmo.com/..."
+                      value={formData.venmo_link}
+                      onChange={(e) => handleInputChange("venmo_link", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cashapp_link" className="text-xs font-medium text-gray-600">CashApp Link</Label>
+                    <Input
+                      id="cashapp_link"
+                      placeholder="https://cash.app/$..."
+                      value={formData.cashapp_link}
+                      onChange={(e) => handleInputChange("cashapp_link", e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
