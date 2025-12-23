@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Shield } from "lucide-react";
 import { motion } from "framer-motion";
+import PublicPageLayout from "@/components/PublicPageLayout";
 
 export default function TermsOfService() {
+  const [language, setLanguage] = useState('en');
   const navigate = useNavigate();
 
   const handleAuth = () => {
@@ -14,26 +16,9 @@ export default function TermsOfService() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-indigo-50 flex flex-col">
-      {/* Header - matching Welcome page */}
-      <header className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link to={createPageUrl("Welcome")} className="flex items-center space-x-3">
-              <img
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg"
-                alt="Collab Unity"
-                className="w-8 h-8 rounded-lg"
-              />
-              <span className="text-xl font-bold text-gray-900">Collab Unity</span>
-            </Link>
-
-          </div>
-        </div>
-      </header>
-
+    <PublicPageLayout currentLanguage={language} onLanguageChange={setLanguage}>
       {/* Main Content */}
-      <div className="flex-1 pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+      <div className="flex-1 pt-8 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="flex items-center mb-6 sm:mb-8">
@@ -341,39 +326,6 @@ export default function TermsOfService() {
           </motion.div>
         </div>
       </div>
-
-      {/* Footer - matching Welcome page */}
-      <footer className="bg-gray-900 text-gray-300 py-12 px-4 sm:px-6 lg:px-8 mt-auto">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg"
-                alt="Collab Unity"
-                className="w-8 h-8 rounded-lg"
-              />
-              <span className="text-xl font-bold text-white">Collab Unity</span>
-            </div>
-            <p className="text-gray-400 mb-6">
-              Where Ideas Happen
-            </p>
-            <div className="flex items-center justify-center flex-wrap gap-6 text-sm">
-              <Link to={createPageUrl("Contact")} className="hover:text-white transition-colors">
-                Contact
-              </Link>
-              <Link to={createPageUrl("TermsOfService")} className="hover:text-white transition-colors">
-                Terms of Service
-              </Link>
-              <Link to={createPageUrl("PrivacyPolicy")} className="hover:text-white transition-colors">
-                Privacy Policy
-              </Link>
-            </div>
-          </div>
-          <p className="text-gray-500 text-sm text-center">
-            © 2025 Collab Unity. All rights reserved.
-          </p>
-        </div>
-      </footer>
-    </div>
+    </PublicPageLayout>
   );
 }

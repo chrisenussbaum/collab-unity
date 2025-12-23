@@ -6,12 +6,14 @@ import { Heart, Users, Zap, Sparkles, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Support() {
+  const [language, setLanguage] = React.useState('en');
+  
   const handleVenmoRedirect = () => {
     window.open('https://venmo.com/chrisenussbaum', '_blank', 'noopener,noreferrer');
   };
 
   return (
-    <PublicPageLayout>
+    <PublicPageLayout currentLanguage={language} onLanguageChange={setLanguage}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
