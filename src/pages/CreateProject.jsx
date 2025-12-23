@@ -732,31 +732,49 @@ export default function CreateProject() {
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="paypal_link" className="text-xs font-medium text-gray-600">PayPal Link</Label>
-                        <Input
-                          id="paypal_link"
-                          placeholder="https://paypal.me/..."
-                          value={formData.paypal_link}
-                          onChange={(e) => handleInputChange("paypal_link", e.target.value)}
-                        />
+                        <Label htmlFor="paypal_link" className="text-sm font-medium">PayPal Link</Label>
+                        <div className="flex items-center">
+                          <span className="text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-l-md border border-r-0 whitespace-nowrap">
+                            https://paypal.me/
+                          </span>
+                          <Input
+                            id="paypal_link"
+                            placeholder="username"
+                            value={formData.paypal_link}
+                            onChange={(e) => handleInputChange("paypal_link", e.target.value)}
+                            className="rounded-l-none"
+                          />
+                        </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="venmo_link" className="text-xs font-medium text-gray-600">Venmo Link</Label>
-                        <Input
-                          id="venmo_link"
-                          placeholder="https://venmo.com/..."
-                          value={formData.venmo_link}
-                          onChange={(e) => handleInputChange("venmo_link", e.target.value)}
-                        />
+                        <Label htmlFor="venmo_link" className="text-sm font-medium">Venmo Link</Label>
+                        <div className="flex items-center">
+                          <span className="text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-l-md border border-r-0 whitespace-nowrap">
+                            https://venmo.com/
+                          </span>
+                          <Input
+                            id="venmo_link"
+                            placeholder="username"
+                            value={formData.venmo_link}
+                            onChange={(e) => handleInputChange("venmo_link", e.target.value)}
+                            className="rounded-l-none"
+                          />
+                        </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="cashapp_link" className="text-xs font-medium text-gray-600">CashApp Link</Label>
-                        <Input
-                          id="cashapp_link"
-                          placeholder="https://cash.app/$..."
-                          value={formData.cashapp_link}
-                          onChange={(e) => handleInputChange("cashapp_link", e.target.value)}
-                        />
+                        <Label htmlFor="cashapp_link" className="text-sm font-medium">CashApp Link</Label>
+                        <div className="flex items-center">
+                          <span className="text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-l-md border border-r-0 whitespace-nowrap">
+                            https://cash.app/$
+                          </span>
+                          <Input
+                            id="cashapp_link"
+                            placeholder="username"
+                            value={formData.cashapp_link}
+                            onChange={(e) => handleInputChange("cashapp_link", e.target.value)}
+                            className="rounded-l-none"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
