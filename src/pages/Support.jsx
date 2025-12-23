@@ -12,17 +12,16 @@ export default function Support() {
 
   return (
     <PublicPageLayout>
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <div className="text-center mb-12">
-              <div className="w-20 h-20 cu-gradient rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <Heart className="w-10 h-10 text-white" />
-              </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="text-center mb-12">
+            <div className="w-20 h-20 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
+              <Heart className="w-10 h-10 text-white" />
+            </div>
               <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
                 Support Collab Unity
               </h1>
@@ -107,8 +106,7 @@ export default function Support() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
-        </div>
+        </motion.div>
       </div>
     </PublicPageLayout>
   );
