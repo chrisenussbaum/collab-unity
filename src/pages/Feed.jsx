@@ -206,7 +206,7 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
         );
         if (userApplaud) {
           await FeedPostApplaud.delete(userApplaud.id);
-          if (onApplaudUpdate) onApplaudUpdate();
+          if (onApplaudUpdate) await onApplaudUpdate();
         }
       } else {
         await FeedPostApplaud.create({
@@ -220,14 +220,14 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
             user_email: post.created_by,
             title: "Someone applauded your post!",
             message: `${currentUser.full_name || currentUser.email} applauded your post "${post.title || post.content.substring(0, 50) + '...' }".`,
-            type: "feed_post_applaud",
-            related_feed_post_id: post.id,
+            type: "feed_applaud",
+            related_entity_id: post.id,
             actor_email: currentUser.email,
             actor_name: currentUser.full_name || currentUser.email,
             metadata: { post_title: post.title }
           }).catch(err => console.error("Failed to create notification:", err));
         }
-        if (onApplaudUpdate) onApplaudUpdate();
+        if (onApplaudUpdate) await onApplaudUpdate();
       }
     } catch (error) {
       // Rollback on error
@@ -2259,10 +2259,39 @@ export default function Feed({ currentUser, authIsLoading }) {
   }, [projects, feedPosts]);
 
   const handleApplaudUpdate = useCallback(async () => {
-    // Invalidate and refetch to ensure immediate update
-    await queryClient.invalidateQueries(['feed-projects']);
-    await queryClient.refetchQueries(['feed-projects']);
-  }, [queryClient]);
+    const allProjectIdsInFeed = projects.map(p => p.id);
+    const allFeedPostIdsInFeed = feedPosts.map(fp => fp.id);
+
+    // Fetch updated applauds directly and update state immediately
+    const updates = [];
+    
+    if (allProjectIdsInFeed.length > 0) {
+      updates.push(
+        withRetry(() => ProjectApplaud.filter({ project_id: { $in: allProjectIdsInFeed } }))
+          .then(updatedApplauds => {
+            if (updatedApplauds) {
+              setProjectApplauds(updatedApplauds);
+            }
+          })
+          .catch(error => console.error("Error updating project applauds:", error))
+      );
+    }
+    
+    if (allFeedPostIdsInFeed.length > 0) {
+      updates.push(
+        withRetry(() => FeedPostApplaud.filter({ feed_post_id: { $in: allFeedPostIdsInFeed } }))
+          .then(updatedApplauds => {
+            if (updatedApplauds) {
+              setFeedPostApplauds(updatedApplauds);
+            }
+          })
+          .catch(error => console.error("Error updating feed post applauds:", error))
+      );
+    }
+    
+    // Wait for all updates to complete
+    await Promise.all(updates);
+  }, [projects, feedPosts]);
   
   // Filter feed items based on search query
   const displayedItems = React.useMemo(() => {
