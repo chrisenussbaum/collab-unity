@@ -217,8 +217,73 @@ export default function AdminVerificationPanel() {
   const handleApproveAd = async (ad) => {
     setIsProcessing(true);
     try {
+      // Check if targeting data is missing and generate if needed
+      let targetingData = {
+        target_categories: ad.target_categories || [],
+        target_keywords: ad.target_keywords || [],
+        priority_score: ad.priority_score || 5
+      };
+
+      const needsTargeting = !ad.target_categories?.length || !ad.target_keywords?.length || !ad.priority_score;
+
+      if (needsTargeting) {
+        toast.info("Generating missing targeting data...");
+        
+        try {
+          const prompt = `Based on the following advertisement details, generate relevant targeting data:
+
+Ad Title: ${ad.title}
+Ad Description: ${ad.description}
+Advertiser Type: ${ad.type}
+Advertiser Name: ${ad.advertiser_name}
+
+Please analyze this ad and provide:
+1. target_categories: Array of 3-5 relevant categories (e.g., "technology", "design", "marketing", "business", "education", "healthcare", "finance", "e-commerce", "nonprofit", "entertainment", "sports", "science", "art", "music", "gaming", "food", "travel", "fashion", "real-estate", "automotive")
+2. target_keywords: Array of 10-15 relevant keywords that describe the ad's focus areas, skills, industries, or topics
+3. priority_score: A number from 1-10 indicating the relevance and value of this ad (1=lowest, 10=highest). Consider factors like: ad type (nonprofit/education should score higher), content quality, target audience value, and campaign goals.`;
+
+          const response = await base44.integrations.Core.InvokeLLM({
+            prompt: prompt,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                target_categories: {
+                  type: "array",
+                  items: { type: "string" }
+                },
+                target_keywords: {
+                  type: "array",
+                  items: { type: "string" }
+                },
+                priority_score: {
+                  type: "number",
+                  minimum: 1,
+                  maximum: 10
+                }
+              },
+              required: ["target_categories", "target_keywords", "priority_score"]
+            }
+          });
+
+          targetingData = {
+            target_categories: response.target_categories || ["general"],
+            target_keywords: response.target_keywords || [ad.type, "advertising"],
+            priority_score: response.priority_score || 5
+          };
+        } catch (genError) {
+          console.error("Error generating targeting on approval:", genError);
+          toast.warning("Using default targeting values");
+          targetingData = {
+            target_categories: ["general"],
+            target_keywords: [ad.type, "advertising"],
+            priority_score: 5
+          };
+        }
+      }
+
       await Advertisement.update(ad.id, {
-        is_active: true
+        is_active: true,
+        ...targetingData
       });
 
       if (ad.created_by) {

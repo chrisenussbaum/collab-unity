@@ -134,7 +134,7 @@ export default function CreateAd({ currentUser }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const generateTargeting = async (adData) => {
+  const generateTargeting = async (adData, retryCount = 0) => {
     setIsGeneratingTargeting(true);
     try {
       const { InvokeLLM } = await import("@/integrations/Core");
@@ -179,17 +179,32 @@ Be specific and relevant to help match this ad with the right audience based on 
         }
       });
 
+      // Validate response
+      if (!response.target_categories || !response.target_keywords || !response.priority_score) {
+        throw new Error("Incomplete targeting data received");
+      }
+
       return {
-        target_categories: response.target_categories || [],
-        target_keywords: response.target_keywords || [],
-        priority_score: response.priority_score || 1
+        target_categories: response.target_categories,
+        target_keywords: response.target_keywords,
+        priority_score: response.priority_score
       };
     } catch (error) {
       console.error("Error generating targeting data:", error);
-      toast.warning("Could not generate smart targeting. The ad will still be submitted.");
+      
+      // Retry up to 2 times
+      if (retryCount < 2) {
+        console.log(`Retrying targeting generation (attempt ${retryCount + 2}/3)...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return generateTargeting(adData, retryCount + 1);
+      }
+      
+      // After 3 attempts, use fallback values
+      toast.error("Failed to generate smart targeting. Using default values.");
       return {
-        target_categories: [],
-        target_keywords: []
+        target_categories: ["general"],
+        target_keywords: [adData.type, "advertising"],
+        priority_score: 5
       };
     } finally {
       setIsGeneratingTargeting(false);
@@ -533,6 +548,29 @@ Be specific and relevant to help match this ad with the right audience based on 
                     </p>
                   </div>
                 )}
+
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <DollarSign className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900 mb-1">Support Collab Unity</h4>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Help us keep the platform free and improve features for everyone. Your support directly funds development and server costs.
+                      </p>
+                      <a 
+                        href={PLATFORM_VENMO_LINK}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 font-medium hover:underline"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Support via Venmo (@chrisenussbaum)
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Advanced Settings */}
