@@ -2259,9 +2259,35 @@ export default function Feed({ currentUser, authIsLoading }) {
   }, [projects, feedPosts]);
 
   const handleApplaudUpdate = useCallback(async () => {
-    // Invalidate the query cache to trigger a fresh fetch
-    queryClient.invalidateQueries(['feed-projects']);
-  }, [queryClient]);
+    const allProjectIdsInFeed = projects.map(p => p.id);
+    const allFeedPostIdsInFeed = feedPosts.map(fp => fp.id);
+
+    if (allProjectIdsInFeed.length > 0) {
+      try {
+        const updatedProjectApplauds = await withRetry(() =>
+          ProjectApplaud.filter({ project_id: { $in: allProjectIdsInFeed } })
+        );
+        if (updatedProjectApplauds) {
+          setProjectApplauds(updatedProjectApplauds);
+        }
+      } catch (error) {
+        console.error("Error updating project applauds:", error);
+      }
+    }
+    
+    if (allFeedPostIdsInFeed.length > 0) {
+      try {
+        const updatedFeedPostApplauds = await withRetry(() =>
+          FeedPostApplaud.filter({ feed_post_id: { $in: allFeedPostIdsInFeed } })
+        );
+        if (updatedFeedPostApplauds) {
+          setFeedPostApplauds(updatedFeedPostApplauds);
+        }
+      } catch (error) {
+        console.error("Error updating feed post applauds:", error);
+      }
+    }
+  }, [projects, feedPosts]);
   
   // Filter feed items based on search query
   const displayedItems = React.useMemo(() => {
