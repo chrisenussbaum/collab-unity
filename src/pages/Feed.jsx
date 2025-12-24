@@ -2259,9 +2259,8 @@ export default function Feed({ currentUser, authIsLoading }) {
   }, [projects, feedPosts]);
 
   const handleApplaudUpdate = useCallback(async () => {
-    // Invalidate and refetch to ensure immediate update
-    await queryClient.invalidateQueries(['feed-projects']);
-    await queryClient.refetchQueries(['feed-projects']);
+    // Invalidate the query cache to trigger a fresh fetch
+    queryClient.invalidateQueries(['feed-projects']);
   }, [queryClient]);
   
   // Filter feed items based on search query
