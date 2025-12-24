@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -150,6 +149,7 @@ Advertiser Name: ${adData.advertiser_name}
 Please analyze this ad and provide:
 1. target_categories: Array of 3-5 relevant categories (e.g., "technology", "design", "marketing", "business", "education", "healthcare", "finance", "e-commerce", "nonprofit", "entertainment", "sports", "science", "art", "music", "gaming", "food", "travel", "fashion", "real-estate", "automotive")
 2. target_keywords: Array of 10-15 relevant keywords that describe the ad's focus areas, skills, industries, or topics
+3. priority_score: A number from 1-10 indicating the relevance and value of this ad (1=lowest, 10=highest). Consider factors like: ad type (nonprofit/education should score higher), content quality, target audience value, and campaign goals.
 
 Be specific and relevant to help match this ad with the right audience based on their skills, interests, and project involvement.`;
 
@@ -167,15 +167,22 @@ Be specific and relevant to help match this ad with the right audience based on 
               type: "array",
               items: { type: "string" },
               description: "Array of relevant keyword strings"
+            },
+            priority_score: {
+              type: "number",
+              minimum: 1,
+              maximum: 10,
+              description: "Priority score from 1-10"
             }
           },
-          required: ["target_categories", "target_keywords"]
+          required: ["target_categories", "target_keywords", "priority_score"]
         }
       });
 
       return {
         target_categories: response.target_categories || [],
-        target_keywords: response.target_keywords || []
+        target_keywords: response.target_keywords || [],
+        priority_score: response.priority_score || 1
       };
     } catch (error) {
       console.error("Error generating targeting data:", error);
@@ -206,7 +213,7 @@ Be specific and relevant to help match this ad with the right audience based on 
         ...formData,
         target_categories: targetingData.target_categories,
         target_keywords: targetingData.target_keywords,
-        priority_score: 1,
+        priority_score: targetingData.priority_score,
         is_active: false,
         created_by: currentUser.email
       });
@@ -441,6 +448,29 @@ Be specific and relevant to help match this ad with the right audience based on 
               <div className="space-y-4 pt-6 border-t">
                 <h3 className="text-lg font-semibold text-gray-900">Advertisement Budget</h3>
                 
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <DollarSign className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900 mb-1">Support Collab Unity</h4>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Help us keep the platform free and improve features for everyone. Your support directly funds development and server costs.
+                      </p>
+                      <a 
+                        href={PLATFORM_VENMO_LINK}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 font-medium hover:underline"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Support via Venmo (@chrisenussbaum)
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Start Date *</Label>

@@ -18,13 +18,13 @@ import Onboarding from './pages/Onboarding';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import ProjectDetail from './pages/ProjectDetail';
 import ReportBug from './pages/ReportBug';
+import Support from './pages/Support';
 import SupportCU from './pages/SupportCU';
 import TermsOfService from './pages/TermsOfService';
 import Testimonials from './pages/Testimonials';
 import UserProfile from './pages/UserProfile';
 import UserProjects from './pages/UserProjects';
 import Welcome from './pages/Welcome';
-import Support from './pages/Support';
 import __Layout from './Layout.jsx';
 
 
@@ -49,13 +49,13 @@ export const PAGES = {
     "PrivacyPolicy": PrivacyPolicy,
     "ProjectDetail": ProjectDetail,
     "ReportBug": ReportBug,
+    "Support": Support,
     "SupportCU": SupportCU,
     "TermsOfService": TermsOfService,
     "Testimonials": Testimonials,
     "UserProfile": UserProfile,
     "UserProjects": UserProjects,
     "Welcome": Welcome,
-    "Support": Support,
 }
 
 export const pagesConfig = {
