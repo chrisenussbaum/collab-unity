@@ -687,10 +687,10 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
                 className={`flex items-center space-x-2 transition-colors cu-text-responsive-sm ${isApplauded ? 'text-blue-600 hover:text-blue-700' : 'text-gray-600 hover:text-blue-600'}`}
                 onClick={handleApplaud}
               >
-                <HandHeart className="cu-icon-sm" />
+                <HandHeart className={`cu-icon-sm ${isApplauded ? 'fill-current' : ''}`} />
                 <span className="hidden sm:inline">Applaud</span>
                 {applaudCount > 0 && (
-                  <span className="cu-text-responsive-xs bg-gray-200 px-2 py-1 rounded-full ml-1">
+                  <span className="text-xs font-semibold">
                     {applaudCount}
                   </span>
                 )}
