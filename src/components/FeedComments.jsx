@@ -770,7 +770,7 @@ const FeedComments = forwardRef(({ project, currentUser, context = "feed" }, ref
             )}
 
             <div className="mt-2 flex items-center gap-3">
-              {!isEditing && currentUser && (
+              {!isEditing && currentUser && !isReply && (
                 <Button
                   variant="ghost"
                   size="sm"
