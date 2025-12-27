@@ -423,9 +423,9 @@ export default function Onboarding({ currentUser }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5 }}
-              className="w-full max-w-2xl"
+              className="w-full max-w-md"
             >
-              <div className="text-center mb-6">
+              <div className="text-center mb-8">
                 <div className="w-16 h-16 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
                   <Lightbulb className="w-8 h-8 text-white" />
                 </div>
@@ -437,9 +437,9 @@ export default function Onboarding({ currentUser }) {
                 </p>
               </div>
 
-              <Card className="cu-card max-h-[70vh] overflow-y-auto">
-                <CardContent className="pt-6 pb-6">
-                  <form onSubmit={handleProfileSubmit} className="space-y-5">
+              <Card className="cu-card">
+                <CardContent className="pt-6">
+                  <form onSubmit={handleProfileSubmit} className="space-y-6">
                     {/* Profile Photo */}
                     <div>
                       <Label className="text-base font-medium mb-2 block">
