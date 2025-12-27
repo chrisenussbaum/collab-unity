@@ -7,9 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Lightbulb, Loader2, Upload, Camera, CheckCircle, XCircle, FileText, Shield, ArrowLeft, Cookie, Image, Briefcase, GraduationCap, Users, BookOpen, Rocket, Target, Wrench } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
-import ArrayInputWithSearch from "../components/ArrayInputWithSearch";
+import { Lightbulb, Loader2, Upload, Camera, CheckCircle, XCircle, FileText, Shield, ArrowLeft, Cookie, Image, Briefcase, GraduationCap, Users, BookOpen, Rocket, Target } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PostOnboardingDialog from "../components/PostOnboardingDialog";
@@ -20,10 +18,6 @@ export default function Onboarding({ currentUser }) {
   const [primaryGoal, setPrimaryGoal] = useState("");
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
-  const [bio, setBio] = useState("");
-  const [skills, setSkills] = useState([]);
-  const [interests, setInterests] = useState([]);
-  const [tools, setTools] = useState([]);
   const [profileImage, setProfileImage] = useState("");
   const [coverImage, setCoverImage] = useState("");
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
@@ -55,10 +49,6 @@ export default function Onboarding({ currentUser }) {
     // Pre-fill with existing data if available
     if (currentUser.username) setUsername(currentUser.username);
     if (currentUser.full_name) setFullName(currentUser.full_name);
-    if (currentUser.bio) setBio(currentUser.bio);
-    if (currentUser.skills) setSkills(currentUser.skills);
-    if (currentUser.interests) setInterests(currentUser.interests);
-    if (currentUser.tools_technologies) setTools(currentUser.tools_technologies);
     if (currentUser.profile_image) setProfileImage(currentUser.profile_image);
     if (currentUser.cover_image) setCoverImage(currentUser.cover_image);
     if (currentUser.primary_goal) setPrimaryGoal(currentUser.primary_goal);
@@ -139,22 +129,6 @@ export default function Onboarding({ currentUser }) {
       toast.error("Please enter your full name.");
       return;
     }
-    if (!bio.trim()) {
-      toast.error("Please write a brief bio about yourself.");
-      return;
-    }
-    if (skills.length === 0) {
-      toast.error("Please add at least one skill.");
-      return;
-    }
-    if (interests.length === 0) {
-      toast.error("Please add at least one interest.");
-      return;
-    }
-    if (tools.length === 0) {
-      toast.error("Please add at least one tool/technology.");
-      return;
-    }
     if (!profileImage) {
       toast.error("Please upload a profile photo.");
       return;
@@ -199,10 +173,6 @@ export default function Onboarding({ currentUser }) {
       await base44.auth.updateMe({
         username: username.toLowerCase().trim(),
         full_name: fullName.trim(),
-        bio: bio.trim(),
-        skills: skills,
-        interests: interests,
-        tools_technologies: tools,
         profile_image: profileImage,
         cover_image: coverImage,
         primary_goal: primaryGoal,
@@ -430,15 +400,21 @@ export default function Onboarding({ currentUser }) {
                   <Lightbulb className="w-8 h-8 text-white" />
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-                  Complete Your Profile
+                  Create Your Profile
                 </h1>
                 <p className="text-gray-600">
-                  Tell us about yourself to maximize collaboration opportunities
+                  Complete these required fields to get started
                 </p>
               </div>
 
               <Card className="cu-card">
-                <CardContent className="pt-6">
+                <CardHeader>
+                  <CardTitle>Create Your Profile</CardTitle>
+                  <CardDescription>
+                    Complete these required fields to get started
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
                   <form onSubmit={handleProfileSubmit} className="space-y-6">
                     {/* Profile Photo */}
                     <div>
@@ -528,73 +504,6 @@ export default function Onboarding({ currentUser }) {
                       />
                     </div>
 
-                    {/* Bio */}
-                    <div>
-                      <Label htmlFor="bio" className="text-base font-medium mb-2 block">
-                        About You <span className="text-red-500">*</span>
-                      </Label>
-                      <Textarea
-                        id="bio"
-                        placeholder="Tell us about yourself, your interests, and what you're passionate about..."
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
-                        rows={3}
-                        maxLength={500}
-                        required
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        {bio.length}/500 characters
-                      </p>
-                    </div>
-
-                    {/* Skills */}
-                    <div>
-                      <Label className="text-base font-medium mb-2 block">
-                        Skills <span className="text-red-500">*</span>
-                      </Label>
-                      <p className="text-sm text-gray-500 mb-2">
-                        Add at least one skill (e.g., Web Development, Graphic Design)
-                      </p>
-                      <ArrayInputWithSearch
-                        value={skills}
-                        onChange={setSkills}
-                        placeholder="Add a skill..."
-                        maxItems={15}
-                      />
-                    </div>
-
-                    {/* Interests */}
-                    <div>
-                      <Label className="text-base font-medium mb-2 block">
-                        Interests <span className="text-red-500">*</span>
-                      </Label>
-                      <p className="text-sm text-gray-500 mb-2">
-                        Add at least one interest (e.g., Sustainability, AI, Gaming)
-                      </p>
-                      <ArrayInputWithSearch
-                        value={interests}
-                        onChange={setInterests}
-                        placeholder="Add an interest..."
-                        maxItems={15}
-                      />
-                    </div>
-
-                    {/* Tools */}
-                    <div>
-                      <Label className="text-base font-medium mb-2 block">
-                        Tools & Technologies <span className="text-red-500">*</span>
-                      </Label>
-                      <p className="text-sm text-gray-500 mb-2">
-                        Add at least one tool (e.g., Figma, Python, Adobe Suite)
-                      </p>
-                      <ArrayInputWithSearch
-                        value={tools}
-                        onChange={setTools}
-                        placeholder="Add a tool or technology..."
-                        maxItems={15}
-                      />
-                    </div>
-
                     {/* Cover Photo */}
                     <div>
                       <Label className="text-base font-medium mb-2 block">
@@ -646,7 +555,7 @@ export default function Onboarding({ currentUser }) {
                       <Button
                         type="submit"
                         className="cu-button flex-1"
-                        disabled={isCheckingUsername || !username.trim() || !fullName.trim() || !bio.trim() || skills.length === 0 || interests.length === 0 || tools.length === 0 || !profileImage || !coverImage || !!usernameError}
+                        disabled={isCheckingUsername || !username.trim() || !fullName.trim() || !profileImage || !coverImage || !!usernameError}
                       >
                         {isCheckingUsername ? (
                           <>
@@ -660,7 +569,7 @@ export default function Onboarding({ currentUser }) {
                     </div>
 
                     <p className="text-xs text-center text-gray-500">
-                      All fields are required. You can update your profile anytime from settings.
+                      You can add more details to your profile later from your profile settings
                     </p>
                   </form>
                 </CardContent>

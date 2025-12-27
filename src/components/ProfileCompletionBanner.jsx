@@ -16,8 +16,7 @@ export default function ProfileCompletionBanner({ user, onDismiss }) {
   const hasSkills = user.skills && user.skills.length >= 1;
   const hasTools = user.tools_technologies && user.tools_technologies.length >= 1;
   const hasInterests = user.interests && user.interests.length >= 1;
-  const hasBio = user.bio && user.bio.trim().length > 0;
-  const isProfileComplete = hasSkills && hasTools && hasInterests && hasBio;
+  const isProfileComplete = hasSkills && hasTools && hasInterests;
 
   // Don't show banner if user has completed minimum requirements
   if (isProfileComplete) return null;
