@@ -66,8 +66,70 @@ const UserCard = ({ user, currentUser, index }) => {
           </div>
           
           {user.username && (
-            <span className="text-sm text-gray-500 mb-4">@{user.username}</span>
+            <span className="text-sm text-gray-500 mb-3">@{user.username}</span>
           )}
+          
+          {/* Bio */}
+          {user.bio && (
+            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{user.bio}</p>
+          )}
+          
+          {/* Skills, Interests, Tools Display */}
+          <div className="w-full space-y-2 mb-4 text-left">
+            {user.skills && user.skills.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-1">Skills</p>
+                <div className="flex flex-wrap gap-1">
+                  {user.skills.slice(0, 3).map(skill => (
+                    <Badge key={skill} className="text-xs bg-purple-100 text-purple-700 border-purple-200">
+                      {skill}
+                    </Badge>
+                  ))}
+                  {user.skills.length > 3 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{user.skills.length - 3}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {user.interests && user.interests.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-1">Interests</p>
+                <div className="flex flex-wrap gap-1">
+                  {user.interests.slice(0, 3).map(interest => (
+                    <Badge key={interest} className="text-xs bg-indigo-100 text-indigo-700 border-indigo-200">
+                      {interest}
+                    </Badge>
+                  ))}
+                  {user.interests.length > 3 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{user.interests.length - 3}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {user.tools_technologies && user.tools_technologies.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-1">Tools</p>
+                <div className="flex flex-wrap gap-1">
+                  {user.tools_technologies.slice(0, 3).map(tool => (
+                    <Badge key={tool} className="text-xs bg-blue-100 text-blue-700 border-blue-200">
+                      {tool}
+                    </Badge>
+                  ))}
+                  {user.tools_technologies.length > 3 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{user.tools_technologies.length - 3}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           
           {/* Chat Button */}
           <Button 

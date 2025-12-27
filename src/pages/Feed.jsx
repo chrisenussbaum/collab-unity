@@ -2391,21 +2391,11 @@ export default function Feed({ currentUser, authIsLoading }) {
       <Dialog open={showFirstProjectPrompt} onOpenChange={setShowFirstProjectPrompt}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <div className="flex justify-between items-start">
-              <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <DialogTitle className="text-xl font-bold">Create Your First Project!</DialogTitle>
+            <div className="flex items-center space-x-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleDismissPrompt}
-                className="h-6 w-6 rounded-full"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              <DialogTitle className="text-xl font-bold">Create Your First Project!</DialogTitle>
             </div>
             <DialogDescription className="pt-4 text-base">
               Welcome to Collab Unity! 🎉 Start your collaboration journey by creating your first project. 

@@ -12,14 +12,14 @@ export default function ProfileCompletionBanner({ user, onDismiss }) {
 
   if (!user || isDismissed) return null;
 
-  // Check if user has made any profile edits beyond required fields
-  const hasSkills = user.skills && user.skills.length > 0;
-  const hasTools = user.tools_technologies && user.tools_technologies.length > 0;
-  const hasInterests = user.interests && user.interests.length > 0;
-  const hasMadeEdits = hasSkills || hasTools || hasInterests;
+  // Check if user has completed minimum profile requirements
+  const hasSkills = user.skills && user.skills.length >= 1;
+  const hasTools = user.tools_technologies && user.tools_technologies.length >= 1;
+  const hasInterests = user.interests && user.interests.length >= 1;
+  const isProfileComplete = hasSkills && hasTools && hasInterests;
 
-  // Don't show banner if user has made any edits (has skills, tools, or interests)
-  if (hasMadeEdits) return null;
+  // Don't show banner if user has completed minimum requirements
+  if (isProfileComplete) return null;
 
   const handleDismiss = () => {
     setIsDismissed(true);
