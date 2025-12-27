@@ -35,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+import ProfileCompletionBanner from "../components/ProfileCompletionBanner";
 import ClickableImage from "../components/ClickableImage";
 import ImageModal from "../components/ImageModal";
 import { getPublicUserProfiles } from '@/functions/getPublicUserProfiles';
@@ -1880,6 +1881,12 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
       <div className="min-h-screen bg-gray-50">
         <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            {isOwner && propCurrentUser && (
+              <div className="mb-4 sm:mb-6">
+                <ProfileCompletionBanner user={propCurrentUser} />
+              </div>
+            )}
+
             <Card className="cu-card mb-4 sm:mb-6 md:mb-8 overflow-hidden">
               <CardContent className="p-0">
                 <div className="h-32 sm:h-40 md:h-48 lg:h-64 relative overflow-hidden group">
