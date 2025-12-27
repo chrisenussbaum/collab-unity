@@ -7,15 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Lightbulb, Loader2, Upload, Camera, CheckCircle, XCircle, FileText, Shield, ArrowLeft, Cookie, Image, Briefcase, GraduationCap, Users, BookOpen, Rocket, Target } from "lucide-react";
+import { Lightbulb, Loader2, Upload, Camera, CheckCircle, XCircle, FileText, Shield, ArrowLeft, Cookie, Image } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PostOnboardingDialog from "../components/PostOnboardingDialog";
 
 export default function Onboarding({ currentUser }) {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1 = goal, 2 = profile, 3 = terms, 4 = cookies
-  const [primaryGoal, setPrimaryGoal] = useState("");
+  const [step, setStep] = useState(1); // 1 = profile, 2 = terms, 3 = cookies
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [profileImage, setProfileImage] = useState("");
@@ -51,7 +50,6 @@ export default function Onboarding({ currentUser }) {
     if (currentUser.full_name) setFullName(currentUser.full_name);
     if (currentUser.profile_image) setProfileImage(currentUser.profile_image);
     if (currentUser.cover_image) setCoverImage(currentUser.cover_image);
-    if (currentUser.primary_goal) setPrimaryGoal(currentUser.primary_goal);
   }, [currentUser, navigate]);
 
   const checkUsernameAvailability = async (usernameToCheck) => {
@@ -151,7 +149,7 @@ export default function Onboarding({ currentUser }) {
       }
 
       // Move to terms step
-      setStep(3);
+      setStep(2);
     } catch (error) {
       console.error("Error checking username:", error);
       toast.error("Failed to verify username. Please try again.");
@@ -162,7 +160,7 @@ export default function Onboarding({ currentUser }) {
 
   const handleAcceptTerms = async () => {
     // Move to cookies step
-    setStep(4);
+    setStep(3);
   };
 
   const handleCookiesChoice = async (accepted) => {
@@ -175,7 +173,6 @@ export default function Onboarding({ currentUser }) {
         full_name: fullName.trim(),
         profile_image: profileImage,
         cover_image: coverImage,
-        primary_goal: primaryGoal,
         has_completed_onboarding: true,
         accepted_terms: true,
         terms_accepted_at: new Date().toISOString(),
@@ -269,125 +266,6 @@ export default function Onboarding({ currentUser }) {
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div
-              key="goal-step"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
-              className="w-full max-w-3xl"
-            >
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Target className="w-8 h-8 text-white" />
-                </div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-                  What brings you to Collab Unity?
-                </h1>
-                <p className="text-gray-600">
-                  Choose your primary goal to get personalized recommendations
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[
-                  {
-                    value: "build_business",
-                    icon: Briefcase,
-                    title: "Build a Business",
-                    description: "Launch a startup or turn your idea into a viable business",
-                    color: "from-green-500 to-emerald-600"
-                  },
-                  {
-                    value: "enhance_portfolio",
-                    icon: Rocket,
-                    title: "Enhance Portfolio",
-                    description: "Showcase your work and build an impressive portfolio",
-                    color: "from-purple-500 to-indigo-600"
-                  },
-                  {
-                    value: "organizational_projects",
-                    icon: Users,
-                    title: "Organizational Projects",
-                    description: "Manage projects for your company or organization",
-                    color: "from-blue-500 to-cyan-600"
-                  },
-                  {
-                    value: "educational_assignments",
-                    icon: GraduationCap,
-                    title: "Educational Projects",
-                    description: "Collaborate on school assignments and learning projects",
-                    color: "from-orange-500 to-amber-600"
-                  },
-                  {
-                    value: "personal_development",
-                    icon: BookOpen,
-                    title: "Personal Development",
-                    description: "Learn new skills and grow through hands-on projects",
-                    color: "from-pink-500 to-rose-600"
-                  },
-                  {
-                    value: "explore",
-                    icon: Lightbulb,
-                    title: "Just Exploring",
-                    description: "Discover opportunities and see what's possible",
-                    color: "from-violet-500 to-purple-600"
-                  }
-                ].map((goal) => {
-                  const Icon = goal.icon;
-                  const isSelected = primaryGoal === goal.value;
-                  
-                  return (
-                    <motion.div
-                      key={goal.value}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Card
-                        onClick={() => setPrimaryGoal(goal.value)}
-                        className={`cursor-pointer transition-all duration-300 ${
-                          isSelected
-                            ? 'border-2 border-purple-500 shadow-lg bg-purple-50'
-                            : 'border-2 border-transparent hover:border-purple-200 hover:shadow-md'
-                        }`}
-                      >
-                        <CardContent className="p-6">
-                          <div className={`w-12 h-12 bg-gradient-to-br ${goal.color} rounded-lg flex items-center justify-center mb-4`}>
-                            <Icon className="w-6 h-6 text-white" />
-                          </div>
-                          <h3 className="font-bold text-gray-900 mb-2">{goal.title}</h3>
-                          <p className="text-sm text-gray-600">{goal.description}</p>
-                          {isSelected && (
-                            <div className="mt-4 flex items-center text-purple-600">
-                              <CheckCircle className="w-5 h-5 mr-2" />
-                              <span className="text-sm font-medium">Selected</span>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-8 text-center">
-                <Button
-                  onClick={() => setStep(2)}
-                  className="cu-button px-12"
-                  disabled={!primaryGoal}
-                >
-                  Continue
-                </Button>
-                {!primaryGoal && (
-                  <p className="text-xs text-gray-500 mt-4">
-                    Please select your primary goal to continue
-                  </p>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {step === 2 && (
-            <motion.div
               key="profile-step"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -400,10 +278,10 @@ export default function Onboarding({ currentUser }) {
                   <Lightbulb className="w-8 h-8 text-white" />
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-                  Create Your Profile
+                  Welcome to Collab Unity
                 </h1>
                 <p className="text-gray-600">
-                  Complete these required fields to get started
+                  Let's get you set up in just a few seconds
                 </p>
               </div>
 
@@ -541,32 +419,20 @@ export default function Onboarding({ currentUser }) {
                       </div>
                     </div>
 
-                    <div className="flex gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setStep(1)}
-                        className="flex-1"
-                        disabled={isCheckingUsername}
-                      >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back
-                      </Button>
-                      <Button
-                        type="submit"
-                        className="cu-button flex-1"
-                        disabled={isCheckingUsername || !username.trim() || !fullName.trim() || !profileImage || !coverImage || !!usernameError}
-                      >
-                        {isCheckingUsername ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Checking...
-                          </>
-                        ) : (
-                          'Continue'
-                        )}
-                      </Button>
-                    </div>
+                    <Button
+                      type="submit"
+                      className="cu-button w-full"
+                      disabled={isCheckingUsername || !username.trim() || !fullName.trim() || !profileImage || !coverImage || !!usernameError}
+                    >
+                      {isCheckingUsername ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Checking...
+                        </>
+                      ) : (
+                        'Continue'
+                      )}
+                    </Button>
 
                     <p className="text-xs text-center text-gray-500">
                       You can add more details to your profile later from your profile settings
@@ -577,7 +443,7 @@ export default function Onboarding({ currentUser }) {
             </motion.div>
           )}
 
-          {step === 3 && (
+          {step === 2 && (
             <motion.div
               key="terms-step"
               initial={{ opacity: 0, y: 20 }}
@@ -793,7 +659,7 @@ export default function Onboarding({ currentUser }) {
                 <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <Button
                     variant="outline"
-                    onClick={() => setStep(2)}
+                    onClick={() => setStep(1)}
                     className="sm:flex-1"
                     disabled={isSubmitting}
                   >
@@ -837,7 +703,7 @@ export default function Onboarding({ currentUser }) {
             </motion.div>
           )}
 
-          {step === 4 && (
+          {step === 3 && (
             <motion.div
               key="cookies-step"
               initial={{ opacity: 0, y: 20 }}
@@ -963,7 +829,7 @@ export default function Onboarding({ currentUser }) {
               <div className="flex flex-col sm:flex-row gap-3 pt-6">
                 <Button
                   variant="outline"
-                  onClick={() => setStep(3)}
+                  onClick={() => setStep(2)}
                   className="sm:flex-1"
                   disabled={isSubmitting}
                 >
