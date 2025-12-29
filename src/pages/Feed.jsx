@@ -2312,35 +2312,28 @@ export default function Feed({ currentUser, authIsLoading }) {
               ) : (
                 <>
                   <AnimatePresence>
-                    {createInfiniteScrollFeedWithAds(displayedItems, inlineAds).map((item, index) => (
-                      item.type === 'post' ? (
-                        item.content.itemType === 'project' ? (
-                          <ProjectPost
-                            key={`project-${item.content.id}`}
-                            project={item.content}
-                            owner={item.content.owner}
-                            currentUser={currentUser}
-                            projectApplauds={projectApplauds}
-                            projectIDEs={projectIDEsMap[item.content.id] || []}
-                            onProjectUpdate={loadFeedData}
-                            onApplaudUpdate={handleApplaudUpdate}
-                            collaboratorProfilesMap={allCollaboratorProfiles}
-                          />
-                        ) : (
-                          <FeedPostItem
-                            key={`feedpost-${item.content.id}`}
-                            post={item.content}
-                            owner={item.content.owner}
-                            currentUser={currentUser}
-                            feedPostApplauds={feedPostApplauds}
-                            onPostDeleted={loadFeedData}
-                            onApplaudUpdate={handleApplaudUpdate}
-                          />
-                        )
+                    {displayedItems.map((item) => (
+                      item.itemType === 'project' ? (
+                        <ProjectPost
+                          key={`project-${item.id}`}
+                          project={item}
+                          owner={item.owner}
+                          currentUser={currentUser}
+                          projectApplauds={projectApplauds}
+                          onProjectUpdate={loadFeedData}
+                          onApplaudUpdate={handleApplaudUpdate}
+                          collaboratorProfilesMap={allCollaboratorProfiles}
+                        />
                       ) : (
-                        <div key={`ad-${item.content.id}-${index}`} className="w-full">
-                          <AdvertisementCard ad={item.content} />
-                        </div>
+                        <FeedPostItem
+                          key={`feedpost-${item.id}`}
+                          post={item}
+                          owner={item.owner}
+                          currentUser={currentUser}
+                          feedPostApplauds={feedPostApplauds}
+                          onPostDeleted={loadFeedData}
+                          onApplaudUpdate={handleApplaudUpdate}
+                        />
                       )
                     ))}
                   </AnimatePresence>
@@ -2597,35 +2590,28 @@ export default function Feed({ currentUser, authIsLoading }) {
               ) : (
                 <>
                   <AnimatePresence>
-                    {createInfiniteScrollFeedWithAds(displayedItems, inlineAds).map((item, index) => (
-                      item.type === 'post' ? (
-                        item.content.itemType === 'project' ? (
-                          <ProjectPost
-                            key={`project-${item.content.id}`}
-                            project={item.content}
-                            owner={item.content.owner}
-                            currentUser={currentUser}
-                            projectApplauds={projectApplauds}
-                            projectIDEs={projectIDEsMap[item.content.id] || []}
-                            onProjectUpdate={loadFeedData}
-                            onApplaudUpdate={handleApplaudUpdate}
-                            collaboratorProfilesMap={allCollaboratorProfiles}
-                          />
-                        ) : (
-                          <FeedPostItem
-                            key={`feedpost-${item.content.id}`}
-                            post={item.content}
-                            owner={item.content.owner}
-                            currentUser={currentUser}
-                            feedPostApplauds={feedPostApplauds}
-                            onPostDeleted={loadFeedData}
-                            onApplaudUpdate={handleApplaudUpdate}
-                          />
-                        )
+                    {displayedItems.map((item) => (
+                      item.itemType === 'project' ? (
+                        <ProjectPost
+                          key={`project-${item.id}`}
+                          project={item}
+                          owner={item.owner}
+                          currentUser={currentUser}
+                          projectApplauds={projectApplauds}
+                          onProjectUpdate={loadFeedData}
+                          onApplaudUpdate={handleApplaudUpdate}
+                          collaboratorProfilesMap={allCollaboratorProfiles}
+                        />
                       ) : (
-                        <div key={`ad-${item.content.id}-${index}`} className="w-full">
-                          <AdvertisementCard ad={item.content} />
-                        </div>
+                        <FeedPostItem
+                          key={`feedpost-${item.id}`}
+                          post={item}
+                          owner={item.owner}
+                          currentUser={currentUser}
+                          feedPostApplauds={feedPostApplauds}
+                          onPostDeleted={loadFeedData}
+                          onApplaudUpdate={handleApplaudUpdate}
+                        />
                       )
                     ))}
                   </AnimatePresence>
