@@ -52,8 +52,6 @@ import {
   BookOpen,
   Bookmark,
   BookmarkCheck,
-  Code,
-  Maximize2,
   ExternalLink,
   DollarSign,
   CreditCard,
@@ -72,7 +70,6 @@ import { getPublicUserProfiles } from '@/functions/getPublicUserProfiles';
 import { injectAds } from '@/functions/injectAds';
 import { toast } from "sonner";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
-import IDEPreviewDialog from "@/components/IDEPreviewDialog";
 import ProjectLinkPreviewDialog from "@/components/ProjectLinkPreviewDialog";
 import FeedProjectHighlights from "../components/FeedProjectHighlights";
 import ProjectActivityIndicator, { isProjectActive } from "../components/ProjectActivityIndicator";
@@ -719,7 +716,7 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
 };
 
 
-const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projectIDEs = [], onProjectUpdate, onApplaudUpdate, collaboratorProfilesMap = {} }) => {
+const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProjectUpdate, onApplaudUpdate, collaboratorProfilesMap = {} }) => {
   const [contentView, setContentView] = React.useState('link');
   const [isApplauded, setIsApplauded] = useState(false);
   const [applaudCount, setApplaudCount] = useState(0);
@@ -743,10 +740,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
 
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(project.followers_count || 0);
-
-  // IDE Preview States
-  const [selectedIDE, setSelectedIDE] = useState(null);
-  const [showIDEPreview, setShowIDEPreview] = useState(false);
 
   // Project Link Preview States
   const [selectedProjectLink, setSelectedProjectLink] = useState(null);
@@ -779,19 +772,16 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
 
   const hasLinks = project.project_urls?.length > 0;
   const hasHighlights = project.highlights && project.highlights.length > 0;
-  const hasIDEs = projectIDEs.length > 0;
-  const hasAnyContent = hasLinks || hasHighlights || hasIDEs;
+  const hasAnyContent = hasLinks || hasHighlights;
   const hasMultipleLinks = project.project_urls?.length > 1;
 
   useEffect(() => {
     if (hasLinks) {
       setContentView('link');
-    } else if (hasIDEs) {
-      setContentView('ides');
     } else if (hasHighlights) {
       setContentView('highlights');
     }
-  }, [hasLinks, hasHighlights, hasIDEs]);
+  }, [hasLinks, hasHighlights]);
 
   // Get collaborator profiles from the passed map
   const collaboratorProfiles = React.useMemo(() => {
@@ -1001,11 +991,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
     setContentView(view);
   };
 
-  const handleIDEClick = (ide) => {
-    setSelectedIDE(ide);
-    setShowIDEPreview(true);
-  };
-
   const handleProjectLinkClick = (url, shouldPreview = false) => {
     if (shouldPreview) {
       setSelectedProjectLink(url);
@@ -1017,14 +1002,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
 
   return (
     <>
-      {/* IDE Preview Dialog */}
-      <IDEPreviewDialog
-        isOpen={showIDEPreview}
-        onClose={() => setShowIDEPreview(false)}
-        codeProject={selectedIDE}
-        projectTitle={project.title}
-      />
-
       {/* Project Link Preview Dialog */}
       <ProjectLinkPreviewDialog
         isOpen={showLinkPreview}
@@ -1342,7 +1319,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
                 // Build ordered list of available content types
                 const contentTypes = [];
                 if (hasLinks) contentTypes.push({ key: 'link', label: 'Showcase', icon: LinkIcon, count: project.project_urls?.length });
-                if (hasIDEs) contentTypes.push({ key: 'ides', label: 'IDEs', icon: Code, count: projectIDEs.length });
                 if (hasHighlights) contentTypes.push({ key: 'highlights', label: 'Highlights', icon: Camera, count: project.highlights?.length });
                 
                 if (contentTypes.length === 0) return null;
@@ -1578,73 +1554,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projec
               />
             )}
 
-            {/* Project IDEs - Interactive Previews */}
-            {(contentView === 'ides' && hasIDEs) && (
-              <div className="mb-4">
-                <HorizontalScrollContainer 
-                  className="pb-2"
-                  showArrows={projectIDEs.length > 1}
-                >
-                  {projectIDEs.map((ide, index) => (
-                    <div
-                      key={ide.id}
-                      className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[360px] cursor-pointer"
-                      onClick={() => handleIDEClick(ide)}
-                    >
-                      <Card className="cu-card bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden h-full border-2 border-purple-100 hover:border-purple-300">
-                        <div className="p-3">
-                          <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-                            <Badge className="bg-blue-100 text-blue-700 flex items-center gap-1">
-                              <Code className="w-3 h-3" />
-                              Code Playground
-                            </Badge>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleIDEClick(ide);
-                              }}
-                            >
-                              <Maximize2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                          
-                          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-2">
-                            <div className="bg-gray-900 px-3 py-2 flex items-center justify-between">
-                              <div className="flex items-center space-x-1">
-                                <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                                <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-                                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                              </div>
-                              <span className="text-[10px] text-gray-400">Preview</span>
-                            </div>
-                            <div className="aspect-video bg-white flex items-center justify-center p-4">
-                              <div className="text-center">
-                                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                                  <Code className="w-6 h-6 text-white" />
-                                </div>
-                                <p className="text-xs font-semibold text-gray-800">Interactive Preview</p>
-                                <p className="text-[10px] text-gray-500 mt-1">Click to explore</p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <h4 className="font-semibold text-sm text-gray-900 line-clamp-1 mb-1">
-                            {ide.title}
-                          </h4>
-                          <p className="text-xs text-gray-500">
-                            Updated {new Date(ide.updated_date).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </Card>
-                    </div>
-                  ))}
-                </HorizontalScrollContainer>
-              </div>
-            )}
-
             <div className="flex flex-wrap items-center gap-x-4 sm:gap-x-6 gap-y-2 cu-text-responsive-sm text-gray-600 mb-4">
               {project.location && (
                 <div className="flex items-center">
@@ -1737,7 +1646,6 @@ export default function Feed({ currentUser, authIsLoading }) {
   const [feedPosts, setFeedPosts] = useState([]);
   const [projectApplauds, setProjectApplauds] = useState([]);
   const [feedPostApplauds, setFeedPostApplauds] = useState([]);
-  const [projectIDEsMap, setProjectIDEsMap] = useState({}); // Map of project_id -> IDEs array
   const [advertisements, setAdvertisements] = useState({
     desktop: { left: [], right: [] },
     mobile: { inline: [] },
@@ -1922,11 +1830,10 @@ export default function Feed({ currentUser, authIsLoading }) {
       const feedPostIds = initialFeedPosts.map(fp => fp.id);
       
       // Parallel load all data
-      const [profilesResponse, fetchedProjectApplauds, fetchedFeedPostApplauds, fetchedIDEsMap] = await Promise.all([
+      const [profilesResponse, fetchedProjectApplauds, fetchedFeedPostApplauds] = await Promise.all([
         allOwnerEmails.length > 0 ? withRetry(() => getPublicUserProfiles({ emails: allOwnerEmails }), 2, 2000) : Promise.resolve({ data: [] }),
         projectIds.length > 0 ? withRetry(() => ProjectApplaud.filter({ project_id: { $in: projectIds } })) : Promise.resolve([]),
-        feedPostIds.length > 0 ? withRetry(() => FeedPostApplaud.filter({ feed_post_id: { $in: feedPostIds } })) : Promise.resolve([]),
-        projectIds.length > 0 ? loadIDEsForProjects(projectIds) : Promise.resolve({})
+        feedPostIds.length > 0 ? withRetry(() => FeedPostApplaud.filter({ feed_post_id: { $in: feedPostIds } })) : Promise.resolve([])
       ]);
       
       const profilesMap = (profilesResponse.data || []).reduce((acc, profile) => {
@@ -1982,7 +1889,6 @@ export default function Feed({ currentUser, authIsLoading }) {
         feedPosts: fullyPopulatedFeedPosts,
         projectApplauds: fetchedProjectApplauds,
         feedPostApplauds: fetchedFeedPostApplauds,
-        projectIDEsMap: fetchedIDEsMap,
         collaboratorProfiles: collabProfilesMap,
         hasMore: initialFeedPosts.length >= POSTS_PER_PAGE * 2 // Only feed posts paginate
       };
@@ -2003,7 +1909,6 @@ export default function Feed({ currentUser, authIsLoading }) {
       setFeedPosts(cachedFeedData.feedPosts);
       setProjectApplauds(cachedFeedData.projectApplauds);
       setFeedPostApplauds(cachedFeedData.feedPostApplauds);
-      setProjectIDEsMap(cachedFeedData.projectIDEsMap);
       setAllCollaboratorProfiles(cachedFeedData.collaboratorProfiles);
       setHasMorePosts(cachedFeedData.hasMore);
       setCurrentPage(1);
@@ -2108,12 +2013,11 @@ export default function Feed({ currentUser, authIsLoading }) {
       const newProjectIds = newProjectItems.map(p => p.id);
       const newFeedPostIds = newFeedPostItems.map(fp => fp.id);
 
-      // PARALLEL LOAD: profiles, applauds, and IDEs
-      const [profilesResponse, fetchedNewProjectApplauds, fetchedNewFeedPostApplauds, fetchedNewIDEsMap] = await Promise.all([
+      // PARALLEL LOAD: profiles and applauds
+      const [profilesResponse, fetchedNewProjectApplauds, fetchedNewFeedPostApplauds] = await Promise.all([
         withRetry(() => getPublicUserProfiles({ emails: allNewOwnerEmails }), 2, 2000),
         newProjectIds.length > 0 ? withRetry(() => ProjectApplaud.filter({ project_id: { $in: newProjectIds } })) : Promise.resolve([]),
-        newFeedPostIds.length > 0 ? withRetry(() => FeedPostApplaud.filter({ feed_post_id: { $in: newFeedPostIds } })) : Promise.resolve([]),
-        loadIDEsForProjects(newProjectIds) // BATCH LOAD IDEs for new projects
+        newFeedPostIds.length > 0 ? withRetry(() => FeedPostApplaud.filter({ feed_post_id: { $in: newFeedPostIds } })) : Promise.resolve([])
       ]);
 
       const newProfilesMap = (profilesResponse.data || []).reduce((acc, profile) => {
@@ -2143,7 +2047,6 @@ export default function Feed({ currentUser, authIsLoading }) {
       // Update state
       setProjects(prev => [...prev, ...populatedNewProjectItems]);
       setFeedPosts(prev => [...prev, ...populatedNewFeedPostItems]);
-      setProjectIDEsMap(prev => ({ ...prev, ...fetchedNewIDEsMap })); // MERGE IDEs MAP
 
       // Fetch collaborator profiles for new projects
       const newCollaboratorEmails = new Set();

@@ -70,9 +70,7 @@ import CommunicationsPanel from '../components/CommunicationsPanel';
 import SocialsPanel from '../components/SocialsPanel';
 import ProjectLinkPreview from "../components/ProjectLinkPreview"; // New import
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer"; // New import
-import IDEPreviewDialog from "@/components/IDEPreviewDialog";
 import { base44 } from "@/api/base44Client";
-import { Code, Maximize2 } from "lucide-react";
 
 
 import {
@@ -163,11 +161,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const logoInputRef = useRef(null);
-
-  // IDE states
-  const [projectIDEs, setProjectIDEs] = useState([]);
-  const [selectedIDE, setSelectedIDE] = useState(null);
-  const [showIDEPreview, setShowIDEPreview] = useState(false);
 
   // New state for invitations
   const [pendingInvitation, setPendingInvitation] = useState(null);
@@ -324,23 +317,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
       const profiles = await getCollaboratorProfiles(projectData);
       if (isMounted.current) {
         setProjectUsers(profiles);
-      }
-
-      // Load project IDEs
-      try {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        const idesData = await withRetry(() => 
-          base44.entities.ProjectIDE.filter({
-            project_id: projectId,
-            is_active: true,
-            ide_type: 'code_playground'
-          }, '-created_date')
-        );
-        if (idesData && isMounted.current) {
-          setProjectIDEs(idesData);
-        }
-      } catch (error) {
-        console.warn("Could not load project IDEs:", error);
       }
 
       // Load template if project was created from one
@@ -817,11 +793,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
     }
   };
 
-  const handleIDEClick = (ide) => {
-    setSelectedIDE(ide);
-    setShowIDEPreview(true);
-  };
-
   // Enhanced loading state as per outline
   if (isLoading) {
     return (
@@ -867,14 +838,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   
   return (
     <>
-      {/* IDE Preview Dialog */}
-      <IDEPreviewDialog
-        isOpen={showIDEPreview}
-        onClose={() => setShowIDEPreview(false)}
-        codeProject={selectedIDE}
-        projectTitle={project.title}
-      />
-
       {/* Real-time Collaboration Presence Tracking */}
       {userCanContribute && currentUser && (
         <CollaboratorPresence projectId={projectId} currentUser={currentUser} />
@@ -1265,7 +1228,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
             )}
 
             {/* Project Links Section */}
-            {(project.project_urls && project.project_urls.length > 0) || projectIDEs.length > 0 ? (
+            {project.project_urls && project.project_urls.length > 0 ? (
               <Card className="cu-card">
                 <CardHeader>
                   <CardTitle className="flex items-center text-base sm:text-lg">
