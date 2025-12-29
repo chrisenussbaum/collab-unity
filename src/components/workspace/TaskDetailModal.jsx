@@ -47,11 +47,13 @@ export default function TaskDetailModal({
   const [newLinkName, setNewLinkName] = useState("");
   const [newLinkUrl, setNewLinkUrl] = useState("");
   const [showAddLink, setShowAddLink] = useState(false);
+  const [localAttachments, setLocalAttachments] = useState([]);
   const fileInputRef = React.useRef(null);
 
   useEffect(() => {
     if (task && isOpen) {
       setLocalProgress(task.progress || 0);
+      setLocalAttachments(task.attachments || []);
       setEditedTask({
         title: task.title || "",
         description: task.description || "",
@@ -242,7 +244,9 @@ export default function TaskDetailModal({
         uploaded_at: new Date().toISOString()
       };
 
-      const updatedAttachments = [...(task.attachments || []), newAttachment];
+      const updatedAttachments = [...localAttachments, newAttachment];
+      setLocalAttachments(updatedAttachments);
+      
       await base44.entities.Task.update(task.id, { attachments: updatedAttachments });
 
       await base44.entities.ActivityLog.create({
@@ -288,7 +292,9 @@ export default function TaskDetailModal({
         uploaded_at: new Date().toISOString()
       };
 
-      const updatedAttachments = [...(task.attachments || []), newAttachment];
+      const updatedAttachments = [...localAttachments, newAttachment];
+      setLocalAttachments(updatedAttachments);
+      
       await base44.entities.Task.update(task.id, { attachments: updatedAttachments });
 
       await base44.entities.ActivityLog.create({
@@ -316,7 +322,9 @@ export default function TaskDetailModal({
     if (!confirm("Delete this attachment?")) return;
 
     try {
-      const updatedAttachments = task.attachments.filter((_, index) => index !== attachmentIndex);
+      const updatedAttachments = localAttachments.filter((_, index) => index !== attachmentIndex);
+      setLocalAttachments(updatedAttachments);
+      
       await base44.entities.Task.update(task.id, { attachments: updatedAttachments });
 
       await base44.entities.ActivityLog.create({
@@ -516,12 +524,12 @@ export default function TaskDetailModal({
             <div>
               <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
                 <Paperclip className="w-4 h-4 mr-1" />
-                Files & Links ({task.attachments?.length || 0})
+                Files & Links ({localAttachments.length})
               </h4>
               
               <div className="space-y-2 mb-3">
-                {task.attachments && task.attachments.length > 0 ? (
-                  task.attachments.map((attachment, index) => (
+                {localAttachments.length > 0 ? (
+                  localAttachments.map((attachment, index) => (
                     <div
                       key={index}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
