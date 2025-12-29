@@ -2090,7 +2090,7 @@ export default function Feed({ currentUser, authIsLoading }) {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [currentPage, isLoadingMore, hasMorePosts, loadAdsForPage, loadFeedPosts, loadApplauds, loadFeedPostApplauds, loadIDEsForProjects]);
+  }, [currentPage, isLoadingMore, hasMorePosts, loadAdsForPage, loadFeedPosts, loadApplauds, loadFeedPostApplauds]);
 
   useEffect(() => {
     const handleScroll = () => {

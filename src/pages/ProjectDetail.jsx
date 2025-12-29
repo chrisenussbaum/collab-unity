@@ -1302,9 +1302,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                       )}
                       </div>
                       ) : null}
-
-                      {/* Project IDEs Section */}
-                      {projectIDEs.length > 0 && (
                       <div>
                       <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
                         <Code className="w-4 h-4 mr-2 text-blue-600" />
