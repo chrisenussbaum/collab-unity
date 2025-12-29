@@ -83,7 +83,7 @@ import {
 
 import ProjectLinksManager from "../components/ProjectLinksManager";
 import CollaboratorPresence from "../components/CollaboratorPresence";
-import AIProjectAssistant from "../components/workspace/AIProjectAssistant";
+
 
 // Add Hat icon component after imports - LIGHTER VERSION
 const HatIcon = ({ className }) => (
@@ -1215,17 +1215,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
               </CardContent>
             </Card>
 
-            {/* AI Project Assistant - Mobile Only (between project details and instructions) */}
-            {userCanContribute && (
-              <div className="xl:hidden">
-                <AIProjectAssistant
-                  project={project}
-                  currentUser={currentUser}
-                  isCollaborator={userCanContribute}
-                  onTasksGenerated={handleProjectUpdate}
-                />
-              </div>
-            )}
+
 
             {/* Project Links Section */}
             {project.project_urls && project.project_urls.length > 0 ? (
@@ -1357,13 +1347,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                 </Card>
               )}
 
-              {/* AI Project Assistant */}
-              <AIProjectAssistant
-                project={project}
-                currentUser={currentUser}
-                isCollaborator={userCanContribute}
-                onTasksGenerated={handleProjectUpdate}
-              />
+
 
               {/* Team Communications Panel */}
               <CommunicationsPanel 
