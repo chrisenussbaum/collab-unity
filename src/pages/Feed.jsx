@@ -991,11 +991,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
     setContentView(view);
   };
 
-  const handleIDEClick = (ide) => {
-    setSelectedIDE(ide);
-    setShowIDEPreview(true);
-  };
-
   const handleProjectLinkClick = (url, shouldPreview = false) => {
     if (shouldPreview) {
       setSelectedProjectLink(url);
@@ -2423,12 +2418,7 @@ export default function Feed({ currentUser, authIsLoading }) {
               </>
             )}
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="cu-content-grid min-h-[800px]"
-            >
+            <div className="cu-content-grid min-h-[800px]">
               {isLoading ? (
                 <div className="text-center py-16">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
