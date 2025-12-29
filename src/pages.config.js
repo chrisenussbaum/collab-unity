@@ -1,6 +1,9 @@
 import AboutUs from './pages/AboutUs';
+import AdminVerificationPanel from './pages/AdminVerificationPanel';
+import Advertise from './pages/Advertise';
 import Chat from './pages/Chat';
 import Contact from './pages/Contact';
+import CreateAd from './pages/CreateAd';
 import CreateProject from './pages/CreateProject';
 import Discover from './pages/Discover';
 import EditProfile from './pages/EditProfile';
@@ -27,8 +30,11 @@ import __Layout from './Layout.jsx';
 
 export const PAGES = {
     "AboutUs": AboutUs,
+    "AdminVerificationPanel": AdminVerificationPanel,
+    "Advertise": Advertise,
     "Chat": Chat,
     "Contact": Contact,
+    "CreateAd": CreateAd,
     "CreateProject": CreateProject,
     "Discover": Discover,
     "EditProfile": EditProfile,

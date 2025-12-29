@@ -1022,7 +1022,16 @@ export default function Layout({ children, currentPageName }) {
                       <Eye className="cu-icon-sm mr-2" /> View Profile
                     </Link>
                   </DropdownMenuItem>
-
+                  {currentUser?.role === 'admin' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to={createPageUrl("AdminVerificationPanel")} className="flex items-center cursor-pointer">
+                          <ShieldCheck className="cu-icon-sm mr-2" /> Ad Review Panel
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to={createPageUrl("SupportCU")} className="flex items-center cursor-pointer">
@@ -1116,7 +1125,16 @@ export default function Layout({ children, currentPageName }) {
                           <Eye className="cu-icon-sm mr-2" /> View Profile
                         </Link>
                       </DropdownMenuItem>
-
+                      {currentUser?.role === 'admin' && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                            <Link to={createPageUrl("AdminVerificationPanel")} className="flex items-center cursor-pointer">
+                              <ShieldCheck className="cu-icon-sm mr-2" /> Ad Review Panel
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl("SupportCU")} className="flex items-center cursor-pointer">

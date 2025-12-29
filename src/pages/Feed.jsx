@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Project, ProjectApplaud, Notification, FeedPost, FeedPostApplaud, Comment, User } from "@/entities/all";
+import { Project, Advertisement, ProjectApplaud, Notification, FeedPost, FeedPostApplaud, Comment, User } from "@/entities/all";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -64,12 +64,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import MediaDisplay from "../components/MediaDisplay";
+import AdvertisementCard from "../components/AdvertisementCard";
 import FeedComments from "../components/FeedComments";
 import CreatePostDialog from "../components/CreatePostDialog";
 import ConfirmationDialog from "../components/ConfirmationDialog";
 import { getPublicUserProfiles } from '@/functions/getPublicUserProfiles';
+import { injectAds } from '@/functions/injectAds';
 import { toast } from "sonner";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
+import IDEPreviewDialog from "@/components/IDEPreviewDialog";
 import ProjectLinkPreviewDialog from "@/components/ProjectLinkPreviewDialog";
 import FeedProjectHighlights from "../components/FeedProjectHighlights";
 import ProjectActivityIndicator, { isProjectActive } from "../components/ProjectActivityIndicator";
@@ -716,7 +719,7 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
 };
 
 
-const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProjectUpdate, onApplaudUpdate, collaboratorProfilesMap = {} }) => {
+const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], projectIDEs = [], onProjectUpdate, onApplaudUpdate, collaboratorProfilesMap = {} }) => {
   const [contentView, setContentView] = React.useState('link');
   const [isApplauded, setIsApplauded] = useState(false);
   const [applaudCount, setApplaudCount] = useState(0);
@@ -740,6 +743,10 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
 
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(project.followers_count || 0);
+
+  // IDE Preview States
+  const [selectedIDE, setSelectedIDE] = useState(null);
+  const [showIDEPreview, setShowIDEPreview] = useState(false);
 
   // Project Link Preview States
   const [selectedProjectLink, setSelectedProjectLink] = useState(null);
@@ -772,16 +779,19 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
 
   const hasLinks = project.project_urls?.length > 0;
   const hasHighlights = project.highlights && project.highlights.length > 0;
-  const hasAnyContent = hasLinks || hasHighlights;
+  const hasIDEs = projectIDEs.length > 0;
+  const hasAnyContent = hasLinks || hasHighlights || hasIDEs;
   const hasMultipleLinks = project.project_urls?.length > 1;
 
   useEffect(() => {
     if (hasLinks) {
       setContentView('link');
+    } else if (hasIDEs) {
+      setContentView('ides');
     } else if (hasHighlights) {
       setContentView('highlights');
     }
-  }, [hasLinks, hasHighlights]);
+  }, [hasLinks, hasHighlights, hasIDEs]);
 
   // Get collaborator profiles from the passed map
   const collaboratorProfiles = React.useMemo(() => {
@@ -991,6 +1001,11 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
     setContentView(view);
   };
 
+  const handleIDEClick = (ide) => {
+    setSelectedIDE(ide);
+    setShowIDEPreview(true);
+  };
+
   const handleProjectLinkClick = (url, shouldPreview = false) => {
     if (shouldPreview) {
       setSelectedProjectLink(url);
@@ -1002,6 +1017,14 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
 
   return (
     <>
+      {/* IDE Preview Dialog */}
+      <IDEPreviewDialog
+        isOpen={showIDEPreview}
+        onClose={() => setShowIDEPreview(false)}
+        codeProject={selectedIDE}
+        projectTitle={project.title}
+      />
+
       {/* Project Link Preview Dialog */}
       <ProjectLinkPreviewDialog
         isOpen={showLinkPreview}
@@ -1313,12 +1336,13 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
           <CardContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 pt-2">
             <p className="text-gray-700 line-clamp-3 mb-4 cu-text-responsive-sm leading-relaxed">{project.description}</p>
 
-            {/* Content Navigation with Arrows - Showcase, Highlights */}
+            {/* Content Navigation with Arrows - Showcase, IDEs, Highlights */}
             {hasAnyContent && (
               (() => {
                 // Build ordered list of available content types
                 const contentTypes = [];
                 if (hasLinks) contentTypes.push({ key: 'link', label: 'Showcase', icon: LinkIcon, count: project.project_urls?.length });
+                if (hasIDEs) contentTypes.push({ key: 'ides', label: 'IDEs', icon: Code, count: projectIDEs.length });
                 if (hasHighlights) contentTypes.push({ key: 'highlights', label: 'Highlights', icon: Camera, count: project.highlights?.length });
                 
                 if (contentTypes.length === 0) return null;
@@ -1554,6 +1578,73 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
               />
             )}
 
+            {/* Project IDEs - Interactive Previews */}
+            {(contentView === 'ides' && hasIDEs) && (
+              <div className="mb-4">
+                <HorizontalScrollContainer 
+                  className="pb-2"
+                  showArrows={projectIDEs.length > 1}
+                >
+                  {projectIDEs.map((ide, index) => (
+                    <div
+                      key={ide.id}
+                      className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[360px] cursor-pointer"
+                      onClick={() => handleIDEClick(ide)}
+                    >
+                      <Card className="cu-card bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden h-full border-2 border-purple-100 hover:border-purple-300">
+                        <div className="p-3">
+                          <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+                            <Badge className="bg-blue-100 text-blue-700 flex items-center gap-1">
+                              <Code className="w-3 h-3" />
+                              Code Playground
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleIDEClick(ide);
+                              }}
+                            >
+                              <Maximize2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          
+                          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-2">
+                            <div className="bg-gray-900 px-3 py-2 flex items-center justify-between">
+                              <div className="flex items-center space-x-1">
+                                <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                                <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                              </div>
+                              <span className="text-[10px] text-gray-400">Preview</span>
+                            </div>
+                            <div className="aspect-video bg-white flex items-center justify-center p-4">
+                              <div className="text-center">
+                                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                                  <Code className="w-6 h-6 text-white" />
+                                </div>
+                                <p className="text-xs font-semibold text-gray-800">Interactive Preview</p>
+                                <p className="text-[10px] text-gray-500 mt-1">Click to explore</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <h4 className="font-semibold text-sm text-gray-900 line-clamp-1 mb-1">
+                            {ide.title}
+                          </h4>
+                          <p className="text-xs text-gray-500">
+                            Updated {new Date(ide.updated_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </Card>
+                    </div>
+                  ))}
+                </HorizontalScrollContainer>
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center gap-x-4 sm:gap-x-6 gap-y-2 cu-text-responsive-sm text-gray-600 mb-4">
               {project.location && (
                 <div className="flex items-center">
@@ -1646,10 +1737,18 @@ export default function Feed({ currentUser, authIsLoading }) {
   const [feedPosts, setFeedPosts] = useState([]);
   const [projectApplauds, setProjectApplauds] = useState([]);
   const [feedPostApplauds, setFeedPostApplauds] = useState([]);
+  const [projectIDEsMap, setProjectIDEsMap] = useState({}); // Map of project_id -> IDEs array
+  const [advertisements, setAdvertisements] = useState({
+    desktop: { left: [], right: [] },
+    mobile: { inline: [] },
+    tablet: { inline: [] },
+    all: []
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [inlineAds, setInlineAds] = useState([]);
   const [allCollaboratorProfiles, setAllCollaboratorProfiles] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -1670,6 +1769,50 @@ export default function Feed({ currentUser, authIsLoading }) {
 
   const POSTS_PER_PAGE = 10;
 
+  // Load ads in background without blocking feed
+  const loadAdsForPage = useCallback(async (page, items) => {
+    try {
+      const getDeviceType = () => {
+        const width = window.innerWidth;
+        if (width < 768) return 'mobile';
+        if (width < 1280) return 'tablet';
+        return 'desktop';
+      };
+
+      const deviceType = getDeviceType();
+
+      const adsResponse = await injectAds({
+        user_email: currentUser?.email || null,
+        organic_posts: items.slice(0, 20), // Pass a sample of combined items
+        device_type: deviceType,
+        insertion_interval: 3,
+        current_page: page,
+        posts_per_page: POSTS_PER_PAGE
+      });
+
+      const { data: adsData } = adsResponse;
+      if (adsData) {
+        let newInlineAds = [];
+        if (deviceType === 'mobile') {
+          newInlineAds = adsData.mobile?.inline || [];
+        } else if (deviceType === 'tablet') {
+          newInlineAds = adsData.tablet?.inline || [];
+        }
+
+        if (page === 1) {
+          setAdvertisements(adsData);
+          setInlineAds(newInlineAds);
+        } else {
+          setInlineAds(prev => [...prev, ...newInlineAds]);
+        }
+      }
+
+    } catch (error) {
+      console.error("Error loading ads for page", page, ":", error);
+      // Don't throw - just log the error so ads don't block feed
+    }
+  }, [currentUser]);
+
   const loadApplauds = useCallback(async (projectIds) => {
     if (!projectIds || projectIds.length === 0) {
       return [];
@@ -1685,6 +1828,37 @@ export default function Feed({ currentUser, authIsLoading }) {
       return [];
     }
   }, []); 
+
+  // BATCH LOAD IDEs for multiple projects
+  const loadIDEsForProjects = useCallback(async (projectIds) => {
+    if (!projectIds || projectIds.length === 0) {
+      return {};
+    }
+    
+    try {
+      const allIDEs = await withRetry(() =>
+        base44.entities.ProjectIDE.filter({
+          project_id: { $in: projectIds },
+          is_active: true,
+          ide_type: 'code_playground'
+        }, '-created_date')
+      );
+      
+      // Group IDEs by project_id
+      const idesMap = {};
+      (allIDEs || []).forEach(ide => {
+        if (!idesMap[ide.project_id]) {
+          idesMap[ide.project_id] = [];
+        }
+        idesMap[ide.project_id].push(ide);
+      });
+      
+      return idesMap;
+    } catch (error) {
+      console.error("Error loading project IDEs:", error);
+      return {};
+    }
+  }, []);
 
   const loadFeedPosts = useCallback(async (page = 1, fetchLimit = POSTS_PER_PAGE, currentOffset = 0) => {
     try {
@@ -1748,10 +1922,11 @@ export default function Feed({ currentUser, authIsLoading }) {
       const feedPostIds = initialFeedPosts.map(fp => fp.id);
       
       // Parallel load all data
-      const [profilesResponse, fetchedProjectApplauds, fetchedFeedPostApplauds] = await Promise.all([
+      const [profilesResponse, fetchedProjectApplauds, fetchedFeedPostApplauds, fetchedIDEsMap] = await Promise.all([
         allOwnerEmails.length > 0 ? withRetry(() => getPublicUserProfiles({ emails: allOwnerEmails }), 2, 2000) : Promise.resolve({ data: [] }),
         projectIds.length > 0 ? withRetry(() => ProjectApplaud.filter({ project_id: { $in: projectIds } })) : Promise.resolve([]),
-        feedPostIds.length > 0 ? withRetry(() => FeedPostApplaud.filter({ feed_post_id: { $in: feedPostIds } })) : Promise.resolve([])
+        feedPostIds.length > 0 ? withRetry(() => FeedPostApplaud.filter({ feed_post_id: { $in: feedPostIds } })) : Promise.resolve([]),
+        projectIds.length > 0 ? loadIDEsForProjects(projectIds) : Promise.resolve({})
       ]);
       
       const profilesMap = (profilesResponse.data || []).reduce((acc, profile) => {
@@ -1807,6 +1982,7 @@ export default function Feed({ currentUser, authIsLoading }) {
         feedPosts: fullyPopulatedFeedPosts,
         projectApplauds: fetchedProjectApplauds,
         feedPostApplauds: fetchedFeedPostApplauds,
+        projectIDEsMap: fetchedIDEsMap,
         collaboratorProfiles: collabProfilesMap,
         hasMore: initialFeedPosts.length >= POSTS_PER_PAGE * 2 // Only feed posts paginate
       };
@@ -1827,12 +2003,22 @@ export default function Feed({ currentUser, authIsLoading }) {
       setFeedPosts(cachedFeedData.feedPosts);
       setProjectApplauds(cachedFeedData.projectApplauds);
       setFeedPostApplauds(cachedFeedData.feedPostApplauds);
+      setProjectIDEsMap(cachedFeedData.projectIDEsMap);
       setAllCollaboratorProfiles(cachedFeedData.collaboratorProfiles);
       setHasMorePosts(cachedFeedData.hasMore);
       setCurrentPage(1);
       consecutiveEmptyLoadsRef.current = 0;
+      
+      // Load ads in background
+      if (cachedFeedData.projects.length > 0 || cachedFeedData.feedPosts.length > 0) {
+        const items = [
+          ...cachedFeedData.projects.map(p => ({ ...p, itemType: 'project' })),
+          ...cachedFeedData.feedPosts.map(fp => ({ ...fp, itemType: 'feedPost' }))
+        ].slice(0, POSTS_PER_PAGE);
+        loadAdsForPage(1, items).catch(err => console.error("Background ad loading failed:", err));
+      }
     }
-  }, [cachedFeedData, isQueryLoading]);
+  }, [cachedFeedData, isQueryLoading, loadAdsForPage]);
 
   // Manual refresh function for post creation/deletion
   const loadFeedData = useCallback(() => {
@@ -1923,10 +2109,11 @@ export default function Feed({ currentUser, authIsLoading }) {
       const newFeedPostIds = newFeedPostItems.map(fp => fp.id);
 
       // PARALLEL LOAD: profiles, applauds, and IDEs
-      const [profilesResponse, fetchedNewProjectApplauds, fetchedNewFeedPostApplauds] = await Promise.all([
+      const [profilesResponse, fetchedNewProjectApplauds, fetchedNewFeedPostApplauds, fetchedNewIDEsMap] = await Promise.all([
         withRetry(() => getPublicUserProfiles({ emails: allNewOwnerEmails }), 2, 2000),
         newProjectIds.length > 0 ? withRetry(() => ProjectApplaud.filter({ project_id: { $in: newProjectIds } })) : Promise.resolve([]),
-        newFeedPostIds.length > 0 ? withRetry(() => FeedPostApplaud.filter({ feed_post_id: { $in: newFeedPostIds } })) : Promise.resolve([])
+        newFeedPostIds.length > 0 ? withRetry(() => FeedPostApplaud.filter({ feed_post_id: { $in: newFeedPostIds } })) : Promise.resolve([]),
+        loadIDEsForProjects(newProjectIds) // BATCH LOAD IDEs for new projects
       ]);
 
       const newProfilesMap = (profilesResponse.data || []).reduce((acc, profile) => {
@@ -1956,6 +2143,7 @@ export default function Feed({ currentUser, authIsLoading }) {
       // Update state
       setProjects(prev => [...prev, ...populatedNewProjectItems]);
       setFeedPosts(prev => [...prev, ...populatedNewFeedPostItems]);
+      setProjectIDEsMap(prev => ({ ...prev, ...fetchedNewIDEsMap })); // MERGE IDEs MAP
 
       // Fetch collaborator profiles for new projects
       const newCollaboratorEmails = new Set();
@@ -1979,6 +2167,11 @@ export default function Feed({ currentUser, authIsLoading }) {
           console.error("Error fetching new collaborator profiles for activity:", error);
         }
       }
+        
+      // Load ads in background - don't await or block on this
+      loadAdsForPage(nextPage, itemsToAdd).catch(err => {
+        console.error("Background ad loading failed:", err);
+      });
       
       setProjectApplauds(prev => [...prev, ...(fetchedNewProjectApplauds || [])]);
       setFeedPostApplauds(prev => [...prev, ...(fetchedNewFeedPostApplauds || [])]);
@@ -1994,7 +2187,7 @@ export default function Feed({ currentUser, authIsLoading }) {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [currentPage, isLoadingMore, hasMorePosts, loadFeedPosts, loadApplauds, loadFeedPostApplauds]);
+  }, [currentPage, isLoadingMore, hasMorePosts, loadAdsForPage, loadFeedPosts, loadApplauds, loadFeedPostApplauds, loadIDEsForProjects]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -2156,7 +2349,27 @@ export default function Feed({ currentUser, authIsLoading }) {
     localStorage.setItem(`first_project_prompt_seen_${currentUser.email}`, 'true');
   };
   
+  const leftAds = advertisements?.desktop?.left || [];
+  const rightAds = advertisements?.desktop?.right || [];
 
+  const createInfiniteScrollFeedWithAds = (posts, ads) => {
+    if (ads.length === 0) return posts.map(post => ({ type: 'post', content: post }));
+    
+    const feedItems = [];
+    let adIndex = 0;
+    const adInterval = 3;
+    
+    posts.forEach((post, index) => {
+      feedItems.push({ type: 'post', content: post });
+      
+      if ((index + 1) % adInterval === 0 && adIndex < ads.length && index < posts.length - 1) {
+        feedItems.push({ type: 'ad', content: ads[adIndex] });
+        adIndex++;
+      }
+    });
+    
+    return feedItems;
+  };
 
   if (authIsLoading) {
     return (
@@ -2307,28 +2520,35 @@ export default function Feed({ currentUser, authIsLoading }) {
               ) : (
                 <>
                   <AnimatePresence>
-                    {displayedItems.map((item) => (
-                      item.itemType === 'project' ? (
-                        <ProjectPost
-                          key={`project-${item.id}`}
-                          project={item}
-                          owner={item.owner}
-                          currentUser={currentUser}
-                          projectApplauds={projectApplauds}
-                          onProjectUpdate={loadFeedData}
-                          onApplaudUpdate={handleApplaudUpdate}
-                          collaboratorProfilesMap={allCollaboratorProfiles}
-                        />
+                    {createInfiniteScrollFeedWithAds(displayedItems, inlineAds).map((item, index) => (
+                      item.type === 'post' ? (
+                        item.content.itemType === 'project' ? (
+                          <ProjectPost
+                            key={`project-${item.content.id}`}
+                            project={item.content}
+                            owner={item.content.owner}
+                            currentUser={currentUser}
+                            projectApplauds={projectApplauds}
+                            projectIDEs={projectIDEsMap[item.content.id] || []}
+                            onProjectUpdate={loadFeedData}
+                            onApplaudUpdate={handleApplaudUpdate}
+                            collaboratorProfilesMap={allCollaboratorProfiles}
+                          />
+                        ) : (
+                          <FeedPostItem
+                            key={`feedpost-${item.content.id}`}
+                            post={item.content}
+                            owner={item.content.owner}
+                            currentUser={currentUser}
+                            feedPostApplauds={feedPostApplauds}
+                            onPostDeleted={loadFeedData}
+                            onApplaudUpdate={handleApplaudUpdate}
+                          />
+                        )
                       ) : (
-                        <FeedPostItem
-                          key={`feedpost-${item.id}`}
-                          post={item}
-                          owner={item.owner}
-                          currentUser={currentUser}
-                          feedPostApplauds={feedPostApplauds}
-                          onPostDeleted={loadFeedData}
-                          onApplaudUpdate={handleApplaudUpdate}
-                        />
+                        <div key={`ad-${item.content.id}-${index}`} className="w-full">
+                          <AdvertisementCard ad={item.content} />
+                        </div>
                       )
                     ))}
                   </AnimatePresence>
@@ -2353,8 +2573,14 @@ export default function Feed({ currentUser, authIsLoading }) {
           </div>
         </div>
 
-        <div className="hidden md:hidden xl:block">
-          <div className="max-w-4xl mx-auto cu-content-grid pt-6">
+        <div className="hidden md:hidden xl:grid xl:grid-cols-12 xl:gap-8">
+          <aside className="xl:col-span-3">
+            <div className="sticky top-20 cu-content-grid h-fit">
+              {leftAds.map(ad => <AdvertisementCard key={ad.id} ad={ad} />)}
+            </div>
+          </aside>
+
+          <main className="xl:col-span-6 cu-content-grid">
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -2418,7 +2644,12 @@ export default function Feed({ currentUser, authIsLoading }) {
               </>
             )}
 
-            <div className="cu-content-grid min-h-[800px]">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="cu-content-grid min-h-[800px]"
+            >
               {isLoading ? (
                 <div className="text-center py-16">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
@@ -2447,28 +2678,35 @@ export default function Feed({ currentUser, authIsLoading }) {
               ) : (
                 <>
                   <AnimatePresence>
-                    {displayedItems.map((item) => (
-                      item.itemType === 'project' ? (
-                        <ProjectPost
-                          key={`project-${item.id}`}
-                          project={item}
-                          owner={item.owner}
-                          currentUser={currentUser}
-                          projectApplauds={projectApplauds}
-                          onProjectUpdate={loadFeedData}
-                          onApplaudUpdate={handleApplaudUpdate}
-                          collaboratorProfilesMap={allCollaboratorProfiles}
-                        />
+                    {createInfiniteScrollFeedWithAds(displayedItems, inlineAds).map((item, index) => (
+                      item.type === 'post' ? (
+                        item.content.itemType === 'project' ? (
+                          <ProjectPost
+                            key={`project-${item.content.id}`}
+                            project={item.content}
+                            owner={item.content.owner}
+                            currentUser={currentUser}
+                            projectApplauds={projectApplauds}
+                            projectIDEs={projectIDEsMap[item.content.id] || []}
+                            onProjectUpdate={loadFeedData}
+                            onApplaudUpdate={handleApplaudUpdate}
+                            collaboratorProfilesMap={allCollaboratorProfiles}
+                          />
+                        ) : (
+                          <FeedPostItem
+                            key={`feedpost-${item.content.id}`}
+                            post={item.content}
+                            owner={item.content.owner}
+                            currentUser={currentUser}
+                            feedPostApplauds={feedPostApplauds}
+                            onPostDeleted={loadFeedData}
+                            onApplaudUpdate={handleApplaudUpdate}
+                          />
+                        )
                       ) : (
-                        <FeedPostItem
-                          key={`feedpost-${item.id}`}
-                          post={item}
-                          owner={item.owner}
-                          currentUser={currentUser}
-                          feedPostApplauds={feedPostApplauds}
-                          onPostDeleted={loadFeedData}
-                          onApplaudUpdate={handleApplaudUpdate}
-                        />
+                        <div key={`ad-${item.content.id}-${index}`} className="w-full">
+                          <AdvertisementCard ad={item.content} />
+                        </div>
                       )
                     ))}
                   </AnimatePresence>
@@ -2489,8 +2727,14 @@ export default function Feed({ currentUser, authIsLoading }) {
                   )}
                 </>
               )}
+            </motion.div>
+          </main>
+
+          <aside className="xl:col-span-3">
+            <div className="sticky top-20 cu-content-grid h-fit">
+              {rightAds.map(ad => <AdvertisementCard key={ad.id} ad={ad} />)}
             </div>
-          </div>
+          </aside>
         </div>
 
         <div className="hidden md:block xl:hidden">
@@ -2580,28 +2824,35 @@ export default function Feed({ currentUser, authIsLoading }) {
               ) : (
                 <>
                   <AnimatePresence>
-                    {displayedItems.map((item) => (
-                      item.itemType === 'project' ? (
-                        <ProjectPost
-                          key={`project-${item.id}`}
-                          project={item}
-                          owner={item.owner}
-                          currentUser={currentUser}
-                          projectApplauds={projectApplauds}
-                          onProjectUpdate={loadFeedData}
-                          onApplaudUpdate={handleApplaudUpdate}
-                          collaboratorProfilesMap={allCollaboratorProfiles}
-                        />
+                    {createInfiniteScrollFeedWithAds(displayedItems, inlineAds).map((item, index) => (
+                      item.type === 'post' ? (
+                        item.content.itemType === 'project' ? (
+                          <ProjectPost
+                            key={`project-${item.content.id}`}
+                            project={item.content}
+                            owner={item.content.owner}
+                            currentUser={currentUser}
+                            projectApplauds={projectApplauds}
+                            projectIDEs={projectIDEsMap[item.content.id] || []}
+                            onProjectUpdate={loadFeedData}
+                            onApplaudUpdate={handleApplaudUpdate}
+                            collaboratorProfilesMap={allCollaboratorProfiles}
+                          />
+                        ) : (
+                          <FeedPostItem
+                            key={`feedpost-${item.content.id}`}
+                            post={item.content}
+                            owner={item.content.owner}
+                            currentUser={currentUser}
+                            feedPostApplauds={feedPostApplauds}
+                            onPostDeleted={loadFeedData}
+                            onApplaudUpdate={handleApplaudUpdate}
+                          />
+                        )
                       ) : (
-                        <FeedPostItem
-                          key={`feedpost-${item.id}`}
-                          post={item}
-                          owner={item.owner}
-                          currentUser={currentUser}
-                          feedPostApplauds={feedPostApplauds}
-                          onPostDeleted={loadFeedData}
-                          onApplaudUpdate={handleApplaudUpdate}
-                        />
+                        <div key={`ad-${item.content.id}-${index}`} className="w-full">
+                          <AdvertisementCard ad={item.content} />
+                        </div>
                       )
                     ))}
                   </AnimatePresence>
