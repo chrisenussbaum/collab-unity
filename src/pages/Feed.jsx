@@ -2432,7 +2432,6 @@ export default function Feed({ currentUser, authIsLoading }) {
                             owner={item.content.owner}
                             currentUser={currentUser}
                             projectApplauds={projectApplauds}
-                            projectIDEs={projectIDEsMap[item.content.id] || []}
                             onProjectUpdate={loadFeedData}
                             onApplaudUpdate={handleApplaudUpdate}
                             collaboratorProfilesMap={allCollaboratorProfiles}
@@ -2590,7 +2589,6 @@ export default function Feed({ currentUser, authIsLoading }) {
                             owner={item.content.owner}
                             currentUser={currentUser}
                             projectApplauds={projectApplauds}
-                            projectIDEs={projectIDEsMap[item.content.id] || []}
                             onProjectUpdate={loadFeedData}
                             onApplaudUpdate={handleApplaudUpdate}
                             collaboratorProfilesMap={allCollaboratorProfiles}
@@ -2736,7 +2734,6 @@ export default function Feed({ currentUser, authIsLoading }) {
                             owner={item.content.owner}
                             currentUser={currentUser}
                             projectApplauds={projectApplauds}
-                            projectIDEs={projectIDEsMap[item.content.id] || []}
                             onProjectUpdate={loadFeedData}
                             onApplaudUpdate={handleApplaudUpdate}
                             collaboratorProfilesMap={allCollaboratorProfiles}
