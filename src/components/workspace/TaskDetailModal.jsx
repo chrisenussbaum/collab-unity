@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   MessageSquare, Calendar, User, AlertCircle, Flag, 
-  TrendingUp, Send, Edit2, Trash2, X, Save 
+  TrendingUp, Send, Edit2, Trash2, X, Save, Paperclip, Link as LinkIcon, Upload, FileText, ExternalLink
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -43,6 +43,11 @@ export default function TaskDetailModal({
   const [isEditing, setIsEditing] = useState(false);
   const [editedTask, setEditedTask] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [newLinkName, setNewLinkName] = useState("");
+  const [newLinkUrl, setNewLinkUrl] = useState("");
+  const [showAddLink, setShowAddLink] = useState(false);
+  const fileInputRef = React.useRef(null);
 
   useEffect(() => {
     if (task && isOpen) {
@@ -219,6 +224,119 @@ export default function TaskDetailModal({
     }
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingFile(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      
+      const newAttachment = {
+        type: "file",
+        name: file.name,
+        url: file_url,
+        file_size: file.size,
+        file_type: file.type,
+        uploaded_by: currentUser.email,
+        uploaded_at: new Date().toISOString()
+      };
+
+      const updatedAttachments = [...(task.attachments || []), newAttachment];
+      await base44.entities.Task.update(task.id, { attachments: updatedAttachments });
+
+      await base44.entities.ActivityLog.create({
+        project_id: projectId,
+        user_email: currentUser.email,
+        user_name: currentUser.full_name || currentUser.email,
+        action_type: "task_updated",
+        action_description: `Added file "${file.name}" to task "${task.title}"`,
+        entity_type: "task",
+        entity_id: task.id
+      });
+
+      onTaskUpdate();
+      toast.success("File uploaded");
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      toast.error("Failed to upload file");
+    } finally {
+      setIsUploadingFile(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleAddLink = async () => {
+    if (!newLinkName.trim() || !newLinkUrl.trim()) {
+      toast.error("Please provide both link name and URL");
+      return;
+    }
+
+    if (!newLinkUrl.startsWith('http://') && !newLinkUrl.startsWith('https://')) {
+      toast.error("Please enter a valid URL starting with http:// or https://");
+      return;
+    }
+
+    try {
+      const newAttachment = {
+        type: "link",
+        name: newLinkName.trim(),
+        url: newLinkUrl.trim(),
+        uploaded_by: currentUser.email,
+        uploaded_at: new Date().toISOString()
+      };
+
+      const updatedAttachments = [...(task.attachments || []), newAttachment];
+      await base44.entities.Task.update(task.id, { attachments: updatedAttachments });
+
+      await base44.entities.ActivityLog.create({
+        project_id: projectId,
+        user_email: currentUser.email,
+        user_name: currentUser.full_name || currentUser.email,
+        action_type: "task_updated",
+        action_description: `Added link "${newLinkName.trim()}" to task "${task.title}"`,
+        entity_type: "task",
+        entity_id: task.id
+      });
+
+      setNewLinkName("");
+      setNewLinkUrl("");
+      setShowAddLink(false);
+      onTaskUpdate();
+      toast.success("Link added");
+    } catch (error) {
+      console.error("Error adding link:", error);
+      toast.error("Failed to add link");
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentIndex) => {
+    if (!confirm("Delete this attachment?")) return;
+
+    try {
+      const updatedAttachments = task.attachments.filter((_, index) => index !== attachmentIndex);
+      await base44.entities.Task.update(task.id, { attachments: updatedAttachments });
+
+      await base44.entities.ActivityLog.create({
+        project_id: projectId,
+        user_email: currentUser.email,
+        user_name: currentUser.full_name || currentUser.email,
+        action_type: "task_updated",
+        action_description: `Removed attachment from task "${task.title}"`,
+        entity_type: "task",
+        entity_id: task.id
+      });
+
+      onTaskUpdate();
+      toast.success("Attachment deleted");
+    } catch (error) {
+      console.error("Error deleting attachment:", error);
+      toast.error("Failed to delete attachment");
+    }
+  };
+
   if (!task) return null;
 
   const assignedUser = collaborators?.find(c => c.email === task.assigned_to);
@@ -392,6 +510,144 @@ export default function TaskDetailModal({
                   style={{ width: `${localProgress}%` }}
                 />
               </div>
+            </div>
+
+            {/* Attachments Section */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                <Paperclip className="w-4 h-4 mr-1" />
+                Files & Links ({task.attachments?.length || 0})
+              </h4>
+              
+              <div className="space-y-2 mb-3">
+                {task.attachments && task.attachments.length > 0 ? (
+                  task.attachments.map((attachment, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        {attachment.type === 'file' ? (
+                          <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                        ) : (
+                          <LinkIcon className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <a
+                            href={attachment.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-medium text-gray-900 hover:text-purple-600 truncate block"
+                          >
+                            {attachment.name}
+                          </a>
+                          {attachment.type === 'file' && attachment.file_size && (
+                            <p className="text-xs text-gray-500">
+                              {(attachment.file_size / 1024).toFixed(1)} KB
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-1 flex-shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => window.open(attachment.url, '_blank')}
+                            title="Open in new tab"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                          </Button>
+                          {attachment.uploaded_by === currentUser.email && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => handleDeleteAttachment(index)}
+                              title="Delete attachment"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    No files or links attached yet
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingFile}
+                  className="flex-1"
+                >
+                  <Upload className="w-4 h-4 mr-1" />
+                  {isUploadingFile ? "Uploading..." : "Upload File"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddLink(!showAddLink)}
+                  className="flex-1"
+                >
+                  <LinkIcon className="w-4 h-4 mr-1" />
+                  Add Link
+                </Button>
+              </div>
+
+              {showAddLink && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2"
+                >
+                  <Input
+                    placeholder="Link name (e.g., Design Mockup)"
+                    value={newLinkName}
+                    onChange={(e) => setNewLinkName(e.target.value)}
+                  />
+                  <Input
+                    placeholder="https://example.com"
+                    value={newLinkUrl}
+                    onChange={(e) => setNewLinkUrl(e.target.value)}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={handleAddLink}
+                      disabled={!newLinkName.trim() || !newLinkUrl.trim()}
+                      className="cu-button flex-1"
+                    >
+                      Add Link
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setShowAddLink(false);
+                        setNewLinkName("");
+                        setNewLinkUrl("");
+                      }}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
             </div>
           </div>
 
