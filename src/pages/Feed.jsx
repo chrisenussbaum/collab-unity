@@ -1737,36 +1737,7 @@ export default function Feed({ currentUser, authIsLoading }) {
     }
   }, []); 
 
-  // BATCH LOAD IDEs for multiple projects
-  const loadIDEsForProjects = useCallback(async (projectIds) => {
-    if (!projectIds || projectIds.length === 0) {
-      return {};
-    }
-    
-    try {
-      const allIDEs = await withRetry(() =>
-        base44.entities.ProjectIDE.filter({
-          project_id: { $in: projectIds },
-          is_active: true,
-          ide_type: 'code_playground'
-        }, '-created_date')
-      );
-      
-      // Group IDEs by project_id
-      const idesMap = {};
-      (allIDEs || []).forEach(ide => {
-        if (!idesMap[ide.project_id]) {
-          idesMap[ide.project_id] = [];
-        }
-        idesMap[ide.project_id].push(ide);
-      });
-      
-      return idesMap;
-    } catch (error) {
-      console.error("Error loading project IDEs:", error);
-      return {};
-    }
-  }, []);
+
 
   const loadFeedPosts = useCallback(async (page = 1, fetchLimit = POSTS_PER_PAGE, currentOffset = 0) => {
     try {
