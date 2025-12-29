@@ -77,16 +77,18 @@ const UserCard = ({ user, currentUser, index }) => {
             </p>
           )}
           
-          {/* Skills, Interests, and Tools - Show at least 1 of each if present */}
+          {/* Skills, Interests, and Tools - Show up to 3 of each if present */}
           <div className="w-full space-y-2 mb-3">
             {user.skills && user.skills.length > 0 && (
               <div className="flex flex-wrap gap-1 justify-center">
-                <Badge variant="outline" className="text-xs bg-purple-50 border-purple-200 text-purple-700">
-                  {user.skills[0]}
-                </Badge>
-                {user.skills.length > 1 && (
+                {user.skills.slice(0, 3).map((skill, idx) => (
+                  <Badge key={idx} variant="outline" className="text-xs bg-purple-50 border-purple-200 text-purple-700">
+                    {skill}
+                  </Badge>
+                ))}
+                {user.skills.length > 3 && (
                   <Badge variant="outline" className="text-xs text-gray-500">
-                    +{user.skills.length - 1} skills
+                    +{user.skills.length - 3}
                   </Badge>
                 )}
               </div>
@@ -94,13 +96,15 @@ const UserCard = ({ user, currentUser, index }) => {
             
             {user.interests && user.interests.length > 0 && (
               <div className="flex flex-wrap gap-1 justify-center">
-                <Badge variant="outline" className="text-xs bg-indigo-50 border-indigo-200 text-indigo-700 flex items-center">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  {user.interests[0]}
-                </Badge>
-                {user.interests.length > 1 && (
+                {user.interests.slice(0, 3).map((interest, idx) => (
+                  <Badge key={idx} variant="outline" className="text-xs bg-indigo-50 border-indigo-200 text-indigo-700 flex items-center">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    {interest}
+                  </Badge>
+                ))}
+                {user.interests.length > 3 && (
                   <Badge variant="outline" className="text-xs text-gray-500">
-                    +{user.interests.length - 1} interests
+                    +{user.interests.length - 3}
                   </Badge>
                 )}
               </div>
@@ -108,13 +112,15 @@ const UserCard = ({ user, currentUser, index }) => {
             
             {user.tools_technologies && user.tools_technologies.length > 0 && (
               <div className="flex flex-wrap gap-1 justify-center">
-                <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700 flex items-center">
-                  <Wrench className="w-3 h-3 mr-1" />
-                  {user.tools_technologies[0]}
-                </Badge>
-                {user.tools_technologies.length > 1 && (
+                {user.tools_technologies.slice(0, 3).map((tool, idx) => (
+                  <Badge key={idx} variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700 flex items-center">
+                    <Wrench className="w-3 h-3 mr-1" />
+                    {tool}
+                  </Badge>
+                ))}
+                {user.tools_technologies.length > 3 && (
                   <Badge variant="outline" className="text-xs text-gray-500">
-                    +{user.tools_technologies.length - 1} tools
+                    +{user.tools_technologies.length - 3}
                   </Badge>
                 )}
               </div>
