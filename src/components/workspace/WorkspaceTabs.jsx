@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, CheckSquare, Wrench, FileStack, Activity, Lightbulb, Code } from 'lucide-react';
+import { MessageSquare, CheckSquare, Wrench, FileStack, Activity, Lightbulb } from 'lucide-react';
 import HorizontalScrollContainer from '@/components/HorizontalScrollContainer';
 import DiscussionBoard from './DiscussionBoard';
 import TaskBoard from './TaskBoard';
@@ -11,7 +11,6 @@ import AssetsTab from './AssetsTab';
 import ActivityTab from './ActivityTab';
 
 import IdeationHub from './ideation/IdeationHub';
-import IdeationToolsTab from './IdeationToolsTab';
 import { base44 } from "@/api/base44Client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -139,9 +138,6 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
     { value: "tasks", icon: CheckSquare, label: "Tasks", title: "Manage project tasks and assignments" },
     { value: "tools", icon: Wrench, label: "Tools", title: "Project tools and integrations" },
     { value: "assets", icon: FileStack, label: "Assets", title: "Manage project files, assets, and links" },
-
-    { value: "ides", icon: Code, label: "IDEs", title: "Access integrated development environments for your project" },
-
     { value: "activity", icon: Activity, label: "Activity", title: "Project activity timeline and history" },
   ];
 
@@ -276,22 +272,6 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
             {activeTab === "assets" && (
               <div className="w-full max-w-none">
                 <AssetsTab 
-                  project={project} 
-                  currentUser={currentUser} 
-                  isCollaborator={isCollaborator}
-                  isProjectOwner={isProjectOwner}
-                  projectOwnerName={projectOwnerName}
-                />
-              </div>
-            )}
-          </TabsContent>
-
-
-
-          <TabsContent value="ides" className="mt-0" forceMount={activeTab === "ides"}>
-            {activeTab === "ides" && (
-              <div className="w-full max-w-none">
-                <IdeationToolsTab 
                   project={project} 
                   currentUser={currentUser} 
                   isCollaborator={isCollaborator}
