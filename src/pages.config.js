@@ -1,5 +1,4 @@
 import AboutUs from './pages/AboutUs';
-import AdminVerificationPanel from './pages/AdminVerificationPanel';
 import Chat from './pages/Chat';
 import Contact from './pages/Contact';
 import CreateProject from './pages/CreateProject';
@@ -28,7 +27,6 @@ import __Layout from './Layout.jsx';
 
 export const PAGES = {
     "AboutUs": AboutUs,
-    "AdminVerificationPanel": AdminVerificationPanel,
     "Chat": Chat,
     "Contact": Contact,
     "CreateProject": CreateProject,
