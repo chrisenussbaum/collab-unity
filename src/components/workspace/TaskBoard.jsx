@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { CheckSquare, Plus, Edit, Trash2, Calendar, User, AlertCircle, Circle, Clock, CheckCircle2, Flag, MessageSquare, TrendingUp } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { UploadFile } from "@/integrations/Core";
+import { CheckSquare, Plus, Edit, Trash2, Calendar, User, AlertCircle, Circle, Clock, CheckCircle2, Flag, MessageSquare, TrendingUp, Upload, Link as LinkIcon, Paperclip, X as XIcon } from "lucide-react";
 import { Task, Notification, ActivityLog } from "@/entities/all";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -50,9 +52,15 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
     priority: "medium",
     assigned_to: "",
     due_date: "",
-    progress: 0
+    progress: 0,
+    attachments: []
   });
 
+  const [newLinkName, setNewLinkName] = useState("");
+  const [newLinkUrl, setNewLinkUrl] = useState("");
+  const [showAddLink, setShowAddLink] = useState(false);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const fileInputRef = useRef(null);
   const retryCountRef = useRef(0);
 
   const fetchTasks = useCallback(async () => {
@@ -90,9 +98,13 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
       priority: "medium",
       assigned_to: "",
       due_date: "",
-      progress: 0
+      progress: 0,
+      attachments: []
     });
     setEditingTask(null);
+    setNewLinkName("");
+    setNewLinkUrl("");
+    setShowAddLink(false);
   };
 
   const handleOpenDialog = (task = null) => {
@@ -105,7 +117,8 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
         priority: task.priority || "medium",
         assigned_to: task.assigned_to || "",
         due_date: task.due_date || "",
-        progress: task.progress || 0
+        progress: task.progress || 0,
+        attachments: task.attachments || []
       });
     } else {
       resetForm();
@@ -116,6 +129,78 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     resetForm();
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingFile(true);
+    try {
+      const { file_url } = await UploadFile({ file });
+      
+      const newAttachment = {
+        type: "file",
+        name: file.name,
+        url: file_url,
+        file_size: file.size,
+        file_type: file.type,
+        uploaded_by: currentUser.email,
+        uploaded_at: new Date().toISOString()
+      };
+
+      setFormData(prev => ({
+        ...prev,
+        attachments: [...prev.attachments, newAttachment]
+      }));
+
+      toast.success("File uploaded");
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      toast.error("Failed to upload file");
+    } finally {
+      setIsUploadingFile(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleAddLink = () => {
+    if (!newLinkName.trim() || !newLinkUrl.trim()) {
+      toast.error("Please provide both link name and URL");
+      return;
+    }
+
+    if (!newLinkUrl.startsWith('http://') && !newLinkUrl.startsWith('https://')) {
+      toast.error("Please enter a valid URL starting with http:// or https://");
+      return;
+    }
+
+    const newAttachment = {
+      type: "link",
+      name: newLinkName.trim(),
+      url: newLinkUrl.trim(),
+      uploaded_by: currentUser.email,
+      uploaded_at: new Date().toISOString()
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      attachments: [...prev.attachments, newAttachment]
+    }));
+
+    setNewLinkName("");
+    setNewLinkUrl("");
+    setShowAddLink(false);
+    toast.success("Link added");
+  };
+
+  const handleRemoveAttachment = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -550,13 +635,20 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingTask ? 'Edit Task' : 'Create New Task'}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              ref={fileInputRef}
+              type="file"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+
             <div>
               <label className="block text-sm font-medium mb-1">Title *</label>
               <Input
@@ -635,7 +727,7 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                   <SelectValue placeholder="Select collaborator" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={null}>Unassigned</SelectItem> {/* Changed null to "" for consistency with select value */}
+                  <SelectItem value={null}>Unassigned</SelectItem>
                   {collaborators?.map((collab) => (
                     <SelectItem key={collab.email} value={collab.email}>
                       {collab.full_name || collab.email}
@@ -643,6 +735,125 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium">Initial Progress</label>
+                <span className="text-sm font-medium text-purple-600">{formData.progress}%</span>
+              </div>
+              <Slider
+                value={[formData.progress]}
+                onValueChange={(value) => setFormData({ ...formData, progress: value[0] })}
+                max={100}
+                step={5}
+                className="mb-2"
+              />
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-purple-600 h-2 rounded-full transition-all"
+                  style={{ width: `${formData.progress}%` }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 flex items-center">
+                <Paperclip className="w-4 h-4 mr-1" />
+                Files & Links
+              </label>
+              
+              {formData.attachments.length > 0 && (
+                <div className="space-y-2 mb-3">
+                  {formData.attachments.map((attachment, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                    >
+                      <div className="flex items-center space-x-2 flex-1 min-w-0">
+                        {attachment.type === 'file' ? (
+                          <Upload className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                        ) : (
+                          <LinkIcon className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                        )}
+                        <span className="text-sm truncate">{attachment.name}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-gray-400 hover:text-red-600"
+                        onClick={() => handleRemoveAttachment(index)}
+                      >
+                        <XIcon className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingFile}
+                  className="flex-1"
+                >
+                  <Upload className="w-4 h-4 mr-1" />
+                  {isUploadingFile ? "Uploading..." : "Upload File"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddLink(!showAddLink)}
+                  className="flex-1"
+                >
+                  <LinkIcon className="w-4 h-4 mr-1" />
+                  Add Link
+                </Button>
+              </div>
+
+              {showAddLink && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                  <Input
+                    placeholder="Link name (e.g., Design Mockup)"
+                    value={newLinkName}
+                    onChange={(e) => setNewLinkName(e.target.value)}
+                  />
+                  <Input
+                    placeholder="https://example.com"
+                    value={newLinkUrl}
+                    onChange={(e) => setNewLinkUrl(e.target.value)}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleAddLink}
+                      disabled={!newLinkName.trim() || !newLinkUrl.trim()}
+                      className="cu-button flex-1"
+                    >
+                      Add Link
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setShowAddLink(false);
+                        setNewLinkName("");
+                        setNewLinkUrl("");
+                      }}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <DialogFooter>
