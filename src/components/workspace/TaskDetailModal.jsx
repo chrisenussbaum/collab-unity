@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   MessageSquare, Calendar, User, AlertCircle, Flag, 
-  TrendingUp, Send, Edit2, Trash2, X, Save, Paperclip, Link as LinkIcon, Upload, FileText, ExternalLink
+  TrendingUp, Send, Edit2, Trash2, X, Save, Paperclip, Link as LinkIcon, Upload, FileText, ExternalLink, Download
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -553,9 +553,13 @@ export default function TaskDetailModal({
                             size="icon"
                             className="h-7 w-7"
                             onClick={() => window.open(attachment.url, '_blank')}
-                            title="Open in new tab"
+                            title={attachment.type === 'file' ? 'Download file' : 'Open link'}
                           >
-                            <ExternalLink className="w-3 h-3" />
+                            {attachment.type === 'file' ? (
+                              <Download className="w-3 h-3" />
+                            ) : (
+                              <ExternalLink className="w-3 h-3" />
+                            )}
                           </Button>
                           {attachment.uploaded_by === currentUser.email && (
                             <Button
