@@ -109,18 +109,29 @@ Deno.serve(async (req) => {
 
     const { username, existingResumeBase64, existingResumeType, includeDeepScrape } = await req.json();
     
+    console.log('Generating resume for username:', username);
+    
     const users = await base44.asServiceRole.entities.User.filter({ username });
     if (!users || users.length === 0) {
+      console.error('User not found:', username);
       return Response.json({ error: 'User not found' }, { status: 404 });
     }
     
     const profileUser = users[0];
+    console.log('Profile user found:', profileUser.email);
 
     // Fetch all projects user is part of
-    const allProjects = await base44.asServiceRole.entities.Project.list();
-    let userProjects = allProjects.filter(p => 
-      p.collaborator_emails?.includes(profileUser.email)
-    );
+    let userProjects = [];
+    try {
+      const allProjects = await base44.asServiceRole.entities.Project.list();
+      userProjects = allProjects.filter(p => 
+        p.collaborator_emails?.includes(profileUser.email)
+      );
+      console.log('Found projects:', userProjects.length);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      // Continue without projects
+    }
 
     // Deep scrape: Get comprehensive contribution data
     let completedTasks = [];
@@ -238,7 +249,14 @@ Deno.serve(async (req) => {
     // Extract content from existing resume if provided
     let existingResumeData = null;
     if (existingResumeBase64) {
-      existingResumeData = await extractResumeContent(base44, existingResumeBase64, existingResumeType);
+      try {
+        console.log('Extracting resume content...');
+        existingResumeData = await extractResumeContent(base44, existingResumeBase64, existingResumeType);
+        console.log('Resume extraction result:', existingResumeData ? 'success' : 'no data');
+      } catch (error) {
+        console.error('Error extracting resume:', error);
+        // Continue without resume extraction
+      }
     }
 
     // Create PDF with tighter spacing
@@ -603,6 +621,7 @@ Deno.serve(async (req) => {
       doc.text(' - Where Ideas Happen', pageWidth / 2 + 5, footerY);
     }
 
+    console.log('PDF generation complete');
     const pdfBytes = doc.output('arraybuffer');
 
     return new Response(pdfBytes, {
@@ -614,6 +633,10 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Error generating profile PDF:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('Error stack:', error.stack);
+    return Response.json({ 
+      error: error.message || 'Failed to generate resume',
+      details: error.stack 
+    }, { status: 500 });
   }
 });

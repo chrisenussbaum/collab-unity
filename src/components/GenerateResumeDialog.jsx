@@ -157,7 +157,9 @@ export default function GenerateResumeDialog({
       onClose();
     } catch (error) {
       console.error("Error generating resume:", error);
-      toast.error("Failed to generate resume. Please try again.");
+      console.error("Error details:", error.response?.data);
+      const errorMessage = error.response?.data?.error || error.message || "Failed to generate resume";
+      toast.error(errorMessage);
     } finally {
       setIsGenerating(false);
       setGenerationStep(0);
