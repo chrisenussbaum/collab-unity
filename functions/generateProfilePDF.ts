@@ -143,11 +143,10 @@ Deno.serve(async (req) => {
       const projectIds = userProjects.map(p => p.id);
       
       // Fetch all relevant data in parallel
-      const [allTasks, allThoughts, allAssets, allIDEs, allActivities] = await Promise.all([
+      const [allTasks, allThoughts, allAssets, allActivities] = await Promise.all([
         base44.asServiceRole.entities.Task.list(),
         base44.asServiceRole.entities.Thought.list(),
         base44.asServiceRole.entities.AssetVersion.list(),
-        base44.asServiceRole.entities.ProjectIDE.list(),
         base44.asServiceRole.entities.ActivityLog.list()
       ]);
 
@@ -158,7 +157,6 @@ Deno.serve(async (req) => {
           tasksInProgress: 0,
           thoughtsCreated: 0,
           assetsUploaded: 0,
-          idesCreated: 0,
           activities: [],
           keyTasks: []
         };
@@ -182,11 +180,6 @@ Deno.serve(async (req) => {
         // Count assets uploaded by user
         contributions.assetsUploaded = allAssets.filter(a => 
           a.project_id === project.id && a.uploaded_by === profileUser.email
-        ).length;
-
-        // Count IDEs created by user
-        contributions.idesCreated = allIDEs.filter(ide => 
-          ide.project_id === project.id && ide.created_by === profileUser.email
         ).length;
 
         // Get recent activities
@@ -216,9 +209,9 @@ Deno.serve(async (req) => {
         const bContribs = projectContributions.get(b.id);
         
         const aTotal = (aContribs?.tasksCompleted || 0) + (aContribs?.thoughtsCreated || 0) + 
-                       (aContribs?.assetsUploaded || 0) + (aContribs?.idesCreated || 0);
+                       (aContribs?.assetsUploaded || 0);
         const bTotal = (bContribs?.tasksCompleted || 0) + (bContribs?.thoughtsCreated || 0) + 
-                       (bContribs?.assetsUploaded || 0) + (bContribs?.idesCreated || 0);
+                       (bContribs?.assetsUploaded || 0);
         
         if (bTotal !== aTotal) return bTotal - aTotal;
 
@@ -497,9 +490,6 @@ Deno.serve(async (req) => {
           }
           if (contributions.assetsUploaded > 0) {
             metrics.push(`${contributions.assetsUploaded} asset${contributions.assetsUploaded > 1 ? 's' : ''}`);
-          }
-          if (contributions.idesCreated > 0) {
-            metrics.push(`${contributions.idesCreated} workspace${contributions.idesCreated > 1 ? 's' : ''}`);
           }
 
           if (metrics.length > 0) {
