@@ -252,7 +252,7 @@ const DiscoverProjectsMockup = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {[
         { name: "Mobile Fitness App", type: "Seeking Collaborators", image: "https://images.unsplash.com/photo-1461773518188-b3e86f98242f?w=100&h=100&fit=crop", industry: "Health & Fitness", collaborators: 2, desc: "Comprehensive fitness tracking app with personalized workout plans and nutrition guidance", skills: ["Flutter", "Firebase"] },
-        { name: "Podcast Platform", type: "In Progress", image: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=100&h=100&fit=crop", industry: "Media", collaborators: 7, desc: "Audio streaming service for independent creators with built-in monetization tools", skills: ["React", "Node.js"] }
+        { name: "Podcast Platform", type: "In Progress", image: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=100&h=100&fit=crop", industry: "Media", collaborators: 7, desc: "Audio streaming service for independent creators with built-in monetization tools", skills: ["Video Editing", "Scripting"] }
       ].map((project, i) => (
         <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden border-t-4 border-blue-500 hover:shadow-xl transition-all cursor-pointer h-full flex flex-col">
           <div className="p-4 flex flex-col flex-grow">
