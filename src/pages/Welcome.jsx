@@ -73,9 +73,6 @@ const FeedPostMockup = () => {
             <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <Share2 className="w-4 h-4 text-gray-400" />
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <MoreHorizontal className="w-5 h-5 text-gray-400" />
-            </button>
           </div>
           {/* End modified section */}
         </div>
