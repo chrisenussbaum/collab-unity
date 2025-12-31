@@ -1007,19 +1007,6 @@ export default function Welcome() {
       mockup: <WorkspaceMockup />
     },
     {
-      title: "Built-in IDEs - Create Together",
-      icon: Code,
-      description: "Develop, design, and create directly within the platform",
-      color: "pink",
-      demoElements: [
-        { icon: Code, label: "Code Playground", desc: "HTML, CSS, JS editor" },
-        { icon: FileText, label: "Document Editor", desc: "Rich text collaboration" },
-        { icon: Lightbulb, label: "Ideation Tools", desc: "Brainstorm visually" },
-        { icon: Folder, label: "File Explorer", desc: "Organize resources" }
-      ],
-      mockup: <IDEMockup />
-    },
-    {
       title: "Profile - Showcase Your Work",
       icon: User,
       description: "Build your portfolio and highlight your skills and achievements",
