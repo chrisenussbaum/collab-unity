@@ -66,7 +66,7 @@ const FeedPostMockup = () => {
           />
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-gray-900 text-lg mb-1">Blogs</h3>
-            <p className="text-sm text-gray-600">Jane Smith • 2 days ago</p>
+            <p className="text-sm text-gray-600">John Snow • 2 days ago</p>
           </div>
           {/* Modified section: Added Share2 and wrapped buttons */}
           <div className="flex items-center gap-1">
@@ -1172,7 +1172,7 @@ export default function Welcome() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-purple-50 rounded-lg p-3">
-                      <Code className="w-5 h-5 text-purple-600 mb-1" />
+                      <CheckSquare className="w-5 h-5 text-purple-600 mb-1" />
                       <div className="h-2 bg-purple-200 rounded w-full"></div>
                     </div>
                     <div className="bg-blue-50 rounded-lg p-3">
