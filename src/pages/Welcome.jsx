@@ -68,7 +68,7 @@ const FeedPostMockup = () => {
             className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
           />
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-gray-900 text-lg mb-1">The CNI Program</h3>
+            <h3 className="font-bold text-gray-900 text-lg mb-1">Blogs</h3>
             <p className="text-sm text-gray-600">Jane Smith • 2 days ago</p>
           </div>
           {/* Modified section: Added Share2 and wrapped buttons */}
@@ -179,7 +179,7 @@ const FeedPostMockup = () => {
                 className="w-full h-full object-cover"
               />
               <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
-                <p className="text-white text-sm">Team brainstorming session - developing the AI model architecture</p>
+                <p className="text-white text-sm">Team brainstorming session - curating a content calendar for January.</p>
               </div>
             </div>
           )}
@@ -192,9 +192,9 @@ const FeedPostMockup = () => {
         </div>
         
         <div className="flex flex-wrap gap-2 mb-4 pt-4 border-t">
-          <Badge variant="secondary" className="text-xs">Machine Learning</Badge>
-          <Badge variant="secondary" className="text-xs">APIs</Badge>
-          <Badge variant="secondary" className="text-xs">React</Badge>
+          <Badge variant="secondary" className="text-xs">Blogging</Badge>
+          <Badge variant="secondary" className="text-xs">Content</Badge>
+          <Badge variant="secondary" className="text-xs">Marketing</Badge>
           <Badge variant="secondary" className="text-xs">Journalism</Badge>
         </div>
         
