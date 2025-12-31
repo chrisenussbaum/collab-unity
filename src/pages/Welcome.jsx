@@ -106,8 +106,7 @@ const FeedPostMockup = () => {
         </div>
         
         <p className="text-gray-700 mb-4 leading-relaxed">
-          Focusing on a new marketing campaign for Dell.
-          We're making great progress on campaign!
+          Writing and publishing blogs weekly on Medium. Collab with me or follow my project to keep up with my latest work! Your support is appreciated!
         </p>
         
         {/* Content Toggle Tabs */}
