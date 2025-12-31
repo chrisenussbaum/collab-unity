@@ -110,8 +110,8 @@ const FeedPostMockup = () => {
         </div>
         
         <p className="text-gray-700 mb-4 leading-relaxed">
-          Creating an API that would be able to distinguish real news from fake news using the guidelines provided by The Trust Project. 
-          We're making great progress on the curriculum design!
+          Focusing on a new marketing campaign for Dell.
+          We're making great progress on campaign!
         </p>
         
         {/* Content Toggle Tabs */}
@@ -124,7 +124,7 @@ const FeedPostMockup = () => {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            📎 Published
+            🔗 Showcase
           </button>
           <button
             onClick={() => setActiveTab('highlights')}
@@ -165,38 +165,6 @@ const FeedPostMockup = () => {
                   />
                   <p className="text-sm font-medium text-gray-900">Published Project</p>
                   <p className="text-xs text-gray-500 mt-1">Click to visit</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* IDEs Tab Content */}
-          {activeTab === 'ides' && (
-            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 h-full flex flex-col">
-              <div className="flex items-center justify-between mb-2 px-2">
-                <Badge className="bg-blue-100 text-blue-700 text-xs">💻 Code Playground</Badge>
-                <span className="text-xs text-gray-500">Preview</span>
-              </div>
-              <div className="bg-gray-900 rounded-lg p-3 mb-2">
-                <div className="flex items-center space-x-1 mb-2">
-                  <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                  <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <span className="text-[10px] text-gray-400 ml-2">index.html</span>
-                </div>
-                <div className="font-mono text-[10px] text-gray-300 space-y-0.5">
-                  <div><span className="text-purple-400">&lt;div</span> <span className="text-blue-400">className</span>=<span className="text-green-400">"app"</span><span className="text-purple-400">&gt;</span></div>
-                  <div className="ml-2"><span className="text-purple-400">&lt;h1&gt;</span>Hello World<span className="text-purple-400">&lt;/h1&gt;</span></div>
-                  <div><span className="text-purple-400">&lt;/div&gt;</span></div>
-                </div>
-              </div>
-              <div className="flex-1 bg-white rounded p-4 flex items-center justify-center border border-gray-200">
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                    <Code className="w-6 h-6 text-white" />
-                  </div>
-                  <p className="text-sm font-medium text-gray-900">Interactive Preview</p>
-                  <p className="text-xs text-gray-500 mt-1">Click to explore</p>
                 </div>
               </div>
             </div>
@@ -980,7 +948,7 @@ export default function Welcome() {
       mockup: <DiscoverProjectsMockup />
     },
     {
-      title: "Sync - Real-Time Chat",
+      title: "Chat - Message In Real-Time",
       icon: MessageCircle,
       description: "Stay connected with your team through instant messaging and collaboration",
       color: "green",
