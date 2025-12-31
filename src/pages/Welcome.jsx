@@ -776,7 +776,7 @@ const translations = {
     },
     features: {
       title: "Everything you need to collaborate",
-      description: "Explore the powerful features that make Collab Unity the ultimate platform for creators, learners, and innovators to build amazing projects together."
+      description: "Collab Unity is the creative catalyst where solopreneurs and hobbyists turn their dreams into legacies."
     },
     howItWorks: {
       title: "Start collaborating in minutes",
