@@ -434,7 +434,7 @@ Deno.serve(async (req) => {
     if (userProjects.length > 0) {
       addSectionHeader('Project Experience');
 
-      for (const project of userProjects.slice(0, 5)) {
+      for (const project of userProjects.slice(0, 10)) {
         checkNewPage(35);
         
         const projectUrl = `https://collabunity.io/ProjectDetail?id=${project.id}`;
