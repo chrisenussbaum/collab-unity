@@ -169,7 +169,7 @@ const FeedPostMockup = () => {
           {activeTab === 'highlights' && (
             <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200 h-full relative">
               <img 
-                src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=600&h=400&fit=crop"
+                src="https://images.unsplash.com/photo-1519337265831-281ec6cc8514?q=80&w=2070&auto=format&fit=crop"
                 alt="Project Highlight"
                 className="w-full h-full object-cover"
               />
