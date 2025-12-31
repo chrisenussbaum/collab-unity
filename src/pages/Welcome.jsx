@@ -775,7 +775,7 @@ const translations = {
       countries: "Countries Represented"
     },
     features: {
-      title: "Everything you need to collaborate",
+      title: "Where Your Ideas Are Realized",
       description: "Collab Unity is the creative catalyst where solopreneurs and hobbyists turn their dreams into legacies."
     },
     howItWorks: {
