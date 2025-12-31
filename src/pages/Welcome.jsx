@@ -1421,7 +1421,7 @@ export default function Welcome() {
                       <Badge className="bg-purple-600 mt-1">2</Badge>
                       <div>
                         <h4 className="font-semibold mb-1">Built-in Tools</h4>
-                        <p className="text-sm">Integrated IDEs, task management, file sharing, and communication—all in one place.</p>
+                        <p className="text-sm">Task management, file sharing, and communication—all in one place.</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
