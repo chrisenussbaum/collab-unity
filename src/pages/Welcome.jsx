@@ -961,7 +961,6 @@ export default function Welcome() {
       color: "purple",
       demoElements: [
         { icon: Globe, label: "Published Links", desc: "Share live projects" },
-        { icon: Code, label: "IDE Previews", desc: "Show code in action" },
         { icon: Image, label: "Highlights", desc: "Photos & videos" },
         { icon: MessageSquare, label: "Comments", desc: "Engage with community" }
       ],
