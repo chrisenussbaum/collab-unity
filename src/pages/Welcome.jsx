@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
   Lightbulb,
+  Bookmark,
   Users,
   Code,
   Rocket,
@@ -72,6 +73,9 @@ const FeedPostMockup = () => {
           <div className="flex items-center gap-1">
             <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <Share2 className="w-4 h-4 text-gray-400" />
+            </button>
+            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <Bookmark className="w-4 h-4 text-gray-400" />
             </button>
           </div>
           {/* End modified section */}
