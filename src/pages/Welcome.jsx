@@ -134,6 +134,16 @@ const FeedPostMockup = () => {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
+            💻 IDEs
+          </button>
+          <button
+            onClick={() => setActiveTab('highlights')}
+            className={`flex-1 py-2 px-3 text-sm font-medium rounded-lg transition-colors ${
+              activeTab === 'highlights'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
             📸 Highlights
           </button>
         </div>
@@ -165,6 +175,38 @@ const FeedPostMockup = () => {
                   />
                   <p className="text-sm font-medium text-gray-900">Published Project</p>
                   <p className="text-xs text-gray-500 mt-1">Click to visit</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* IDEs Tab Content */}
+          {activeTab === 'ides' && (
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-2 px-2">
+                <Badge className="bg-blue-100 text-blue-700 text-xs">💻 Code Playground</Badge>
+                <span className="text-xs text-gray-500">Preview</span>
+              </div>
+              <div className="bg-gray-900 rounded-lg p-3 mb-2">
+                <div className="flex items-center space-x-1 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <span className="text-[10px] text-gray-400 ml-2">index.html</span>
+                </div>
+                <div className="font-mono text-[10px] text-gray-300 space-y-0.5">
+                  <div><span className="text-purple-400">&lt;div</span> <span className="text-blue-400">className</span>=<span className="text-green-400">"app"</span><span className="text-purple-400">&gt;</span></div>
+                  <div className="ml-2"><span className="text-purple-400">&lt;h1&gt;</span>Hello World<span className="text-purple-400">&lt;/h1&gt;</span></div>
+                  <div><span className="text-purple-400">&lt;/div&gt;</span></div>
+                </div>
+              </div>
+              <div className="flex-1 bg-white rounded p-4 flex items-center justify-center border border-gray-200">
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                    <Code className="w-6 h-6 text-white" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-900">Interactive Preview</p>
+                  <p className="text-xs text-gray-500 mt-1">Click to explore</p>
                 </div>
               </div>
             </div>
@@ -929,6 +971,7 @@ export default function Welcome() {
       color: "purple",
       demoElements: [
         { icon: Globe, label: "Published Links", desc: "Share live projects" },
+        { icon: Code, label: "IDE Previews", desc: "Show code in action" },
         { icon: Image, label: "Highlights", desc: "Photos & videos" },
         { icon: MessageSquare, label: "Comments", desc: "Engage with community" }
       ],
@@ -973,6 +1016,19 @@ export default function Welcome() {
         { icon: Folder, label: "Assets", desc: "Manage files" }
       ],
       mockup: <WorkspaceMockup />
+    },
+    {
+      title: "Built-in IDEs - Create Together",
+      icon: Code,
+      description: "Develop, design, and create directly within the platform",
+      color: "pink",
+      demoElements: [
+        { icon: Code, label: "Code Playground", desc: "HTML, CSS, JS editor" },
+        { icon: FileText, label: "Document Editor", desc: "Rich text collaboration" },
+        { icon: Lightbulb, label: "Ideation Tools", desc: "Brainstorm visually" },
+        { icon: Folder, label: "File Explorer", desc: "Organize resources" }
+      ],
+      mockup: <IDEMockup />
     },
     {
       title: "Profile - Showcase Your Work",
@@ -1424,7 +1480,7 @@ export default function Welcome() {
                       <Badge className="bg-purple-600 mt-1">2</Badge>
                       <div>
                         <h4 className="font-semibold mb-1">Built-in Tools</h4>
-                        <p className="text-sm">Task management, file sharing, and communication—all in one place.</p>
+                        <p className="text-sm">Integrated IDEs, task management, file sharing, and communication—all in one place.</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
