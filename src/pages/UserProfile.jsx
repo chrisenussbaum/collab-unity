@@ -13,7 +13,7 @@ import {
   Edit, Briefcase, Star, Heart, Link as LinkIcon, Linkedin, Globe, FileText, LogOut,
   Plus, ZoomIn, MapPin, Clock, Tag, Award, GraduationCap, HardHat, Mail, Phone, Cake, Info,
   Share2, X, Eye, Download, Sparkles, Wrench, MessageSquare, FileText as FileTextIcon,
-  Bookmark, Camera, Loader2, Upload, MessageCircle, Lock, Unlock
+  Bookmark, Camera, Loader2, Upload, MessageCircle
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -1025,29 +1025,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
 
   const isOwner = propCurrentUser && profileUser && propCurrentUser.email === profileUser.email;
 
-  // Handle profile privacy - show private message if not owner and profile is private
-  const isProfilePrivate = profileUser?.is_public === false && !isOwner;
-
-  const handleToggleProfileVisibility = async () => {
-    if (!isOwner || !profileUser) return;
-    
-    try {
-      const newVisibility = !profileUser.is_public;
-      await base44.auth.updateMe({ is_public: newVisibility });
-      
-      setProfileUser(prev => ({ ...prev, is_public: newVisibility }));
-      
-      if (setCurrentUser) {
-        setCurrentUser(prev => ({ ...prev, is_public: newVisibility }));
-      }
-      
-      toast.success(newVisibility ? "Profile is now public" : "Profile is now private");
-    } catch (error) {
-      console.error("Error updating profile visibility:", error);
-      toast.error("Failed to update profile visibility");
-    }
-  };
-
   const loadMoreProjects = () => {
     const newCount = Math.min(displayedProjectsCount + 3, userProjects.length);
     setDisplayedProjectsCount(newCount);
@@ -2013,25 +1990,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={handleToggleProfileVisibility}
-                              className={`text-xs sm:text-sm px-3 sm:px-4 ${
-                                profileUser.is_public === false 
-                                  ? 'border-orange-300 text-orange-600 hover:bg-orange-50' 
-                                  : ''
-                              }`}
-                            >
-                              {profileUser.is_public === false ? (
-                                <Lock className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                              ) : (
-                                <Unlock className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                              )}
-                              <span className="hidden xs:inline">
-                                {profileUser.is_public === false ? 'Private' : 'Public'}
-                              </span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
                               onClick={handleOpenGenerateResume}
                               className="text-xs sm:text-sm px-3 sm:px-4"
                             >
@@ -2068,43 +2026,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
               </CardContent>
             </Card>
 
-            {isProfilePrivate ? (
-              <Card className="cu-card">
-                <CardContent className="py-12 sm:py-16 text-center">
-                  <Lock className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-gray-300 mb-4" />
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                    This profile is private
-                  </h3>
-                  <p className="text-sm sm:text-base text-gray-600 mb-6 max-w-md mx-auto">
-                    {profileUser?.full_name || 'This user'} has chosen to keep their profile private.
-                  </p>
-                  {propCurrentUser ? (
-                    <div className="flex justify-center gap-3">
-                      <Button
-                        onClick={() => navigate(createPageUrl("Discover"))}
-                        variant="outline"
-                      >
-                        Discover Projects
-                      </Button>
-                      <Button
-                        onClick={() => navigate(createPageUrl("Feed"))}
-                        className="cu-button"
-                      >
-                        Back to Feed
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      onClick={() => base44.auth.redirectToLogin()}
-                      className="cu-button"
-                    >
-                      Sign In
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ) : (
-              <>
+            <>
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 md:gap-8">
                 <div className="lg:col-span-8 space-y-4 sm:space-y-6 md:space-y-8">
                   {profileUser.bio || profileUser.resume_url || isOwner ? (
@@ -3075,8 +2997,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                   )}
                 </div>
               </div>
-              </>
-            )}
+            </>
           </motion.div>
         </div>
       </div>

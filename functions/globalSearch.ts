@@ -122,8 +122,8 @@ Deno.serve(async (req) => {
         const allUsers = await base44.asServiceRole.entities.User.list();
         
         const matchedUsers = allUsers.filter(user => {
-            // CRITICAL: Only include users who have completed onboarding, have a username, and public profile
-            if (!user.username || !user.has_completed_onboarding || user.is_public === false) {
+            // CRITICAL: Only include users who have completed onboarding and have a username
+            if (!user.username || !user.has_completed_onboarding) {
                 return false;
             }
             
