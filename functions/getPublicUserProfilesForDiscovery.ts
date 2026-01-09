@@ -16,13 +16,14 @@ Deno.serve(async (req) => {
 
         const DEFAULT_COVER_IMAGE = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/cd4694e0a_purple-background.jpg';
 
-        // Filter to only include users who have username, name, and profile photo
+        // Filter to only include users who have username, name, profile photo, and public profile
         const publicUsers = (allUsers || []).filter(u => {
             const hasUsername = u.username && u.username.trim() !== '';
             const hasName = u.full_name && u.full_name.trim() !== '';
             const hasProfileImage = u.profile_image && u.profile_image.trim() !== '';
+            const isPublic = u.is_public !== false; // Default to true if not set
             
-            return hasUsername && hasName && hasProfileImage;
+            return hasUsername && hasName && hasProfileImage && isPublic;
         });
 
         const publicProfiles = publicUsers.map(u => ({
