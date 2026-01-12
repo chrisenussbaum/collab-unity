@@ -25,7 +25,6 @@ import Testimonials from './pages/Testimonials';
 import UserProfile from './pages/UserProfile';
 import UserProjects from './pages/UserProjects';
 import Welcome from './pages/Welcome';
-import MyEarnings from './pages/MyEarnings';
 import __Layout from './Layout.jsx';
 
 
@@ -57,7 +56,6 @@ export const PAGES = {
     "UserProfile": UserProfile,
     "UserProjects": UserProjects,
     "Welcome": Welcome,
-    "MyEarnings": MyEarnings,
 }
 
 export const pagesConfig = {
