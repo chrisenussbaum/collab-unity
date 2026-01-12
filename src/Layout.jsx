@@ -1040,11 +1040,6 @@ export default function Layout({ children, currentPageName }) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to={createPageUrl("Leaderboard")} className="flex items-center cursor-pointer">
-                      <Trophy className="cu-icon-sm mr-2" /> Leaderboard
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
                     <Link to={createPageUrl("SupportCU")} className="flex items-center cursor-pointer">
                       <Heart className="cu-icon-sm mr-2" /> Support CU
                     </Link>
@@ -1147,6 +1142,11 @@ export default function Layout({ children, currentPageName }) {
                         </>
                       )}
                       <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to={createPageUrl("Leaderboard")} className="flex items-center cursor-pointer">
+                          <Trophy className="cu-icon-sm mr-2" /> Leaderboard
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl("SupportCU")} className="flex items-center cursor-pointer">
                           <Heart className="cu-icon-sm mr-2" /> Support CU
