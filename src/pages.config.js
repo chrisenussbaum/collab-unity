@@ -10,8 +10,6 @@ import EditProfile from './pages/EditProfile';
 import EditProject from './pages/EditProject';
 import FeatureRequest from './pages/FeatureRequest';
 import Feed from './pages/Feed';
-import Home from './pages/Home';
-import JoinProjects from './pages/JoinProjects';
 import MyProjects from './pages/MyProjects';
 import Notifications from './pages/Notifications';
 import Onboarding from './pages/Onboarding';
@@ -23,7 +21,6 @@ import SupportCU from './pages/SupportCU';
 import TermsOfService from './pages/TermsOfService';
 import Testimonials from './pages/Testimonials';
 import UserProfile from './pages/UserProfile';
-import UserProjects from './pages/UserProjects';
 import Welcome from './pages/Welcome';
 import __Layout from './Layout.jsx';
 
@@ -41,8 +38,6 @@ export const PAGES = {
     "EditProject": EditProject,
     "FeatureRequest": FeatureRequest,
     "Feed": Feed,
-    "Home": Home,
-    "JoinProjects": JoinProjects,
     "MyProjects": MyProjects,
     "Notifications": Notifications,
     "Onboarding": Onboarding,
@@ -54,7 +49,6 @@ export const PAGES = {
     "TermsOfService": TermsOfService,
     "Testimonials": Testimonials,
     "UserProfile": UserProfile,
-    "UserProjects": UserProjects,
     "Welcome": Welcome,
 }
 
