@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { User, Advertisement } from "@/entities/all";
-import { UploadFile } from "@/integrations/Core";
+import { UploadFile, InvokeLLM } from "@/integrations/Core";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -137,8 +137,6 @@ export default function CreateAd({ currentUser }) {
   const generateTargeting = async (adData, retryCount = 0) => {
     setIsGeneratingTargeting(true);
     try {
-      const { InvokeLLM } = await import("@/integrations/Core");
-      
       const prompt = `Based on the following advertisement details, generate relevant targeting data:
 
 Ad Title: ${adData.title}
