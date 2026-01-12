@@ -125,7 +125,7 @@ export default function Leaderboard({ currentUser }) {
         </motion.div>
 
         {/* Tabs */}
-        <div className="flex justify-center mb-8 space-x-2 overflow-x-auto">
+        <div className="flex justify-start sm:justify-center mb-8 space-x-2 overflow-x-auto pb-2 px-4 sm:px-0 scrollbar-hide">
           {tabs.map(tab => {
             const Icon = tab.icon;
             return (
@@ -133,7 +133,7 @@ export default function Leaderboard({ currentUser }) {
                 key={tab.id}
                 variant={activeTab === tab.id ? "default" : "outline"}
                 onClick={() => setActiveTab(tab.id)}
-                className={activeTab === tab.id ? "cu-button" : ""}
+                className={`${activeTab === tab.id ? "cu-button" : ""} whitespace-nowrap flex-shrink-0`}
               >
                 <Icon className="w-4 h-4 mr-2" />
                 {tab.label}
