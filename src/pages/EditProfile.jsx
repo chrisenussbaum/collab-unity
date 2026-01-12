@@ -387,7 +387,23 @@ export default function EditProfile({ currentUser, authIsLoading }) {
 
     setIsSaving(true);
     try {
+      const user = await base44.auth.me();
+      const isFirstTimeComplete = !originalProfileData?.has_completed_onboarding;
+      
       await base44.auth.updateMe(formData);
+      
+      // Award points for profile completion (only first time)
+      if (isFirstTimeComplete && user) {
+        try {
+          await base44.functions.invoke('awardPoints', {
+            action: 'profile_complete',
+            user_email: user.email
+          });
+        } catch (error) {
+          console.error("Error awarding points:", error);
+        }
+      }
+      
       setOriginalProfileData(formData);
       setIsDirty(false);
       navigate(createPageUrl(formData.username ? `UserProfile?username=${formData.username}` : "UserProfile"));
