@@ -21,9 +21,11 @@ export default function SupportCU() {
         >
 
           <div className="text-center mb-12">
-            <div className="w-20 h-20 cu-gradient rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-              <Heart className="w-10 h-10 text-white" />
-            </div>
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg"
+              alt="Collab Unity"
+              className="w-20 h-20 rounded-full mx-auto mb-6 shadow-lg object-cover"
+            />
             <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
               Support Collab Unity
             </h1>
