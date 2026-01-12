@@ -512,6 +512,16 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         current_collaborators_count: newCollaboratorsCount
       }));
 
+      // Award points for joining collaboration
+      try {
+        await base44.functions.invoke('awardPoints', {
+          action: 'project_collaboration',
+          user_email: currentUser.email
+        });
+      } catch (error) {
+        console.error("Error awarding points for collaboration:", error);
+      }
+
       // Notify project owner of acceptance
       await withRetry(() => Notification.create({
         user_email: project.created_by,

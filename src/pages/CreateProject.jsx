@@ -17,6 +17,7 @@ import { motion } from "framer-motion";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import ArrayInputWithSearch from "@/components/ArrayInputWithSearch";
 import { generateProjectSuggestions } from "@/functions/generateProjectSuggestions";
+import { base44 } from "@/api/base44Client";
 
 const PROJECT_CLASSIFICATIONS = [
   { value: "educational", label: "Educational" },
@@ -438,7 +439,18 @@ export default function CreateProject() {
       if (!projectData.template_id) delete projectData.template_id;
       if (!projectData.project_instructions) delete projectData.project_instructions;
 
-      await Project.create(projectData); 
+      const newProject = await Project.create(projectData);
+      
+      // Award points for creating project
+      try {
+        await base44.functions.invoke('awardPoints', {
+          action: 'project_created',
+          user_email: currentUser.email
+        });
+      } catch (error) {
+        console.error("Error awarding points:", error);
+      }
+      
       navigate(createPageUrl("MyProjects"));
     } catch (error) {
       console.error("Error creating project:", error);

@@ -1364,6 +1364,20 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
 
         setSkillEndorsements(prev => [...prev, newEndorsement]);
 
+        // Award points - wrapped in try-catch to prevent blocking
+        try {
+          await base44.functions.invoke('awardPoints', {
+            action: 'endorsement_received',
+            user_email: profileUser.email
+          });
+          await base44.functions.invoke('awardPoints', {
+            action: 'endorsement_given',
+            user_email: propCurrentUser.email
+          });
+        } catch (pointsError) {
+          console.error("Error awarding points for endorsement:", pointsError);
+        }
+
         // Create notification - wrapped in try-catch to prevent blocking
         try {
           await base44.entities.Notification.create({
@@ -1427,6 +1441,20 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
       // Add the new review to the local state (only if public)
       if (review.is_public) {
         setCollaboratorReviews(prev => [review, ...prev]);
+      }
+
+      // Award points - wrapped in try-catch to prevent blocking
+      try {
+        await base44.functions.invoke('awardPoints', {
+          action: 'review_received',
+          user_email: profileUser.email
+        });
+        await base44.functions.invoke('awardPoints', {
+          action: 'review_given',
+          user_email: propCurrentUser.email
+        });
+      } catch (pointsError) {
+        console.error("Error awarding points for review:", pointsError);
       }
 
       // Create notification - wrapped in try-catch to prevent blocking
