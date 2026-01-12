@@ -48,6 +48,7 @@ import RecommendedCollaborators from "../components/RecommendedCollaborators";
 import PortfolioItem from "../components/portfolio/PortfolioItem";
 import EditPortfolioItemDialog from "../components/portfolio/EditPortfolioItemDialog";
 import GenerateResumeDialog from "../components/GenerateResumeDialog";
+import BadgeDisplay, { LevelBadge } from "../components/gamification/BadgeDisplay";
 
 const EditBioModal = ({ isOpen, onClose, bio, onSave }) => {
   const [editedBio, setEditedBio] = useState(bio || "");
@@ -684,6 +685,8 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
   const [selectedProjectForReview, setSelectedProjectForReview] = useState(null);
   const [showSyncDialog, setShowSyncDialog] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [userGameStats, setUserGameStats] = useState(null);
+  const [isLoadingGameStats, setIsLoadingGameStats] = useState(false);
 
   const handleSafeNavigation = useCallback(() => {
     const referrer = document.referrer;
@@ -891,6 +894,24 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
           } catch (error) {
             console.error("Error loading reviews:", error);
             setCollaboratorReviews([]);
+          }
+
+          // Load gamification stats
+          try {
+            setIsLoadingGameStats(true);
+            const gameStats = await base44.entities.UserGameStats.filter({
+              user_email: normalizedUser.email
+            });
+            if (gameStats && gameStats.length > 0) {
+              setUserGameStats(gameStats[0]);
+            } else {
+              setUserGameStats(null);
+            }
+          } catch (error) {
+            console.error("Error loading game stats:", error);
+            setUserGameStats(null);
+          } finally {
+            setIsLoadingGameStats(false);
           }
 
           // Load shared projects ONLY if viewing someone else's profile AND current user is logged in
@@ -2020,12 +2041,45 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                             </Button>
                           </>
                         )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                        </div>
+                        </div>
+                        </div>
+
+                        {/* Gamification Stats */}
+                        {userGameStats && (
+                        <div className="mt-6 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-200">
+                        <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <LevelBadge level={userGameStats.level} size="md" />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium text-gray-600">
+                                {userGameStats.total_points.toLocaleString()} Points
+                              </p>
+                              {userGameStats.activity_streak > 0 && (
+                                <Badge className="bg-orange-100 text-orange-700 text-xs">
+                                  🔥 {userGameStats.activity_streak} day streak
+                                </Badge>
+                              )}
+                            </div>
+                            {userGameStats.badges && userGameStats.badges.length > 0 && (
+                              <div className="mt-2">
+                                <BadgeDisplay badges={userGameStats.badges.slice(0, 5)} size="sm" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <Link to={createPageUrl("Leaderboard")}>
+                          <Button variant="outline" size="sm" className="text-purple-600 border-purple-300">
+                            View Leaderboard
+                          </Button>
+                        </Link>
+                        </div>
+                        </div>
+                        )}
+                        </div>
+                        </CardContent>
+                        </Card>
 
             <>
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 md:gap-8">
