@@ -12,17 +12,20 @@ Deno.serve(async (req) => {
 
     console.log('Starting to award points to existing users...');
 
-    // Get all projects
-    const allProjects = await base44.asServiceRole.entities.Project.filter({});
-    console.log(`Found ${allProjects.length} projects`);
-
     const processedUsers = new Set();
     const results = {
       projectsProcessed: 0,
       creatorsAwarded: 0,
       collaboratorsAwarded: 0,
+      endorsementsProcessed: 0,
+      reviewsProcessed: 0,
+      profilesCompleted: 0,
       errors: []
     };
+
+    // Get all projects
+    const allProjects = await base44.asServiceRole.entities.Project.filter({});
+    console.log(`Found ${allProjects.length} projects`);
 
     for (const project of allProjects) {
       try {
@@ -77,6 +80,113 @@ Deno.serve(async (req) => {
         console.error(`Error processing project ${project.id}:`, error);
         results.errors.push(`Project ${project.id}: ${error.message}`);
       }
+    }
+
+    // Award points for endorsements
+    console.log('Processing endorsements...');
+    try {
+      const allEndorsements = await base44.asServiceRole.entities.SkillEndorsement.filter({});
+      console.log(`Found ${allEndorsements.length} endorsements`);
+      
+      for (const endorsement of allEndorsements) {
+        const receiverKey = `${endorsement.user_email}-endorsement-received`;
+        const giverKey = `${endorsement.endorser_email}-endorsement-given`;
+        
+        try {
+          // Award points to endorsement receiver
+          if (!processedUsers.has(receiverKey)) {
+            await base44.asServiceRole.functions.invoke('awardPoints', {
+              action: 'endorsement_received',
+              user_email: endorsement.user_email
+            });
+            processedUsers.add(receiverKey);
+            results.endorsementsProcessed++;
+          }
+          
+          // Award points to endorsement giver
+          if (!processedUsers.has(giverKey)) {
+            await base44.asServiceRole.functions.invoke('awardPoints', {
+              action: 'endorsement_given',
+              user_email: endorsement.endorser_email
+            });
+            processedUsers.add(giverKey);
+          }
+        } catch (error) {
+          console.error(`Error processing endorsement:`, error);
+          results.errors.push(`Endorsement: ${error.message}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error processing endorsements:', error);
+      results.errors.push(`Endorsements batch: ${error.message}`);
+    }
+
+    // Award points for reviews
+    console.log('Processing reviews...');
+    try {
+      const allReviews = await base44.asServiceRole.entities.CollaboratorReview.filter({});
+      console.log(`Found ${allReviews.length} reviews`);
+      
+      for (const review of allReviews) {
+        const reviewerKey = `${review.reviewer_email}-review-given`;
+        const revieweeKey = `${review.reviewee_email}-review-received`;
+        
+        try {
+          // Award points to reviewer
+          if (!processedUsers.has(reviewerKey)) {
+            await base44.asServiceRole.functions.invoke('awardPoints', {
+              action: 'review_given',
+              user_email: review.reviewer_email
+            });
+            processedUsers.add(reviewerKey);
+            results.reviewsProcessed++;
+          }
+          
+          // Award points to reviewee
+          if (!processedUsers.has(revieweeKey)) {
+            await base44.asServiceRole.functions.invoke('awardPoints', {
+              action: 'review_received',
+              user_email: review.reviewee_email
+            });
+            processedUsers.add(revieweeKey);
+          }
+        } catch (error) {
+          console.error(`Error processing review:`, error);
+          results.errors.push(`Review: ${error.message}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error processing reviews:', error);
+      results.errors.push(`Reviews batch: ${error.message}`);
+    }
+
+    // Award points for profile completion
+    console.log('Processing profile completions...');
+    try {
+      const allUsers = await base44.asServiceRole.entities.User.filter({});
+      console.log(`Found ${allUsers.length} users to check for profile completion`);
+      
+      for (const user of allUsers) {
+        const profileKey = `${user.email}-profile-complete`;
+        
+        try {
+          // Award points if user has completed onboarding and has a profile image
+          if (!processedUsers.has(profileKey) && user.has_completed_onboarding && user.profile_image) {
+            await base44.asServiceRole.functions.invoke('awardPoints', {
+              action: 'profile_complete',
+              user_email: user.email
+            });
+            processedUsers.add(profileKey);
+            results.profilesCompleted++;
+          }
+        } catch (error) {
+          console.error(`Error awarding profile completion points to ${user.email}:`, error);
+          results.errors.push(`Profile ${user.email}: ${error.message}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error processing profile completions:', error);
+      results.errors.push(`Profiles batch: ${error.message}`);
     }
 
     console.log('Finished awarding points. Results:', results);
