@@ -245,36 +245,29 @@ export default function Leaderboard({ currentUser }) {
               <div className="flex items-start">
                 <Star className="w-5 h-5 text-purple-600 mr-2 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold">Complete Profile</p>
+                  <p className="font-semibold">Create a Project</p>
                   <p className="text-gray-600">+100 points</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <Star className="w-5 h-5 text-purple-600 mr-2 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold">Create a Project</p>
-                  <p className="text-gray-600">+50 points</p>
+                  <p className="font-semibold">Complete Profile</p>
+                  <p className="text-gray-600">+75 points</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <Star className="w-5 h-5 text-purple-600 mr-2 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold">Join Collaboration</p>
-                  <p className="text-gray-600">+30 points</p>
+                  <p className="text-gray-600">+50 points</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <Star className="w-5 h-5 text-purple-600 mr-2 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold">Receive Endorsement</p>
-                  <p className="text-gray-600">+10 points</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <Star className="w-5 h-5 text-purple-600 mr-2 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold">Give Endorsement</p>
-                  <p className="text-gray-600">+5 points</p>
+                  <p className="font-semibold">Invite a User</p>
+                  <p className="text-gray-600">+40 points</p>
                 </div>
               </div>
               <div className="flex items-start">
@@ -294,8 +287,15 @@ export default function Leaderboard({ currentUser }) {
               <div className="flex items-start">
                 <Star className="w-5 h-5 text-purple-600 mr-2 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold">Invite a User</p>
-                  <p className="text-gray-600">+25 points</p>
+                  <p className="font-semibold">Receive Endorsement</p>
+                  <p className="text-gray-600">+10 points</p>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <Star className="w-5 h-5 text-purple-600 mr-2 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Give Endorsement</p>
+                  <p className="text-gray-600">+5 points</p>
                 </div>
               </div>
             </div>

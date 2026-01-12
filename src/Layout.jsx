@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, ShieldCheck, User as UserIcon, Lightbulb, Settings, Compass, Search, MessageCircle, Loader2, Heart, Bug } from "lucide-react";
+import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, ShieldCheck, User as UserIcon, Lightbulb, Settings, Compass, Search, MessageCircle, Loader2, Heart, Bug, Trophy } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import GlobalSearchBar from "./components/GlobalSearchBar";
 
@@ -440,7 +440,7 @@ export default function Layout({ children, currentPageName }) {
       ...(currentUser ? [
       { name: "My Projects", path: createPageUrl("MyProjects"), icon: Lightbulb },
       { name: "Chat", path: createPageUrl("Chat"), icon: MessageCircle },
-      { name: "Leaderboard", path: createPageUrl("Leaderboard"), icon: ({ className }) => <span className={className}>🏆</span> },
+      { name: "Leaderboard", path: createPageUrl("Leaderboard"), icon: Trophy },
     ] : []),
   ];
 
@@ -1034,6 +1034,16 @@ export default function Layout({ children, currentPageName }) {
                     </>
                   )}
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to={createPageUrl("Leaderboard")} className="flex items-center cursor-pointer">
+                      <Trophy className="cu-icon-sm mr-2" /> Leaderboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={createPageUrl("Leaderboard")} className="flex items-center cursor-pointer">
+                      <Trophy className="cu-icon-sm mr-2" /> Leaderboard
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to={createPageUrl("SupportCU")} className="flex items-center cursor-pointer">
                       <Heart className="cu-icon-sm mr-2" /> Support CU
