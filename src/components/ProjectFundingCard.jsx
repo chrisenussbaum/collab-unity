@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { DollarSign, ExternalLink, Edit2, CreditCard } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DollarSign, ExternalLink, Edit2, CreditCard, Zap } from 'lucide-react';
 import { toast } from "sonner";
 import { Project } from "@/entities/all";
+import StripeCheckout from './StripeCheckout';
 
 const FUNDING_PLATFORMS = {
   paypal: {
@@ -32,6 +34,7 @@ const FUNDING_PLATFORMS = {
 const ProjectFundingCard = ({ project, projectOwner, canEdit = false, onUpdate }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showFundingDialog, setShowFundingDialog] = useState(false);
   
   const [editedFunding, setEditedFunding] = useState({
     paypal_link: project?.paypal_link || '',
@@ -115,8 +118,19 @@ const ProjectFundingCard = ({ project, projectOwner, canEdit = false, onUpdate }
           </div>
         </CardHeader>
         <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+          {!canEdit && (
+            <Button
+              onClick={() => setShowFundingDialog(true)}
+              className="w-full mb-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              Fund This Project
+            </Button>
+          )}
+
           {hasFundingLinks ? (
             <div className="space-y-2">
+              <p className="text-xs text-gray-500 mb-2">Alternative Payment Methods</p>
               {activeFundingLinks.map(([key, platform]) => {
                 const linkKey = `${key}_link`;
                 const username = project[linkKey];
@@ -150,11 +164,11 @@ const ProjectFundingCard = ({ project, projectOwner, canEdit = false, onUpdate }
                 );
               })}
             </div>
-          ) : (
+          ) : canEdit ? (
             <p className="text-sm text-gray-500 text-center py-2">
               No funding links added yet
             </p>
-          )}
+          ) : null}
         </CardContent>
       </Card>
 
@@ -220,6 +234,97 @@ const ProjectFundingCard = ({ project, projectOwner, canEdit = false, onUpdate }
               {isSaving ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Stripe Funding Dialog */}
+      <Dialog open={showFundingDialog} onOpenChange={setShowFundingDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <DollarSign className="w-5 h-5 mr-2 text-green-600" />
+              Fund "{project?.title}"
+            </DialogTitle>
+          </DialogHeader>
+          
+          <Tabs defaultValue="stripe" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="stripe" className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4" />
+                Card Payment
+              </TabsTrigger>
+              <TabsTrigger value="external" className="flex items-center gap-2">
+                <ExternalLink className="w-4 h-4" />
+                Other Methods
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="stripe" className="mt-4">
+              <StripeCheckout
+                projectId={project?.id}
+                projectTitle={project?.title}
+                onSuccess={() => {
+                  setShowFundingDialog(false);
+                  if (onUpdate) onUpdate();
+                }}
+                onCancel={() => setShowFundingDialog(false)}
+              />
+            </TabsContent>
+
+            <TabsContent value="external" className="mt-4">
+              {hasFundingLinks ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600 mb-4">
+                    Support this project through these payment platforms:
+                  </p>
+                  {activeFundingLinks.map(([key, platform]) => {
+                    const linkKey = `${key}_link`;
+                    const username = project[linkKey];
+                    const fullUrl = getFullUrl(key, username);
+                    
+                    return (
+                      <a
+                        key={key}
+                        href={fullUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors group border border-gray-200"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <img 
+                            src={platform.icon} 
+                            alt={platform.name} 
+                            className="w-6 h-6"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'block';
+                            }}
+                          />
+                          <CreditCard className={`w-6 h-6 ${platform.color} hidden`} />
+                          <div>
+                            <span className={`font-medium ${platform.color} block`}>
+                              {platform.name}
+                            </span>
+                            <span className="text-xs text-gray-500">@{username}</span>
+                          </div>
+                        </div>
+                        <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+                      </a>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-sm text-gray-600">
+                    No alternative payment methods available for this project.
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Use the Card Payment tab to fund via Stripe.
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </>
