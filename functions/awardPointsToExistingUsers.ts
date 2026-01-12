@@ -31,19 +31,22 @@ Deno.serve(async (req) => {
       try {
         results.projectsProcessed++;
 
-        // Award points to project creator
-        if (project.created_by && !processedUsers.has(`${project.created_by}-creator`)) {
-          try {
-            await base44.asServiceRole.functions.invoke('awardPoints', {
-              action: 'project_created',
-              user_email: project.created_by
-            });
-            processedUsers.add(`${project.created_by}-creator`);
-            results.creatorsAwarded++;
-            console.log(`Awarded project creation points to: ${project.created_by}`);
-          } catch (error) {
-            console.error(`Error awarding creator points for ${project.created_by}:`, error);
-            results.errors.push(`Creator ${project.created_by}: ${error.message}`);
+        // Award points to project creator (for EACH project they created)
+        if (project.created_by) {
+          const projectCreatorKey = `${project.created_by}-creator-${project.id}`;
+          if (!processedUsers.has(projectCreatorKey)) {
+            try {
+              await base44.asServiceRole.functions.invoke('awardPoints', {
+                action: 'project_created',
+                user_email: project.created_by
+              });
+              processedUsers.add(projectCreatorKey);
+              results.creatorsAwarded++;
+              console.log(`Awarded project creation points to: ${project.created_by} for project ${project.id}`);
+            } catch (error) {
+              console.error(`Error awarding creator points for ${project.created_by}:`, error);
+              results.errors.push(`Creator ${project.created_by}: ${error.message}`);
+            }
           }
         }
 
@@ -82,18 +85,18 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Award points for endorsements
+    // Award points for endorsements (each endorsement given/received)
     console.log('Processing endorsements...');
     try {
       const allEndorsements = await base44.asServiceRole.entities.SkillEndorsement.filter({});
       console.log(`Found ${allEndorsements.length} endorsements`);
       
       for (const endorsement of allEndorsements) {
-        const receiverKey = `${endorsement.user_email}-endorsement-received`;
-        const giverKey = `${endorsement.endorser_email}-endorsement-given`;
+        const receiverKey = `${endorsement.user_email}-endorsement-received-${endorsement.id}`;
+        const giverKey = `${endorsement.endorser_email}-endorsement-given-${endorsement.id}`;
         
         try {
-          // Award points to endorsement receiver
+          // Award points to endorsement receiver (for each endorsement)
           if (!processedUsers.has(receiverKey)) {
             await base44.asServiceRole.functions.invoke('awardPoints', {
               action: 'endorsement_received',
@@ -103,7 +106,7 @@ Deno.serve(async (req) => {
             results.endorsementsProcessed++;
           }
           
-          // Award points to endorsement giver
+          // Award points to endorsement giver (for each endorsement)
           if (!processedUsers.has(giverKey)) {
             await base44.asServiceRole.functions.invoke('awardPoints', {
               action: 'endorsement_given',
@@ -121,18 +124,18 @@ Deno.serve(async (req) => {
       results.errors.push(`Endorsements batch: ${error.message}`);
     }
 
-    // Award points for reviews
+    // Award points for reviews (each review given/received)
     console.log('Processing reviews...');
     try {
       const allReviews = await base44.asServiceRole.entities.CollaboratorReview.filter({});
       console.log(`Found ${allReviews.length} reviews`);
       
       for (const review of allReviews) {
-        const reviewerKey = `${review.reviewer_email}-review-given`;
-        const revieweeKey = `${review.reviewee_email}-review-received`;
+        const reviewerKey = `${review.reviewer_email}-review-given-${review.id}`;
+        const revieweeKey = `${review.reviewee_email}-review-received-${review.id}`;
         
         try {
-          // Award points to reviewer
+          // Award points to reviewer (for each review)
           if (!processedUsers.has(reviewerKey)) {
             await base44.asServiceRole.functions.invoke('awardPoints', {
               action: 'review_given',
@@ -142,7 +145,7 @@ Deno.serve(async (req) => {
             results.reviewsProcessed++;
           }
           
-          // Award points to reviewee
+          // Award points to reviewee (for each review)
           if (!processedUsers.has(revieweeKey)) {
             await base44.asServiceRole.functions.invoke('awardPoints', {
               action: 'review_received',
