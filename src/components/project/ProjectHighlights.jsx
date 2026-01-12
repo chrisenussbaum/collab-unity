@@ -99,6 +99,14 @@ export default function ProjectHighlights({ project, currentUser, onProjectUpdat
         }
       };
 
+      video.addEventListener('loadedmetadata', () => {
+        // Wait for enough data to be loaded
+        if (video.readyState >= 2) {
+          const seekTime = Math.min(0.5, video.duration * 0.05);
+          video.currentTime = seekTime;
+        }
+      });
+
       video.addEventListener('loadeddata', () => {
         // Ensure video has valid dimensions
         if (video.videoWidth > 0 && video.videoHeight > 0) {
