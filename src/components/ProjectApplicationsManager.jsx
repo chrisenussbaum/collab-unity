@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Project, ProjectApplication, Notification, User } from '@/entities/all';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -7,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { getPublicUserProfiles } from '@/functions/getPublicUserProfiles';
 import { Check, X, Inbox } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
 // Utility function to handle rate limits with exponential backoff
 const withRetry = async (apiCall, maxRetries = 3, baseDelay = 1000) => {
@@ -85,6 +85,16 @@ export default function ProjectApplicationsManager({ project, onProjectUpdate })
         collaborator_emails: updatedCollaborators,
         current_collaborators_count: newCollaboratorsCount
       }));
+
+      // 2.5. Award points for joining collaboration
+      try {
+        await base44.functions.invoke('awardPoints', {
+          action: 'project_collaboration',
+          user_email: application.applicant_email
+        });
+      } catch (error) {
+        console.error("Error awarding points for collaboration:", error);
+      }
 
       // 3. Notify the applicant that they were accepted
       await withRetry(() => Notification.create({
