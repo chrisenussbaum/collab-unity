@@ -32,7 +32,11 @@ const BADGE_CONDITIONS = {
   streak_30: (stats) => stats.activity_streak >= 30,
   level_5: (stats) => stats.level >= 5,
   level_10: (stats) => stats.level >= 10,
-  level_20: (stats) => stats.level >= 20
+  level_20: (stats) => stats.level >= 20,
+  community_builder: (stats) => stats.users_invited >= 10,
+  master_collaborator: (stats) => stats.projects_collaborated >= 10,
+  top_mentor: (stats) => (stats.endorsements_given || 0) + (stats.reviews_given || 0) >= 20,
+  prolific_creator: (stats) => stats.projects_created >= 10
 };
 
 Deno.serve(async (req) => {

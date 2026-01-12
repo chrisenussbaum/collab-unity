@@ -109,6 +109,34 @@ export const BADGES = {
     icon: Crown,
     color: "from-purple-500 to-pink-500",
     description: "Reached level 20"
+  },
+  community_builder: {
+    id: "community_builder",
+    name: "Community Builder",
+    icon: Users,
+    color: "from-teal-500 to-cyan-500",
+    description: "Invited 10+ users to the platform"
+  },
+  master_collaborator: {
+    id: "master_collaborator",
+    name: "Master Collaborator",
+    icon: Users,
+    color: "from-lime-500 to-green-500",
+    description: "Collaborated on 10+ projects"
+  },
+  top_mentor: {
+    id: "top_mentor",
+    name: "Top Mentor",
+    icon: Award,
+    color: "from-orange-500 to-red-500",
+    description: "Gave 20+ endorsements and reviews"
+  },
+  prolific_creator: {
+    id: "prolific_creator",
+    name: "Prolific Creator",
+    icon: Sparkles,
+    color: "from-fuchsia-500 to-purple-500",
+    description: "Created 10+ projects"
   }
 };
 

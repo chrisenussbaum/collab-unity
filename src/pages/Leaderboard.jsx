@@ -15,6 +15,7 @@ export default function Leaderboard({ currentUser }) {
   const [topUsers, setTopUsers] = useState([]);
   const [topCreators, setTopCreators] = useState([]);
   const [topCollaborators, setTopCollaborators] = useState([]);
+  const [trendingUsers, setTrendingUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overall");
 
@@ -34,11 +35,21 @@ export default function Leaderboard({ currentUser }) {
       // Get top collaborators
       const topProjectCollaborators = await base44.entities.UserGameStats.filter({}, '-projects_collaborated', 10);
 
+      // Get trending users (active this week with streak)
+      const allUserStats = await base44.entities.UserGameStats.filter({}, '-updated_date', 50);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const trending = allUserStats
+        .filter(u => new Date(u.updated_date) > weekAgo && u.activity_streak > 0)
+        .sort((a, b) => b.activity_streak - a.activity_streak)
+        .slice(0, 5);
+
       // Get user profiles for all unique emails
       const allEmails = [...new Set([
         ...topPointUsers.map(u => u.user_email),
         ...topProjectCreators.map(u => u.user_email),
-        ...topProjectCollaborators.map(u => u.user_email)
+        ...topProjectCollaborators.map(u => u.user_email),
+        ...trending.map(u => u.user_email)
       ])];
 
       const { data: userProfiles } = await base44.functions.invoke('getPublicUserProfiles', { emails: allEmails });
@@ -57,6 +68,7 @@ export default function Leaderboard({ currentUser }) {
       setTopUsers(enrichUsers(topPointUsers));
       setTopCreators(enrichUsers(topProjectCreators));
       setTopCollaborators(enrichUsers(topProjectCollaborators));
+      setTrendingUsers(enrichUsers(trending));
     } catch (error) {
       console.error("Error loading leaderboards:", error);
     } finally {
@@ -73,6 +85,7 @@ export default function Leaderboard({ currentUser }) {
 
   const tabs = [
     { id: "overall", label: "Overall", icon: Trophy },
+    { id: "trending", label: "🔥 Trending", icon: TrendingUp },
     { id: "creators", label: "Top Creators", icon: Star },
     { id: "collaborators", label: "Top Collaborators", icon: Users }
   ];
@@ -81,6 +94,7 @@ export default function Leaderboard({ currentUser }) {
     switch (activeTab) {
       case "creators": return topCreators;
       case "collaborators": return topCollaborators;
+      case "trending": return trendingUsers;
       default: return topUsers;
     }
   };
@@ -91,6 +105,8 @@ export default function Leaderboard({ currentUser }) {
         return { value: user.projects_created, label: "Projects Created" };
       case "collaborators": 
         return { value: user.projects_collaborated, label: "Collaborations" };
+      case "trending":
+        return { value: user.activity_streak, label: "Day Streak 🔥" };
       default: 
         return { value: user.total_points.toLocaleString(), label: "Points" };
     }
