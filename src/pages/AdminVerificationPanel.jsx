@@ -170,7 +170,8 @@ export default function AdminVerificationPanel() {
   const [pendingAds, setPendingAds] = useState([]);
   const [bugs, setBugs] = useState([]);
   const [playgroundContent, setPlaygroundContent] = useState([]);
-  const [activeTab, setActiveTab] = useState('ads'); // 'ads', 'bugs', or 'content'
+  const [pendingPlaygroundContent, setPendingPlaygroundContent] = useState([]);
+  const [activeTab, setActiveTab] = useState('ads'); // 'ads', 'bugs', 'pending-content', or 'content'
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedAd, setSelectedAd] = useState(null);
@@ -212,7 +213,12 @@ export default function AdminVerificationPanel() {
       setPendingAds(pending);
 
       setBugs(allBugs || []);
-      setPlaygroundContent(allContent || []);
+      
+      const approved = allContent.filter(c => c.is_approved);
+      const pendingContent = allContent.filter(c => !c.is_approved);
+      
+      setPlaygroundContent(approved || []);
+      setPendingPlaygroundContent(pendingContent || []);
 
     } catch (error) {
       console.error("Error loading pending items:", error);
@@ -555,6 +561,23 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
                 <span className="sm:ml-1">({bugs.length})</span>
               </Button>
               <Button
+                variant={activeTab === 'pending-content' ? 'default' : 'outline'}
+                onClick={() => {
+                  setActiveTab('pending-content');
+                  setSelectedAd(null);
+                  setSelectedBug(null);
+                  setShowDetailsModal(false);
+                  setShowApprovalDialog(false);
+                  setShowRejectionDialog(false);
+                  setRejectionNotes('');
+                }}
+                className={`flex-shrink-0 ${activeTab === 'pending-content' ? 'bg-white text-purple-600 hover:bg-white/90' : 'bg-white/20 text-white border-white/30 hover:bg-white/30'}`}
+              >
+                <LinkIcon className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Pending</span>
+                <span className="sm:ml-1">({pendingPlaygroundContent.length})</span>
+              </Button>
+              <Button
                 variant={activeTab === 'content' ? 'default' : 'outline'}
                 onClick={() => {
                   setActiveTab('content');
@@ -568,7 +591,7 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
                 className={`flex-shrink-0 ${activeTab === 'content' ? 'bg-white text-purple-600 hover:bg-white/90' : 'bg-white/20 text-white border-white/30 hover:bg-white/30'}`}
               >
                 <Rss className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Playground Content</span>
+                <span className="hidden sm:inline">Content</span>
                 <span className="sm:ml-1">({playgroundContent.length})</span>
               </Button>
             </div>
@@ -630,7 +653,136 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
 
 
 
-        {/* Playground Content Tab */}
+        {/* Pending Content Tab */}
+        {activeTab === 'pending-content' && (
+          <>
+            {pendingPlaygroundContent.length === 0 ? (
+              <Card className="cu-card">
+                <CardContent className="p-12 text-center">
+                  <div className="w-20 h-20 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <LinkIcon className="w-10 h-10 text-purple-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    No Pending Submissions
+                  </h3>
+                  <p className="text-gray-600">
+                    All content submissions have been reviewed.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {pendingPlaygroundContent.map((content) => (
+                  <Card key={content.id} className="cu-card border-2 border-orange-200">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm text-gray-900 line-clamp-2">
+                            {content.title}
+                          </h3>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Submitted by {content.submitted_by}
+                          </p>
+                        </div>
+                        <Badge className="bg-amber-50 text-amber-700 border border-amber-200 font-medium text-xs whitespace-nowrap">
+                          <Clock className="w-3 h-3 mr-1" />
+                          Pending
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {content.image_url && (
+                        <div className="w-full h-32 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg flex items-center justify-center p-4">
+                          <img 
+                            src={content.image_url} 
+                            alt={content.title}
+                            className="w-16 h-16 object-contain"
+                          />
+                        </div>
+                      )}
+                      
+                      {content.description && (
+                        <p className="text-xs text-gray-600 line-clamp-2">
+                          {content.description}
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-2 text-xs">
+                        <Badge variant="outline" className="capitalize">
+                          {content.category.replace(/_/g, ' ')}
+                        </Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {content.content_type}
+                        </Badge>
+                      </div>
+
+                      {content.tags && content.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {content.tags.map((tag, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+
+                      <a 
+                        href={content.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline block truncate"
+                      >
+                        {content.url}
+                      </a>
+
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              await base44.entities.PlaygroundContent.update(content.id, {
+                                is_approved: true
+                              });
+                              toast.success("Content approved!");
+                              await loadPendingItems();
+                            } catch (error) {
+                              console.error("Error approving content:", error);
+                              toast.error("Failed to approve content");
+                            }
+                          }}
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+                        >
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={async () => {
+                            try {
+                              await base44.entities.PlaygroundContent.delete(content.id);
+                              toast.success("Content rejected");
+                              await loadPendingItems();
+                            } catch (error) {
+                              console.error("Error rejecting content:", error);
+                              toast.error("Failed to reject content");
+                            }
+                          }}
+                          className="flex-1 text-xs"
+                        >
+                          <XCircle className="w-3 h-3 mr-1" />
+                          Reject
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Approved Playground Content Tab */}
         {activeTab === 'content' && (
           <>
             <Card className="cu-card mb-6">
