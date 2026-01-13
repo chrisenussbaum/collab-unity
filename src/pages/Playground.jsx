@@ -484,6 +484,27 @@ export default function Playground({ currentUser }) {
                     submitted_by: currentUser.email
                   });
 
+                  // Notify all admins
+                  const allUsers = await base44.entities.User.list();
+                  const admins = allUsers.filter(u => u.role === 'admin');
+                  
+                  const notificationPromises = admins.map(admin =>
+                    base44.entities.Notification.create({
+                      user_email: admin.email,
+                      title: "New Content Submitted for Review",
+                      message: `${currentUser.full_name || currentUser.email} submitted new content: "${submitFormData.title.trim() || urlObj.hostname}"`,
+                      type: "general",
+                      actor_email: currentUser.email,
+                      actor_name: currentUser.full_name || currentUser.email,
+                      metadata: {
+                        content_category: submitFormData.category,
+                        content_url: submitFormData.url.trim()
+                      }
+                    })
+                  );
+                  
+                  await Promise.all(notificationPromises);
+
                   toast.success("Content submitted! It will be reviewed by our team.");
                   setSubmitFormData({
                     url: '',

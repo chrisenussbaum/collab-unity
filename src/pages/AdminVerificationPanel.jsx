@@ -8,6 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import {
   ShieldCheck,
   Clock,
@@ -26,7 +31,12 @@ import {
   Rss,
   Plus,
   Link as LinkIcon,
-  Loader2
+  Loader2,
+  Edit,
+  Check,
+  X,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
@@ -190,6 +200,10 @@ export default function AdminVerificationPanel() {
   const [isScrapingUrl, setIsScrapingUrl] = useState(false);
   const [selectedContent, setSelectedContent] = useState(null);
   const [showContentDeleteDialog, setShowContentDeleteDialog] = useState(false);
+  const [showEditContentDialog, setShowEditContentDialog] = useState(false);
+  const [editingContent, setEditingContent] = useState(null);
+  const [selectedPendingContent, setSelectedPendingContent] = useState(new Set());
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
   const loadPendingItems = useCallback(async () => {
     setIsLoading(true);
@@ -491,6 +505,99 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
     }
   };
 
+  const handleEditContent = async () => {
+    if (!editingContent) return;
+    
+    setIsProcessing(true);
+    try {
+      const tagsArray = typeof editingContent.tags === 'string' 
+        ? editingContent.tags.split(',').map(t => t.trim()).filter(t => t)
+        : editingContent.tags;
+
+      await base44.entities.PlaygroundContent.update(editingContent.id, {
+        title: editingContent.title,
+        description: editingContent.description,
+        url: editingContent.url,
+        category: editingContent.category,
+        tags: tagsArray,
+        author: editingContent.author,
+        duration: editingContent.duration
+      });
+      
+      toast.success("Content updated successfully!");
+      await loadPendingItems();
+      setShowEditContentDialog(false);
+      setEditingContent(null);
+    } catch (error) {
+      console.error("Error updating content:", error);
+      toast.error("Failed to update content.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedPendingContent.size === 0) return;
+    
+    setIsBulkProcessing(true);
+    try {
+      const promises = Array.from(selectedPendingContent).map(id =>
+        base44.entities.PlaygroundContent.update(id, { is_approved: true })
+      );
+      
+      await Promise.all(promises);
+      toast.success(`${selectedPendingContent.size} content items approved!`);
+      setSelectedPendingContent(new Set());
+      await loadPendingItems();
+    } catch (error) {
+      console.error("Error bulk approving:", error);
+      toast.error("Failed to approve some content items.");
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkReject = async () => {
+    if (selectedPendingContent.size === 0) return;
+    
+    setIsBulkProcessing(true);
+    try {
+      const promises = Array.from(selectedPendingContent).map(id =>
+        base44.entities.PlaygroundContent.delete(id)
+      );
+      
+      await Promise.all(promises);
+      toast.success(`${selectedPendingContent.size} content items rejected!`);
+      setSelectedPendingContent(new Set());
+      await loadPendingItems();
+    } catch (error) {
+      console.error("Error bulk rejecting:", error);
+      toast.error("Failed to reject some content items.");
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const toggleContentSelection = (contentId) => {
+    setSelectedPendingContent(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(contentId)) {
+        newSet.delete(contentId);
+      } else {
+        newSet.add(contentId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedPendingContent.size === pendingPlaygroundContent.length) {
+      setSelectedPendingContent(new Set());
+    } else {
+      setSelectedPendingContent(new Set(pendingPlaygroundContent.map(c => c.id)));
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -656,6 +763,57 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
         {/* Pending Content Tab */}
         {activeTab === 'pending-content' && (
           <>
+            {pendingPlaygroundContent.length > 0 && (
+              <Card className="cu-card mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={selectedPendingContent.size === pendingPlaygroundContent.length && pendingPlaygroundContent.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        {selectedPendingContent.size > 0 
+                          ? `${selectedPendingContent.size} selected` 
+                          : 'Select all'}
+                      </span>
+                    </div>
+                    
+                    {selectedPendingContent.size > 0 && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={handleBulkApprove}
+                          disabled={isBulkProcessing}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                        >
+                          {isBulkProcessing ? (
+                            <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                          ) : (
+                            <Check className="w-4 h-4 mr-1" />
+                          )}
+                          Approve All
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={handleBulkReject}
+                          disabled={isBulkProcessing}
+                        >
+                          {isBulkProcessing ? (
+                            <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                          ) : (
+                            <X className="w-4 h-4 mr-1" />
+                          )}
+                          Reject All
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
             {pendingPlaygroundContent.length === 0 ? (
               <Card className="cu-card">
                 <CardContent className="p-12 text-center">
@@ -673,9 +831,14 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {pendingPlaygroundContent.map((content) => (
-                  <Card key={content.id} className="cu-card border-2 border-orange-200">
+                  <Card key={content.id} className={`cu-card border-2 ${selectedPendingContent.has(content.id) ? 'border-purple-400 bg-purple-50' : 'border-orange-200'}`}>
                     <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2">
+                        <Checkbox
+                          checked={selectedPendingContent.has(content.id)}
+                          onCheckedChange={() => toggleContentSelection(content.id)}
+                          className="mt-1"
+                        />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-sm text-gray-900 line-clamp-2">
                             {content.title}
@@ -942,6 +1105,21 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
                             View
                           </Button>
                         </a>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditingContent({
+                              ...content,
+                              tags: Array.isArray(content.tags) ? content.tags.join(', ') : ''
+                            });
+                            setShowEditContentDialog(true);
+                          }}
+                          className="text-xs"
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Edit
+                        </Button>
                         <Button
                           variant="destructive"
                           size="sm"
@@ -1233,6 +1411,130 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
           isDestructive={true}
           isLoading={isProcessing}
         />
+
+        {/* Edit Content Dialog */}
+        <Dialog open={showEditContentDialog} onOpenChange={setShowEditContentDialog}>
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Playground Content</DialogTitle>
+              <DialogDescription>
+                Update the details for this content item
+              </DialogDescription>
+            </DialogHeader>
+            
+            {editingContent && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="edit-title">Title *</Label>
+                  <Input
+                    id="edit-title"
+                    value={editingContent.title}
+                    onChange={(e) => setEditingContent({ ...editingContent, title: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-url">URL *</Label>
+                  <Input
+                    id="edit-url"
+                    type="url"
+                    value={editingContent.url}
+                    onChange={(e) => setEditingContent({ ...editingContent, url: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-category">Category *</Label>
+                  <Select value={editingContent.category} onValueChange={(value) => setEditingContent({ ...editingContent, category: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="digital_library">Digital Library</SelectItem>
+                      <SelectItem value="video_courses">Video Courses</SelectItem>
+                      <SelectItem value="podcasts">Podcasts</SelectItem>
+                      <SelectItem value="tutorials">Tutorials</SelectItem>
+                      <SelectItem value="games">Games</SelectItem>
+                      <SelectItem value="shows_movies">Shows & Movies</SelectItem>
+                      <SelectItem value="puzzles">Puzzles</SelectItem>
+                      <SelectItem value="interactive_stories">Interactive Stories</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Textarea
+                    id="edit-description"
+                    value={editingContent.description || ''}
+                    onChange={(e) => setEditingContent({ ...editingContent, description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-author">Author</Label>
+                    <Input
+                      id="edit-author"
+                      value={editingContent.author || ''}
+                      onChange={(e) => setEditingContent({ ...editingContent, author: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-duration">Duration</Label>
+                    <Input
+                      id="edit-duration"
+                      placeholder="e.g., 45 min"
+                      value={editingContent.duration || ''}
+                      onChange={(e) => setEditingContent({ ...editingContent, duration: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-tags">Tags (comma-separated)</Label>
+                  <Input
+                    id="edit-tags"
+                    value={editingContent.tags}
+                    onChange={(e) => setEditingContent({ ...editingContent, tags: e.target.value })}
+                    placeholder="movie, action, thriller"
+                  />
+                </div>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowEditContentDialog(false);
+                  setEditingContent(null);
+                }}
+                disabled={isProcessing}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEditContent}
+                disabled={isProcessing || !editingContent?.title || !editingContent?.url}
+                className="cu-button"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Details Modal - Ad */}
         {selectedAd && activeTab === 'ads' && (
