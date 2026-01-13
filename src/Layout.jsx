@@ -438,7 +438,6 @@ export default function Layout({ children, currentPageName }) {
       ...(currentUser ? [
       { name: "My Projects", path: createPageUrl("MyProjects"), icon: Lightbulb },
       { name: "Chat", path: createPageUrl("Chat"), icon: MessageCircle },
-      { name: "Leaderboard", path: createPageUrl("Leaderboard"), icon: Trophy },
     ] : []),
   ];
 
