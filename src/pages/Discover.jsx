@@ -903,18 +903,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm cu-button-mobile-full"
                 >
                   <Megaphone className="w-5 h-5 mr-2" />
-                  Advertise
-                </Button>
-              </Link>
-
-              <Link to={createPageUrl("SubmitContent")}>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm cu-button-mobile-full"
-                >
-                  <Lightbulb className="w-5 h-5 mr-2" />
-                  Submit Content
+                  Promote Your Project
                 </Button>
               </Link>
             </div>
@@ -941,29 +930,16 @@ export default function Discover({ currentUser: propCurrentUser }) {
                 </Button>
               </Link>
 
-              <div className="flex gap-2 w-full">
-                <Link to={createPageUrl("Advertise")} className="flex-1">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm w-full"
-                  >
-                    <Megaphone className="w-5 h-5 mr-2" />
-                    Advertise
-                  </Button>
-                </Link>
-
-                <Link to={createPageUrl("SubmitContent")} className="flex-1">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm w-full"
-                  >
-                    <Lightbulb className="w-5 h-5 mr-2" />
-                    Submit Content
-                  </Button>
-                </Link>
-              </div>
+              <Link to={createPageUrl("Advertise")} className="w-full">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm w-full"
+                >
+                  <Megaphone className="w-5 h-5 mr-2" />
+                  Promote Your Project
+                </Button>
+              </Link>
             </div>
 
           </motion.div>

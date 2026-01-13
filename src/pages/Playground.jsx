@@ -3,9 +3,14 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { base44 } from "@/api/base44Client";
 import ContentViewer from "../components/playground/ContentViewer";
 import RSSFeedViewer from "../components/playground/RSSFeedViewer";
+import { toast } from "sonner";
 import { 
   Sparkles, 
   Book, 
@@ -21,7 +26,9 @@ import {
   Rocket,
   Library,
   Monitor,
-  Wand2
+  Wand2,
+  Link as LinkIcon,
+  Loader2
 } from "lucide-react";
 
 const PLAYGROUND_CATEGORIES = [
@@ -80,6 +87,14 @@ export default function Playground({ currentUser }) {
   const [viewingContent, setViewingContent] = useState(null);
   const [currentItemType, setCurrentItemType] = useState(null);
   const [viewingRSSFeed, setViewingRSSFeed] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitFormData, setSubmitFormData] = useState({
+    url: '',
+    category: '',
+    tags: '',
+    title: '',
+    description: ''
+  });
 
   const loadContentForItem = async (categoryId, itemTitle) => {
     setIsLoadingContent(true);
@@ -412,22 +427,164 @@ export default function Playground({ currentUser }) {
           })}
         </div>
 
-        {/* Coming Soon Notice */}
+        {/* Submit Content Form */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
           <Card className="cu-card bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
-            <CardContent className="py-8 text-center">
-              <Rocket className="w-12 h-12 mx-auto text-purple-600 mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                Something Amazing is Coming
-              </h3>
-              <p className="text-gray-600 max-w-2xl mx-auto">
-                The Playground is being built to give you an immersive environment for creativity, 
-                learning, and entertainment. Click on a category above to explore what's planned.
-              </p>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                  <LinkIcon className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">Share Your Favorite Resources</CardTitle>
+                  <CardDescription className="text-base">
+                    Submit content to help the community learn and grow
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                
+                if (!currentUser) {
+                  toast.error("Please sign in to submit content.");
+                  return;
+                }
+
+                if (!submitFormData.url || !submitFormData.category) {
+                  toast.error("Please provide a URL and select a category.");
+                  return;
+                }
+
+                setIsSubmitting(true);
+                try {
+                  const urlObj = new URL(submitFormData.url);
+                  const domain = urlObj.hostname;
+                  const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+
+                  const tagsArray = submitFormData.tags
+                    .split(',')
+                    .map(tag => tag.trim())
+                    .filter(tag => tag.length > 0);
+
+                  await base44.entities.PlaygroundContent.create({
+                    url: submitFormData.url.trim(),
+                    category: submitFormData.category,
+                    title: submitFormData.title.trim() || urlObj.hostname,
+                    description: submitFormData.description.trim(),
+                    image_url: faviconUrl,
+                    tags: tagsArray,
+                    content_type: submitFormData.url.includes('rss') || submitFormData.url.includes('feed') ? 'rss_feed' : 'article',
+                    is_approved: false,
+                    submitted_by: currentUser.email
+                  });
+
+                  toast.success("Content submitted! It will be reviewed by our team.");
+                  setSubmitFormData({
+                    url: '',
+                    category: '',
+                    tags: '',
+                    title: '',
+                    description: ''
+                  });
+                } catch (error) {
+                  console.error("Error submitting content:", error);
+                  toast.error("Failed to submit content. Please check the URL and try again.");
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="url">Content URL *</Label>
+                    <Input
+                      id="url"
+                      type="url"
+                      placeholder="https://example.com/content"
+                      value={submitFormData.url}
+                      onChange={(e) => setSubmitFormData({ ...submitFormData, url: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="category">Category *</Label>
+                    <Select value={submitFormData.category} onValueChange={(value) => setSubmitFormData({ ...submitFormData, category: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="digital_library">Digital Library</SelectItem>
+                        <SelectItem value="video_courses">Video Courses</SelectItem>
+                        <SelectItem value="podcasts">Podcasts</SelectItem>
+                        <SelectItem value="tutorials">Tutorials</SelectItem>
+                        <SelectItem value="games">Games</SelectItem>
+                        <SelectItem value="shows_movies">Shows & Movies</SelectItem>
+                        <SelectItem value="puzzles">Puzzles</SelectItem>
+                        <SelectItem value="interactive_stories">Interactive Stories</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="title">Title (Optional)</Label>
+                    <Input
+                      id="title"
+                      type="text"
+                      placeholder="Auto-detected if left blank"
+                      value={submitFormData.title}
+                      onChange={(e) => setSubmitFormData({ ...submitFormData, title: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="tags">Tags (Optional)</Label>
+                    <Input
+                      id="tags"
+                      type="text"
+                      placeholder="movie, action, thriller"
+                      value={submitFormData.tags}
+                      onChange={(e) => setSubmitFormData({ ...submitFormData, tags: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="description">Description (Optional)</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Brief description..."
+                    value={submitFormData.description}
+                    onChange={(e) => setSubmitFormData({ ...submitFormData, description: e.target.value })}
+                    rows={2}
+                  />
+                </div>
+
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting || !submitFormData.url || !submitFormData.category}
+                  className="w-full cu-button"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <LinkIcon className="w-4 h-4 mr-2" />
+                      Submit Content
+                    </>
+                  )}
+                </Button>
+              </form>
             </CardContent>
           </Card>
         </motion.div>
