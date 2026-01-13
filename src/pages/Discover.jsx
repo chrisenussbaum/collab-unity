@@ -875,6 +875,17 @@ export default function Discover({ currentUser: propCurrentUser }) {
             </p>
             
             <div className="hidden sm:flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-8 px-4">
+              <Link to={createPageUrl("Playground")}>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm cu-button-mobile-full"
+                >
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Playground
+                </Button>
+              </Link>
+              
               <Link to={createPageUrl("CreateProject")}>
                 <Button
                   size="lg"
@@ -898,6 +909,17 @@ export default function Discover({ currentUser: propCurrentUser }) {
             </div>
 
             <div className="flex sm:hidden flex-col items-center justify-center gap-3 mb-6 px-4">
+              <Link to={createPageUrl("Playground")} className="w-full">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm w-full"
+                >
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Playground
+                </Button>
+              </Link>
+              
               <Link to={createPageUrl("Advertise")} className="w-full">
                 <Button
                   size="lg"

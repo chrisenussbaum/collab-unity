@@ -10,6 +10,7 @@ import EditProfile from './pages/EditProfile';
 import EditProject from './pages/EditProject';
 import FeatureRequest from './pages/FeatureRequest';
 import Feed from './pages/Feed';
+import Leaderboard from './pages/Leaderboard';
 import MyProjects from './pages/MyProjects';
 import Notifications from './pages/Notifications';
 import Onboarding from './pages/Onboarding';
@@ -22,7 +23,7 @@ import TermsOfService from './pages/TermsOfService';
 import Testimonials from './pages/Testimonials';
 import UserProfile from './pages/UserProfile';
 import Welcome from './pages/Welcome';
-import Leaderboard from './pages/Leaderboard';
+import Playground from './pages/Playground';
 import __Layout from './Layout.jsx';
 
 
@@ -39,6 +40,7 @@ export const PAGES = {
     "EditProject": EditProject,
     "FeatureRequest": FeatureRequest,
     "Feed": Feed,
+    "Leaderboard": Leaderboard,
     "MyProjects": MyProjects,
     "Notifications": Notifications,
     "Onboarding": Onboarding,
@@ -51,7 +53,7 @@ export const PAGES = {
     "Testimonials": Testimonials,
     "UserProfile": UserProfile,
     "Welcome": Welcome,
-    "Leaderboard": Leaderboard,
+    "Playground": Playground,
 }
 
 export const pagesConfig = {
