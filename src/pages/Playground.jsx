@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
+import ContentViewer from "../components/playground/ContentViewer";
 import { 
   Sparkles, 
   Book, 
@@ -75,6 +76,8 @@ export default function Playground({ currentUser }) {
   const [selectedItem, setSelectedItem] = useState(null);
   const [contentFeed, setContentFeed] = useState([]);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const [viewingContent, setViewingContent] = useState(null);
+  const [currentItemType, setCurrentItemType] = useState(null);
 
   const loadContentForItem = async (categoryId, itemTitle) => {
     setIsLoadingContent(true);
@@ -92,6 +95,7 @@ export default function Playground({ currentUser }) {
       };
 
       const categoryEnum = categoryMap[itemTitle];
+      setCurrentItemType(categoryEnum);
       
       if (categoryEnum) {
         const content = await base44.entities.PlaygroundContent.filter({
@@ -167,55 +171,66 @@ export default function Playground({ currentUser }) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block h-full"
+                  <Card 
+                    className="cu-card h-full hover:shadow-xl transition-all border-2 hover:border-purple-300 cursor-pointer"
+                    onClick={() => setViewingContent(item)}
                   >
-                    <Card className="cu-card h-full hover:shadow-xl transition-all border-2 hover:border-purple-300">
-                      {item.image_url && (
-                        <div className="h-48 overflow-hidden rounded-t-lg">
-                          <img 
-                            src={item.image_url} 
-                            alt={item.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                    {item.image_url && (
+                      <div className="h-48 overflow-hidden rounded-t-lg">
+                        <img 
+                          src={item.image_url} 
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    
+                    <CardHeader>
+                      <CardTitle className="text-lg line-clamp-2">{item.title}</CardTitle>
+                      {item.author && (
+                        <p className="text-sm text-gray-600">By {item.author}</p>
+                      )}
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-2">
+                      {item.description && (
+                        <p className="text-sm text-gray-600 line-clamp-3">
+                          {item.description}
+                        </p>
                       )}
                       
-                      <CardHeader>
-                        <CardTitle className="text-lg line-clamp-2">{item.title}</CardTitle>
-                        {item.author && (
-                          <p className="text-sm text-gray-600">By {item.author}</p>
-                        )}
-                      </CardHeader>
-                      
-                      <CardContent className="space-y-2">
-                        {item.description && (
-                          <p className="text-sm text-gray-600 line-clamp-3">
-                            {item.description}
-                          </p>
-                        )}
-                        
-                        <div className="flex items-center gap-2 pt-2">
-                          {item.duration && (
-                            <Badge variant="secondary" className="text-xs">
-                              {item.duration}
-                            </Badge>
-                          )}
-                          <Badge variant="outline" className="text-xs">
-                            {item.content_type.replace(/_/g, ' ')}
+                      <div className="flex items-center gap-2 pt-2">
+                        {item.duration && (
+                          <Badge variant="secondary" className="text-xs">
+                            {item.duration}
                           </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </a>
+                        )}
+                        <Badge variant="outline" className="text-xs">
+                          {item.content_type.replace(/_/g, ' ')}
+                        </Badge>
+                      </div>
+                      
+                      <Button variant="outline" size="sm" className="w-full mt-2">
+                        {currentItemType === 'podcasts' || currentItemType === 'video_courses' || currentItemType === 'shows_movies' ? 'Play' : 
+                         currentItemType === 'games' || currentItemType === 'interactive_stories' ? 'Launch' : 
+                         'Read'} →
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </motion.div>
               ))}
             </div>
           )}
         </div>
+
+        {/* Content Viewer Modal */}
+        {viewingContent && (
+          <ContentViewer 
+            item={viewingContent}
+            itemType={currentItemType}
+            onClose={() => setViewingContent(null)}
+          />
+        )}
       </div>
     );
   }
