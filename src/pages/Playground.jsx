@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { base44 } from "@/api/base44Client";
 import { 
   Sparkles, 
   Book, 
@@ -71,6 +72,153 @@ const PLAYGROUND_CATEGORIES = [
 
 export default function Playground({ currentUser }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [contentFeed, setContentFeed] = useState([]);
+  const [isLoadingContent, setIsLoadingContent] = useState(false);
+
+  const loadContentForItem = async (categoryId, itemTitle) => {
+    setIsLoadingContent(true);
+    try {
+      // Map item titles to category enums
+      const categoryMap = {
+        'Digital Library': 'digital_library',
+        'Video Courses': 'video_courses',
+        'Podcasts': 'podcasts',
+        'Tutorials': 'tutorials',
+        'Games': 'games',
+        'Shows & Movies': 'shows_movies',
+        'Puzzles': 'puzzles',
+        'Interactive Stories': 'interactive_stories'
+      };
+
+      const categoryEnum = categoryMap[itemTitle];
+      
+      if (categoryEnum) {
+        const content = await base44.entities.PlaygroundContent.filter({
+          category: categoryEnum,
+          is_approved: true
+        }, '-created_date');
+        
+        setContentFeed(content || []);
+      }
+    } catch (error) {
+      console.error("Error loading content:", error);
+      setContentFeed([]);
+    } finally {
+      setIsLoadingContent(false);
+    }
+  };
+
+  // Show content feed for a specific item
+  if (selectedItem) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 text-white py-16 sm:py-20 -mt-14 pt-28 sm:-mt-16 sm:pt-32">
+          <div className="cu-container">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Button
+                variant="ghost"
+                className="text-white hover:bg-white/10 mb-4"
+                onClick={() => setSelectedItem(null)}
+              >
+                ← Back
+              </Button>
+              
+              <div className="flex items-center gap-4 mb-4">
+                <div className={`w-16 h-16 ${selectedItem.color} rounded-2xl flex items-center justify-center shadow-lg`}>
+                  <selectedItem.icon className="w-8 h-8" />
+                </div>
+                <div>
+                  <h1 className="text-3xl sm:text-4xl font-bold">{selectedItem.title}</h1>
+                  <p className="text-purple-100 text-lg">{selectedItem.description}</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+
+        <div className="cu-container cu-page">
+          {isLoadingContent ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading content...</p>
+            </div>
+          ) : contentFeed.length === 0 ? (
+            <Card className="cu-card">
+              <CardContent className="p-12 text-center">
+                <selectedItem.icon className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  No Content Yet
+                </h3>
+                <p className="text-gray-600">
+                  Content for {selectedItem.title} is coming soon!
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {contentFeed.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block h-full"
+                  >
+                    <Card className="cu-card h-full hover:shadow-xl transition-all border-2 hover:border-purple-300">
+                      {item.image_url && (
+                        <div className="h-48 overflow-hidden rounded-t-lg">
+                          <img 
+                            src={item.image_url} 
+                            alt={item.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      
+                      <CardHeader>
+                        <CardTitle className="text-lg line-clamp-2">{item.title}</CardTitle>
+                        {item.author && (
+                          <p className="text-sm text-gray-600">By {item.author}</p>
+                        )}
+                      </CardHeader>
+                      
+                      <CardContent className="space-y-2">
+                        {item.description && (
+                          <p className="text-sm text-gray-600 line-clamp-3">
+                            {item.description}
+                          </p>
+                        )}
+                        
+                        <div className="flex items-center gap-2 pt-2">
+                          {item.duration && (
+                            <Badge variant="secondary" className="text-xs">
+                              {item.duration}
+                            </Badge>
+                          )}
+                          <Badge variant="outline" className="text-xs">
+                            {item.content_type.replace(/_/g, ' ')}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </a>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (selectedCategory) {
     const category = PLAYGROUND_CATEGORIES.find(c => c.id === selectedCategory);
@@ -116,7 +264,13 @@ export default function Playground({ currentUser }) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card className="cu-card h-full hover:shadow-xl transition-all cursor-pointer border-2 hover:border-purple-300">
+                  <Card 
+                    className="cu-card h-full hover:shadow-xl transition-all cursor-pointer border-2 hover:border-purple-300"
+                    onClick={() => {
+                      setSelectedItem(item);
+                      loadContentForItem(category.id, item.title);
+                    }}
+                  >
                     <CardHeader>
                       <div className={`w-12 h-12 ${item.color} rounded-xl flex items-center justify-center mb-3`}>
                         <Icon className="w-6 h-6" />
@@ -125,9 +279,9 @@ export default function Playground({ currentUser }) {
                       <CardDescription>{item.description}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Badge variant="secondary" className="text-xs">
-                        Coming Soon
-                      </Badge>
+                      <Button variant="outline" size="sm" className="w-full">
+                        Explore →
+                      </Button>
                     </CardContent>
                   </Card>
                 </motion.div>

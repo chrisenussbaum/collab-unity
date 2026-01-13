@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { User, Advertisement, Notification } from '@/entities/all';
+import { User, Advertisement, Notification, PlaygroundContent } from '@/entities/all';
 import { base44 } from "@/api/base44Client";
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,7 +22,11 @@ import {
   ExternalLink,
   Lightbulb,
   Bug,
-  Trash2
+  Trash2,
+  Rss,
+  Plus,
+  Link as LinkIcon,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
@@ -165,7 +169,8 @@ export default function AdminVerificationPanel() {
   const [currentUser, setCurrentUser] = useState(null);
   const [pendingAds, setPendingAds] = useState([]);
   const [bugs, setBugs] = useState([]);
-  const [activeTab, setActiveTab] = useState('ads'); // 'ads' or 'bugs'
+  const [playgroundContent, setPlaygroundContent] = useState([]);
+  const [activeTab, setActiveTab] = useState('ads'); // 'ads', 'bugs', or 'content'
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedAd, setSelectedAd] = useState(null);
@@ -178,6 +183,11 @@ export default function AdminVerificationPanel() {
   const [adminNotes, setAdminNotes] = useState('');
   const [bugStatus, setBugStatus] = useState('');
   const [bugPriority, setBugPriority] = useState('');
+  const [newContentUrl, setNewContentUrl] = useState('');
+  const [newContentCategory, setNewContentCategory] = useState('');
+  const [isScrapingUrl, setIsScrapingUrl] = useState(false);
+  const [selectedContent, setSelectedContent] = useState(null);
+  const [showContentDeleteDialog, setShowContentDeleteDialog] = useState(false);
 
   const loadPendingItems = useCallback(async () => {
     setIsLoading(true);
@@ -191,15 +201,17 @@ export default function AdminVerificationPanel() {
         return;
       }
 
-      const [allAds, allBugs] = await Promise.all([
+      const [allAds, allBugs, allContent] = await Promise.all([
         Advertisement.list(),
-        base44.entities.Bug.list('-created_date')
+        base44.entities.Bug.list('-created_date'),
+        base44.entities.PlaygroundContent.list('-created_date')
       ]);
 
       const pending = allAds.filter(ad => !ad.is_active);
       setPendingAds(pending);
 
       setBugs(allBugs || []);
+      setPlaygroundContent(allContent || []);
 
     } catch (error) {
       console.error("Error loading pending items:", error);
@@ -384,6 +396,83 @@ Please analyze this ad and provide:
     }
   };
 
+  const handleAddContent = async () => {
+    if (!newContentUrl.trim() || !newContentCategory) {
+      toast.error("Please enter a URL and select a category.");
+      return;
+    }
+
+    setIsScrapingUrl(true);
+    try {
+      // Scrape the URL to get metadata
+      const scrapedData = await base44.integrations.Core.InvokeLLM({
+        prompt: `Extract metadata from this content URL and return structured data. URL: ${newContentUrl}
+
+Please provide:
+- title: The title of the content
+- description: A brief description or summary
+- author: The author/creator if available
+- duration: Duration for videos/podcasts (e.g., "45 min") if applicable
+- image_url: A thumbnail or cover image URL if available
+
+If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            title: { type: "string" },
+            description: { type: "string" },
+            author: { type: "string" },
+            duration: { type: "string" },
+            image_url: { type: "string" }
+          }
+        }
+      });
+
+      // Create the content entry
+      await base44.entities.PlaygroundContent.create({
+        url: newContentUrl.trim(),
+        category: newContentCategory,
+        title: scrapedData.title || "Untitled Content",
+        description: scrapedData.description || "",
+        image_url: scrapedData.image_url || "",
+        author: scrapedData.author || "",
+        duration: scrapedData.duration || "",
+        content_type: newContentUrl.includes('rss') || newContentUrl.includes('feed') ? 'rss_feed' : 'article',
+        is_approved: true,
+        submitted_by: currentUser.email
+      });
+
+      toast.success("Content added successfully!");
+      setNewContentUrl('');
+      setNewContentCategory('');
+      await loadPendingItems();
+    } catch (error) {
+      console.error("Error adding content:", error);
+      toast.error("Failed to add content. Please try again.");
+    } finally {
+      setIsScrapingUrl(false);
+    }
+  };
+
+  const handleDeleteContent = async () => {
+    if (!selectedContent) return;
+    
+    setIsProcessing(true);
+    try {
+      await base44.entities.PlaygroundContent.delete(selectedContent.id);
+      toast.success("Content deleted successfully!");
+      await loadPendingItems();
+      setShowContentDeleteDialog(false);
+      setSelectedContent(null);
+    } catch (error) {
+      console.error("Error deleting content:", error);
+      toast.error("Failed to delete content.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -453,6 +542,23 @@ Please analyze this ad and provide:
                 <span className="hidden sm:inline">Bugs</span>
                 <span className="sm:ml-1">({bugs.length})</span>
               </Button>
+              <Button
+                variant={activeTab === 'content' ? 'default' : 'outline'}
+                onClick={() => {
+                  setActiveTab('content');
+                  setSelectedAd(null);
+                  setSelectedBug(null);
+                  setShowDetailsModal(false);
+                  setShowApprovalDialog(false);
+                  setShowRejectionDialog(false);
+                  setRejectionNotes('');
+                }}
+                className={`flex-shrink-0 ${activeTab === 'content' ? 'bg-white text-purple-600 hover:bg-white/90' : 'bg-white/20 text-white border-white/30 hover:bg-white/30'}`}
+              >
+                <Rss className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Playground Content</span>
+                <span className="sm:ml-1">({playgroundContent.length})</span>
+              </Button>
             </div>
           </div>
         </motion.div>
@@ -511,6 +617,158 @@ Please analyze this ad and provide:
         )}
 
 
+
+        {/* Playground Content Tab */}
+        {activeTab === 'content' && (
+          <>
+            <Card className="cu-card mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Rss className="w-5 h-5 text-purple-600" />
+                  Add Playground Content
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Content URL *
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={newContentUrl}
+                      onChange={(e) => setNewContentUrl(e.target.value)}
+                      placeholder="https://example.com/podcast-rss or https://youtube.com/watch?v=..."
+                      className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Playground Section *
+                  </label>
+                  <select
+                    value={newContentCategory}
+                    onChange={(e) => setNewContentCategory(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">Select section...</option>
+                    <option value="digital_library">Digital Library</option>
+                    <option value="video_courses">Video Courses</option>
+                    <option value="podcasts">Podcasts</option>
+                    <option value="tutorials">Tutorials</option>
+                    <option value="games">Games</option>
+                    <option value="shows_movies">Shows & Movies</option>
+                    <option value="puzzles">Puzzles</option>
+                    <option value="interactive_stories">Interactive Stories</option>
+                  </select>
+                </div>
+
+                <Button
+                  onClick={handleAddContent}
+                  disabled={isScrapingUrl || !newContentUrl.trim() || !newContentCategory}
+                  className="cu-button w-full"
+                >
+                  {isScrapingUrl ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Scraping Content...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Content
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {playgroundContent.length === 0 ? (
+              <Card className="cu-card">
+                <CardContent className="p-12 text-center">
+                  <div className="w-20 h-20 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Rss className="w-10 h-10 text-purple-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    No Playground Content Yet
+                  </h3>
+                  <p className="text-gray-600">
+                    Add URLs above to populate the playground with content.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {playgroundContent.map((content) => (
+                  <Card key={content.id} className="cu-card">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm text-gray-900 line-clamp-2">
+                            {content.title}
+                          </h3>
+                          <p className="text-xs text-gray-500 mt-1 capitalize">
+                            {content.category.replace(/_/g, ' ')}
+                          </p>
+                        </div>
+                        <Badge variant="secondary" className="text-xs">
+                          {content.content_type}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {content.image_url && (
+                        <img 
+                          src={content.image_url} 
+                          alt={content.title}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                      )}
+                      
+                      {content.description && (
+                        <p className="text-xs text-gray-600 line-clamp-2">
+                          {content.description}
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        {content.author && <span>By {content.author}</span>}
+                        {content.duration && <span>• {content.duration}</span>}
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <a
+                          href={content.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1"
+                        >
+                          <Button variant="outline" size="sm" className="w-full text-xs">
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            View
+                          </Button>
+                        </a>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedContent(content);
+                            setShowContentDeleteDialog(true);
+                          }}
+                          className="text-xs"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </>
+        )}
 
         {/* Bugs Tab */}
         {activeTab === 'bugs' && (
@@ -767,6 +1025,19 @@ Please analyze this ad and provide:
           confirmText="Delete"
           cancelText="Cancel"
           onConfirm={handleDeleteBug}
+          isDestructive={true}
+          isLoading={isProcessing}
+        />
+
+        {/* Delete Content Dialog */}
+        <ConfirmationDialog
+          isOpen={showContentDeleteDialog}
+          onOpenChange={setShowContentDeleteDialog}
+          title="Delete Playground Content"
+          description="Are you sure you want to delete this content? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={handleDeleteContent}
           isDestructive={true}
           isLoading={isProcessing}
         />
