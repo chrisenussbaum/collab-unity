@@ -185,6 +185,7 @@ export default function AdminVerificationPanel() {
   const [bugPriority, setBugPriority] = useState('');
   const [newContentUrl, setNewContentUrl] = useState('');
   const [newContentCategory, setNewContentCategory] = useState('');
+  const [newContentTags, setNewContentTags] = useState('');
   const [isScrapingUrl, setIsScrapingUrl] = useState(false);
   const [selectedContent, setSelectedContent] = useState(null);
   const [showContentDeleteDialog, setShowContentDeleteDialog] = useState(false);
@@ -432,6 +433,12 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
         }
       });
 
+      // Parse tags from comma-separated input
+      const tagsArray = newContentTags
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0);
+
       // Create the content entry with favicon
       await base44.entities.PlaygroundContent.create({
         url: newContentUrl.trim(),
@@ -441,6 +448,7 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
         image_url: faviconUrl,
         author: scrapedData.author || "",
         duration: scrapedData.duration || "",
+        tags: tagsArray,
         content_type: newContentUrl.includes('rss') || newContentUrl.includes('feed') ? 'rss_feed' : 'article',
         is_approved: true,
         submitted_by: currentUser.email
@@ -449,6 +457,7 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
       toast.success("Content added successfully!");
       setNewContentUrl('');
       setNewContentCategory('');
+      setNewContentTags('');
       await loadPendingItems();
     } catch (error) {
       console.error("Error adding content:", error);
@@ -668,6 +677,22 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
                   </select>
                 </div>
 
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Tags (comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={newContentTags}
+                    onChange={(e) => setNewContentTags(e.target.value)}
+                    placeholder="movie, action, thriller"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Add tags like "movie", "show", "comedy", etc.
+                  </p>
+                </div>
+
                 <Button
                   onClick={handleAddContent}
                   disabled={isScrapingUrl || !newContentUrl.trim() || !newContentCategory}
@@ -742,6 +767,16 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
                         {content.author && <span>By {content.author}</span>}
                         {content.duration && <span>• {content.duration}</span>}
                       </div>
+
+                      {content.tags && content.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pt-2">
+                          {content.tags.map((tag, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
 
                       <div className="flex gap-2 pt-2">
                         <a

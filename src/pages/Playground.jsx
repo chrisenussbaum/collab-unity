@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
 import ContentViewer from "../components/playground/ContentViewer";
+import RSSFeedViewer from "../components/playground/RSSFeedViewer";
 import { 
   Sparkles, 
   Book, 
@@ -78,6 +79,7 @@ export default function Playground({ currentUser }) {
   const [isLoadingContent, setIsLoadingContent] = useState(false);
   const [viewingContent, setViewingContent] = useState(null);
   const [currentItemType, setCurrentItemType] = useState(null);
+  const [viewingRSSFeed, setViewingRSSFeed] = useState(null);
 
   const loadContentForItem = async (categoryId, itemTitle) => {
     setIsLoadingContent(true);
@@ -112,6 +114,18 @@ export default function Playground({ currentUser }) {
       setIsLoadingContent(false);
     }
   };
+
+  // Show RSS feed viewer if viewing an RSS feed
+  if (viewingRSSFeed) {
+    return (
+      <RSSFeedViewer
+        feedUrl={viewingRSSFeed.url}
+        feedTitle={viewingRSSFeed.title}
+        itemTitle={selectedItem?.title}
+        onBack={() => setViewingRSSFeed(null)}
+      />
+    );
+  }
 
   // Show content feed for a specific item
   if (selectedItem) {
@@ -173,7 +187,13 @@ export default function Playground({ currentUser }) {
                 >
                   <Card 
                     className="cu-card h-full hover:shadow-xl transition-all border-2 hover:border-purple-300 cursor-pointer"
-                    onClick={() => setViewingContent(item)}
+                    onClick={() => {
+                      if (item.content_type === 'rss_feed') {
+                        setViewingRSSFeed(item);
+                      } else {
+                        setViewingContent(item);
+                      }
+                    }}
                   >
                     {item.image_url && (
                       <div className="h-48 overflow-hidden rounded-t-lg bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center p-8">
@@ -203,19 +223,24 @@ export default function Playground({ currentUser }) {
                         </p>
                       )}
                       
-                      <div className="flex items-center gap-2 pt-2">
+                      <div className="flex flex-wrap items-center gap-2 pt-2">
                         {item.duration && (
                           <Badge variant="secondary" className="text-xs">
                             {item.duration}
                           </Badge>
                         )}
-                        <Badge variant="outline" className="text-xs">
-                          {item.content_type.replace(/_/g, ' ')}
-                        </Badge>
+                        {item.tags && item.tags.length > 0 && (
+                          item.tags.slice(0, 3).map((tag, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs bg-purple-50">
+                              {tag}
+                            </Badge>
+                          ))
+                        )}
                       </div>
                       
                       <Button variant="outline" size="sm" className="w-full mt-2">
-                        {currentItemType === 'podcasts' || currentItemType === 'video_courses' || currentItemType === 'shows_movies' ? 'Play' : 
+                        {item.content_type === 'rss_feed' ? 'Browse Feed' :
+                         currentItemType === 'podcasts' || currentItemType === 'video_courses' || currentItemType === 'shows_movies' ? 'Play' : 
                          currentItemType === 'games' || currentItemType === 'interactive_stories' ? 'Launch' : 
                          'Read'} →
                       </Button>
