@@ -156,14 +156,14 @@ function ContentReader({ item, onClose }) {
 
         <div className="p-6">
           {item.image_url && (
-            <div className="w-full max-h-64 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg mb-6 overflow-hidden flex items-center justify-center">
+            <div className="w-full h-48 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg mb-6 flex items-center justify-center p-8">
               <img 
                 src={item.image_url} 
                 alt={item.title}
-                className="w-full max-h-64 object-cover"
+                className="w-32 h-32 object-contain"
                 onError={(e) => {
                   e.target.style.display = 'none';
-                  e.target.parentElement.innerHTML = '<div class="flex items-center justify-center h-64"><div class="text-center"><div class="w-20 h-20 bg-purple-200 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3"><svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div><p class="text-sm text-gray-500 font-medium">Image not available</p></div></div>';
+                  e.target.parentElement.innerHTML = '<div class="flex items-center justify-center h-full"><div class="text-center"><div class="w-20 h-20 bg-purple-200 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3"><svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div><p class="text-sm text-gray-500 font-medium">Icon not available</p></div></div>';
                 }}
               />
             </div>
@@ -254,11 +254,11 @@ function InteractiveViewer({ item, onClose }) {
           ) : (
             <div className="bg-gradient-to-br from-orange-50 to-pink-50 p-12 rounded-lg text-center mb-4">
               {item.image_url ? (
-                <div className="w-64 h-64 bg-gradient-to-br from-orange-100 to-pink-100 rounded-lg mx-auto mb-6 overflow-hidden flex items-center justify-center">
+                <div className="w-64 h-64 bg-gradient-to-br from-orange-100 to-pink-100 rounded-lg mx-auto mb-6 flex items-center justify-center p-8">
                   <img 
                     src={item.image_url} 
                     alt={item.title}
-                    className="w-full h-full object-cover"
+                    className="w-40 h-40 object-contain"
                     onError={(e) => {
                       e.target.style.display = 'none';
                       e.target.parentElement.innerHTML = '<div class="flex items-center justify-center w-full h-full"><svg class="w-24 h-24 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>';

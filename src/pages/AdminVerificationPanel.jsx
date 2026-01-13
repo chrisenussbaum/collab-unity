@@ -404,6 +404,11 @@ Please analyze this ad and provide:
 
     setIsScrapingUrl(true);
     try {
+      // Extract domain for favicon
+      const urlObj = new URL(newContentUrl.trim());
+      const domain = urlObj.hostname;
+      const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+
       // Scrape the URL to get metadata
       const scrapedData = await base44.integrations.Core.InvokeLLM({
         prompt: `Extract metadata from this content URL and return structured data. URL: ${newContentUrl}
@@ -413,7 +418,6 @@ Please provide:
 - description: A brief description or summary
 - author: The author/creator if available
 - duration: Duration for videos/podcasts (e.g., "45 min") if applicable
-- image_url: A thumbnail or cover image URL if available
 
 If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
         add_context_from_internet: true,
@@ -423,19 +427,18 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
             title: { type: "string" },
             description: { type: "string" },
             author: { type: "string" },
-            duration: { type: "string" },
-            image_url: { type: "string" }
+            duration: { type: "string" }
           }
         }
       });
 
-      // Create the content entry
+      // Create the content entry with favicon
       await base44.entities.PlaygroundContent.create({
         url: newContentUrl.trim(),
         category: newContentCategory,
         title: scrapedData.title || "Untitled Content",
         description: scrapedData.description || "",
-        image_url: scrapedData.image_url || "",
+        image_url: faviconUrl,
         author: scrapedData.author || "",
         duration: scrapedData.duration || "",
         content_type: newContentUrl.includes('rss') || newContentUrl.includes('feed') ? 'rss_feed' : 'article',
@@ -720,11 +723,13 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
                     </CardHeader>
                     <CardContent className="space-y-3">
                       {content.image_url && (
-                        <img 
-                          src={content.image_url} 
-                          alt={content.title}
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
+                        <div className="w-full h-32 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg flex items-center justify-center p-4">
+                          <img 
+                            src={content.image_url} 
+                            alt={content.title}
+                            className="w-16 h-16 object-contain"
+                          />
+                        </div>
                       )}
                       
                       {content.description && (
