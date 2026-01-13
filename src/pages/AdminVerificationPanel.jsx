@@ -899,43 +899,58 @@ If this is an RSS feed URL, analyze the feed and extract the main metadata.`,
                       </a>
 
                       <div className="flex gap-2 pt-2">
-                        <Button
-                          size="sm"
-                          onClick={async () => {
-                            try {
-                              await base44.entities.PlaygroundContent.update(content.id, {
-                                is_approved: true
-                              });
-                              toast.success("Content approved!");
-                              await loadPendingItems();
-                            } catch (error) {
-                              console.error("Error approving content:", error);
-                              toast.error("Failed to approve content");
-                            }
-                          }}
-                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
-                        >
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={async () => {
-                            try {
-                              await base44.entities.PlaygroundContent.delete(content.id);
-                              toast.success("Content rejected");
-                              await loadPendingItems();
-                            } catch (error) {
-                              console.error("Error rejecting content:", error);
-                              toast.error("Failed to reject content");
-                            }
-                          }}
-                          className="flex-1 text-xs"
-                        >
-                          <XCircle className="w-3 h-3 mr-1" />
-                          Reject
-                        </Button>
+                       <Button
+                         size="sm"
+                         onClick={async () => {
+                           try {
+                             await base44.entities.PlaygroundContent.update(content.id, {
+                               is_approved: true
+                             });
+                             toast.success("Content approved!");
+                             await loadPendingItems();
+                           } catch (error) {
+                             console.error("Error approving content:", error);
+                             toast.error("Failed to approve content");
+                           }
+                         }}
+                         className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+                       >
+                         <CheckCircle className="w-3 h-3 mr-1" />
+                         Approve
+                       </Button>
+                       <Button
+                         size="sm"
+                         variant="outline"
+                         onClick={() => {
+                           setEditingContent({
+                             ...content,
+                             tags: Array.isArray(content.tags) ? content.tags.join(', ') : ''
+                           });
+                           setShowEditContentDialog(true);
+                         }}
+                         className="text-xs"
+                       >
+                         <Edit className="w-3 h-3 mr-1" />
+                         Edit
+                       </Button>
+                       <Button
+                         size="sm"
+                         variant="destructive"
+                         onClick={async () => {
+                           try {
+                             await base44.entities.PlaygroundContent.delete(content.id);
+                             toast.success("Content rejected");
+                             await loadPendingItems();
+                           } catch (error) {
+                             console.error("Error rejecting content:", error);
+                             toast.error("Failed to reject content");
+                           }
+                         }}
+                         className="text-xs"
+                       >
+                         <XCircle className="w-3 h-3 mr-1" />
+                         Reject
+                       </Button>
                       </div>
                     </CardContent>
                   </Card>
