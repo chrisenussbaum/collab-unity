@@ -88,12 +88,10 @@ export default function Layout({ children, currentPageName }) {
     createPageUrl("Testimonials")
   ];
 
-  // Check for login callback - don't redirect during auth flow
-  const isLoginCallback = location.pathname.includes('/login') || 
-                          location.pathname.includes('/callback') ||
-                          location.pathname.includes('/auth') ||
-                          location.search.includes('code=') ||
-                          location.search.includes('token=');
+  // Check for actual auth callback - only when there are auth params in URL
+  const isLoginCallback = location.search.includes('code=') ||
+                          location.search.includes('token=') ||
+                          (location.pathname.includes('/callback') && location.search.length > 0);
 
   const isPublicRoute = publicRoutes.some(route => location.pathname.startsWith(route)) || isLoginCallback;
 
@@ -226,7 +224,7 @@ export default function Layout({ children, currentPageName }) {
     } catch (e) {
       console.warn("Error accessing localStorage:", e);
     }
-    
+
     // Prevent multiple redirects during the same session
     if (hasNavigated) {
       return;
@@ -234,10 +232,10 @@ export default function Layout({ children, currentPageName }) {
 
     const loadUserAndHandleRedirects = async () => {
       setIsLoading(true);
-      
-      // Don't interfere with login/auth callbacks - let them complete
+
+      // Don't interfere with actual auth callbacks that have auth parameters
       if (isLoginCallback) {
-        console.log("Login callback detected, waiting for auth to complete...");
+        console.log("Auth callback detected, waiting for auth to complete...");
         setAuthChecked(true);
         setIsLoading(false);
         return;
