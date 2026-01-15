@@ -36,12 +36,16 @@ export default function CodeEditor({ currentUser, onBack }) {
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showEditProjectDialog, setShowEditProjectDialog] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDescription, setNewProjectDescription] = useState("");
+  const [editProjectName, setEditProjectName] = useState("");
+  const [editProjectDescription, setEditProjectDescription] = useState("");
   const [shareTitle, setShareTitle] = useState("");
   const [shareDescription, setShareDescription] = useState("");
   const [shareTags, setShareTags] = useState("");
   const iframeRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (currentUser) {
@@ -85,10 +89,42 @@ export default function CodeEditor({ currentUser, onBack }) {
   };
 
   const addNewFile = () => {
-    const fileName = prompt("Enter file name (e.g., main.js, styles.css):");
+    const fileName = prompt("Enter file name (e.g., main.js, styles.css, image.png):");
     if (!fileName) return;
 
     const extension = fileName.split('.').pop().toLowerCase();
+    const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'];
+    
+    if (imageExtensions.includes(extension)) {
+      // Trigger file upload for images
+      fileInputRef.current?.click();
+      fileInputRef.current.onchange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          
+          const newFile = {
+            name: fileName,
+            content: file_url,
+            language: 'image'
+          };
+
+          setCurrentProject(prev => ({
+            ...prev,
+            files: [...prev.files, newFile]
+          }));
+          setSelectedFile(newFile);
+          toast.success(`${fileName} added!`);
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          toast.error("Failed to upload image");
+        }
+      };
+      return;
+    }
+
     let language = 'javascript';
     let defaultContent = '';
 
@@ -185,10 +221,10 @@ export default function CodeEditor({ currentUser, onBack }) {
     setTimeout(() => setIsRunning(false), 500);
   };
 
-  const saveProject = async () => {
+  const saveProject = async (showToast = true) => {
     if (!currentUser) {
       toast.error("Please sign in to save projects");
-      return;
+      return false;
     }
 
     setIsSaving(true);
@@ -200,7 +236,7 @@ export default function CodeEditor({ currentUser, onBack }) {
           files: currentProject.files,
           tags: currentProject.tags
         });
-        toast.success("Project saved!");
+        if (showToast) toast.success("Project saved!");
       } else {
         const saved = await base44.entities.CodeProject.create({
           title: currentProject.title,
@@ -209,15 +245,46 @@ export default function CodeEditor({ currentUser, onBack }) {
           is_public: false
         });
         setCurrentProject({ ...currentProject, id: saved.id });
-        toast.success("Project saved!");
+        if (showToast) toast.success("Project saved!");
       }
       await loadProjects();
+      return true;
     } catch (error) {
       console.error("Error saving project:", error);
-      toast.error("Failed to save project");
+      if (showToast) toast.error("Failed to save project");
+      return false;
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const updateProjectDetails = async () => {
+    if (!editProjectName.trim()) {
+      toast.error("Please enter a project name");
+      return;
+    }
+
+    setCurrentProject(prev => ({
+      ...prev,
+      title: editProjectName.trim(),
+      description: editProjectDescription.trim()
+    }));
+
+    setShowEditProjectDialog(false);
+    
+    if (currentProject.id) {
+      await saveProject(false);
+      toast.success("Project details updated!");
+    }
+  };
+
+  const handleBackToProjects = async () => {
+    // Auto-save before going back
+    if (currentProject) {
+      await saveProject(false);
+    }
+    setCurrentProject(null);
+    setSelectedFile(null);
   };
 
   const capturePreview = async () => {
@@ -445,21 +512,32 @@ export default function CodeEditor({ currentUser, onBack }) {
 
   return (
     <div className="fixed inset-0 bg-gray-900 text-white flex flex-col">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+      />
+      
       {/* Header */}
       <div className="bg-gray-800 border-b border-gray-700 px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
-              setCurrentProject(null);
-              setSelectedFile(null);
-            }}
+            onClick={handleBackToProjects}
             className="text-gray-400 hover:text-white"
           >
             ← Projects
           </Button>
-          <div>
+          <div 
+            className="cursor-pointer hover:bg-gray-700/50 px-2 py-1 rounded transition-colors"
+            onClick={() => {
+              setEditProjectName(currentProject.title);
+              setEditProjectDescription(currentProject.description || "");
+              setShowEditProjectDialog(true);
+            }}
+          >
             <h2 className="font-bold">{currentProject.title}</h2>
             {currentProject.description && (
               <p className="text-xs text-gray-400">{currentProject.description}</p>
@@ -558,12 +636,22 @@ export default function CodeEditor({ currentUser, onBack }) {
             <Code className="w-4 h-4 text-gray-400" />
             <span className="text-sm font-medium">{selectedFile?.name}</span>
           </div>
-          <Textarea
-            value={selectedFile?.content || ''}
-            onChange={(e) => updateFileContent(e.target.value)}
-            className="flex-1 bg-gray-900 border-0 text-white font-mono text-sm resize-none focus-visible:ring-0 rounded-none"
-            style={{ fontFamily: 'Monaco, Consolas, monospace' }}
-          />
+          {selectedFile?.language === 'image' ? (
+            <div className="flex-1 bg-gray-900 flex items-center justify-center p-8">
+              <img 
+                src={selectedFile.content} 
+                alt={selectedFile.name}
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
+          ) : (
+            <Textarea
+              value={selectedFile?.content || ''}
+              onChange={(e) => updateFileContent(e.target.value)}
+              className="flex-1 bg-gray-900 border-0 text-white font-mono text-sm resize-none focus-visible:ring-0 rounded-none"
+              style={{ fontFamily: 'Monaco, Consolas, monospace' }}
+            />
+          )}
         </div>
 
         {/* Preview */}
