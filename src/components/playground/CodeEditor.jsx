@@ -310,6 +310,8 @@ export default function CodeEditor({ currentUser, onBack }) {
   };
 
   const runCode = () => {
+    if (!currentProject) return;
+    
     setIsRunning(true);
     
     const htmlFile = currentProject.files.find(f => f.language === 'html');
