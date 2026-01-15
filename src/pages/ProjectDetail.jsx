@@ -907,25 +907,13 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
             </Button>
             
             {isOwner && (
-              <>
-                <Link to={createPageUrl(`EditProject?id=${project.id}`)}>
-                  <Button className="cu-button text-sm" size="sm">
-                    <Edit className="w-4 h-4 mr-1 sm:mr-2" />
-                    <span className="hidden sm:inline">Edit Project</span>
-                    <span className="sm:hidden">Edit</span>
-                  </Button>
-                </Link>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowSaveTemplateDialog(true)}
-                  className="text-sm"
-                  size="sm"
-                >
-                  <FileText className="w-4 h-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Save as Template</span>
-                  <span className="sm:hidden">Template</span>
+              <Link to={createPageUrl(`EditProject?id=${project.id}`)}>
+                <Button className="cu-button text-sm" size="sm">
+                  <Edit className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Edit Project</span>
+                  <span className="sm:hidden">Edit</span>
                 </Button>
-              </>
+              </Link>
             )}
           </div>
         </div>
@@ -1546,13 +1534,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         )}
         </div>
 
-        {showSaveTemplateDialog && (
-          <SaveAsTemplateDialog
-            open={showSaveTemplateDialog}
-            onOpenChange={setShowSaveTemplateDialog}
-            project={project}
-          />
-        )}
 
         </>
         );
