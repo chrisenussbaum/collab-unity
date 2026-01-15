@@ -980,74 +980,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 xl:gap-8">
           {/* Left Sidebar - Desktop Only */}
           <aside className="hidden xl:block xl:col-span-3 space-y-6">
-            {/* Project Information - Desktop Only */}
-            <Card className="cu-card">
-              <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6 pt-4 sm:pt-6">
-                <CardTitle className="flex items-center text-base sm:text-lg">
-                  <Users className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-600" />
-                  Project Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
-                {/* Project Status - Editable for Owner */}
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-gray-600">Project Status</span>
-                  {isOwner ? (
-                    <Select 
-                      value={project.status} 
-                      onValueChange={handleStatusChange}
-                      disabled={isUpdatingStatus}
-                    >
-                      <SelectTrigger className="w-[180px] h-8 text-xs sm:text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="seeking_collaborators">Seeking Collaborators</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Badge className={`${statusClass} text-xs`}>
-                      {project.status?.replace(/_/g, ' ')}
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-gray-600">Total Collaborators</span>
-                  <span className="font-medium text-sm sm:text-base">
-                    {projectUsers.length}
-                  </span>
-                </div>
-                
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-gray-600">Project Type</span>
-                  <Badge variant="outline" className="text-xs">
-                    {project.project_type}
-                  </Badge>
-                </div>
-                
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-sm text-gray-600">Collaboration</span>
-                    <Badge 
-                      variant={project.is_visible_on_feed ? "default" : "secondary"} 
-                      className={`text-xs ${project.is_visible_on_feed ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                    >
-                      {project.is_visible_on_feed ? "Open" : "Invite-Only"}
-                    </Badge>
-                  </div>
-                
-                {project.industry && (
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-sm text-gray-600">Industry</span>
-                    <span className="text-xs sm:text-sm font-medium break-words text-right">
-                      {project.industry.replace(/_/g, ' ')}
-                    </span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
 
             {/* For non-collaborators: Show Social & Funding in left sidebar */}
             {!userCanContribute && (
@@ -1126,74 +1058,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                 </CardContent>
               </Card>
             )}
-            {/* Project Information for Mobile/Tablet - Show above project details */}
-            <Card className="cu-card xl:hidden">
-              <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6 pt-4 sm:pt-6">
-                <CardTitle className="flex items-center text-base sm:text-lg">
-                  <Users className="w-4 h-4 sm:w-5 h-5 mr-2 text-purple-600" />
-                  Project Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-gray-600">Project Status</span>
-                  {isOwner ? (
-                    <Select 
-                      value={project.status} 
-                      onValueChange={handleStatusChange}
-                      disabled={isUpdatingStatus}
-                    >
-                      <SelectTrigger className="w-[180px] h-8 text-xs sm:text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="seeking_collaborators">Seeking Collaborators</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Badge className={`${statusClass} text-xs`}>
-                      {project.status?.replace(/_/g, ' ')}
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-gray-600">Total Collaborators</span>
-                  <span className="font-medium text-sm sm:text-base">
-                    {projectUsers.length}
-                  </span>
-                </div>
-                
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-gray-600">Project Type</span>
-                  <Badge variant="outline" className="text-xs">
-                    {project.project_type}
-                  </Badge>
-                </div>
-                
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-gray-600">Collaboration</span>
-                  <Badge 
-                    variant={project.is_visible_on_feed ? "default" : "secondary"} 
-                    className={`text-xs ${project.is_visible_on_feed ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                  >
-                    {project.is_visible_on_feed ? "Open" : "Invite-Only"}
-                  </Badge>
-                </div>
-                
-                {project.industry && (
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-sm text-gray-600">Industry</span>
-                    <span className="text-xs sm:text-sm font-medium break-words text-right">
-                      {project.industry.replace(/_/g, ' ')}
-                    </span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-            
             {isOwner && <ProjectApplicationsManager project={project} onProjectUpdate={handleProjectUpdate} />}
             
             <Card className="cu-card">
@@ -1232,9 +1096,26 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                       {project.title}
                     </CardTitle>
                     <div className="flex items-center flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4">
-                      <Badge className={`${statusClass} text-xs sm:text-sm px-2 sm:px-3 py-1`}>
-                        {project.status?.replace(/_/g, ' ')}
-                      </Badge>
+                      {isOwner ? (
+                        <Select 
+                          value={project.status} 
+                          onValueChange={handleStatusChange}
+                          disabled={isUpdatingStatus}
+                        >
+                          <SelectTrigger className="w-[160px] h-8 text-xs sm:text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="seeking_collaborators">Seeking Collaborators</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Badge className={`${statusClass} text-xs sm:text-sm px-2 sm:px-3 py-1`}>
+                          {project.status?.replace(/_/g, ' ')}
+                        </Badge>
+                      )}
                       <Badge variant="outline" className="text-xs sm:text-sm">
                         {project.project_type}
                       </Badge>
