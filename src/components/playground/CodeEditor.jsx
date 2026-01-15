@@ -21,19 +21,11 @@ import {
   Download,
   Upload,
   Loader2,
-  RefreshCw,
-  Folder,
-  ChevronRight,
-  ChevronDown
+  RefreshCw
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
-import CodeMirror from '@uiw/react-codemirror';
-import { html } from '@codemirror/lang-html';
-import { css } from '@codemirror/lang-css';
-import { javascript } from '@codemirror/lang-javascript';
-import { autocompletion } from '@codemirror/autocomplete';
 
 export default function CodeEditor({ currentUser, onBack }) {
   const [projects, setProjects] = useState([]);
@@ -53,9 +45,6 @@ export default function CodeEditor({ currentUser, onBack }) {
   const [shareDescription, setShareDescription] = useState("");
   const [shareTags, setShareTags] = useState("");
   const [previewContent, setPreviewContent] = useState("");
-  const [expandedFolders, setExpandedFolders] = useState({});
-  const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
-  const [newFolderName, setNewFolderName] = useState("");
   const iframeRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -86,11 +75,10 @@ export default function CodeEditor({ currentUser, onBack }) {
       title: newProjectName.trim(),
       description: newProjectDescription.trim(),
       files: [
-        { name: 'index.html', path: 'index.html', content: '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>My Project</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <h1>Hello World!</h1>\n  <script src="script.js"></script>\n</body>\n</html>', language: 'html' },
-        { name: 'style.css', path: 'style.css', content: 'body {\n  margin: 0;\n  padding: 20px;\n  font-family: Arial, sans-serif;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  min-height: 100vh;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n\nh1 {\n  font-size: 3rem;\n  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);\n}', language: 'css' },
-        { name: 'script.js', path: 'script.js', content: '// Your JavaScript code here\nconsole.log("Hello from Code Editor!");', language: 'javascript' }
-      ],
-      folders: []
+        { name: 'index.html', content: '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>My Project</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <h1>Hello World!</h1>\n  <script src="script.js"></script>\n</body>\n</html>', language: 'html' },
+        { name: 'style.css', content: 'body {\n  margin: 0;\n  padding: 20px;\n  font-family: Arial, sans-serif;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  min-height: 100vh;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n\nh1 {\n  font-size: 3rem;\n  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);\n}', language: 'css' },
+        { name: 'script.js', content: '// Your JavaScript code here\nconsole.log("Hello from Code Editor!");', language: 'javascript' }
+      ]
     };
 
     setCurrentProject(newProject);
@@ -101,15 +89,15 @@ export default function CodeEditor({ currentUser, onBack }) {
     toast.success("New project created!");
   };
 
-  const addNewFile = (folderPath = '') => {
-    const fileName = prompt(`Enter file name ${folderPath ? `in ${folderPath}/` : ''}(e.g., main.js, styles.css, image.png):`);
+  const addNewFile = () => {
+    const fileName = prompt("Enter file name (e.g., main.js, styles.css, image.png):");
     if (!fileName) return;
 
-    const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
     const extension = fileName.split('.').pop().toLowerCase();
     const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'];
     
     if (imageExtensions.includes(extension)) {
+      // Trigger file upload for images
       fileInputRef.current?.click();
       fileInputRef.current.onchange = async (e) => {
         const file = e.target.files?.[0];
@@ -120,7 +108,6 @@ export default function CodeEditor({ currentUser, onBack }) {
           
           const newFile = {
             name: fileName,
-            path: fullPath,
             content: file_url,
             language: 'image'
           };
@@ -155,7 +142,6 @@ export default function CodeEditor({ currentUser, onBack }) {
 
     const newFile = {
       name: fileName,
-      path: fullPath,
       content: defaultContent,
       language
     };
@@ -168,98 +154,32 @@ export default function CodeEditor({ currentUser, onBack }) {
     toast.success(`${fileName} added!`);
   };
 
-  const addNewFolder = () => {
-    if (!newFolderName.trim()) {
-      toast.error("Please enter a folder name");
-      return;
-    }
-
-    const folderPath = newFolderName.trim();
-    
-    if (currentProject.folders?.includes(folderPath)) {
-      toast.error("Folder already exists");
-      return;
-    }
-
-    setCurrentProject(prev => ({
-      ...prev,
-      folders: [...(prev.folders || []), folderPath]
-    }));
-    setExpandedFolders(prev => ({ ...prev, [folderPath]: true }));
-    setShowNewFolderDialog(false);
-    setNewFolderName("");
-    toast.success(`Folder "${folderPath}" created!`);
-  };
-
-  const toggleFolder = (folderPath) => {
-    setExpandedFolders(prev => ({
-      ...prev,
-      [folderPath]: !prev[folderPath]
-    }));
-  };
-
-  const getFilesByFolder = () => {
-    const result = { root: [], folders: {} };
-    
-    currentProject.files.forEach(file => {
-      const filePath = file.path || file.name;
-      const parts = filePath.split('/');
-      
-      if (parts.length === 1) {
-        result.root.push(file);
-      } else {
-        const folder = parts[0];
-        if (!result.folders[folder]) {
-          result.folders[folder] = [];
-        }
-        result.folders[folder].push(file);
-      }
-    });
-    
-    return result;
-  };
-
-  const deleteFile = (filePath) => {
+  const deleteFile = (fileName) => {
     if (currentProject.files.length === 1) {
       toast.error("Cannot delete the last file");
       return;
     }
 
-    const file = currentProject.files.find(f => (f.path || f.name) === filePath);
-    if (!confirm(`Delete ${file.name}?`)) return;
+    if (!confirm(`Delete ${fileName}?`)) return;
 
-    const updatedFiles = currentProject.files.filter(f => (f.path || f.name) !== filePath);
+    const updatedFiles = currentProject.files.filter(f => f.name !== fileName);
     setCurrentProject(prev => ({ ...prev, files: updatedFiles }));
     
-    if ((selectedFile?.path || selectedFile?.name) === filePath) {
+    if (selectedFile?.name === fileName) {
       setSelectedFile(updatedFiles[0]);
     }
     
-    toast.success(`${file.name} deleted`);
+    toast.success(`${fileName} deleted`);
   };
 
   const updateFileContent = (content) => {
-    const selectedPath = selectedFile.path || selectedFile.name;
     setCurrentProject(prev => ({
       ...prev,
       files: prev.files.map(f => 
-        (f.path || f.name) === selectedPath ? { ...f, content } : f
+        f.name === selectedFile.name ? { ...f, content } : f
       )
     }));
     setSelectedFile(prev => ({ ...prev, content }));
-  };
-
-  const getLanguageExtension = (language) => {
-    switch (language) {
-      case 'html':
-        return html();
-      case 'css':
-        return css();
-      case 'javascript':
-        return javascript();
-      default:
-        return javascript();
-    }
   };
 
   const runCode = () => {
@@ -692,129 +612,43 @@ export default function CodeEditor({ currentUser, onBack }) {
         <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
           <div className="p-3 border-b border-gray-700 flex items-center justify-between">
             <span className="font-semibold text-sm">Files</span>
-            <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowNewFolderDialog(true)}
-                className="h-6 w-6 p-0"
-                title="New Folder"
-              >
-                <FolderPlus className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => addNewFile()}
-                className="h-6 w-6 p-0"
-                title="New File"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={addNewFile}
+              className="h-6 w-6 p-0"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
           </div>
           <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            {(() => {
-              const fileStructure = getFilesByFolder();
-              const selectedPath = selectedFile?.path || selectedFile?.name;
-              
-              return (
-                <>
-                  {/* Root level files */}
-                  {fileStructure.root.map((file) => {
-                    const filePath = file.path || file.name;
-                    return (
-                      <div
-                        key={filePath}
-                        className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer transition-colors group ${
-                          selectedPath === filePath
-                            ? 'bg-purple-600'
-                            : 'hover:bg-gray-700'
-                        }`}
-                        onClick={() => setSelectedFile(file)}
-                      >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <File className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-sm truncate">{file.name}</span>
-                        </div>
-                        {currentProject.files.length > 1 && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteFile(filePath);
-                            }}
-                            className="opacity-0 group-hover:opacity-100 hover:text-red-400"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  {/* Folders */}
-                  {currentProject.folders?.map((folderPath) => (
-                    <div key={folderPath}>
-                      <div
-                        className="flex items-center justify-between px-2 py-2 rounded hover:bg-gray-700 cursor-pointer transition-colors"
-                        onClick={() => toggleFolder(folderPath)}
-                      >
-                        <div className="flex items-center gap-2 flex-1">
-                          {expandedFolders[folderPath] ? (
-                            <ChevronDown className="w-4 h-4" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4" />
-                          )}
-                          <Folder className="w-4 h-4 text-yellow-400" />
-                          <span className="text-sm">{folderPath}</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addNewFile(folderPath);
-                          }}
-                          className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100"
-                          title="Add file to folder"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </Button>
-                      </div>
-                      
-                      {expandedFolders[folderPath] && fileStructure.folders[folderPath]?.map((file) => {
-                        const filePath = file.path || file.name;
-                        return (
-                          <div
-                            key={filePath}
-                            className={`flex items-center justify-between pl-8 pr-3 py-2 rounded cursor-pointer transition-colors group ${
-                              selectedPath === filePath
-                                ? 'bg-purple-600'
-                                : 'hover:bg-gray-700'
-                            }`}
-                            onClick={() => setSelectedFile(file)}
-                          >
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <File className="w-4 h-4 flex-shrink-0" />
-                              <span className="text-sm truncate">{file.name}</span>
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteFile(filePath);
-                              }}
-                              className="opacity-0 group-hover:opacity-100 hover:text-red-400"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
-                </>
-              );
-            })()}
+            {currentProject.files.map((file) => (
+              <div
+                key={file.name}
+                className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer transition-colors ${
+                  selectedFile?.name === file.name
+                    ? 'bg-purple-600'
+                    : 'hover:bg-gray-700'
+                }`}
+                onClick={() => setSelectedFile(file)}
+              >
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <File className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm truncate">{file.name}</span>
+                </div>
+                {currentProject.files.length > 1 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteFile(file.name);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 hover:text-red-400"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -833,44 +667,11 @@ export default function CodeEditor({ currentUser, onBack }) {
               />
             </div>
           ) : (
-            <CodeMirror
+            <Textarea
               value={selectedFile?.content || ''}
-              height="100%"
-              extensions={[
-                getLanguageExtension(selectedFile?.language),
-                autocompletion()
-              ]}
-              onChange={(value) => updateFileContent(value)}
-              theme="dark"
-              basicSetup={{
-                lineNumbers: true,
-                highlightActiveLineGutter: true,
-                highlightSpecialChars: true,
-                foldGutter: true,
-                drawSelection: true,
-                dropCursor: true,
-                allowMultipleSelections: true,
-                indentOnInput: true,
-                syntaxHighlighting: true,
-                bracketMatching: true,
-                closeBrackets: true,
-                autocompletion: true,
-                rectangularSelection: true,
-                crosshairCursor: true,
-                highlightActiveLine: true,
-                highlightSelectionMatches: true,
-                closeBracketsKeymap: true,
-                searchKeymap: true,
-                foldKeymap: true,
-                completionKeymap: true,
-                lintKeymap: true,
-              }}
-              className="flex-1 text-sm"
-              style={{ 
-                height: '100%',
-                fontSize: '14px',
-                fontFamily: 'Monaco, Consolas, monospace'
-              }}
+              onChange={(e) => updateFileContent(e.target.value)}
+              className="flex-1 bg-gray-900 border-0 text-white font-mono text-sm resize-none focus-visible:ring-0 rounded-none"
+              style={{ fontFamily: 'Monaco, Consolas, monospace' }}
             />
           )}
         </div>
@@ -899,36 +700,6 @@ export default function CodeEditor({ currentUser, onBack }) {
           />
         </div>
       </div>
-
-      {/* New Folder Dialog */}
-      <Dialog open={showNewFolderDialog} onOpenChange={setShowNewFolderDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Folder</DialogTitle>
-            <DialogDescription>
-              Organize your files with folders
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Folder Name *</Label>
-              <Input
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                placeholder="e.g., src, components, styles"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNewFolderDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={addNewFolder} className="cu-button">
-              Create Folder
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Edit Project Dialog */}
       <Dialog open={showEditProjectDialog} onOpenChange={setShowEditProjectDialog}>
