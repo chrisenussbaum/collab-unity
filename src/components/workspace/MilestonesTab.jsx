@@ -170,7 +170,7 @@ export default function MilestonesTab({ project, currentUser, isCollaborator, is
                 <Flag className="w-6 h-6 text-purple-600" />
                 <h2 className="text-2xl font-bold text-gray-900">Project Milestones</h2>
               </div>
-              <p className="text-gray-600">Track your progress and celebrate achievements</p>
+              <p className="text-gray-600">Define major goals and track key achievements that mark significant progress</p>
             </div>
             {hasWriteAccess && (
               <Button onClick={() => setShowCreateModal(true)} className="cu-button">
@@ -268,7 +268,7 @@ export default function MilestonesTab({ project, currentUser, isCollaborator, is
             <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-700 mb-2">No milestones yet</h3>
             <p className="text-gray-500 mb-6">
-              Create milestones to track progress and celebrate key achievements.
+              Milestones represent major goals and phases of your project. Break down your project into significant achievements like "Complete Beta Version" or "Launch to 1000 Users". Use Tasks tab for day-to-day action items.
             </p>
             {hasWriteAccess && (
               <Button onClick={() => setShowCreateModal(true)} className="cu-button">
@@ -293,7 +293,7 @@ export default function MilestonesTab({ project, currentUser, isCollaborator, is
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
-                placeholder="e.g., Launch MVP, Complete Design Phase"
+                placeholder="e.g., Launch Beta Version, Reach 1000 Users, Complete Phase 1"
               />
             </div>
 
@@ -303,7 +303,7 @@ export default function MilestonesTab({ project, currentUser, isCollaborator, is
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
-                placeholder="Describe what needs to be accomplished..."
+                placeholder="Describe the major goal or achievement this milestone represents..."
               />
             </div>
 

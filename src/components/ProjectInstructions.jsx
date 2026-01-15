@@ -35,8 +35,37 @@ export default function ProjectInstructions({ instructions, isOwner, onEditClick
     }));
   };
 
-  if (!instructions) {
+  if (!instructions && !isOwner) {
     return null;
+  }
+
+  if (!instructions && isOwner) {
+    return (
+      <Card className="cu-card border-purple-200">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center space-x-2 text-purple-900">
+              <BookOpen className="w-5 h-5" />
+              <span>Project Instructions</span>
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onEditClick}
+              className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Add Instructions
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-500 text-center py-8">
+            Add project instructions to guide your team through this project.
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   const {

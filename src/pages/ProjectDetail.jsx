@@ -1321,8 +1321,8 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
               />
             ) : null}
 
-            {/* Project Instructions - Show if exists or if owner */}
-            {(project.project_instructions || isOwner) && (
+            {/* Project Instructions - Always show for collaborators */}
+            {userCanContribute && (
               <ProjectInstructions
                 instructions={project.project_instructions}
                 isOwner={isOwner}
