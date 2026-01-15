@@ -36,16 +36,12 @@ export default function CodeEditor({ currentUser, onBack }) {
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const [showEditProjectDialog, setShowEditProjectDialog] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDescription, setNewProjectDescription] = useState("");
-  const [editProjectName, setEditProjectName] = useState("");
-  const [editProjectDescription, setEditProjectDescription] = useState("");
   const [shareTitle, setShareTitle] = useState("");
   const [shareDescription, setShareDescription] = useState("");
   const [shareTags, setShareTags] = useState("");
   const iframeRef = useRef(null);
-  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (currentUser) {
@@ -89,42 +85,10 @@ export default function CodeEditor({ currentUser, onBack }) {
   };
 
   const addNewFile = () => {
-    const fileName = prompt("Enter file name (e.g., main.js, styles.css, image.png):");
+    const fileName = prompt("Enter file name (e.g., main.js, styles.css):");
     if (!fileName) return;
 
     const extension = fileName.split('.').pop().toLowerCase();
-    const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'];
-    
-    if (imageExtensions.includes(extension)) {
-      // Trigger file upload for images
-      fileInputRef.current?.click();
-      fileInputRef.current.onchange = async (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        try {
-          const { file_url } = await base44.integrations.Core.UploadFile({ file });
-          
-          const newFile = {
-            name: fileName,
-            content: file_url,
-            language: 'image'
-          };
-
-          setCurrentProject(prev => ({
-            ...prev,
-            files: [...prev.files, newFile]
-          }));
-          setSelectedFile(newFile);
-          toast.success(`${fileName} added!`);
-        } catch (error) {
-          console.error("Error uploading image:", error);
-          toast.error("Failed to upload image");
-        }
-      };
-      return;
-    }
-
     let language = 'javascript';
     let defaultContent = '';
 
@@ -221,10 +185,10 @@ export default function CodeEditor({ currentUser, onBack }) {
     setTimeout(() => setIsRunning(false), 500);
   };
 
-  const saveProject = async (showToast = true) => {
+  const saveProject = async () => {
     if (!currentUser) {
       toast.error("Please sign in to save projects");
-      return false;
+      return;
     }
 
     setIsSaving(true);
@@ -236,7 +200,7 @@ export default function CodeEditor({ currentUser, onBack }) {
           files: currentProject.files,
           tags: currentProject.tags
         });
-        if (showToast) toast.success("Project saved!");
+        toast.success("Project saved!");
       } else {
         const saved = await base44.entities.CodeProject.create({
           title: currentProject.title,
@@ -245,46 +209,15 @@ export default function CodeEditor({ currentUser, onBack }) {
           is_public: false
         });
         setCurrentProject({ ...currentProject, id: saved.id });
-        if (showToast) toast.success("Project saved!");
+        toast.success("Project saved!");
       }
       await loadProjects();
-      return true;
     } catch (error) {
       console.error("Error saving project:", error);
-      if (showToast) toast.error("Failed to save project");
-      return false;
+      toast.error("Failed to save project");
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const updateProjectDetails = async () => {
-    if (!editProjectName.trim()) {
-      toast.error("Please enter a project name");
-      return;
-    }
-
-    setCurrentProject(prev => ({
-      ...prev,
-      title: editProjectName.trim(),
-      description: editProjectDescription.trim()
-    }));
-
-    setShowEditProjectDialog(false);
-    
-    if (currentProject.id) {
-      await saveProject(false);
-      toast.success("Project details updated!");
-    }
-  };
-
-  const handleBackToProjects = async () => {
-    // Auto-save before going back
-    if (currentProject) {
-      await saveProject(false);
-    }
-    setCurrentProject(null);
-    setSelectedFile(null);
   };
 
   const capturePreview = async () => {
@@ -512,32 +445,21 @@ export default function CodeEditor({ currentUser, onBack }) {
 
   return (
     <div className="fixed inset-0 bg-gray-900 text-white flex flex-col">
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-      />
-      
       {/* Header */}
       <div className="bg-gray-800 border-b border-gray-700 px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleBackToProjects}
+            onClick={() => {
+              setCurrentProject(null);
+              setSelectedFile(null);
+            }}
             className="text-gray-400 hover:text-white"
           >
             ← Projects
           </Button>
-          <div 
-            className="cursor-pointer hover:bg-gray-700/50 px-2 py-1 rounded transition-colors"
-            onClick={() => {
-              setEditProjectName(currentProject.title);
-              setEditProjectDescription(currentProject.description || "");
-              setShowEditProjectDialog(true);
-            }}
-          >
+          <div>
             <h2 className="font-bold">{currentProject.title}</h2>
             {currentProject.description && (
               <p className="text-xs text-gray-400">{currentProject.description}</p>
@@ -636,22 +558,12 @@ export default function CodeEditor({ currentUser, onBack }) {
             <Code className="w-4 h-4 text-gray-400" />
             <span className="text-sm font-medium">{selectedFile?.name}</span>
           </div>
-          {selectedFile?.language === 'image' ? (
-            <div className="flex-1 bg-gray-900 flex items-center justify-center p-8">
-              <img 
-                src={selectedFile.content} 
-                alt={selectedFile.name}
-                className="max-w-full max-h-full object-contain"
-              />
-            </div>
-          ) : (
-            <Textarea
-              value={selectedFile?.content || ''}
-              onChange={(e) => updateFileContent(e.target.value)}
-              className="flex-1 bg-gray-900 border-0 text-white font-mono text-sm resize-none focus-visible:ring-0 rounded-none"
-              style={{ fontFamily: 'Monaco, Consolas, monospace' }}
-            />
-          )}
+          <Textarea
+            value={selectedFile?.content || ''}
+            onChange={(e) => updateFileContent(e.target.value)}
+            className="flex-1 bg-gray-900 border-0 text-white font-mono text-sm resize-none focus-visible:ring-0 rounded-none"
+            style={{ fontFamily: 'Monaco, Consolas, monospace' }}
+          />
         </div>
 
         {/* Preview */}
@@ -677,45 +589,6 @@ export default function CodeEditor({ currentUser, onBack }) {
           />
         </div>
       </div>
-
-      {/* Edit Project Dialog */}
-      <Dialog open={showEditProjectDialog} onOpenChange={setShowEditProjectDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Project Details</DialogTitle>
-            <DialogDescription>
-              Update your project name and description
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Project Name *</Label>
-              <Input
-                value={editProjectName}
-                onChange={(e) => setEditProjectName(e.target.value)}
-                placeholder="My Awesome Project"
-              />
-            </div>
-            <div>
-              <Label>Description</Label>
-              <Textarea
-                value={editProjectDescription}
-                onChange={(e) => setEditProjectDescription(e.target.value)}
-                placeholder="What does your project do?"
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditProjectDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={updateProjectDetails} className="cu-button">
-              Update Details
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Share Dialog */}
       <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
