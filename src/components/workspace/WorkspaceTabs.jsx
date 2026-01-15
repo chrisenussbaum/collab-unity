@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, CheckSquare, Wrench, FileStack, Activity, Lightbulb, BookOpen, Flag } from 'lucide-react';
+import { MessageSquare, CheckSquare, Wrench, FileStack, Activity, Lightbulb, BookOpen, Flag, LayoutGrid } from 'lucide-react';
 import HorizontalScrollContainer from '@/components/HorizontalScrollContainer';
 import DiscussionBoard from './DiscussionBoard';
 import TaskBoard from './TaskBoard';
 import ToolsHub from './ToolsHub';
 import AssetsTab from './AssetsTab';
-
+import OverviewTab from './OverviewTab';
 import ActivityTab from './ActivityTab';
 
 import IdeationHub from './ideation/IdeationHub';
@@ -135,14 +135,15 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
   };
   
   const tabsConfig = [
-    { value: "discussion", icon: MessageSquare, label: "Discussion", title: "Project discussion and comments" },
-    { value: "ideate", icon: Lightbulb, label: "Ideate", title: "Plan and brainstorm project steps" },
-    { value: "thoughts", icon: BookOpen, label: "Thoughts", title: "Share reflections and insights about the project" },
+    { value: "overview", icon: LayoutGrid, label: "Overview", title: "High-level project summary and progress" },
     { value: "milestones", icon: Flag, label: "Milestones", title: "Major goals and key achievements" },
     { value: "tasks", icon: CheckSquare, label: "Tasks", title: "Action items and daily work" },
-    { value: "tools", icon: Wrench, label: "Tools", title: "Project tools and integrations" },
+    { value: "planning", icon: Lightbulb, label: "Planning", title: "Plan and brainstorm project steps" },
+    { value: "discussion", icon: MessageSquare, label: "Discussion", title: "Project discussion and comments" },
     { value: "assets", icon: FileStack, label: "Assets", title: "Manage project files, assets, and links" },
+    { value: "tools", icon: Wrench, label: "Tools", title: "Project tools and integrations" },
     { value: "activity", icon: Activity, label: "Activity", title: "Project activity timeline and history" },
+    { value: "thoughts", icon: BookOpen, label: "Thoughts", title: "Share reflections and insights about the project" },
   ];
 
   const renderTabs = () => tabsConfig.map((tab) => {
@@ -214,36 +215,23 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
         </div>
         
         <div className="w-full">
-          <TabsContent value="discussion" className="mt-0" forceMount={activeTab === "discussion"}>
-            {activeTab === "discussion" && (
+          <TabsContent value="overview" className="mt-0" forceMount={activeTab === "overview"}>
+            {activeTab === "overview" && (
               <div className="w-full max-w-none">
-                <DiscussionBoard 
-                  project={project} 
-                  currentUser={currentUser} 
-                  onProjectUpdate={onProjectUpdate} 
+                <OverviewTab
+                  project={project}
+                  currentUser={currentUser}
                   isCollaborator={isCollaborator}
                   isProjectOwner={isProjectOwner}
                   projectOwnerName={projectOwnerName}
+                  projectUsers={projectUsers}
+                  onProjectUpdate={onProjectUpdate}
                 />
               </div>
             )}
           </TabsContent>
 
-          <TabsContent value="ideate" className="mt-0" forceMount={activeTab === "ideate"}>
-            {activeTab === "ideate" && (
-              <div className="w-full max-w-none">
-                <IdeationHub 
-                  project={project} 
-                  currentUser={currentUser} 
-                  isCollaborator={isCollaborator}
-                  isProjectOwner={isProjectOwner}
-                  projectOwnerName={projectOwnerName}
-                />
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="thoughts" className="mt-0" forceMount={activeTab === "thoughts"}>
+          <TabsContent value="milestones" className="mt-0" forceMount={activeTab === "milestones"}>
             {activeTab === "thoughts" && (
               <div className="w-full max-w-none">
                 <ThoughtsTab 
@@ -285,7 +273,36 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
             )}
           </TabsContent>
 
-          <TabsContent value="tools" className="mt-0" forceMount={activeTab === "tools"}>
+          <TabsContent value="planning" className="mt-0" forceMount={activeTab === "planning"}>
+            {activeTab === "planning" && (
+              <div className="w-full max-w-none">
+                <IdeationHub 
+                  project={project} 
+                  currentUser={currentUser} 
+                  isCollaborator={isCollaborator}
+                  isProjectOwner={isProjectOwner}
+                  projectOwnerName={projectOwnerName}
+                />
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="discussion" className="mt-0" forceMount={activeTab === "discussion"}>
+            {activeTab === "discussion" && (
+              <div className="w-full max-w-none">
+                <DiscussionBoard 
+                  project={project} 
+                  currentUser={currentUser} 
+                  onProjectUpdate={onProjectUpdate} 
+                  isCollaborator={isCollaborator}
+                  isProjectOwner={isProjectOwner}
+                  projectOwnerName={projectOwnerName}
+                />
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="assets" className="mt-0" forceMount={activeTab === "assets"}>
             {activeTab === "tools" && (
               <div className="w-full max-w-none">
                 <ToolsHub 
@@ -313,10 +330,38 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
             )}
           </TabsContent>
 
+          <TabsContent value="tools" className="mt-0" forceMount={activeTab === "tools"}>
+            {activeTab === "tools" && (
+              <div className="w-full max-w-none">
+                <ToolsHub 
+                  project={project} 
+                  onProjectUpdate={onProjectUpdate} 
+                  isCollaborator={isCollaborator}
+                  isProjectOwner={isProjectOwner}
+                  projectOwnerName={projectOwnerName}
+                />
+              </div>
+            )}
+          </TabsContent>
+
           <TabsContent value="activity" className="mt-0" forceMount={activeTab === "activity"}>
             {activeTab === "activity" && (
               <div className="w-full max-w-none">
                 <ActivityTab 
+                  project={project} 
+                  currentUser={currentUser} 
+                  isCollaborator={isCollaborator}
+                  isProjectOwner={isProjectOwner}
+                  projectOwnerName={projectOwnerName}
+                />
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="thoughts" className="mt-0" forceMount={activeTab === "thoughts"}>
+            {activeTab === "thoughts" && (
+              <div className="w-full max-w-none">
+                <ThoughtsTab 
                   project={project} 
                   currentUser={currentUser} 
                   isCollaborator={isCollaborator}
