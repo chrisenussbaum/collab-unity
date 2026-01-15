@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { base44 } from "@/api/base44Client";
 import ContentViewer from "../components/playground/ContentViewer";
 import RSSFeedViewer from "../components/playground/RSSFeedViewer";
+import CodeEditor from "../components/playground/CodeEditor";
 import { toast } from "sonner";
 import { 
   Sparkles, 
@@ -88,6 +89,7 @@ export default function Playground({ currentUser }) {
   const [currentItemType, setCurrentItemType] = useState(null);
   const [viewingRSSFeed, setViewingRSSFeed] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCodeEditor, setShowCodeEditor] = useState(false);
   const [submitFormData, setSubmitFormData] = useState({
     url: '',
     category: '',
@@ -97,6 +99,12 @@ export default function Playground({ currentUser }) {
   });
 
   const loadContentForItem = async (categoryId, itemTitle) => {
+    // Special handling for Creative Studio items
+    if (itemTitle === 'Code Editor') {
+      setShowCodeEditor(true);
+      return;
+    }
+
     setIsLoadingContent(true);
     try {
       // Map item titles to category enums
@@ -129,6 +137,20 @@ export default function Playground({ currentUser }) {
       setIsLoadingContent(false);
     }
   };
+
+  // Show Code Editor if selected
+  if (showCodeEditor) {
+    return (
+      <CodeEditor
+        currentUser={currentUser}
+        onBack={() => {
+          setShowCodeEditor(false);
+          setSelectedCategory(null);
+          setSelectedItem(null);
+        }}
+      />
+    );
+  }
 
   // Show RSS feed viewer if viewing an RSS feed
   if (viewingRSSFeed) {
