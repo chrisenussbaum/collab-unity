@@ -56,8 +56,6 @@ export default function CodeEditor({ currentUser, onBack }) {
   const [expandedFolders, setExpandedFolders] = useState({});
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  const [previewMode, setPreviewMode] = useState('desktop'); // desktop, tablet, mobile
-  const [currentFolderForUpload, setCurrentFolderForUpload] = useState('');
   const iframeRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -104,11 +102,42 @@ export default function CodeEditor({ currentUser, onBack }) {
   };
 
   const addNewFile = (folderPath = '') => {
-    const fileName = prompt(`Enter file name ${folderPath ? `in ${folderPath}/` : ''}(e.g., main.js, styles.css):`);
+    const fileName = prompt(`Enter file name ${folderPath ? `in ${folderPath}/` : ''}(e.g., main.js, styles.css, image.png):`);
     if (!fileName) return;
 
     const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
     const extension = fileName.split('.').pop().toLowerCase();
+    const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'];
+    
+    if (imageExtensions.includes(extension)) {
+      fileInputRef.current?.click();
+      fileInputRef.current.onchange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          
+          const newFile = {
+            name: fileName,
+            path: fullPath,
+            content: file_url,
+            language: 'image'
+          };
+
+          setCurrentProject(prev => ({
+            ...prev,
+            files: [...prev.files, newFile]
+          }));
+          setSelectedFile(newFile);
+          toast.success(`${fileName} added!`);
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          toast.error("Failed to upload image");
+        }
+      };
+      return;
+    }
 
     let language = 'javascript';
     let defaultContent = '';
@@ -137,40 +166,6 @@ export default function CodeEditor({ currentUser, onBack }) {
     }));
     setSelectedFile(newFile);
     toast.success(`${fileName} added!`);
-  };
-
-  const uploadImageFile = (folderPath = '') => {
-    setCurrentFolderForUpload(folderPath);
-    fileInputRef.current?.click();
-  };
-
-  const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      const fileName = file.name;
-      const fullPath = currentFolderForUpload ? `${currentFolderForUpload}/${fileName}` : fileName;
-      
-      const newFile = {
-        name: fileName,
-        path: fullPath,
-        content: file_url,
-        language: 'image'
-      };
-
-      setCurrentProject(prev => ({
-        ...prev,
-        files: [...prev.files, newFile]
-      }));
-      setSelectedFile(newFile);
-      toast.success(`${fileName} uploaded!`);
-      setCurrentFolderForUpload('');
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      toast.error("Failed to upload image");
-    }
   };
 
   const addNewFolder = () => {
@@ -308,20 +303,19 @@ export default function CodeEditor({ currentUser, onBack }) {
 
     setIsSaving(true);
     try {
-      const projectData = {
-        title: currentProject.title,
-        description: currentProject.description,
-        files: currentProject.files,
-        folders: currentProject.folders || [],
-        tags: currentProject.tags || []
-      };
-
       if (currentProject.id) {
-        await base44.entities.CodeProject.update(currentProject.id, projectData);
+        await base44.entities.CodeProject.update(currentProject.id, {
+          title: currentProject.title,
+          description: currentProject.description,
+          files: currentProject.files,
+          tags: currentProject.tags
+        });
         if (showToast) toast.success("Project saved!");
       } else {
         const saved = await base44.entities.CodeProject.create({
-          ...projectData,
+          title: currentProject.title,
+          description: currentProject.description,
+          files: currentProject.files,
           is_public: false
         });
         setCurrentProject({ ...currentProject, id: saved.id });
@@ -624,7 +618,6 @@ export default function CodeEditor({ currentUser, onBack }) {
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        onChange={handleFileUpload}
         className="hidden"
       />
       
@@ -674,15 +667,11 @@ export default function CodeEditor({ currentUser, onBack }) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => saveProject(true)}
+            onClick={saveProject}
             disabled={isSaving}
             className="text-blue-400 hover:text-blue-300"
           >
-            {isSaving ? (
-              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4 mr-1" />
-            )}
+            <Save className="w-4 h-4 mr-1" />
             Save
           </Button>
           <Button
@@ -712,15 +701,6 @@ export default function CodeEditor({ currentUser, onBack }) {
                 title="New Folder"
               >
                 <FolderPlus className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => uploadImageFile('')}
-                className="h-6 w-6 p-0"
-                title="Upload Image"
-              >
-                <Upload className="w-4 h-4" />
               </Button>
               <Button
                 variant="ghost"
@@ -788,32 +768,18 @@ export default function CodeEditor({ currentUser, onBack }) {
                           <Folder className="w-4 h-4 text-yellow-400" />
                           <span className="text-sm">{folderPath}</span>
                         </div>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              uploadImageFile(folderPath);
-                            }}
-                            className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100"
-                            title="Upload image"
-                          >
-                            <Upload className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              addNewFile(folderPath);
-                            }}
-                            className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100"
-                            title="Add file to folder"
-                          >
-                            <Plus className="w-3 h-3" />
-                          </Button>
-                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addNewFile(folderPath);
+                          }}
+                          className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100"
+                          title="Add file to folder"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
                       </div>
                       
                       {expandedFolders[folderPath] && fileStructure.folders[folderPath]?.map((file) => {
@@ -910,66 +876,27 @@ export default function CodeEditor({ currentUser, onBack }) {
         </div>
 
         {/* Preview */}
-        <div className="flex-1 flex flex-col border-l border-gray-700 bg-gray-900">
+        <div className="flex-1 flex flex-col border-l border-gray-700">
           <div className="p-3 bg-gray-800 border-b border-gray-700 flex items-center gap-2">
             <Eye className="w-4 h-4 text-gray-400" />
             <span className="text-sm font-medium">Preview</span>
-            
-            <div className="flex items-center gap-1 ml-auto">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setPreviewMode('desktop')}
-                className={`h-7 px-2 text-xs ${previewMode === 'desktop' ? 'bg-purple-600 text-white' : 'text-gray-400'}`}
-              >
-                Desktop
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setPreviewMode('tablet')}
-                className={`h-7 px-2 text-xs ${previewMode === 'tablet' ? 'bg-purple-600 text-white' : 'text-gray-400'}`}
-              >
-                Tablet
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setPreviewMode('mobile')}
-                className={`h-7 px-2 text-xs ${previewMode === 'mobile' ? 'bg-purple-600 text-white' : 'text-gray-400'}`}
-              >
-                Mobile
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={runCode}
-                className="h-7 px-2 text-xs ml-2"
-              >
-                <RefreshCw className="w-3 h-3 mr-1" />
-                Refresh
-              </Button>
-            </div>
-          </div>
-          <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
-            <div 
-              className={`bg-white shadow-2xl transition-all ${
-                previewMode === 'desktop' 
-                  ? 'w-full h-full' 
-                  : previewMode === 'tablet'
-                  ? 'w-[768px] h-[1024px]'
-                  : 'w-[375px] h-[667px]'
-              }`}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={runCode}
+              className="ml-auto h-6 text-xs"
             >
-              <iframe
-                ref={iframeRef}
-                srcDoc={previewContent}
-                className="w-full h-full"
-                title="preview"
-                sandbox="allow-scripts allow-same-origin"
-              />
-            </div>
+              <RefreshCw className="w-3 h-3 mr-1" />
+              Refresh
+            </Button>
           </div>
+          <iframe
+            ref={iframeRef}
+            srcDoc={previewContent}
+            className="flex-1 bg-white"
+            title="preview"
+            sandbox="allow-scripts allow-same-origin"
+          />
         </div>
       </div>
 
