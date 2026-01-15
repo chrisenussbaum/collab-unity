@@ -58,14 +58,53 @@ export default function CodeEditor({ currentUser, onBack }) {
   const [newFolderName, setNewFolderName] = useState("");
   const [previewMode, setPreviewMode] = useState('desktop'); // desktop, tablet, mobile
   const [currentFolderForUpload, setCurrentFolderForUpload] = useState('');
+  const [previewHeight, setPreviewHeight] = useState(300);
+  const [isResizing, setIsResizing] = useState(false);
   const iframeRef = useRef(null);
   const fileInputRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     if (currentUser) {
       loadProjects();
     }
   }, [currentUser]);
+
+  // Auto-preview on file content change
+  useEffect(() => {
+    if (currentProject && selectedFile) {
+      const timer = setTimeout(() => {
+        runCode();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedFile?.content, currentProject?.files]);
+
+  // Handle resizing
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e) => {
+      if (!containerRef.current) return;
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const newHeight = containerRect.bottom - e.clientY;
+      const minHeight = 200;
+      const maxHeight = containerRect.height - 200;
+      setPreviewHeight(Math.max(minHeight, Math.min(maxHeight, newHeight)));
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
 
   const loadProjects = async () => {
     try {
@@ -100,6 +139,9 @@ export default function CodeEditor({ currentUser, onBack }) {
     setShowNewProjectDialog(false);
     setNewProjectName("");
     setNewProjectDescription("");
+    
+    // Auto-run code for new project
+    setTimeout(() => runCode(), 100);
     toast.success("New project created!");
   };
 
@@ -448,37 +490,23 @@ export default function CodeEditor({ currentUser, onBack }) {
   };
 
   const loadProject = (project) => {
-    setCurrentProject(project);
-    setSelectedFile(project.files[0]);
+    // Ensure all files have a path property
+    const updatedFiles = project.files.map(file => ({
+      ...file,
+      path: file.path || file.name
+    }));
+
+    const updatedProject = {
+      ...project,
+      files: updatedFiles,
+      folders: project.folders || []
+    };
+
+    setCurrentProject(updatedProject);
+    setSelectedFile(updatedFiles[0]);
     
-    // Generate preview after a short delay to ensure state is set
-    setTimeout(() => {
-      const htmlFile = project.files.find(f => f.language === 'html');
-      const cssFile = project.files.find(f => f.language === 'css');
-      const jsFile = project.files.find(f => f.language === 'javascript');
-
-      let htmlContent = htmlFile?.content || '';
-      
-      if (cssFile) {
-        const cssTag = `<style>${cssFile.content}</style>`;
-        if (htmlContent.includes('</head>')) {
-          htmlContent = htmlContent.replace('</head>', `${cssTag}</head>`);
-        } else {
-          htmlContent = `${cssTag}${htmlContent}`;
-        }
-      }
-
-      if (jsFile) {
-        const jsTag = `<script>${jsFile.content}</script>`;
-        if (htmlContent.includes('</body>')) {
-          htmlContent = htmlContent.replace('</body>', `${jsTag}</body>`);
-        } else {
-          htmlContent = `${htmlContent}${jsTag}`;
-        }
-      }
-
-      setPreviewContent(htmlContent);
-    }, 100);
+    // Auto-run preview
+    setTimeout(() => runCode(), 100);
   };
 
   if (!currentUser) {
@@ -698,9 +726,10 @@ export default function CodeEditor({ currentUser, onBack }) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* File Explorer */}
-        <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
+      <div ref={containerRef} className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex overflow-hidden min-h-0">
+          {/* File Explorer */}
+          <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
           <div className="p-3 border-b border-gray-700 flex items-center justify-between">
             <span className="font-semibold text-sm">Files</span>
             <div className="flex gap-1">
@@ -908,9 +937,19 @@ export default function CodeEditor({ currentUser, onBack }) {
             />
           )}
         </div>
+        </div>
+
+        {/* Resizable Handle */}
+        <div
+          className="h-1 bg-gray-700 hover:bg-purple-600 cursor-ns-resize transition-colors"
+          onMouseDown={() => setIsResizing(true)}
+        />
 
         {/* Preview */}
-        <div className="flex-1 flex flex-col border-l border-gray-700 bg-gray-900">
+        <div 
+          className="flex flex-col border-t border-gray-700 bg-gray-900"
+          style={{ height: `${previewHeight}px` }}
+        >
           <div className="p-3 bg-gray-800 border-b border-gray-700 flex items-center gap-2">
             <Eye className="w-4 h-4 text-gray-400" />
             <span className="text-sm font-medium">Preview</span>
@@ -951,15 +990,19 @@ export default function CodeEditor({ currentUser, onBack }) {
               </Button>
             </div>
           </div>
-          <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
+          <div className="flex-1 flex items-center justify-center overflow-auto">
             <div 
-              className={`bg-white shadow-2xl transition-all ${
+              className={`bg-white shadow-2xl transition-all my-4 ${
                 previewMode === 'desktop' 
-                  ? 'w-full h-full' 
+                  ? 'w-full mx-4' 
                   : previewMode === 'tablet'
-                  ? 'w-[768px] h-[1024px]'
-                  : 'w-[375px] h-[667px]'
+                  ? 'w-[768px]'
+                  : 'w-[375px]'
               }`}
+              style={{ 
+                height: previewMode === 'desktop' ? 'calc(100% - 2rem)' : '100%',
+                maxHeight: previewMode === 'tablet' ? '1024px' : previewMode === 'mobile' ? '667px' : 'none'
+              }}
             >
               <iframe
                 ref={iframeRef}
@@ -971,6 +1014,7 @@ export default function CodeEditor({ currentUser, onBack }) {
             </div>
           </div>
         </div>
+      </div>
       </div>
 
       {/* New Folder Dialog */}
