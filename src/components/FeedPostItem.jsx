@@ -39,11 +39,10 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
-import { FeedPost, FeedPostApplaud, Notification, Project, CodeProject } from "@/entities/all";
+import { FeedPost, FeedPostApplaud, Notification, Project } from "@/entities/all";
 import { toast } from "sonner";
 import FeedComments from "./FeedComments";
 import HorizontalScrollContainer from "./HorizontalScrollContainer";
-import CodeProjectPreview from "./CodeProjectPreview";
 
 const STATUS_ICONS = {
   on_track: { icon: CheckCircle, color: "text-green-600", bg: "bg-green-50", border: "border-green-200" },
@@ -62,7 +61,6 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
   const [isApplauded, setIsApplauded] = useState(false);
   const [applaudCount, setApplaudCount] = useState(0);
   const [relatedProject, setRelatedProject] = useState(null);
-  const [codeProject, setCodeProject] = useState(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -84,17 +82,10 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
     const loadRelatedProject = async () => {
       if (post.related_project_id) {
         try {
-          // First try loading as CodeProject
-          const codeProj = await CodeProject.get(post.related_project_id);
-          setCodeProject(codeProj);
+          const project = await Project.get(post.related_project_id);
+          setRelatedProject(project);
         } catch (error) {
-          // If not a code project, try regular project
-          try {
-            const project = await Project.get(post.related_project_id);
-            setRelatedProject(project);
-          } catch (projError) {
-            console.error("Error loading related project:", projError);
-          }
+          console.error("Error loading related project:", error);
         }
       }
     };
@@ -440,15 +431,8 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
               </div>
             )}
 
-            {/* Code Project Interactive Preview */}
-            {codeProject && (
-              <div className="mt-4">
-                <CodeProjectPreview project={codeProject} />
-              </div>
-            )}
-
             {/* Related Project Link */}
-            {relatedProject && !codeProject && (
+            {relatedProject && (
               <Link 
                 to={createPageUrl(`ProjectDetail?id=${relatedProject.id}`)}
                 className="block mt-4"

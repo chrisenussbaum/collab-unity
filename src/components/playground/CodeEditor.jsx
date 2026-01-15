@@ -475,15 +475,26 @@ export default function CodeEditor({ currentUser, onBack }) {
 
     setIsSaving(true);
     try {
-      // Save or update project first
+      // Capture preview
+      const thumbnailData = await capturePreview();
+      let thumbnailUrl = null;
+
+      if (thumbnailData) {
+        const blob = await (await fetch(thumbnailData)).blob();
+        const file = new File([blob], 'preview.jpg', { type: 'image/jpeg' });
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        thumbnailUrl = file_url;
+      }
+
+      // Save or update project
       let projectId = currentProject.id;
       if (!projectId) {
         const saved = await base44.entities.CodeProject.create({
           title: currentProject.title || shareTitle.trim(),
           description: currentProject.description || shareDescription.trim(),
           files: currentProject.files,
-          folders: currentProject.folders || [],
           is_public: true,
+          thumbnail_url: thumbnailUrl,
           tags: shareTags.split(',').map(t => t.trim()).filter(Boolean),
           shared_to_feed: true
         });
@@ -491,32 +502,34 @@ export default function CodeEditor({ currentUser, onBack }) {
         setCurrentProject({ ...currentProject, id: saved.id });
       } else {
         await base44.entities.CodeProject.update(projectId, {
-          title: shareTitle.trim(),
-          description: shareDescription.trim(),
           is_public: true,
+          thumbnail_url: thumbnailUrl,
           tags: shareTags.split(',').map(t => t.trim()).filter(Boolean),
           shared_to_feed: true
         });
       }
 
-      // Create feed post with embedded preview data
+      // Create feed post
       await base44.entities.FeedPost.create({
         post_type: 'narrative',
         title: shareTitle.trim(),
-        content: shareDescription.trim() || 'Check out my interactive code project!',
-        related_project_id: projectId,
-        tags: ['code', 'playground', 'interactive', ...shareTags.split(',').map(t => t.trim()).filter(Boolean)]
+        content: shareDescription.trim() || 'Check out my code project!',
+        media_attachments: thumbnailUrl ? [{
+          media_url: thumbnailUrl,
+          media_type: 'image'
+        }] : [],
+        tags: ['code', 'playground', ...shareTags.split(',').map(t => t.trim()).filter(Boolean)]
       });
 
-      toast.success("Published to Feed! Your project is now live.");
+      toast.success("Shared to Feed!");
       setShowShareDialog(false);
       setShareTitle("");
       setShareDescription("");
       setShareTags("");
       await loadProjects();
     } catch (error) {
-      console.error("Error publishing to feed:", error);
-      toast.error("Failed to publish project");
+      console.error("Error sharing to feed:", error);
+      toast.error("Failed to share project");
     } finally {
       setIsSaving(false);
     }
@@ -690,13 +703,15 @@ export default function CodeEditor({ currentUser, onBack }) {
       />
       
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
+      <div className="bg-gray-800 border-b border-gray-700 px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
+            variant="ghost"
+            size="sm"
             onClick={handleBackToProjects}
-            className="bg-gray-700 hover:bg-gray-600 text-white"
+            className="text-gray-400 hover:text-white"
           >
-            ← Back to Projects
+            ← Projects
           </Button>
           <div 
             className="cursor-pointer hover:bg-gray-700/50 px-2 py-1 rounded transition-colors"
@@ -745,12 +760,13 @@ export default function CodeEditor({ currentUser, onBack }) {
             Save
           </Button>
           <Button
+            variant="ghost"
             size="sm"
             onClick={() => setShowShareDialog(true)}
-            className="bg-purple-600 hover:bg-purple-700 text-white"
+            className="text-purple-400 hover:text-purple-300"
           >
             <Share2 className="w-4 h-4 mr-1" />
-            Publish to Feed
+            Share
           </Button>
         </div>
       </div>
@@ -1119,9 +1135,9 @@ export default function CodeEditor({ currentUser, onBack }) {
       <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Publish to Feed</DialogTitle>
+            <DialogTitle>Share to Feed</DialogTitle>
             <DialogDescription>
-              Share your interactive code project with the community. Others will be able to view and interact with the live preview.
+              Share your code project with the community
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -1159,12 +1175,12 @@ export default function CodeEditor({ currentUser, onBack }) {
               {isSaving ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Publishing...
+                  Sharing...
                 </>
               ) : (
                 <>
                   <Share2 className="w-4 h-4 mr-2" />
-                  Publish to Feed
+                  Share to Feed
                 </>
               )}
             </Button>
