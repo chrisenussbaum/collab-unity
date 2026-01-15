@@ -44,6 +44,7 @@ export default function CodeEditor({ currentUser, onBack }) {
   const [shareTitle, setShareTitle] = useState("");
   const [shareDescription, setShareDescription] = useState("");
   const [shareTags, setShareTags] = useState("");
+  const [previewContent, setPreviewContent] = useState("");
   const iframeRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -210,14 +211,7 @@ export default function CodeEditor({ currentUser, onBack }) {
       }
     }
 
-    if (iframeRef.current) {
-      const iframe = iframeRef.current;
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-      iframeDoc.open();
-      iframeDoc.write(htmlContent);
-      iframeDoc.close();
-    }
-
+    setPreviewContent(htmlContent);
     setTimeout(() => setIsRunning(false), 500);
   };
 
@@ -370,7 +364,35 @@ export default function CodeEditor({ currentUser, onBack }) {
   const loadProject = (project) => {
     setCurrentProject(project);
     setSelectedFile(project.files[0]);
-    runCode();
+    
+    // Generate preview after a short delay to ensure state is set
+    setTimeout(() => {
+      const htmlFile = project.files.find(f => f.language === 'html');
+      const cssFile = project.files.find(f => f.language === 'css');
+      const jsFile = project.files.find(f => f.language === 'javascript');
+
+      let htmlContent = htmlFile?.content || '';
+      
+      if (cssFile) {
+        const cssTag = `<style>${cssFile.content}</style>`;
+        if (htmlContent.includes('</head>')) {
+          htmlContent = htmlContent.replace('</head>', `${cssTag}</head>`);
+        } else {
+          htmlContent = `${cssTag}${htmlContent}`;
+        }
+      }
+
+      if (jsFile) {
+        const jsTag = `<script>${jsFile.content}</script>`;
+        if (htmlContent.includes('</body>')) {
+          htmlContent = htmlContent.replace('</body>', `${jsTag}</body>`);
+        } else {
+          htmlContent = `${htmlContent}${jsTag}`;
+        }
+      }
+
+      setPreviewContent(htmlContent);
+    }, 100);
   };
 
   if (!currentUser) {
@@ -671,9 +693,10 @@ export default function CodeEditor({ currentUser, onBack }) {
           </div>
           <iframe
             ref={iframeRef}
+            srcDoc={previewContent}
             className="flex-1 bg-white"
             title="preview"
-            sandbox="allow-scripts"
+            sandbox="allow-scripts allow-same-origin"
           />
         </div>
       </div>
