@@ -1435,7 +1435,9 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
             isOpen={showEditInstructionsModal}
             onClose={() => setShowEditInstructionsModal(false)}
             project={project}
-            onSave={handleProjectUpdate}
+            onSave={async () => {
+              await handleProjectUpdate();
+            }}
           />
         )}
 
