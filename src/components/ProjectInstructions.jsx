@@ -131,7 +131,7 @@ export default function ProjectInstructions({ instructions, isOwner, onEditClick
               <BookOpen className="w-5 h-5" />
               <span>Project Instructions</span>
             </CardTitle>
-            {isOwner && onEditClick && (
+            {isOwner && (
               <Button
                 variant="outline"
                 size="sm"
