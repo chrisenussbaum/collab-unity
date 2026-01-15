@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { Plus, X, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Project, ActivityLog, User } from "@/entities/all"; // Added User entity
 
-export default function EditProjectInstructionsModal({ project, isOpen, onClose, onSuccess }) {
+export default function EditProjectInstructionsModal({ project, isOpen, onClose, onSave }) {
   const [currentUser, setCurrentUser] = useState(null); // Local state for currentUser
   const [isSaving, setIsSaving] = useState(false);
   const [instructions, setInstructions] = useState(project?.project_instructions || {
@@ -152,7 +151,12 @@ export default function EditProjectInstructionsModal({ project, isOpen, onClose,
         entity_type: "project_instructions"
       });
 
-      if (onSuccess) onSuccess();
+      toast.success("Project instructions saved successfully!");
+      
+      if (onSave) {
+        await onSave();
+      }
+      
       onClose();
     } catch (error) {
       console.error("Error saving instructions:", error);
