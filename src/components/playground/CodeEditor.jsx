@@ -1015,7 +1015,6 @@ export default function CodeEditor({ currentUser, onBack }) {
           </div>
         </div>
       </div>
-      </div>
 
       {/* New Folder Dialog */}
       <Dialog open={showNewFolderDialog} onOpenChange={setShowNewFolderDialog}>
