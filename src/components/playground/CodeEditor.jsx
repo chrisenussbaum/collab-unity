@@ -24,9 +24,7 @@ import {
   RefreshCw,
   Folder,
   ChevronRight,
-  ChevronDown,
-  Users,
-  MessageCircle
+  ChevronDown
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -36,8 +34,6 @@ import { html } from '@codemirror/lang-html';
 import { css } from '@codemirror/lang-css';
 import { javascript } from '@codemirror/lang-javascript';
 import { autocompletion } from '@codemirror/autocomplete';
-import CollaboratorPanel from "./CollaboratorPanel";
-import ProjectChat from "./ProjectChat";
 
 export default function CodeEditor({ currentUser, onBack }) {
   const [projects, setProjects] = useState([]);
@@ -64,9 +60,6 @@ export default function CodeEditor({ currentUser, onBack }) {
   const [currentFolderForUpload, setCurrentFolderForUpload] = useState('');
   const [previewHeight, setPreviewHeight] = useState(300);
   const [isResizing, setIsResizing] = useState(false);
-  const [showCollaborators, setShowCollaborators] = useState(false);
-  const [showChat, setShowChat] = useState(false);
-  const [userRole, setUserRole] = useState('owner');
   const iframeRef = useRef(null);
   const fileInputRef = useRef(null);
   const containerRef = useRef(null);
@@ -76,70 +69,6 @@ export default function CodeEditor({ currentUser, onBack }) {
       loadProjects();
     }
   }, [currentUser]);
-
-  // Check user's role in current project
-  useEffect(() => {
-    if (currentProject?.id && currentUser) {
-      checkUserRole();
-      subscribeToProjectChanges();
-    }
-  }, [currentProject?.id, currentUser]);
-
-  const checkUserRole = async () => {
-    try {
-      const collabs = await base44.entities.CodeProjectCollaborator.filter({
-        project_id: currentProject.id,
-        user_email: currentUser.email,
-        status: "accepted"
-      });
-      
-      if (collabs && collabs.length > 0) {
-        setUserRole(collabs[0].role);
-      } else if (currentProject.created_by === currentUser.email) {
-        setUserRole('owner');
-        // Auto-create owner collaborator record
-        await base44.entities.CodeProjectCollaborator.create({
-          project_id: currentProject.id,
-          user_email: currentUser.email,
-          role: 'owner',
-          status: 'accepted'
-        });
-      } else {
-        setUserRole('viewer');
-      }
-    } catch (error) {
-      console.error("Error checking user role:", error);
-      setUserRole('viewer');
-    }
-  };
-
-  const subscribeToProjectChanges = () => {
-    if (!currentProject?.id) return;
-
-    const unsubscribe = base44.entities.CodeProject.subscribe((event) => {
-      if (event.data?.id === currentProject.id && event.type === 'update') {
-        // Merge remote changes with local state
-        setCurrentProject(prev => ({
-          ...prev,
-          ...event.data,
-          // Keep local unsaved changes if any
-          files: event.data.files || prev.files
-        }));
-        
-        // Update selected file if it was modified
-        if (selectedFile) {
-          const updatedFile = event.data.files?.find(f => 
-            (f.path || f.name) === (selectedFile.path || selectedFile.name)
-          );
-          if (updatedFile) {
-            setSelectedFile(updatedFile);
-          }
-        }
-      }
-    });
-
-    return () => unsubscribe();
-  };
 
   // Reload projects when returning to project list
   useEffect(() => {
@@ -399,11 +328,6 @@ export default function CodeEditor({ currentUser, onBack }) {
   };
 
   const updateFileContent = (content) => {
-    if (userRole === 'viewer') {
-      toast.error("You don't have permission to edit");
-      return;
-    }
-
     const selectedPath = selectedFile.path || selectedFile.name;
     setCurrentProject(prev => ({
       ...prev,
@@ -793,24 +717,6 @@ export default function CodeEditor({ currentUser, onBack }) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setShowChat(!showChat)}
-            className={showChat ? "text-purple-400" : "text-gray-400 hover:text-purple-400"}
-          >
-            <MessageCircle className="w-4 h-4 mr-1" />
-            Chat
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowCollaborators(!showCollaborators)}
-            className={showCollaborators ? "text-purple-400" : "text-gray-400 hover:text-purple-400"}
-          >
-            <Users className="w-4 h-4 mr-1" />
-            Team
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
             onClick={runCode}
             disabled={isRunning}
             className="text-green-400 hover:text-green-300"
@@ -828,7 +734,7 @@ export default function CodeEditor({ currentUser, onBack }) {
             variant="ghost"
             size="sm"
             onClick={() => saveProject(true)}
-            disabled={isSaving || userRole === 'viewer'}
+            disabled={isSaving}
             className="text-blue-400 hover:text-blue-300"
           >
             {isSaving ? (
@@ -838,40 +744,20 @@ export default function CodeEditor({ currentUser, onBack }) {
             )}
             Save
           </Button>
-          {userRole === 'owner' && (
-            <Button
-              size="sm"
-              onClick={() => setShowShareDialog(true)}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-            >
-              <Share2 className="w-4 h-4 mr-1" />
-              Publish to Feed
-            </Button>
-          )}
+          <Button
+            size="sm"
+            onClick={() => setShowShareDialog(true)}
+            className="bg-purple-600 hover:bg-purple-700 text-white"
+          >
+            <Share2 className="w-4 h-4 mr-1" />
+            Publish to Feed
+          </Button>
         </div>
       </div>
 
       {/* Main Content */}
       <div ref={containerRef} className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 flex overflow-hidden min-h-0">
-          {/* Collaboration Panels */}
-          {showCollaborators && (
-            <div className="w-64 flex-shrink-0">
-              <CollaboratorPanel 
-                project={currentProject} 
-                currentUser={currentUser}
-                onUpdate={() => {}}
-              />
-            </div>
-          )}
-          {showChat && (
-            <div className="w-80 flex-shrink-0">
-              <ProjectChat 
-                project={currentProject} 
-                currentUser={currentUser}
-              />
-            </div>
-          )}
           {/* File Explorer */}
           <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
           <div className="p-3 border-b border-gray-700 flex items-center justify-between">
@@ -901,7 +787,6 @@ export default function CodeEditor({ currentUser, onBack }) {
                 onClick={() => addNewFile()}
                 className="h-6 w-6 p-0"
                 title="New File"
-                disabled={userRole === 'viewer'}
               >
                 <Plus className="w-4 h-4" />
               </Button>
@@ -1049,7 +934,6 @@ export default function CodeEditor({ currentUser, onBack }) {
                 autocompletion()
               ]}
               onChange={(value) => updateFileContent(value)}
-              editable={userRole !== 'viewer'}
               theme="dark"
               basicSetup={{
                 lineNumbers: true,
