@@ -90,28 +90,33 @@ export default function CreateProject() {
   // Handle template data from URL params
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const fromTemplate = params.get('fromTemplate');
+    const templateId = params.get('template_id');
     
-    if (fromTemplate === 'true') {
-      const templateId = params.get('templateId');
-      const title = params.get('title');
-      const description = params.get('description');
-      const skills = params.get('skills');
-      const tools = params.get('tools');
-      const projectInstructions = params.get('projectInstructions');
-      
-      setFormData(prev => ({
-        ...prev,
-        title: title || "",
-        description: description || "",
-        skills_needed: skills ? JSON.parse(skills) : [],
-        tools_needed: tools ? JSON.parse(tools) : [],
-        template_id: templateId || "",
-        project_instructions: projectInstructions ? JSON.parse(projectInstructions) : null,
-      }));
-      
-      setIsAIAssisted(true);
-      setCurrentStep(1);
+    if (templateId) {
+      // Fetch template data and populate form
+      base44.entities.ProjectTemplate.filter({ id: templateId })
+        .then(templates => {
+          if (templates && templates.length > 0) {
+            const template = templates[0];
+            setFormData(prev => ({
+              ...prev,
+              title: template.title || "",
+              description: template.description || "",
+              classification: template.classification || "",
+              industry: template.industry || "",
+              skills_needed: template.skills_needed || [],
+              tools_needed: template.tools_needed || [],
+              template_id: template.id,
+              project_instructions: template.project_instructions || null,
+            }));
+            setIsAIAssisted(true);
+            setCurrentStep(1);
+          }
+        })
+        .catch(error => {
+          console.error("Error loading template:", error);
+          toast.error("Failed to load template");
+        });
     }
   }, [location.search]);
 
@@ -560,12 +565,29 @@ export default function CreateProject() {
                     <PenLine className="w-5 h-5 mr-2" />
                     Start from Scratch
                   </Button>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-4 bg-white text-gray-500">or</span>
+                    </div>
+                  </div>
+
+                  {/* Browse Templates Option */}
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(createPageUrl("Templates"))}
+                    className="w-full py-6 text-lg border-2 hover:border-indigo-300 hover:bg-indigo-50"
+                  >
+                    <FileIcon className="w-5 h-5 mr-2" />
+                    Browse Templates
+                  </Button>
                 </CardContent>
               </Card>
             </motion.div>
           )}
-
-          {/* Browse Templates button removed - feature being reworked */}
 
           {/* Assisted Banner */}
           {isAIAssisted && currentStep > 0 && (
