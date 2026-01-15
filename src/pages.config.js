@@ -14,7 +14,6 @@ import Leaderboard from './pages/Leaderboard';
 import MyProjects from './pages/MyProjects';
 import Notifications from './pages/Notifications';
 import Onboarding from './pages/Onboarding';
-import Playground from './pages/Playground';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import ProjectDetail from './pages/ProjectDetail';
 import ReportBug from './pages/ReportBug';
@@ -24,6 +23,8 @@ import TermsOfService from './pages/TermsOfService';
 import Testimonials from './pages/Testimonials';
 import UserProfile from './pages/UserProfile';
 import Welcome from './pages/Welcome';
+import Playground from './pages/Playground';
+import Templates from './pages/Templates';
 import __Layout from './Layout.jsx';
 
 
@@ -44,7 +45,6 @@ export const PAGES = {
     "MyProjects": MyProjects,
     "Notifications": Notifications,
     "Onboarding": Onboarding,
-    "Playground": Playground,
     "PrivacyPolicy": PrivacyPolicy,
     "ProjectDetail": ProjectDetail,
     "ReportBug": ReportBug,
@@ -54,6 +54,8 @@ export const PAGES = {
     "Testimonials": Testimonials,
     "UserProfile": UserProfile,
     "Welcome": Welcome,
+    "Playground": Playground,
+    "Templates": Templates,
 }
 
 export const pagesConfig = {
