@@ -80,17 +80,6 @@ export default function CodeEditor({ currentUser, onBack }) {
     }
   }, [selectedFile?.content, currentProject?.files]);
 
-  // Auto-save periodically when editing
-  useEffect(() => {
-    if (!currentProject?.id) return; // Only auto-save existing projects
-    
-    const autoSaveTimer = setTimeout(() => {
-      saveProject(false); // Silent auto-save
-    }, 5000); // Auto-save every 5 seconds of inactivity
-    
-    return () => clearTimeout(autoSaveTimer);
-  }, [currentProject]);
-
   // Handle resizing
   useEffect(() => {
     if (!isResizing) return;
@@ -128,13 +117,13 @@ export default function CodeEditor({ currentUser, onBack }) {
     }
   };
 
-  const createNewProject = async () => {
+  const createNewProject = () => {
     if (!newProjectName.trim()) {
       toast.error("Please enter a project name");
       return;
     }
 
-    const newProjectData = {
+    const newProject = {
       title: newProjectName.trim(),
       description: newProjectDescription.trim(),
       files: [
@@ -142,33 +131,21 @@ export default function CodeEditor({ currentUser, onBack }) {
         { name: 'style.css', path: 'style.css', content: 'body {\n  margin: 0;\n  padding: 20px;\n  font-family: Arial, sans-serif;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  min-height: 100vh;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n\nh1 {\n  font-size: 3rem;\n  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);\n}', language: 'css' },
         { name: 'script.js', path: 'script.js', content: '// Your JavaScript code here\nconsole.log("Hello from Code Editor!");', language: 'javascript' }
       ],
-      folders: [],
-      is_public: false
+      folders: []
     };
 
-    try {
-      // Save immediately to database
-      const savedProject = await base44.entities.CodeProject.create(newProjectData);
-      
-      setCurrentProject(savedProject);
-      setSelectedFile(savedProject.files[0]);
-      setShowNewProjectDialog(false);
-      setNewProjectName("");
-      setNewProjectDescription("");
-      
-      // Auto-run code for new project
-      setTimeout(() => runCode(), 100);
-      toast.success("Project created and saved!");
-      
-      // Reload projects list
-      await loadProjects();
-    } catch (error) {
-      console.error("Error creating project:", error);
-      toast.error("Failed to create project");
-    }
+    setCurrentProject(newProject);
+    setSelectedFile(newProject.files[0]);
+    setShowNewProjectDialog(false);
+    setNewProjectName("");
+    setNewProjectDescription("");
+    
+    // Auto-run code for new project
+    setTimeout(() => runCode(), 100);
+    toast.success("New project created!");
   };
 
-  const addNewFile = async (folderPath = '') => {
+  const addNewFile = (folderPath = '') => {
     const fileName = prompt(`Enter file name ${folderPath ? `in ${folderPath}/` : ''}(e.g., main.js, styles.css):`);
     if (!fileName) return;
 
@@ -201,12 +178,6 @@ export default function CodeEditor({ currentUser, onBack }) {
       files: [...prev.files, newFile]
     }));
     setSelectedFile(newFile);
-    
-    // Auto-save after adding file
-    if (currentProject?.id) {
-      await saveProject(false);
-    }
-    
     toast.success(`${fileName} added!`);
   };
 
@@ -244,7 +215,7 @@ export default function CodeEditor({ currentUser, onBack }) {
     }
   };
 
-  const addNewFolder = async () => {
+  const addNewFolder = () => {
     if (!newFolderName.trim()) {
       toast.error("Please enter a folder name");
       return;
@@ -264,12 +235,6 @@ export default function CodeEditor({ currentUser, onBack }) {
     setExpandedFolders(prev => ({ ...prev, [folderPath]: true }));
     setShowNewFolderDialog(false);
     setNewFolderName("");
-    
-    // Auto-save after adding folder
-    if (currentProject?.id) {
-      await saveProject(false);
-    }
-    
     toast.success(`Folder "${folderPath}" created!`);
   };
 
