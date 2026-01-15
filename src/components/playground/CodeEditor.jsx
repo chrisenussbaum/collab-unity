@@ -244,7 +244,7 @@ export default function CodeEditor({ currentUser, onBack }) {
     }
   };
 
-  const addNewFolder = () => {
+  const addNewFolder = async () => {
     if (!newFolderName.trim()) {
       toast.error("Please enter a folder name");
       return;
@@ -264,6 +264,12 @@ export default function CodeEditor({ currentUser, onBack }) {
     setExpandedFolders(prev => ({ ...prev, [folderPath]: true }));
     setShowNewFolderDialog(false);
     setNewFolderName("");
+    
+    // Auto-save after adding folder
+    if (currentProject?.id) {
+      await saveProject(false);
+    }
+    
     toast.success(`Folder "${folderPath}" created!`);
   };
 
