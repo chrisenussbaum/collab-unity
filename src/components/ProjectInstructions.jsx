@@ -154,7 +154,7 @@ export default function ProjectInstructions({ instructions, isOwner, onEditClick
       {/* Project Phases */}
       <div className="space-y-4">
         {phases.map((phase, index) => {
-          if (!phase.data) return null;
+          if (!phase.data || !phase.data.title) return null;
           
           const Icon = phaseIcons[phase.key];
           const colors = colorClasses[phase.color];
@@ -194,9 +194,11 @@ export default function ProjectInstructions({ instructions, isOwner, onEditClick
                   
                   <CollapsibleContent>
                     <CardContent className="pt-0">
-                      <p className="text-gray-700 mb-4">
-                        {phase.data.description}
-                      </p>
+                      {phase.data.description && (
+                        <p className="text-gray-700 mb-4">
+                          {phase.data.description}
+                        </p>
+                      )}
                       
                       {phase.data.steps && phase.data.steps.length > 0 && (
                         <div className="mb-4">
