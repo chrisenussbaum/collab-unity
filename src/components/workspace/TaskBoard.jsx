@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { UploadFile } from "@/integrations/Core";
-import { CheckSquare, Plus, Edit, Trash2, Calendar, User, AlertCircle, Circle, Clock, CheckCircle2, Flag, MessageSquare, TrendingUp, Upload, Link as LinkIcon, Paperclip, X as XIcon } from "lucide-react";
+import { CheckSquare, Plus, Edit, Trash2, Calendar, User, AlertCircle, Circle, Clock, CheckCircle2, Flag, MessageSquare, TrendingUp, Upload, Link as LinkIcon, Paperclip, X as XIcon, Filter } from "lucide-react";
 import { Task, Notification, ActivityLog } from "@/entities/all";
+import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -53,8 +54,12 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
     assigned_to: "",
     due_date: "",
     progress: 0,
-    attachments: []
+    attachments: [],
+    milestone_id: ""
   });
+
+  const [milestones, setMilestones] = useState([]);
+  const [groupByMilestone, setGroupByMilestone] = useState(false);
 
   const [newLinkName, setNewLinkName] = useState("");
   const [newLinkUrl, setNewLinkUrl] = useState("");
@@ -71,8 +76,13 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
 
     setIsLoading(true);
     try {
-      const data = await withRetry(() => Task.filter({ project_id: project.id }, '-created_date'));
-      setTasks(Array.isArray(data) ? data : []);
+      const [tasksData, milestonesData] = await Promise.all([
+        withRetry(() => Task.filter({ project_id: project.id }, '-created_date')),
+        withRetry(() => base44.entities.ProjectMilestone.filter({ project_id: project.id }, 'target_date'))
+      ]);
+      
+      setTasks(Array.isArray(tasksData) ? tasksData : []);
+      setMilestones(Array.isArray(milestonesData) ? milestonesData : []);
       retryCountRef.current = 0;
     } catch (error) {
       console.error("Error fetching tasks:", error);
@@ -81,6 +91,7 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
         toast.error("Failed to load tasks");
       }
       setTasks([]);
+      setMilestones([]);
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +110,8 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
       assigned_to: "",
       due_date: "",
       progress: 0,
-      attachments: []
+      attachments: [],
+      milestone_id: ""
     });
     setEditingTask(null);
     setNewLinkName("");
@@ -118,7 +130,8 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
         assigned_to: task.assigned_to || "",
         due_date: task.due_date || "",
         progress: task.progress || 0,
-        attachments: task.attachments || []
+        attachments: task.attachments || [],
+        milestone_id: task.milestone_id || ""
       });
     } else {
       resetForm();
@@ -477,15 +490,28 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
   return (
     <div className="space-y-6">
       <Card className="cu-card">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-3">
           <CardTitle className="flex items-center">
             <CheckSquare className="w-5 h-5 mr-2 text-purple-600" />
             Task Board
           </CardTitle>
-          <Button onClick={() => handleOpenDialog()} className="cu-button">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Task
-          </Button>
+          <div className="flex items-center gap-2">
+            {milestones.length > 0 && (
+              <Button
+                variant={groupByMilestone ? "default" : "outline"}
+                size="sm"
+                onClick={() => setGroupByMilestone(!groupByMilestone)}
+                className="text-xs"
+              >
+                <Filter className="w-4 h-4 mr-1" />
+                {groupByMilestone ? "Show All" : "Group by Milestone"}
+              </Button>
+            )}
+            <Button onClick={() => handleOpenDialog()} className="cu-button">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Task
+            </Button>
+          </div>
         </CardHeader>
       </Card>
 
@@ -493,6 +519,271 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
         <div className="text-center py-8">
           <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-500">Loading tasks...</p>
+        </div>
+      ) : groupByMilestone && milestones.length > 0 ? (
+        <div className="space-y-8">
+          {/* Tasks with no milestone */}
+          {tasks.filter(t => !t.milestone_id).length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-700">
+                <Circle className="w-5 h-5 mr-2" />
+                No Milestone
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {statusColumns.map((column) => {
+                  const columnTasks = tasks.filter(t => t.status === column.id && !t.milestone_id);
+                  
+                  return (
+                    <Card key={column.id} className="cu-card">
+                      <CardHeader className={`${column.color} rounded-t-lg`}>
+                        <CardTitle className="text-sm font-semibold flex items-center justify-between">
+                          <span>{column.label}</span>
+                          <Badge variant="secondary">{columnTasks.length}</Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4 space-y-3 min-h-[150px]">
+                        <AnimatePresence>
+                          {columnTasks.map((task) => {
+                            const assignedUser = collaborators?.find(c => c.email === task.assigned_to);
+                            
+                            return (
+                              <motion.div
+                                key={task.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                              >
+                                <Card 
+                                  className="hover:shadow-md transition-shadow cursor-pointer"
+                                  onClick={() => {
+                                    setSelectedTask(task);
+                                    setIsTaskDetailOpen(true);
+                                  }}
+                                >
+                                  <CardContent className="p-3">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <h4 className="font-medium text-sm flex-1">{task.title}</h4>
+                                      {task.priority && task.priority !== 'medium' && (
+                                        <Flag className={`w-3 h-3 ml-2 ${
+                                          task.priority === 'urgent' ? 'text-red-500' : 
+                                          task.priority === 'high' ? 'text-orange-500' : 
+                                          'text-blue-500'
+                                        }`} />
+                                      )}
+                                    </div>
+                                    {task.description && (
+                                      <p className="text-xs text-gray-600 mb-2 line-clamp-2">{task.description}</p>
+                                    )}
+                                    <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+                                      {task.due_date && (
+                                        <span className="flex items-center">
+                                          <Calendar className="w-3 h-3 mr-1" />
+                                          {format(new Date(task.due_date), 'MMM d')}
+                                        </span>
+                                      )}
+                                      {assignedUser && (
+                                        <span className="flex items-center">
+                                          <User className="w-3 h-3 mr-1" />
+                                          {assignedUser.full_name || assignedUser.email.split('@')[0]}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center justify-between mt-2">
+                                      <Select
+                                        value={task.status}
+                                        onValueChange={(value) => handleStatusChange(task, value)}
+                                      >
+                                        <SelectTrigger 
+                                          className="w-24 h-7 text-xs"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent onClick={(e) => e.stopPropagation()}>
+                                          {statusColumns.map((col) => (
+                                            <SelectItem key={col.id} value={col.id}>
+                                              {col.label}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      <div className="flex items-center space-x-1">
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpenDialog(task);
+                                          }}
+                                        >
+                                          <Edit className="w-3 h-3" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDelete(task);
+                                          }}
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              </motion.div>
+                            );
+                          })}
+                        </AnimatePresence>
+                        {columnTasks.length === 0 && (
+                          <div className="text-center py-8 text-gray-400">
+                            <p className="text-sm">No tasks</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Tasks grouped by milestone */}
+          {milestones.map((milestone) => {
+            const milestoneTasks = tasks.filter(t => t.milestone_id === milestone.id);
+            if (milestoneTasks.length === 0) return null;
+
+            return (
+              <div key={milestone.id}>
+                <h3 className="text-lg font-semibold mb-4 flex items-center text-purple-700">
+                  <Flag className="w-5 h-5 mr-2" />
+                  {milestone.title}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {statusColumns.map((column) => {
+                    const columnTasks = milestoneTasks.filter(t => t.status === column.id);
+                    
+                    return (
+                      <Card key={column.id} className="cu-card">
+                        <CardHeader className={`${column.color} rounded-t-lg`}>
+                          <CardTitle className="text-sm font-semibold flex items-center justify-between">
+                            <span>{column.label}</span>
+                            <Badge variant="secondary">{columnTasks.length}</Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 space-y-3 min-h-[150px]">
+                          <AnimatePresence>
+                            {columnTasks.map((task) => {
+                              const assignedUser = collaborators?.find(c => c.email === task.assigned_to);
+                              
+                              return (
+                                <motion.div
+                                  key={task.id}
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -20 }}
+                                >
+                                  <Card 
+                                    className="hover:shadow-md transition-shadow cursor-pointer"
+                                    onClick={() => {
+                                      setSelectedTask(task);
+                                      setIsTaskDetailOpen(true);
+                                    }}
+                                  >
+                                    <CardContent className="p-3">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <h4 className="font-medium text-sm flex-1">{task.title}</h4>
+                                        {task.priority && task.priority !== 'medium' && (
+                                          <Flag className={`w-3 h-3 ml-2 ${
+                                            task.priority === 'urgent' ? 'text-red-500' : 
+                                            task.priority === 'high' ? 'text-orange-500' : 
+                                            'text-blue-500'
+                                          }`} />
+                                        )}
+                                      </div>
+                                      {task.description && (
+                                        <p className="text-xs text-gray-600 mb-2 line-clamp-2">{task.description}</p>
+                                      )}
+                                      <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+                                        {task.due_date && (
+                                          <span className="flex items-center">
+                                            <Calendar className="w-3 h-3 mr-1" />
+                                            {format(new Date(task.due_date), 'MMM d')}
+                                          </span>
+                                        )}
+                                        {assignedUser && (
+                                          <span className="flex items-center">
+                                            <User className="w-3 h-3 mr-1" />
+                                            {assignedUser.full_name || assignedUser.email.split('@')[0]}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center justify-between mt-2">
+                                        <Select
+                                          value={task.status}
+                                          onValueChange={(value) => handleStatusChange(task, value)}
+                                        >
+                                          <SelectTrigger 
+                                            className="w-24 h-7 text-xs"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent onClick={(e) => e.stopPropagation()}>
+                                            {statusColumns.map((col) => (
+                                              <SelectItem key={col.id} value={col.id}>
+                                                {col.label}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                        <div className="flex items-center space-x-1">
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleOpenDialog(task);
+                                            }}
+                                          >
+                                            <Edit className="w-3 h-3" />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDelete(task);
+                                            }}
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                </motion.div>
+                              );
+                            })}
+                          </AnimatePresence>
+                          {columnTasks.length === 0 && (
+                            <div className="text-center py-8 text-gray-400">
+                              <p className="text-sm">No tasks</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -717,24 +1008,46 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Assign To</label>
-              <Select
-                value={formData.assigned_to}
-                onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select collaborator" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={null}>Unassigned</SelectItem>
-                  {collaborators?.map((collab) => (
-                    <SelectItem key={collab.email} value={collab.email}>
-                      {collab.full_name || collab.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Assign To</label>
+                <Select
+                  value={formData.assigned_to}
+                  onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select collaborator" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>Unassigned</SelectItem>
+                    {collaborators?.map((collab) => (
+                      <SelectItem key={collab.email} value={collab.email}>
+                        {collab.full_name || collab.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Milestone</label>
+                <Select
+                  value={formData.milestone_id}
+                  onValueChange={(value) => setFormData({ ...formData, milestone_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="No milestone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>No milestone</SelectItem>
+                    {milestones.map((milestone) => (
+                      <SelectItem key={milestone.id} value={milestone.id}>
+                        {milestone.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div>
