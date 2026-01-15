@@ -83,8 +83,6 @@ import {
 
 import ProjectLinksManager from "../components/ProjectLinksManager";
 import CollaboratorPresence from "../components/CollaboratorPresence";
-import ProjectInstructions from "../components/ProjectInstructions";
-import EditProjectInstructionsModal from "../components/EditProjectInstructionsModal";
 
 
 // Add Hat icon component after imports - LIGHTER VERSION
@@ -167,9 +165,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   // New state for invitations
   const [pendingInvitation, setPendingInvitation] = useState(null);
   const [isRespondingToInvite, setIsRespondingToInvite] = useState(false);
-
-  // State for project instructions editing
-  const [showEditInstructionsModal, setShowEditInstructionsModal] = useState(false);
 
 
 
@@ -1268,15 +1263,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                 onProjectUpdate={handleProjectUpdate}
               />
             ) : null}
-
-            {/* Project Instructions - Always show for collaborators */}
-            {userCanContribute && (
-              <ProjectInstructions
-                instructions={project.project_instructions}
-                isOwner={isOwner}
-                onEditClick={() => setShowEditInstructionsModal(true)}
-              />
-            )}
           </main>
 
           {/* Right Sidebar - Only show to collaborators on desktop */}
@@ -1428,19 +1414,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
           </div>
         )}
         </div>
-
-        {/* Edit Instructions Modal */}
-        {isOwner && (
-          <EditProjectInstructionsModal
-            isOpen={showEditInstructionsModal}
-            onClose={() => setShowEditInstructionsModal(false)}
-            project={project}
-            onSave={async () => {
-              await handleProjectUpdate();
-            }}
-          />
-        )}
-
         </>
         );
         }
