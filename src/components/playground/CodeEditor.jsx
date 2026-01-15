@@ -70,13 +70,6 @@ export default function CodeEditor({ currentUser, onBack }) {
     }
   }, [currentUser]);
 
-  // Reload projects when returning to project list
-  useEffect(() => {
-    if (!currentProject && currentUser) {
-      loadProjects();
-    }
-  }, [currentProject, currentUser]);
-
   // Auto-preview on file content change
   useEffect(() => {
     if (currentProject && selectedFile) {
@@ -451,8 +444,6 @@ export default function CodeEditor({ currentUser, onBack }) {
     }
     setCurrentProject(null);
     setSelectedFile(null);
-    // Reload projects to show updated list
-    await loadProjects();
   };
 
   const capturePreview = async () => {
