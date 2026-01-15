@@ -12,13 +12,13 @@ import { Project, ActivityLog, User } from "@/entities/all"; // Added User entit
 export default function EditProjectInstructionsModal({ project, isOpen, onClose, onSave }) {
   const [currentUser, setCurrentUser] = useState(null); // Local state for currentUser
   const [isSaving, setIsSaving] = useState(false);
-  const [instructions, setInstructions] = useState(project?.project_instructions || {
-    overview: "",
-    planning_phase: { title: "Planning Phase", description: "", steps: [], deliverables: [] },
-    execution_phase: { title: "Execution Phase", description: "", steps: [], deliverables: [] },
-    delivery_phase: { title: "Delivery Phase", description: "", steps: [], deliverables: [] },
-    success_criteria: [],
-    common_challenges: []
+  const [instructions, setInstructions] = useState({
+    overview: project?.project_instructions?.overview || "",
+    planning_phase: project?.project_instructions?.planning_phase || { title: "Planning Phase", description: "", steps: [], deliverables: [] },
+    execution_phase: project?.project_instructions?.execution_phase || { title: "Execution Phase", description: "", steps: [], deliverables: [] },
+    delivery_phase: project?.project_instructions?.delivery_phase || { title: "Delivery Phase", description: "", steps: [], deliverables: [] },
+    success_criteria: project?.project_instructions?.success_criteria || [],
+    common_challenges: project?.project_instructions?.common_challenges || []
   });
 
   const [newInputs, setNewInputs] = useState({
