@@ -50,6 +50,8 @@ import EditPortfolioItemDialog from "../components/portfolio/EditPortfolioItemDi
 import GenerateResumeDialog from "../components/GenerateResumeDialog";
 import BadgeDisplay, { LevelBadge } from "../components/gamification/BadgeDisplay";
 import ServiceListingManager from "../components/ServiceListingManager";
+import ManageAvailability from "../components/ManageAvailability";
+import BookingsManager from "../components/BookingsManager";
 
 const EditBioModal = ({ isOpen, onClose, bio, onSave }) => {
   const [editedBio, setEditedBio] = useState(bio || "");

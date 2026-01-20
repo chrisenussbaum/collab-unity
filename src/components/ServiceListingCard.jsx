@@ -1,18 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DollarSign, MessageCircle, ExternalLink, Briefcase, Play, Camera } from "lucide-react";
+import { DollarSign, MessageCircle, ExternalLink, Briefcase, Play, Camera, Calendar } from "lucide-react";
 import OptimizedAvatar from "./OptimizedAvatar";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import ClickableImage from "./ClickableImage";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import BookingCalendar from "./BookingCalendar";
 
 export default function ServiceListingCard({ listing, provider, currentUser }) {
   const navigate = useNavigate();
   const isOwnListing = currentUser && currentUser.email === listing.provider_email;
+  const [showBookingDialog, setShowBookingDialog] = useState(false);
 
   const handleContactProvider = async (e) => {
     e.preventDefault();
@@ -203,17 +206,37 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
       </CardContent>
 
       {!isOwnListing && (
-        <CardFooter className="bg-gray-50 border-t p-3">
+        <CardFooter className="bg-gray-50 border-t p-3 flex gap-2">
           <Button
             size="sm"
+            onClick={() => setShowBookingDialog(true)}
+            className="flex-1 cu-button"
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            Book Now
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
             onClick={handleContactProvider}
-            className="w-full cu-button"
+            className="flex-1"
           >
             <MessageCircle className="w-4 h-4 mr-2" />
-            Contact Provider
+            Message
           </Button>
         </CardFooter>
       )}
+
+      <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <BookingCalendar
+            serviceListing={listing}
+            provider={provider}
+            currentUser={currentUser}
+            onClose={() => setShowBookingDialog(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
