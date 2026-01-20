@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Notification, User } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Popover,
@@ -111,7 +111,7 @@ export default function NotificationBell() {
     setIsLoading(true);
     try {
       const data = await withRetry(() =>
-        Notification.filter({ user_email: user.email }, "-created_date", 10)
+        base44.entities.Notification.filter({ user_email: user.email }, "-created_date", 10)
       );
       
       if (!isMounted.current) return;
@@ -140,7 +140,7 @@ export default function NotificationBell() {
   useEffect(() => {
     let mounted = true;
     
-    User.me().then(user => {
+    base44.auth.me().then(user => {
       if (mounted && isMounted.current) {
         setCurrentUser(user);
         fetchNotifications(user);
@@ -160,7 +160,7 @@ export default function NotificationBell() {
   useEffect(() => {
     if (!currentUser) return;
 
-    const unsubscribe = Notification.subscribe((event) => {
+    const unsubscribe = base44.entities.Notification.subscribe((event) => {
       if (event.type === 'create' && event.data.user_email === currentUser.email) {
         setNotifications(prev => [event.data, ...prev].slice(0, 10));
         setUnreadCount(prev => prev + 1);
@@ -182,7 +182,7 @@ export default function NotificationBell() {
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
 
-      await withRetry(() => Notification.update(id, { read: true }));
+      await withRetry(() => base44.entities.Notification.update(id, { read: true }));
       
       if (shouldNavigate && isMounted.current) {
         navigate(path);
@@ -222,7 +222,7 @@ export default function NotificationBell() {
         
         const batch = unreadIds.slice(i, i + batchSize);
         await Promise.all(
-          batch.map(id => withRetry(() => Notification.update(id, { read: true })))
+          batch.map(id => withRetry(() => base44.entities.Notification.update(id, { read: true })))
         );
         if (i + batchSize < unreadIds.length && isMounted.current) {
           await new Promise(resolve => setTimeout(resolve, 1000));

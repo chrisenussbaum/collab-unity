@@ -13,7 +13,7 @@ import {
   Edit, Briefcase, Star, Heart, Link as LinkIcon, Linkedin, Globe, FileText, LogOut,
   Plus, ZoomIn, MapPin, Clock, Tag, Award, GraduationCap, HardHat, Mail, Phone, Cake, Info,
   Share2, X, Eye, Download, Sparkles, Wrench, MessageSquare, FileText as FileTextIcon,
-  Bookmark, Camera, Loader2, Upload, MessageCircle, Play, ExternalLink, Calendar
+  Bookmark, Camera, Loader2, Upload, MessageCircle, Play, ExternalLink, Calendar, Bell
 } from "lucide-react";
 import { motion } from "framer-motion";
 import MediaDisplay from "../components/MediaDisplay";
