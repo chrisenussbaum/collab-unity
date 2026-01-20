@@ -2870,6 +2870,30 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                     />
                   )}
 
+                  {/* Availability Management */}
+                  {isOwner && propCurrentUser && (
+                    <div className="mt-4">
+                      <ManageAvailability currentUser={propCurrentUser} />
+                    </div>
+                  )}
+
+                  {/* Bookings Manager */}
+                  {isOwner && propCurrentUser && (
+                    <div className="mt-4">
+                      <Card className="cu-card">
+                        <CardHeader className="pb-3 sm:pb-4">
+                          <CardTitle className="flex items-center text-base sm:text-lg">
+                            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-600"/>
+                            My Bookings
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <BookingsManager currentUser={propCurrentUser} />
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+
                   {/* Recommended Collaborators */}
                   {isOwner && propCurrentUser && (
                     <RecommendedCollaborators 
