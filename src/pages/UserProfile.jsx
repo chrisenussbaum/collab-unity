@@ -2058,6 +2058,10 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                                   <Info className="w-4 h-4 mr-2" />
                                   Contact Info
                                 </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate(createPageUrl("NotificationSettings"))}>
+                                  <Bell className="w-4 h-4 mr-2" />
+                                  Notification Settings
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </>
