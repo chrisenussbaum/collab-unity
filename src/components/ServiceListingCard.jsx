@@ -4,13 +4,15 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DollarSign, MessageCircle, ExternalLink, Briefcase } from "lucide-react";
+import { DollarSign, MessageCircle, ExternalLink, Briefcase, Play, Camera } from "lucide-react";
 import OptimizedAvatar from "./OptimizedAvatar";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import ClickableImage from "./ClickableImage";
 
 export default function ServiceListingCard({ listing, provider, currentUser }) {
   const navigate = useNavigate();
+  const isOwnListing = currentUser && currentUser.email === listing.provider_email;
 
   const handleContactProvider = async (e) => {
     e.preventDefault();
@@ -134,6 +136,52 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
             </div>
           )}
 
+          {listing.media_attachments && listing.media_attachments.length > 0 && (
+            <div className="pt-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Camera className="w-4 h-4 text-purple-600" />
+                <span className="text-xs font-medium text-gray-700">Service Showcase</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {listing.media_attachments.slice(0, 4).map((media, idx) => {
+                  const mediaUrl = media.media_url;
+                  const mediaType = media.media_type || 'image';
+                  
+                  return (
+                    <div key={idx} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+                      {mediaType === 'video' ? (
+                        <div className="relative w-full h-full">
+                          {media.thumbnail_url ? (
+                            <img 
+                              src={media.thumbnail_url} 
+                              alt={media.caption || 'Video thumbnail'}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <video 
+                              src={mediaUrl}
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                            <Play className="w-6 h-6 text-white" />
+                          </div>
+                        </div>
+                      ) : (
+                        <ClickableImage
+                          src={mediaUrl} 
+                          alt={media.caption || 'Service showcase'}
+                          caption={media.caption}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {listing.portfolio_links && listing.portfolio_links.length > 0 && (
             <div className="pt-2 border-t space-y-1">
               {listing.portfolio_links.slice(0, 2).map((link, idx) => (
@@ -154,16 +202,18 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
         </div>
       </CardContent>
 
-      <CardFooter className="bg-gray-50 border-t p-3">
-        <Button
-          size="sm"
-          onClick={handleContactProvider}
-          className="w-full cu-button"
-        >
-          <MessageCircle className="w-4 h-4 mr-2" />
-          Contact Provider
-        </Button>
-      </CardFooter>
+      {!isOwnListing && (
+        <CardFooter className="bg-gray-50 border-t p-3">
+          <Button
+            size="sm"
+            onClick={handleContactProvider}
+            className="w-full cu-button"
+          >
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Contact Provider
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }
