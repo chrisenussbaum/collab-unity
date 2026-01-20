@@ -13,7 +13,7 @@ import {
   Edit, Briefcase, Star, Heart, Link as LinkIcon, Linkedin, Globe, FileText, LogOut,
   Plus, ZoomIn, MapPin, Clock, Tag, Award, GraduationCap, HardHat, Mail, Phone, Cake, Info,
   Share2, X, Eye, Download, Sparkles, Wrench, MessageSquare, FileText as FileTextIcon,
-  Bookmark, Camera, Loader2, Upload, MessageCircle, Play, ExternalLink
+  Bookmark, Camera, Loader2, Upload, MessageCircle, Play, ExternalLink, Calendar
 } from "lucide-react";
 import { motion } from "framer-motion";
 import MediaDisplay from "../components/MediaDisplay";
@@ -2037,6 +2037,15 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                             >
                               <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                               <span className="hidden xs:inline">Edit Profile</span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(createPageUrl("MyBookings"))}
+                              className="text-xs sm:text-sm px-3 sm:px-4"
+                            >
+                              <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                              <span className="hidden xs:inline">My Bookings</span>
                             </Button>
                             <Button
                               variant="outline"

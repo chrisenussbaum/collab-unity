@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, ShieldCheck, User as UserIcon, Lightbulb, Settings, Compass, Search, MessageCircle, Loader2, Heart, Bug, Trophy } from "lucide-react";
+import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, ShieldCheck, User as UserIcon, Lightbulb, Settings, Compass, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import GlobalSearchBar from "./components/GlobalSearchBar";
 
