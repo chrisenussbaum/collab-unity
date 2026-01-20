@@ -50,7 +50,7 @@ export default function BookingAvailabilityManager({ availability, onUpdate }) {
     });
   };
 
-  const handleSave = () => {
+  const handleUpdate = () => {
     onUpdate({
       booking_enabled: bookingEnabled,
       session_duration_minutes: sessionDuration,
@@ -59,6 +59,11 @@ export default function BookingAvailabilityManager({ availability, onUpdate }) {
       weekly_availability: weeklyAvailability
     });
   };
+
+  // Auto-update parent when values change
+  React.useEffect(() => {
+    handleUpdate();
+  }, [bookingEnabled, sessionDuration, bufferTime, advanceBookingDays, weeklyAvailability]);
 
   return (
     <Card>
@@ -167,11 +172,7 @@ export default function BookingAvailabilityManager({ availability, onUpdate }) {
             </div>
           </div>
 
-          <div className="flex justify-end pt-4 border-t">
-            <Button onClick={handleSave} className="cu-button">
-              Save Availability
-            </Button>
-          </div>
+
         </CardContent>
       )}
     </Card>

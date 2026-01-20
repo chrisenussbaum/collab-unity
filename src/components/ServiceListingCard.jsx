@@ -123,6 +123,15 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
             {getRateDisplay()}
           </div>
 
+          {listing.booking_enabled && (
+            <div className="flex items-center gap-2 text-sm text-purple-700 bg-purple-50 px-3 py-2 rounded-lg">
+              <Calendar className="w-4 h-4" />
+              <span className="font-medium">
+                {listing.session_duration_minutes} min sessions • Book up to {listing.advance_booking_days} days ahead
+              </span>
+            </div>
+          )}
+
           {listing.skills_offered && listing.skills_offered.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {listing.skills_offered.slice(0, 4).map((skill, idx) => (
