@@ -30,24 +30,8 @@ export default function BookingsManager({ currentUser }) {
         client_email: currentUser.email
       }, '-created_date');
 
-      // Load service listings for reference
-      const serviceIds = [...new Set([
-        ...asProvider.map(b => b.service_listing_id),
-        ...asClient.map(b => b.service_listing_id)
-      ])];
-
-      const services = {};
-      for (const id of serviceIds) {
-        try {
-          const service = await base44.entities.ServiceListing.get(id);
-          if (service) services[id] = service;
-        } catch (e) {
-          console.error("Error loading service:", e);
-        }
-      }
-
-      setBookingsAsProvider(asProvider.map(b => ({ ...b, service: services[b.service_listing_id] })));
-      setBookingsAsClient(asClient.map(b => ({ ...b, service: services[b.service_listing_id] })));
+      setBookingsAsProvider(asProvider);
+      setBookingsAsClient(asClient);
     } catch (error) {
       console.error("Error loading bookings:", error);
       toast.error("Failed to load bookings");
@@ -84,28 +68,15 @@ export default function BookingsManager({ currentUser }) {
     }
   };
 
-  const handleConfirmBooking = async (bookingId) => {
-    try {
-      await base44.entities.Booking.update(bookingId, {
-        status: 'confirmed'
-      });
-      toast.success("Booking confirmed");
-      loadBookings();
-    } catch (error) {
-      console.error("Error confirming booking:", error);
-      toast.error("Failed to confirm booking");
-    }
-  };
-
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { label: 'Pending', className: 'bg-yellow-100 text-yellow-700' },
+      pending_payment: { label: 'Pending Payment', className: 'bg-yellow-100 text-yellow-700' },
       confirmed: { label: 'Confirmed', className: 'bg-green-100 text-green-700' },
       completed: { label: 'Completed', className: 'bg-blue-100 text-blue-700' },
       cancelled: { label: 'Cancelled', className: 'bg-gray-100 text-gray-700' }
     };
 
-    const config = statusConfig[status] || statusConfig.pending;
+    const config = statusConfig[status] || statusConfig.confirmed;
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
@@ -113,10 +84,7 @@ export default function BookingsManager({ currentUser }) {
     <Card className="mb-4">
       <CardContent className="pt-6">
         <div className="flex justify-between items-start mb-4">
-          <div className="space-y-2 flex-1">
-            {booking.service && (
-              <p className="font-bold text-gray-900">{booking.service.title}</p>
-            )}
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-purple-600" />
               <span className="font-semibold">
@@ -133,15 +101,16 @@ export default function BookingsManager({ currentUser }) {
                 {isProvider ? booking.client_name : booking.provider_email}
               </span>
             </div>
-            {booking.estimated_amount > 0 && (
-              <div className="flex items-center gap-2 text-purple-600 font-semibold">
-                <DollarSign className="w-4 h-4" />
-                <span>${booking.estimated_amount.toFixed(2)} (estimated)</span>
-              </div>
-            )}
+            <div className="flex items-center gap-2 text-purple-600 font-semibold">
+              <DollarSign className="w-4 h-4" />
+              <span>${booking.total_amount.toFixed(2)}</span>
+            </div>
           </div>
           <div className="text-right space-y-2">
             {getStatusBadge(booking.status)}
+            {booking.payment_status === 'paid' && (
+              <Badge className="bg-green-100 text-green-700 block">Paid</Badge>
+            )}
           </div>
         </div>
 
@@ -155,16 +124,6 @@ export default function BookingsManager({ currentUser }) {
         )}
 
         <div className="flex gap-2 mt-4">
-          {isProvider && booking.status === 'pending' && (
-            <Button
-              size="sm"
-              onClick={() => handleConfirmBooking(booking.id)}
-              className="cu-button"
-            >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Confirm Booking
-            </Button>
-          )}
           {isProvider && booking.status === 'confirmed' && (
             <Button
               size="sm"
@@ -211,11 +170,7 @@ export default function BookingsManager({ currentUser }) {
 
       <TabsContent value="received" className="mt-6">
         {bookingsAsProvider.length === 0 ? (
-          <div className="text-center py-12">
-            <Calendar className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-            <p className="text-gray-500">No bookings received yet</p>
-            <p className="text-xs text-gray-400 mt-2">Set up your availability to receive booking requests</p>
-          </div>
+          <p className="text-center text-gray-500 py-8">No bookings received yet</p>
         ) : (
           bookingsAsProvider.map(booking => (
             <BookingCard key={booking.id} booking={booking} isProvider={true} />
@@ -225,11 +180,7 @@ export default function BookingsManager({ currentUser }) {
 
       <TabsContent value="made" className="mt-6">
         {bookingsAsClient.length === 0 ? (
-          <div className="text-center py-12">
-            <Calendar className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-            <p className="text-gray-500">You haven't made any bookings yet</p>
-            <p className="text-xs text-gray-400 mt-2">Browse services on the Discover page to get started</p>
-          </div>
+          <p className="text-center text-gray-500 py-8">You haven't made any bookings yet</p>
         ) : (
           bookingsAsClient.map(booking => (
             <BookingCard key={booking.id} booking={booking} isProvider={false} />
