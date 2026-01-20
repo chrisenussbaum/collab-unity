@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Project, Advertisement, ProjectApplaud, Notification, FeedPost, FeedPostApplaud, Comment, User } from "@/entities/all";
+import { Project, Advertisement, ProjectApplaud, Notification, FeedPost, FeedPostApplaud, Comment, User, ServiceListing } from "@/entities/all";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -75,6 +75,7 @@ import FeedProjectHighlights from "../components/FeedProjectHighlights";
 import ProjectActivityIndicator, { isProjectActive } from "../components/ProjectActivityIndicator";
 import OptimizedImage from "@/components/OptimizedImage";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
+import ServiceFeedCard from "@/components/feed/ServiceFeedCard";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -1644,6 +1645,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
 export default function Feed({ currentUser, authIsLoading }) {
   const [projects, setProjects] = useState([]);
   const [feedPosts, setFeedPosts] = useState([]);
+  const [serviceListings, setServiceListings] = useState([]);
   const [projectApplauds, setProjectApplauds] = useState([]);
   const [feedPostApplauds, setFeedPostApplauds] = useState([]);
   const [advertisements, setAdvertisements] = useState({
@@ -1773,28 +1775,34 @@ export default function Feed({ currentUser, authIsLoading }) {
   const { data: cachedFeedData, isLoading: isQueryLoading } = useQuery({
     queryKey: ['feed-projects', currentUser?.email],
     queryFn: async () => {
-      // Fetch ALL public projects and initial feed posts
-      const [visibleProjectsData, initialFeedPostsData] = await Promise.all([
+      // Fetch ALL public projects, initial feed posts, and service listings
+      const [visibleProjectsData, initialFeedPostsData, serviceListingsData] = await Promise.all([
         withRetry(() =>
           Project.filter({ is_visible_on_feed: true }, "-created_date")
         ),
         withRetry(() =>
           FeedPost.filter({ is_visible: true }, "-created_date", POSTS_PER_PAGE * 2, 0)
+        ),
+        withRetry(() =>
+          ServiceListing.list("-created_date")
         )
       ]);
       
       // Track all loaded item IDs
       visibleProjectsData.forEach(p => loadedItemIdsRef.current.add(p.id));
       initialFeedPostsData.forEach(fp => loadedItemIdsRef.current.add(fp.id));
+      serviceListingsData.forEach(sl => loadedItemIdsRef.current.add(sl.id));
 
-      // Separate projects and feed posts (all projects, initial feed posts)
+      // Separate projects, feed posts, and services
       const initialProjects = visibleProjectsData;
       const initialFeedPosts = initialFeedPostsData;
+      const initialServiceListings = serviceListingsData;
 
-      // Get unique owner emails from all items
+      // Get unique owner/provider emails from all items
       const allOwnerEmails = [...new Set([
         ...initialProjects.map(p => p.created_by),
-        ...initialFeedPosts.map(fp => fp.created_by)
+        ...initialFeedPosts.map(fp => fp.created_by),
+        ...initialServiceListings.map(sl => sl.provider_email)
       ])];
       
       const projectIds = initialProjects.map(p => p.id);
@@ -1812,7 +1820,7 @@ export default function Feed({ currentUser, authIsLoading }) {
         return acc;
       }, {});
 
-      // Populate projects and posts with full data
+      // Populate projects, posts, and services with full data
       const fullyPopulatedProjects = initialProjects.map(project => ({
         ...project,
         owner: profilesMap[project.created_by] || {
@@ -1828,6 +1836,16 @@ export default function Feed({ currentUser, authIsLoading }) {
         owner: profilesMap[post.created_by] || {
           email: post.created_by,
           full_name: post.created_by.split('@')[0],
+          username: null,
+          profile_image: null,
+        }
+      }));
+
+      const fullyPopulatedServiceListings = initialServiceListings.map(listing => ({
+        ...listing,
+        provider: profilesMap[listing.provider_email] || {
+          email: listing.provider_email,
+          full_name: listing.provider_email.split('@')[0],
           username: null,
           profile_image: null,
         }
@@ -1858,6 +1876,7 @@ export default function Feed({ currentUser, authIsLoading }) {
       return {
         projects: fullyPopulatedProjects,
         feedPosts: fullyPopulatedFeedPosts,
+        serviceListings: fullyPopulatedServiceListings,
         projectApplauds: fetchedProjectApplauds,
         feedPostApplauds: fetchedFeedPostApplauds,
         collaboratorProfiles: collabProfilesMap,
@@ -1878,6 +1897,7 @@ export default function Feed({ currentUser, authIsLoading }) {
     if (cachedFeedData && !isQueryLoading) {
       setProjects(cachedFeedData.projects);
       setFeedPosts(cachedFeedData.feedPosts);
+      setServiceListings(cachedFeedData.serviceListings);
       setProjectApplauds(cachedFeedData.projectApplauds);
       setFeedPostApplauds(cachedFeedData.feedPostApplauds);
       setAllCollaboratorProfiles(cachedFeedData.collaboratorProfiles);
@@ -1886,10 +1906,11 @@ export default function Feed({ currentUser, authIsLoading }) {
       consecutiveEmptyLoadsRef.current = 0;
       
       // Load ads in background
-      if (cachedFeedData.projects.length > 0 || cachedFeedData.feedPosts.length > 0) {
+      if (cachedFeedData.projects.length > 0 || cachedFeedData.feedPosts.length > 0 || cachedFeedData.serviceListings.length > 0) {
         const items = [
           ...cachedFeedData.projects.map(p => ({ ...p, itemType: 'project' })),
-          ...cachedFeedData.feedPosts.map(fp => ({ ...fp, itemType: 'feedPost' }))
+          ...cachedFeedData.feedPosts.map(fp => ({ ...fp, itemType: 'feedPost' })),
+          ...cachedFeedData.serviceListings.map(sl => ({ ...sl, itemType: 'service' }))
         ].slice(0, POSTS_PER_PAGE);
         loadAdsForPage(1, items).catch(err => console.error("Background ad loading failed:", err));
       }
@@ -2126,11 +2147,12 @@ export default function Feed({ currentUser, authIsLoading }) {
   const allFeedItems = React.useMemo(() => {
     const combined = [
       ...projects.map(p => ({ ...p, itemType: 'project', sortDate: new Date(p.created_date) })),
-      ...feedPosts.map(fp => ({ ...fp, itemType: 'feedPost', sortDate: new Date(fp.created_date) }))
+      ...feedPosts.map(fp => ({ ...fp, itemType: 'feedPost', sortDate: new Date(fp.created_date) })),
+      ...serviceListings.map(sl => ({ ...sl, itemType: 'service', sortDate: new Date(sl.created_date) }))
     ];
     
     return combined.sort((a, b) => b.sortDate - a.sortDate);
-  }, [projects, feedPosts]);
+  }, [projects, feedPosts, serviceListings]);
 
   const handleApplaudUpdate = useCallback(async () => {
     const allProjectIdsInFeed = projects.map(p => p.id);
@@ -2176,6 +2198,10 @@ export default function Feed({ currentUser, authIsLoading }) {
                item.industry?.toLowerCase().includes(query) ||
                item.area_of_interest?.toLowerCase().includes(query) ||
                item.skills_needed?.some(skill => skill.toLowerCase().includes(query));
+      } else if (item.itemType === 'service') {
+        return item.title?.toLowerCase().includes(query) ||
+               item.description?.toLowerCase().includes(query) ||
+               item.skills_offered?.some(skill => skill.toLowerCase().includes(query));
       } else {
         // FeedPost
         return item.title?.toLowerCase().includes(query) ||
