@@ -68,27 +68,40 @@ export default function MyBookings() {
   const handleContactProvider = async (booking) => {
     try {
       const otherEmail = booking.client_email === currentUser.email ? booking.provider_email : booking.client_email;
-      const conversations = await base44.entities.Conversation.filter({
-        conversation_type: "direct"
+      
+      // Check if conversation already exists (both directions)
+      const existingConv1 = await base44.entities.Conversation.filter({
+        participant_1_email: currentUser.email,
+        participant_2_email: otherEmail
       });
 
-      const existingConversation = conversations.find(conv =>
-        (conv.participant_1_email === currentUser.email && conv.participant_2_email === otherEmail) ||
-        (conv.participant_2_email === currentUser.email && conv.participant_1_email === otherEmail)
-      );
+      const existingConv2 = await base44.entities.Conversation.filter({
+        participant_1_email: otherEmail,
+        participant_2_email: currentUser.email
+      });
 
-      if (existingConversation) {
-        navigate(createPageUrl("Chat") + "?conversation=" + existingConversation.id);
+      let conversation;
+      if (existingConv1.length > 0) {
+        conversation = existingConv1[0];
+      } else if (existingConv2.length > 0) {
+        conversation = existingConv2[0];
       } else {
-        const newConversation = await base44.entities.Conversation.create({
+        // Create new conversation
+        conversation = await base44.entities.Conversation.create({
           conversation_type: "direct",
           participant_1_email: currentUser.email,
-          participant_2_email: otherEmail
+          participant_2_email: otherEmail,
+          last_message: "",
+          last_message_time: new Date().toISOString(),
+          participant_1_unread_count: 0,
+          participant_2_unread_count: 0
         });
-        navigate(createPageUrl("Chat") + "?conversation=" + newConversation.id);
       }
+
+      // Navigate to chat with this conversation
+      navigate(createPageUrl(`Chat?conversation=${conversation.id}`));
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error starting conversation:", error);
       toast.error("Failed to open conversation");
     }
   };
