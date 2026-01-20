@@ -8,7 +8,6 @@ import { ChevronLeft, ChevronRight, Clock, DollarSign, Calendar as CalendarIcon 
 import { format, addDays, isSameDay, startOfDay, parseISO } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
-import { createBookingCheckout } from "@/functions/createBookingCheckout";
 
 export default function BookingCalendar({ serviceListing, provider, onClose, currentUser }) {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -138,31 +137,56 @@ export default function BookingCalendar({ serviceListing, provider, onClose, cur
       }
 
       const endTime = `${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`;
-      const totalAmount = calculateTotal();
+      const estimatedAmount = calculateTotal();
 
-      const { data } = await createBookingCheckout({
+      // Create booking directly without payment
+      const booking = await base44.entities.Booking.create({
         service_listing_id: serviceListing.id,
         provider_email: serviceListing.provider_email,
+        client_email: currentUser.email,
+        client_name: currentUser.full_name,
         booking_date: format(selectedDate, 'yyyy-MM-dd'),
         start_time: selectedTime,
         end_time: endTime,
         duration_hours: duration,
-        total_amount: totalAmount,
+        estimated_amount: estimatedAmount,
+        currency: 'USD',
+        status: 'pending',
         client_notes: clientNotes
       });
 
-      // Check if running in iframe
-      if (window.self !== window.top) {
-        toast.error("Checkout is only available from the published app, not in preview mode");
-        return;
-      }
+      // Send notification to provider
+      await base44.entities.Notification.create({
+        user_email: serviceListing.provider_email,
+        title: 'New Booking Request',
+        message: `${currentUser.full_name} wants to book ${serviceListing.title} on ${format(selectedDate, 'MMM dd, yyyy')} at ${selectedTime}`,
+        type: 'general',
+        actor_email: currentUser.email,
+        actor_name: currentUser.full_name,
+        metadata: {
+          booking_id: booking.id,
+          service_listing_id: serviceListing.id
+        }
+      });
 
-      // Redirect to Stripe checkout
-      window.location.href = data.sessionUrl;
+      // Send notification to client
+      await base44.entities.Notification.create({
+        user_email: currentUser.email,
+        title: 'Booking Request Sent',
+        message: `Your booking request for ${serviceListing.title} has been sent to the provider`,
+        type: 'general',
+        metadata: {
+          booking_id: booking.id,
+          service_listing_id: serviceListing.id
+        }
+      });
+
+      toast.success("Booking request sent! The provider will contact you to arrange payment.");
+      onClose();
 
     } catch (error) {
       console.error("Booking error:", error);
-      toast.error(error.response?.data?.error || "Failed to create booking");
+      toast.error("Failed to create booking");
     } finally {
       setIsLoading(false);
     }
@@ -276,12 +300,17 @@ export default function BookingCalendar({ serviceListing, provider, onClose, cur
                 <span className="font-semibold">{duration} hours</span>
               </div>
             )}
-            <div className="flex items-center justify-between text-lg font-bold pt-2 border-t">
-              <span>Total:</span>
-              <span className="text-purple-600">
-                ${calculateTotal().toFixed(2)}
-              </span>
-            </div>
+            {calculateTotal() > 0 && (
+              <div className="flex items-center justify-between text-lg font-bold pt-2 border-t">
+                <span>Estimated Cost:</span>
+                <span className="text-purple-600">
+                  ${calculateTotal().toFixed(2)}
+                </span>
+              </div>
+            )}
+            <p className="text-xs text-gray-500 text-center pt-2">
+              Payment details will be arranged directly with the provider
+            </p>
           </div>
         )}
 
@@ -299,7 +328,7 @@ export default function BookingCalendar({ serviceListing, provider, onClose, cur
             onClick={handleBooking}
             disabled={!selectedDate || !selectedTime || isLoading}
           >
-            {isLoading ? "Processing..." : "Proceed to Payment"}
+            {isLoading ? "Sending Request..." : "Request Booking"}
           </Button>
         </div>
       </CardContent>
