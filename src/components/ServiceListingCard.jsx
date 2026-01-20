@@ -233,7 +233,7 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
               className={listing.booking_enabled ? "flex-1" : "w-full"}
             >
               <MessageCircle className="w-4 h-4 mr-2" />
-              Message
+              Chat
             </Button>
           </div>
         </CardFooter>
