@@ -391,8 +391,7 @@ export default function Playground({ currentUser }) {
                 transition={{ delay: index * 0.15 }}
               >
                 <Card 
-                  className="cu-card h-full cursor-pointer hover:shadow-2xl transition-all border-2 hover:border-purple-300 group"
-                  onClick={() => setSelectedCategory(category.id)}
+                  className="cu-card h-full hover:shadow-2xl transition-all border-2 hover:border-purple-300 group"
                 >
                   <CardHeader className={`${category.bgColor} border-b-2 ${category.borderColor}`}>
                     <div className={`w-14 h-14 bg-gradient-to-br ${category.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
@@ -403,13 +402,20 @@ export default function Playground({ currentUser }) {
                       {category.description}
                     </CardDescription>
                   </CardHeader>
-                  
+
                   <CardContent className="pt-6">
                     <div className="space-y-2">
                       {category.items.map(item => {
                         const ItemIcon = item.icon;
                         return (
-                          <div key={item.title} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                          <div 
+                            key={item.title} 
+                            className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                            onClick={() => {
+                              setSelectedItem(item);
+                              loadContentForItem(category.id, item.title);
+                            }}
+                          >
                             <div className={`w-8 h-8 ${item.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
                               <ItemIcon className="w-4 h-4" />
                             </div>
