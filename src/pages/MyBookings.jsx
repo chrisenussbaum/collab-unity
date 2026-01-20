@@ -245,7 +245,7 @@ export default function MyBookings() {
               onClick={() => handleContactProvider(booking)}
             >
               <MessageCircle className="w-4 h-4 mr-1" />
-              Message
+              Chat
             </Button>
           </div>
         </CardContent>

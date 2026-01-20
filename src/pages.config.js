@@ -11,6 +11,7 @@ import EditProject from './pages/EditProject';
 import FeatureRequest from './pages/FeatureRequest';
 import Feed from './pages/Feed';
 import Leaderboard from './pages/Leaderboard';
+import MyBookings from './pages/MyBookings';
 import MyProjects from './pages/MyProjects';
 import Notifications from './pages/Notifications';
 import Onboarding from './pages/Onboarding';
@@ -22,9 +23,8 @@ import Support from './pages/Support';
 import SupportCU from './pages/SupportCU';
 import TermsOfService from './pages/TermsOfService';
 import Testimonials from './pages/Testimonials';
-import Welcome from './pages/Welcome';
 import UserProfile from './pages/UserProfile';
-import MyBookings from './pages/MyBookings';
+import Welcome from './pages/Welcome';
 import __Layout from './Layout.jsx';
 
 
@@ -42,6 +42,7 @@ export const PAGES = {
     "FeatureRequest": FeatureRequest,
     "Feed": Feed,
     "Leaderboard": Leaderboard,
+    "MyBookings": MyBookings,
     "MyProjects": MyProjects,
     "Notifications": Notifications,
     "Onboarding": Onboarding,
@@ -53,9 +54,8 @@ export const PAGES = {
     "SupportCU": SupportCU,
     "TermsOfService": TermsOfService,
     "Testimonials": Testimonials,
-    "Welcome": Welcome,
     "UserProfile": UserProfile,
-    "MyBookings": MyBookings,
+    "Welcome": Welcome,
 }
 
 export const pagesConfig = {
