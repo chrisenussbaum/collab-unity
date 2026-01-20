@@ -156,6 +156,25 @@ export default function NotificationBell() {
     };
   }, [fetchNotifications]);
 
+  // Real-time notification subscription
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const unsubscribe = Notification.subscribe((event) => {
+      if (event.type === 'create' && event.data.user_email === currentUser.email) {
+        setNotifications(prev => [event.data, ...prev].slice(0, 10));
+        setUnreadCount(prev => prev + 1);
+      } else if (event.type === 'update' && event.data.user_email === currentUser.email) {
+        setNotifications(prev => prev.map(n => n.id === event.id ? event.data : n));
+        if (event.data.read && !event.old_data?.read) {
+          setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [currentUser]);
+
   const handleMarkAsRead = async (id, shouldNavigate, path) => {
     if (!isMounted.current) return;
     
