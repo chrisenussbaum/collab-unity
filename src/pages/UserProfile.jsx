@@ -2031,40 +2031,35 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                           <>
                             <Button
                               variant="outline"
-                              size="sm"
                               onClick={() => navigate(createPageUrl("EditProfile"))}
-                              className="text-xs sm:text-sm px-3 sm:px-4"
                             >
-                              <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                              <span className="hidden xs:inline">Edit Profile</span>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit Profile
                             </Button>
                             <Button
                               variant="outline"
-                              size="sm"
                               onClick={() => navigate(createPageUrl("MyBookings"))}
-                              className="text-xs sm:text-sm px-3 sm:px-4"
                             >
-                              <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                              <span className="hidden xs:inline">My Bookings</span>
+                              <Calendar className="w-4 h-4 mr-2" />
+                              My Bookings
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleOpenGenerateResume}
-                              className="text-xs sm:text-sm px-3 sm:px-4"
-                            >
-                              <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                              <span className="hidden xs:inline">Generate Resume</span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setIsContactModalOpen(true)}
-                              className="text-xs sm:text-sm px-3 sm:px-4"
-                            >
-                              <Info className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                              <span className="hidden xs:inline">Contact Info</span>
-                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="outline">
+                                  More
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={handleOpenGenerateResume}>
+                                  <Download className="w-4 h-4 mr-2" />
+                                  Generate Resume
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setIsContactModalOpen(true)}>
+                                  <Info className="w-4 h-4 mr-2" />
+                                  Contact Info
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </>
                         ) : (
                           <>
