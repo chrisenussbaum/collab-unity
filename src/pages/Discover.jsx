@@ -962,7 +962,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold shadow-lg hover:shadow-xl transition-all cu-button-mobile-full"
                 >
                   <Plus className="w-5 h-5 mr-2" />
-                  Start a Project
+                  Create Project
                 </Button>
               </Link>
 
@@ -973,7 +973,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm cu-button-mobile-full"
                 >
                   <Megaphone className="w-5 h-5 mr-2" />
-                  Promote Your Project
+                  Promote Project
                 </Button>
               </Link>
             </div>
@@ -996,7 +996,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold shadow-lg hover:shadow-xl transition-all w-full"
                 >
                   <Plus className="w-5 h-5 mr-2" />
-                  Start a Project
+                  Create Project
                 </Button>
               </Link>
 
@@ -1007,7 +1007,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm w-full"
                 >
                   <Megaphone className="w-5 h-5 mr-2" />
-                  Promote Your Project
+                  Promote Project
                 </Button>
               </Link>
             </div>
