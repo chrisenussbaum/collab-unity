@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Clock, CheckCircle, MapPin, Building2, Tag, Eye, Plus, Briefcase, Megaphone, Lightbulb, Sparkles, Filter, X, Bell, BellOff, Bookmark, BookmarkCheck, HandHeart } from "lucide-react";
+import { Users, Clock, CheckCircle, MapPin, Building2, Tag, Eye, Plus, Briefcase, Megaphone, Lightbulb, Sparkles, Filter, X, Bell, BellOff, Bookmark, BookmarkCheck, HandHeart, DollarSign } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
