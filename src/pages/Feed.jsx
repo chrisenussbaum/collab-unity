@@ -2433,6 +2433,13 @@ export default function Feed({ currentUser, authIsLoading }) {
                             onApplaudUpdate={handleApplaudUpdate}
                             collaboratorProfilesMap={allCollaboratorProfiles}
                           />
+                        ) : item.content.itemType === 'service' ? (
+                          <ServiceFeedCard
+                            key={`service-${item.content.id}`}
+                            listing={item.content}
+                            provider={item.content.provider}
+                            currentUser={currentUser}
+                          />
                         ) : (
                           <FeedPostItem
                             key={`feedpost-${item.content.id}`}
@@ -2590,6 +2597,13 @@ export default function Feed({ currentUser, authIsLoading }) {
                             onApplaudUpdate={handleApplaudUpdate}
                             collaboratorProfilesMap={allCollaboratorProfiles}
                           />
+                        ) : item.content.itemType === 'service' ? (
+                          <ServiceFeedCard
+                            key={`service-${item.content.id}`}
+                            listing={item.content}
+                            provider={item.content.provider}
+                            currentUser={currentUser}
+                          />
                         ) : (
                           <FeedPostItem
                             key={`feedpost-${item.content.id}`}
@@ -2734,6 +2748,13 @@ export default function Feed({ currentUser, authIsLoading }) {
                             onProjectUpdate={loadFeedData}
                             onApplaudUpdate={handleApplaudUpdate}
                             collaboratorProfilesMap={allCollaboratorProfiles}
+                          />
+                        ) : item.content.itemType === 'service' ? (
+                          <ServiceFeedCard
+                            key={`service-${item.content.id}`}
+                            listing={item.content}
+                            provider={item.content.provider}
+                            currentUser={currentUser}
                           />
                         ) : (
                           <FeedPostItem
