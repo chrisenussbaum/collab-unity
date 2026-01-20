@@ -600,6 +600,15 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
                 </div>
               ))}
             </div>
+
+            <div className="border-t pt-4">
+              <BookingAvailabilityManager
+                availability={formData}
+                onUpdate={(availabilityData) => {
+                  setFormData(prev => ({ ...prev, ...availabilityData }));
+                }}
+              />
+            </div>
           </div>
 
           <DialogFooter>
