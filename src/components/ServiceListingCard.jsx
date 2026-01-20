@@ -1,18 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DollarSign, MessageCircle, ExternalLink, Briefcase, Play, Camera } from "lucide-react";
+import { DollarSign, MessageCircle, ExternalLink, Briefcase, Play, Camera, Calendar } from "lucide-react";
 import OptimizedAvatar from "./OptimizedAvatar";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import ClickableImage from "./ClickableImage";
+import BookingDialog from "./BookingDialog";
 
 export default function ServiceListingCard({ listing, provider, currentUser }) {
   const navigate = useNavigate();
   const isOwnListing = currentUser && currentUser.email === listing.provider_email;
+  const [showBookingDialog, setShowBookingDialog] = useState(false);
 
   const handleContactProvider = async (e) => {
     e.preventDefault();
@@ -204,16 +206,37 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
 
       {!isOwnListing && (
         <CardFooter className="bg-gray-50 border-t p-3">
-          <Button
-            size="sm"
-            onClick={handleContactProvider}
-            className="w-full cu-button"
-          >
-            <MessageCircle className="w-4 h-4 mr-2" />
-            Contact Provider
-          </Button>
+          <div className="w-full flex gap-2">
+            {listing.booking_enabled && (
+              <Button
+                size="sm"
+                onClick={() => setShowBookingDialog(true)}
+                className="flex-1 cu-button"
+              >
+                <Calendar className="w-4 h-4 mr-2" />
+                Book Service
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleContactProvider}
+              className={listing.booking_enabled ? "flex-1" : "w-full"}
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Message
+            </Button>
+          </div>
         </CardFooter>
       )}
+      
+      <BookingDialog
+        open={showBookingDialog}
+        onClose={() => setShowBookingDialog(false)}
+        listing={listing}
+        provider={provider}
+        currentUser={currentUser}
+      />
     </Card>
   );
 }

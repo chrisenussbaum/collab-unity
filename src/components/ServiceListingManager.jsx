@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, X, DollarSign, Briefcase, Upload, Loader2, Camera, Play, Trash2, ExternalLink } from "lucide-react";
+import { Plus, Edit, X, DollarSign, Briefcase, Upload, Loader2, Camera, Play, Trash2, ExternalLink, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import ArrayInputWithSearch from "./ArrayInputWithSearch";
 import ClickableImage from "./ClickableImage";
 import { generateVideoThumbnail } from "@/functions/generateVideoThumbnail";
+import BookingAvailabilityManager from "./BookingAvailabilityManager";
 
 export default function ServiceListingManager({ currentUser, isOwner }) {
   const [listings, setListings] = useState([]);
@@ -28,10 +29,16 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
     skills_offered: [],
     portfolio_links: [],
     media_attachments: [],
-    availability_status: "available"
+    availability_status: "available",
+    booking_enabled: false,
+    session_duration_minutes: 60,
+    buffer_time_minutes: 0,
+    advance_booking_days: 30,
+    weekly_availability: {}
   });
 
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [showAvailabilityManager, setShowAvailabilityManager] = useState(false);
 
   useEffect(() => {
     if (currentUser) {
@@ -64,7 +71,12 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
         skills_offered: listing.skills_offered || [],
         portfolio_links: listing.portfolio_links || [],
         media_attachments: listing.media_attachments || [],
-        availability_status: listing.availability_status || "available"
+        availability_status: listing.availability_status || "available",
+        booking_enabled: listing.booking_enabled || false,
+        session_duration_minutes: listing.session_duration_minutes || 60,
+        buffer_time_minutes: listing.buffer_time_minutes || 0,
+        advance_booking_days: listing.advance_booking_days || 30,
+        weekly_availability: listing.weekly_availability || {}
       });
     } else {
       setEditingListing(null);
@@ -75,7 +87,12 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
         skills_offered: [],
         portfolio_links: [],
         media_attachments: [],
-        availability_status: "available"
+        availability_status: "available",
+        booking_enabled: false,
+        session_duration_minutes: 60,
+        buffer_time_minutes: 0,
+        advance_booking_days: 30,
+        weekly_availability: {}
       });
     }
     setShowDialog(true);
@@ -239,7 +256,7 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-900">{listing.title}</h4>
                       <p className="text-sm text-gray-600 mt-1 line-clamp-2">{listing.description}</p>
-                      <div className="flex items-center gap-2 mt-2">
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
                         {listing.rate && (
                           <Badge className="bg-green-100 text-green-700">
                             <DollarSign className="w-3 h-3" />
@@ -255,6 +272,12 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
                         >
                           {listing.availability_status}
                         </Badge>
+                        {listing.booking_enabled && (
+                          <Badge className="bg-purple-100 text-purple-700">
+                            <Calendar className="w-3 h-3 mr-1" />
+                            Booking Enabled
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <div className="flex space-x-2">
