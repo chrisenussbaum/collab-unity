@@ -15,6 +15,37 @@ export default function MessageBubble({
   isGroupChat = false,
   isRead = false
 }) {
+  // Render message content with clickable links
+  const renderMessageContent = (content) => {
+    if (!content) return null;
+
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = content.split(urlRegex);
+
+    return (
+      <p className="text-sm whitespace-pre-wrap break-words">
+        {parts.map((part, index) => {
+          if (index % 2 === 1) {
+            // This is a URL
+            return (
+              <a
+                key={index}
+                href={part}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`hover:underline ${isOwn ? 'text-white underline' : 'text-blue-600'}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {part}
+              </a>
+            );
+          }
+          return <span key={index}>{part}</span>;
+        })}
+      </p>
+    );
+  };
+
   const renderMediaContent = () => {
     if (!message.media_url) return null;
 
@@ -94,9 +125,7 @@ export default function MessageBubble({
               ? 'bg-purple-600 text-white' 
               : 'bg-gray-100 text-gray-900'
           }`}>
-            {message.content && (
-              <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-            )}
+            {message.content && renderMessageContent(message.content)}
             {renderMediaContent()}
           </div>
           <div className="flex items-center justify-between mt-1 px-2">
