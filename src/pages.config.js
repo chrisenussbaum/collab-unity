@@ -22,8 +22,9 @@ import Support from './pages/Support';
 import SupportCU from './pages/SupportCU';
 import TermsOfService from './pages/TermsOfService';
 import Testimonials from './pages/Testimonials';
-import UserProfile from './pages/UserProfile';
 import Welcome from './pages/Welcome';
+import UserProfile from './pages/UserProfile';
+import MyBookings from './pages/MyBookings';
 import __Layout from './Layout.jsx';
 
 
@@ -52,8 +53,9 @@ export const PAGES = {
     "SupportCU": SupportCU,
     "TermsOfService": TermsOfService,
     "Testimonials": Testimonials,
-    "UserProfile": UserProfile,
     "Welcome": Welcome,
+    "UserProfile": UserProfile,
+    "MyBookings": MyBookings,
 }
 
 export const pagesConfig = {
