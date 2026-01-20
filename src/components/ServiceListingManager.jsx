@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, X, DollarSign, Briefcase, Upload, Loader2, Camera, Play, Trash2 } from "lucide-react";
+import { Plus, Edit, X, DollarSign, Briefcase, Upload, Loader2, Camera, Play, Trash2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import ArrayInputWithSearch from "./ArrayInputWithSearch";
 import ClickableImage from "./ClickableImage";
@@ -282,6 +282,63 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
                       {listing.skills_offered.length > 5 && (
                         <Badge variant="outline" className="text-xs">+{listing.skills_offered.length - 5}</Badge>
                       )}
+                    </div>
+                  )}
+                  
+                  {listing.media_attachments && listing.media_attachments.length > 0 && (
+                    <div className="mt-3 pt-3 border-t">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Camera className="w-4 h-4 text-purple-600" />
+                        <span className="text-xs font-medium text-gray-700">Showcase</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {listing.media_attachments.slice(0, 3).map((media, idx) => (
+                          <div key={idx} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+                            {media.media_type === 'video' ? (
+                              <div className="relative w-full h-full">
+                                {media.thumbnail_url ? (
+                                  <img 
+                                    src={media.thumbnail_url} 
+                                    alt={media.caption || 'Video thumbnail'}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <video 
+                                    src={media.media_url}
+                                    className="w-full h-full object-cover"
+                                  />
+                                )}
+                                <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                  <Play className="w-6 h-6 text-white" />
+                                </div>
+                              </div>
+                            ) : (
+                              <img 
+                                src={media.media_url} 
+                                alt={media.caption || 'Service showcase'}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {listing.portfolio_links && listing.portfolio_links.length > 0 && (
+                    <div className="mt-3 pt-3 border-t space-y-1">
+                      {listing.portfolio_links.slice(0, 2).map((link, idx) => (
+                        <a
+                          key={idx}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center text-xs text-purple-600 hover:underline"
+                        >
+                          <ExternalLink className="w-3 h-3 mr-1" />
+                          {link.title || link.url}
+                        </a>
+                      ))}
                     </div>
                   )}
                 </div>

@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Clock, CheckCircle, MapPin, Building2, Tag, Eye, Plus, Briefcase, Megaphone, Lightbulb, Sparkles, Filter, X, Bell, BellOff, Bookmark, BookmarkCheck, HandHeart, DollarSign } from "lucide-react";
+import { Users, Clock, CheckCircle, MapPin, Building2, Tag, Eye, Plus, Briefcase, Megaphone, Lightbulb, Sparkles, Filter, X, Bell, BellOff, Bookmark, BookmarkCheck, HandHeart, DollarSign, Camera, Play, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,6 +30,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import ServiceListingCard from "../components/ServiceListingCard";
+import ClickableImage from "../components/ClickableImage";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -1432,6 +1433,76 @@ export default function Discover({ currentUser: propCurrentUser }) {
                                       +{project.skills_needed.length - 4}
                                     </Badge>
                                   )}
+                                </div>
+                              )}
+
+                              {project.highlights && project.highlights.length > 0 && (
+                                <div className="pt-3 border-t">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Camera className="w-4 h-4 text-purple-600" />
+                                    <span className="text-xs font-medium text-gray-700">Project Highlights</span>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-2">
+                                    {project.highlights.slice(0, 3).map((highlight, idx) => {
+                                      const mediaUrl = highlight.media_url || highlight.image_url;
+                                      const mediaType = highlight.media_type || 'image';
+                                      
+                                      return (
+                                        <div key={idx} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100" onClick={(e) => e.preventDefault()}>
+                                          {mediaType === 'video' ? (
+                                            <div className="relative w-full h-full">
+                                              {highlight.thumbnail_url ? (
+                                                <img 
+                                                  src={highlight.thumbnail_url} 
+                                                  alt={highlight.caption || 'Video thumbnail'}
+                                                  className="w-full h-full object-cover"
+                                                />
+                                              ) : (
+                                                <video 
+                                                  src={mediaUrl}
+                                                  className="w-full h-full object-cover"
+                                                />
+                                              )}
+                                              <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                                <Play className="w-6 h-6 text-white" />
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <ClickableImage
+                                              src={mediaUrl} 
+                                              alt={highlight.caption || 'Project highlight'}
+                                              caption={highlight.caption}
+                                              className="w-full h-full object-cover hover:scale-105 transition-transform"
+                                            />
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
+                              {project.project_urls && project.project_urls.length > 0 && (
+                                <div className="pt-3 border-t">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <ExternalLink className="w-4 h-4 text-purple-600" />
+                                    <span className="text-xs font-medium text-gray-700">Showcase</span>
+                                  </div>
+                                  <div className="space-y-1">
+                                    {project.project_urls.slice(0, 2).map((link, idx) => (
+                                      <a
+                                        key={idx}
+                                        href={link.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center text-xs text-purple-600 hover:underline"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <ExternalLink className="w-3 h-3 mr-1" />
+                                        {link.title || link.url}
+                                      </a>
+                                    ))}
+                                  </div>
                                 </div>
                               )}
                             </CardContent>
