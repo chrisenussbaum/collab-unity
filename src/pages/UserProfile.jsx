@@ -49,6 +49,7 @@ import PortfolioItem from "../components/portfolio/PortfolioItem";
 import EditPortfolioItemDialog from "../components/portfolio/EditPortfolioItemDialog";
 import GenerateResumeDialog from "../components/GenerateResumeDialog";
 import BadgeDisplay, { LevelBadge } from "../components/gamification/BadgeDisplay";
+import ServiceListingManager from "../components/ServiceListingManager";
 
 const EditBioModal = ({ isOpen, onClose, bio, onSave }) => {
   const [editedBio, setEditedBio] = useState(bio || "");
@@ -2857,6 +2858,14 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                         )}
                       </CardContent>
                     </Card>
+                  )}
+
+                  {/* Service Offerings */}
+                  {isOwner && propCurrentUser && (
+                    <ServiceListingManager 
+                      currentUser={propCurrentUser}
+                      isOwner={isOwner}
+                    />
                   )}
 
                   {/* Recommended Collaborators */}
