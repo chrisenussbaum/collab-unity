@@ -147,20 +147,22 @@ export default function MarketplaceFeedCard({ project, marketplaceListing, selle
               {project.description}
             </p>
 
-            {marketplaceListing && (
-              <Badge variant="outline" className="text-xs">
-                {marketplaceListing.price_type === "consultation" 
-                  ? `Consultation - ${marketplaceListing.consultation_duration_minutes} min`
-                  : "Fixed Price"}
-              </Badge>
-            )}
+            <div className="flex flex-wrap gap-2">
+              {marketplaceListing && (
+                <Badge variant="outline" className="text-xs">
+                  {marketplaceListing.price_type === "consultation" 
+                    ? `Consultation - ${marketplaceListing.consultation_duration_minutes} min`
+                    : "Fixed Price"}
+                </Badge>
+              )}
 
-            {project.area_of_interest && (
-              <Badge className="text-xs bg-purple-100 text-purple-700">
-                <Tag className="w-3 h-3 mr-1" />
-                {project.area_of_interest}
-              </Badge>
-            )}
+              {project.area_of_interest && (
+                <Badge className="text-xs bg-purple-100 text-purple-700">
+                  <Tag className="w-3 h-3 mr-1" />
+                  {project.area_of_interest}
+                </Badge>
+              )}
+            </div>
 
             {project.skills_needed && project.skills_needed.length > 0 && (
               <div className="flex flex-wrap gap-2">

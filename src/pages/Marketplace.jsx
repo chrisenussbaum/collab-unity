@@ -403,20 +403,22 @@ export default function Marketplace({ currentUser }) {
                            {listing.description}
                          </p>
 
-                         {marketplaceListing && (
-                           <Badge variant="outline" className="text-xs">
-                             {marketplaceListing.price_type === "consultation" 
-                               ? `Consultation - ${marketplaceListing.consultation_duration_minutes} min`
-                               : "Fixed Price"}
-                           </Badge>
-                         )}
+                         <div className="flex flex-wrap gap-2">
+                           {marketplaceListing && (
+                             <Badge variant="outline" className="text-xs">
+                               {marketplaceListing.price_type === "consultation" 
+                                 ? `Consultation - ${marketplaceListing.consultation_duration_minutes} min`
+                                 : "Fixed Price"}
+                             </Badge>
+                           )}
 
-                         {listing.area_of_interest && (
-                           <Badge className="text-xs bg-purple-100 text-purple-700">
-                             <Tag className="w-3 h-3 mr-1" />
-                             {listing.area_of_interest}
-                           </Badge>
-                         )}
+                           {listing.area_of_interest && (
+                             <Badge className="text-xs bg-purple-100 text-purple-700">
+                               <Tag className="w-3 h-3 mr-1" />
+                               {listing.area_of_interest}
+                             </Badge>
+                           )}
+                         </div>
 
                          {listing.skills_needed && listing.skills_needed.length > 0 && (
                            <div className="flex flex-wrap gap-2">
