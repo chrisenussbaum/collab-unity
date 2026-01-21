@@ -316,6 +316,11 @@ export default function NotificationBell() {
               const Icon = notificationIcons[notification.type] || Bell;
 
               const getNotificationLink = (notif) => {
+                // Check if this is a booking-related notification
+                if (notif.metadata?.redirect_to === 'mybookings') {
+                  return createPageUrl('MyBookings');
+                }
+                
                 if (notif.type === 'direct_message' && notif.related_entity_id) {
                   return `${createPageUrl('Chat')}?conversation=${notif.related_entity_id}`;
                 }

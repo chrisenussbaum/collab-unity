@@ -56,7 +56,8 @@ Deno.serve(async (req) => {
         booking_id: booking.id,
         booking_date,
         start_time,
-        end_time
+        end_time,
+        redirect_to: 'mybookings'
       }
     });
 
@@ -73,7 +74,8 @@ Deno.serve(async (req) => {
         booking_id: booking.id,
         booking_date,
         start_time,
-        end_time
+        end_time,
+        redirect_to: 'mybookings'
       }
     });
 

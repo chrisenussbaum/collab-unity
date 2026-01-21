@@ -72,12 +72,16 @@ export default function ProjectBookingDialog({ isOpen, onClose, project, marketp
         user_email: project.created_by,
         title: "New Marketplace Booking Request",
         message: `${currentUser.full_name} wants to book a consultation about "${project.title}"`,
-        type: "project_application",
+        type: "general",
         related_project_id: project.id,
         related_entity_id: booking.id,
         actor_email: currentUser.email,
         actor_name: currentUser.full_name,
-        read: false
+        read: false,
+        metadata: {
+          booking_id: booking.id,
+          redirect_to: 'mybookings'
+        }
       });
 
       toast.success("Booking request sent successfully!");
