@@ -147,21 +147,16 @@ export default function SetPriceDialog({ isOpen, onClose, project, existingListi
               Remove from Marketplace
             </Button>
           )}
-          <div className="flex flex-col-reverse sm:flex-row gap-2 w-full sm:w-auto">
-            <Button variant="outline" onClick={onClose} disabled={isSaving} className="w-full sm:w-auto">
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={isSaving} className="cu-button w-full sm:w-auto">
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                existingListing ? "Update Price" : "List Project"
-              )}
-            </Button>
-          </div>
+          <Button onClick={handleSave} disabled={isSaving} className="cu-button w-full sm:w-auto">
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              existingListing ? "Update Price" : "List Project"
+            )}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
