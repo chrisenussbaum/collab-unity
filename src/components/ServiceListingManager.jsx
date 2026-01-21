@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, X, DollarSign, Briefcase, Upload, Loader2, Camera, Play, Trash2, ExternalLink, Calendar } from "lucide-react";
+import { Plus, Edit, X, DollarSign, Briefcase, Upload, Loader2, Camera, Play, Trash2, ExternalLink, Calendar, Globe, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import ArrayInputWithSearch from "./ArrayInputWithSearch";
 import ClickableImage from "./ClickableImage";
@@ -230,7 +230,7 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
         <CardHeader className="pb-3 sm:pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center text-base sm:text-lg">
-              <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600" />
+              <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-600" />
               Service Offerings
             </CardTitle>
             <Button
@@ -349,19 +349,32 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
                   )}
                   
                   {listing.portfolio_links && listing.portfolio_links.length > 0 && (
-                    <div className="mt-3 pt-3 border-t space-y-1">
-                      {listing.portfolio_links.slice(0, 2).map((link, idx) => (
-                        <a
-                          key={idx}
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center text-xs text-blue-600 hover:underline"
-                        >
-                          <ExternalLink className="w-3 h-3 mr-1" />
-                          {link.title || link.url}
-                        </a>
-                      ))}
+                    <div className="mt-3 pt-3 border-t">
+                      <div className="flex items-center gap-2 mb-2">
+                        <LinkIcon className="w-4 h-4 text-purple-600" />
+                        <span className="text-xs font-medium text-gray-700">Portfolio Links</span>
+                      </div>
+                      <div className="space-y-2">
+                        {listing.portfolio_links.map((link, idx) => (
+                          <a
+                            key={idx}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between p-2 rounded-lg bg-white border hover:border-purple-300 hover:shadow-sm transition-all group"
+                          >
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                                <Globe className="w-3 h-3 text-white" />
+                              </div>
+                              <span className="text-xs font-medium text-gray-700 truncate group-hover:text-purple-600">
+                                {link.title || link.url}
+                              </span>
+                            </div>
+                            <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-purple-600 flex-shrink-0 ml-2" />
+                          </a>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -377,7 +390,7 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
                 variant="outline"
                 size="sm"
                 onClick={() => handleOpenDialog()}
-                className="text-blue-600 border-blue-300"
+                className="text-purple-600 border-purple-300"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Service Listing

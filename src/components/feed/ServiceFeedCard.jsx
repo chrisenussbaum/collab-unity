@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DollarSign, MessageCircle, ExternalLink, Briefcase, Play, Camera, Calendar } from "lucide-react";
+import { DollarSign, MessageCircle, ExternalLink, Briefcase, Play, Camera, Calendar, Globe, Link as LinkIcon } from "lucide-react";
 import OptimizedAvatar from "../OptimizedAvatar";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -70,7 +70,7 @@ export default function ServiceFeedCard({ listing, provider, currentUser }) {
   };
 
   return (
-    <Card className="cu-card mb-6 overflow-hidden border-t-4 border-blue-500 hover:shadow-lg transition-shadow">
+    <Card className="cu-card mb-6 overflow-hidden border-t-4 border-purple-500 hover:shadow-lg transition-shadow">
       <CardHeader className="px-3 sm:px-4 md:px-6 pb-3">
         <div className="flex items-start justify-between space-x-3">
           <div className="flex items-start space-x-3 flex-1 min-w-0">
@@ -89,7 +89,7 @@ export default function ServiceFeedCard({ listing, provider, currentUser }) {
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <Briefcase className="w-4 h-4 text-blue-600" />
+                <Briefcase className="w-4 h-4 text-purple-600" />
                 <span className="text-xs text-gray-500 font-medium">Service Offering</span>
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 line-clamp-2 mb-1">
@@ -100,7 +100,7 @@ export default function ServiceFeedCard({ listing, provider, currentUser }) {
                   to={createPageUrl(provider?.username ? `UserProfile?username=${provider.username}` : `UserProfile?email=${provider?.email}`)}
                   className="flex items-center space-x-1.5 group"
                 >
-                  <span className="text-xs sm:text-sm text-gray-600 group-hover:text-blue-600 transition-colors">
+                  <span className="text-xs sm:text-sm text-gray-600 group-hover:text-purple-600 transition-colors">
                     {provider?.full_name || 'Provider'}
                   </span>
                 </Link>
@@ -147,7 +147,7 @@ export default function ServiceFeedCard({ listing, provider, currentUser }) {
           {listing.skills_offered && listing.skills_offered.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {listing.skills_offered.slice(0, 6).map((skill, idx) => (
-                <Badge key={idx} className="text-xs bg-blue-100 text-blue-700 border border-blue-200">
+                <Badge key={idx} className="text-xs bg-purple-100 text-purple-700 border border-purple-200">
                   {skill}
                 </Badge>
               ))}
@@ -246,31 +246,43 @@ export default function ServiceFeedCard({ listing, provider, currentUser }) {
             </div>
           )}
 
-          {listing.portfolio_links && listing.portfolio_links.length > 0 && (
-            <div className="pt-2 border-t space-y-2">
-              {listing.portfolio_links.slice(0, 2).map((link, idx) => (
-                <a
-                  key={idx}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center text-sm text-blue-600 hover:underline"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  {link.title || link.url}
-                </a>
-              ))}
-              {listing.portfolio_links.length > 2 && (
-                <p className="text-xs text-gray-500">+{listing.portfolio_links.length - 2} more links</p>
-              )}
-            </div>
-          )}
+
         </div>
       </CardContent>
 
+      {listing.portfolio_links && listing.portfolio_links.length > 0 && (
+        <div className="border-t bg-gray-50/50 px-3 sm:px-4 md:px-6 py-3">
+          <div className="flex items-center gap-2 mb-2">
+            <LinkIcon className="w-4 h-4 text-purple-600" />
+            <span className="text-xs font-medium text-gray-700">Portfolio Links</span>
+          </div>
+          <div className="space-y-2">
+            {listing.portfolio_links.map((link, idx) => (
+              <a
+                key={idx}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-2 rounded-lg bg-white border hover:border-purple-300 hover:shadow-sm transition-all group"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                    <Globe className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-xs font-medium text-gray-700 truncate group-hover:text-purple-600">
+                    {link.title || link.url}
+                  </span>
+                </div>
+                <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-purple-600 flex-shrink-0 ml-2" />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!isOwnListing && (
-        <CardFooter className="bg-gradient-to-r from-gray-50 to-blue-50/30 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-t border-gray-200">
+        <CardFooter className="bg-gradient-to-r from-gray-50 to-purple-50/30 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-t border-purple-100/50">
           <div className="w-full flex gap-2">
             {listing.booking_enabled && (
               <Button
