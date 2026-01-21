@@ -84,21 +84,6 @@ export default function ProjectBookingDialog({ isOpen, onClose, project, marketp
         }
       });
 
-      // Send confirmation notification to client
-      await base44.entities.Notification.create({
-        user_email: currentUser.email,
-        title: "Booking Request Sent",
-        message: `Your booking request for "${project.title}" consultation on ${format(selectedDate, "MMM d, yyyy")} at ${selectedTimeSlot.start} has been sent`,
-        type: "general",
-        related_entity_id: booking.id,
-        actor_email: project.created_by,
-        actor_name: seller?.full_name || 'Project Owner',
-        metadata: {
-          booking_id: booking.id,
-          redirect_to: 'mybookings'
-        }
-      });
-
       toast.success("Booking request sent successfully!");
       onClose();
       setSelectedDate(null);

@@ -61,24 +61,6 @@ Deno.serve(async (req) => {
       }
     });
 
-    // Send confirmation notification to client
-    await base44.asServiceRole.entities.Notification.create({
-      user_email: client_email,
-      title: 'Booking Request Sent',
-      message: `Your booking request for "${service_title}" with ${provider_name} on ${booking_date} at ${start_time} has been sent`,
-      type: 'general',
-      related_entity_id: booking.id,
-      actor_email: provider_email,
-      actor_name: provider_name,
-      metadata: {
-        booking_id: booking.id,
-        booking_date,
-        start_time,
-        end_time,
-        redirect_to: 'mybookings'
-      }
-    });
-
     return Response.json({ success: true, booking });
   } catch (error) {
     console.error('Error creating booking:', error);
