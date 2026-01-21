@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Clock, CheckCircle, MapPin, Building2, Tag, Eye, Plus, Briefcase, Megaphone, Lightbulb, Sparkles, Filter, X, Bell, BellOff, Bookmark, BookmarkCheck, HandHeart, DollarSign, Camera, Play, ExternalLink } from "lucide-react";
+import { Users, Clock, CheckCircle, MapPin, Building2, Tag, Eye, Plus, Briefcase, Megaphone, Lightbulb, Sparkles, Filter, X, Bell, BellOff, Bookmark, BookmarkCheck, HandHeart, Camera, Play, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,7 +29,6 @@ import OptimizedAvatar from "@/components/OptimizedAvatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import ServiceListingCard from "../components/ServiceListingCard";
 import ClickableImage from "../components/ClickableImage";
 
 const formatEnumLabel = (str) => {
@@ -85,9 +84,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
   const [applicationMessage, setApplicationMessage] = useState("");
   const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
 
-  const [serviceListings, setServiceListings] = useState([]);
-  const [serviceProviders, setServiceProviders] = useState({});
-  const [isLoadingServices, setIsLoadingServices] = useState(false);
+
 
   useEffect(() => {
     const initializeUser = async () => {
@@ -350,36 +347,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
     refetchOnMount: false,
   });
 
-  const { data: servicesQueryData, isLoading: isServicesQueryLoading } = useQuery({
-    queryKey: ['discover-services'],
-    queryFn: async () => {
-      const allListings = await withRetry(() => base44.entities.ServiceListing.filter({}));
-      
-      // Fetch provider profiles
-      const providerEmails = [...new Set(allListings.map(l => l.provider_email))];
-      let providersMap = {};
-      
-      if (providerEmails.length > 0) {
-        const { data: providerProfiles } = await withRetry(() => 
-          getPublicUserProfiles({ emails: providerEmails })
-        );
-        
-        (providerProfiles || []).forEach(profile => {
-          providersMap[profile.email] = profile;
-        });
-      }
-      
-      return {
-        listings: allListings,
-        providers: providersMap
-      };
-    },
-    enabled: userInitialized && activeTab === "services",
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
+
 
   // Update state when query data changes
   useEffect(() => {
@@ -399,18 +367,9 @@ export default function Discover({ currentUser: propCurrentUser }) {
   }, [usersQueryData, activeTab]);
 
   useEffect(() => {
-    if (servicesQueryData && activeTab === "services") {
-      setServiceListings(servicesQueryData.listings);
-      setServiceProviders(servicesQueryData.providers);
-      setIsLoadingServices(false);
-    }
-  }, [servicesQueryData, activeTab]);
-
-  useEffect(() => {
     setIsLoading(isProjectsQueryLoading && activeTab === "projects");
     setIsLoadingUsers(isUsersQueryLoading && activeTab === "people");
-    setIsLoadingServices(isServicesQueryLoading && activeTab === "services");
-  }, [isProjectsQueryLoading, isUsersQueryLoading, isServicesQueryLoading, activeTab]);
+  }, [isProjectsQueryLoading, isUsersQueryLoading, activeTab]);
 
   const handleFollow = async (projectId, e) => {
     e.preventDefault();
@@ -803,29 +762,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
     return filtered;
   }, [users, searchQuery, selectedSkills, showOnlyMatching, currentUser, calculateUserMatchScore]);
 
-  const filteredServices = useMemo(() => {
-    return serviceListings.filter(listing => {
-      const provider = serviceProviders[listing.provider_email];
-      
-      const matchesSearch = searchQuery === "" ||
-        listing.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        listing.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        provider?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (listing.skills_offered && listing.skills_offered.some(skill =>
-          skill.toLowerCase().includes(searchQuery.toLowerCase())
-        ));
 
-      const matchesSkills = selectedSkills.length === 0 || (
-        listing.skills_offered && selectedSkills.every(selectedSkill =>
-          listing.skills_offered.some(skill => 
-            skill.toLowerCase() === selectedSkill.toLowerCase()
-          )
-        )
-      );
-
-      return matchesSearch && matchesSkills;
-    });
-  }, [serviceListings, serviceProviders, searchQuery, selectedSkills]);
 
   const toggleSkill = (skill) => {
     setSelectedSkills(prev =>
@@ -1019,7 +956,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
       <div className="cu-container">
         <div className="cu-page">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="projects" className="text-sm sm:text-base">
                 <Briefcase className="w-4 h-4 mr-2" />
                 Projects
@@ -1027,10 +964,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
               <TabsTrigger value="people" className="text-sm sm:text-base">
                 <Users className="w-4 h-4 mr-2" />
                 Collaborators
-              </TabsTrigger>
-              <TabsTrigger value="services" className="text-sm sm:text-base">
-                <DollarSign className="w-4 h-4 mr-2" />
-                Services
               </TabsTrigger>
             </TabsList>
 
@@ -1689,96 +1622,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
               )}
             </TabsContent>
 
-            <TabsContent value="services">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="mb-6"
-              >
-                <div className="relative mb-4">
-                  <Input
-                    type="text"
-                    placeholder="Search services by title, skills, or provider..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-white"
-                  />
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                </div>
 
-                {allSkills.length > 0 && (
-                  <div className="mb-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Filter by Skills:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {allSkills.slice(0, 10).map(skill => (
-                        <Badge
-                          key={skill}
-                          variant="outline"
-                          className={`cursor-pointer transition-colors ${
-                            selectedSkills.includes(skill)
-                              ? 'bg-purple-100 text-purple-800 border-purple-300'
-                              : 'bg-white hover:bg-gray-100'
-                          }`}
-                          onClick={() => toggleSkill(skill)}
-                        >
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {hasActiveFilters && (
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {selectedSkills.map(skill => (
-                      <Badge 
-                        key={skill} 
-                        className="bg-purple-100 text-purple-800 cursor-pointer hover:bg-purple-200"
-                        onClick={() => toggleSkill(skill)}
-                      >
-                        {skill}
-                        <X className="w-3 h-3 ml-1" />
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-
-              {isLoadingServices ? (
-                <div className="text-center py-16">
-                  <p className="cu-text-responsive-sm text-gray-500">Loading services...</p>
-                </div>
-              ) : filteredServices.length === 0 ? (
-                <div className="text-center py-16">
-                  <DollarSign className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                  <h3 className="cu-text-responsive-lg font-semibold text-gray-900 mb-2">
-                    {hasActiveFilters ? "No matching services found" : "No services available yet"}
-                  </h3>
-                  <p className="text-gray-600 cu-text-responsive-sm mb-4">
-                    {hasActiveFilters 
-                      ? "Try adjusting your filters or search terms" 
-                      : "Be the first to offer your services!"}
-                  </p>
-                  {hasActiveFilters && (
-                    <Button onClick={clearAllFilters} variant="outline">
-                      Clear Filters
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <div className="cu-grid-responsive-1-2-3">
-                  {filteredServices.map((listing, index) => (
-                    <ServiceListingCard
-                      key={listing.id}
-                      listing={listing}
-                      provider={serviceProviders[listing.provider_email]}
-                      currentUser={currentUser}
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
           </Tabs>
         </div>
       </div>
