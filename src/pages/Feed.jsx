@@ -76,6 +76,7 @@ import ProjectActivityIndicator, { isProjectActive } from "../components/Project
 import OptimizedImage from "@/components/OptimizedImage";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 import ServiceFeedCard from "@/components/feed/ServiceFeedCard";
+import MarketplaceFeedCard from "@/components/feed/MarketplaceFeedCard";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -1646,6 +1647,7 @@ export default function Feed({ currentUser, authIsLoading }) {
   const [projects, setProjects] = useState([]);
   const [feedPosts, setFeedPosts] = useState([]);
   const [serviceListings, setServiceListings] = useState([]);
+  const [marketplaceListings, setMarketplaceListings] = useState([]);
   const [projectApplauds, setProjectApplauds] = useState([]);
   const [feedPostApplauds, setFeedPostApplauds] = useState([]);
   const [advertisements, setAdvertisements] = useState({
@@ -1775,8 +1777,8 @@ export default function Feed({ currentUser, authIsLoading }) {
   const { data: cachedFeedData, isLoading: isQueryLoading } = useQuery({
     queryKey: ['feed-projects', currentUser?.email],
     queryFn: async () => {
-      // Fetch ALL public projects, initial feed posts, and service listings
-      const [visibleProjectsData, initialFeedPostsData, serviceListingsData] = await Promise.all([
+      // Fetch ALL public projects, initial feed posts, service listings, and marketplace listings
+      const [visibleProjectsData, initialFeedPostsData, serviceListingsData, marketplaceListingsData] = await Promise.all([
         withRetry(() =>
           Project.filter({ is_visible_on_feed: true }, "-created_date")
         ),
@@ -1785,6 +1787,9 @@ export default function Feed({ currentUser, authIsLoading }) {
         ),
         withRetry(() =>
           ServiceListing.list("-created_date")
+        ),
+        withRetry(() =>
+          base44.entities.MarketplaceListing.filter({ is_available: true }, "-created_date")
         )
       ]);
       
@@ -1792,17 +1797,36 @@ export default function Feed({ currentUser, authIsLoading }) {
       visibleProjectsData.forEach(p => loadedItemIdsRef.current.add(p.id));
       initialFeedPostsData.forEach(fp => loadedItemIdsRef.current.add(fp.id));
       serviceListingsData.forEach(sl => loadedItemIdsRef.current.add(sl.id));
+      marketplaceListingsData.forEach(ml => loadedItemIdsRef.current.add(ml.id));
 
-      // Separate projects, feed posts, and services
+      // Separate projects, feed posts, services, and marketplace listings
       const initialProjects = visibleProjectsData;
       const initialFeedPosts = initialFeedPostsData;
       const initialServiceListings = serviceListingsData;
+      const initialMarketplaceListings = marketplaceListingsData;
+
+      // Fetch marketplace projects
+      const marketplaceProjectIds = initialMarketplaceListings.map(ml => ml.project_id);
+      let marketplaceProjectsData = [];
+      if (marketplaceProjectIds.length > 0) {
+        for (const projectId of marketplaceProjectIds) {
+          try {
+            const projects = await base44.entities.Project.filter({ id: projectId });
+            if (projects.length > 0) {
+              marketplaceProjectsData.push(projects[0]);
+            }
+          } catch (error) {
+            console.error("Error fetching marketplace project:", error);
+          }
+        }
+      }
 
       // Get unique owner/provider emails from all items
       const allOwnerEmails = [...new Set([
         ...initialProjects.map(p => p.created_by),
         ...initialFeedPosts.map(fp => fp.created_by),
-        ...initialServiceListings.map(sl => sl.provider_email)
+        ...initialServiceListings.map(sl => sl.provider_email),
+        ...marketplaceProjectsData.map(mp => mp.created_by)
       ])];
       
       const projectIds = initialProjects.map(p => p.id);
@@ -1851,6 +1875,20 @@ export default function Feed({ currentUser, authIsLoading }) {
         }
       }));
 
+      const fullyPopulatedMarketplaceListings = initialMarketplaceListings.map(listing => {
+        const project = marketplaceProjectsData.find(p => p.id === listing.project_id);
+        return {
+          ...listing,
+          project: project || null,
+          seller: profilesMap[listing.seller_email] || {
+            email: listing.seller_email,
+            full_name: listing.seller_email.split('@')[0],
+            username: null,
+            profile_image: null,
+          }
+        };
+      }).filter(ml => ml.project !== null); // Only include listings with valid projects
+
       // Fetch collaborator profiles for activity indicators
       const allCollaboratorEmails = new Set();
       initialProjects.forEach(p => {
@@ -1877,6 +1915,7 @@ export default function Feed({ currentUser, authIsLoading }) {
         projects: fullyPopulatedProjects,
         feedPosts: fullyPopulatedFeedPosts,
         serviceListings: fullyPopulatedServiceListings,
+        marketplaceListings: fullyPopulatedMarketplaceListings,
         projectApplauds: fetchedProjectApplauds,
         feedPostApplauds: fetchedFeedPostApplauds,
         collaboratorProfiles: collabProfilesMap,
@@ -1898,6 +1937,7 @@ export default function Feed({ currentUser, authIsLoading }) {
       setProjects(cachedFeedData.projects);
       setFeedPosts(cachedFeedData.feedPosts);
       setServiceListings(cachedFeedData.serviceListings);
+      setMarketplaceListings(cachedFeedData.marketplaceListings || []);
       setProjectApplauds(cachedFeedData.projectApplauds);
       setFeedPostApplauds(cachedFeedData.feedPostApplauds);
       setAllCollaboratorProfiles(cachedFeedData.collaboratorProfiles);
@@ -1906,11 +1946,12 @@ export default function Feed({ currentUser, authIsLoading }) {
       consecutiveEmptyLoadsRef.current = 0;
       
       // Load ads in background
-      if (cachedFeedData.projects.length > 0 || cachedFeedData.feedPosts.length > 0 || cachedFeedData.serviceListings.length > 0) {
+      if (cachedFeedData.projects.length > 0 || cachedFeedData.feedPosts.length > 0 || cachedFeedData.serviceListings.length > 0 || (cachedFeedData.marketplaceListings && cachedFeedData.marketplaceListings.length > 0)) {
         const items = [
           ...cachedFeedData.projects.map(p => ({ ...p, itemType: 'project' })),
           ...cachedFeedData.feedPosts.map(fp => ({ ...fp, itemType: 'feedPost' })),
-          ...cachedFeedData.serviceListings.map(sl => ({ ...sl, itemType: 'service' }))
+          ...cachedFeedData.serviceListings.map(sl => ({ ...sl, itemType: 'service' })),
+          ...(cachedFeedData.marketplaceListings || []).map(ml => ({ ...ml, itemType: 'marketplace' }))
         ].slice(0, POSTS_PER_PAGE);
         loadAdsForPage(1, items).catch(err => console.error("Background ad loading failed:", err));
       }
@@ -2148,11 +2189,12 @@ export default function Feed({ currentUser, authIsLoading }) {
     const combined = [
       ...projects.map(p => ({ ...p, itemType: 'project', sortDate: new Date(p.created_date) })),
       ...feedPosts.map(fp => ({ ...fp, itemType: 'feedPost', sortDate: new Date(fp.created_date) })),
-      ...serviceListings.map(sl => ({ ...sl, itemType: 'service', sortDate: new Date(sl.created_date) }))
+      ...serviceListings.map(sl => ({ ...sl, itemType: 'service', sortDate: new Date(sl.created_date) })),
+      ...marketplaceListings.map(ml => ({ ...ml, itemType: 'marketplace', sortDate: new Date(ml.created_date) }))
     ];
     
     return combined.sort((a, b) => b.sortDate - a.sortDate);
-  }, [projects, feedPosts, serviceListings]);
+  }, [projects, feedPosts, serviceListings, marketplaceListings]);
 
   const handleApplaudUpdate = useCallback(async () => {
     const allProjectIdsInFeed = projects.map(p => p.id);
@@ -2202,6 +2244,10 @@ export default function Feed({ currentUser, authIsLoading }) {
         return item.title?.toLowerCase().includes(query) ||
                item.description?.toLowerCase().includes(query) ||
                item.skills_offered?.some(skill => skill.toLowerCase().includes(query));
+      } else if (item.itemType === 'marketplace') {
+        return item.project?.title?.toLowerCase().includes(query) ||
+               item.project?.description?.toLowerCase().includes(query) ||
+               item.project?.area_of_interest?.toLowerCase().includes(query);
       } else {
         // FeedPost
         return item.title?.toLowerCase().includes(query) ||

@@ -419,7 +419,7 @@ export default function Marketplace({ currentUser }) {
                          )}
 
                          {listing.skills_needed && listing.skills_needed.length > 0 && (
-                           <div className="flex flex-wrap gap-1.5">
+                           <div className="flex flex-wrap gap-2">
                              {listing.skills_needed.slice(0, 3).map(skill => (
                                <Badge key={skill} variant="secondary" className="text-xs">
                                  {skill}

@@ -132,7 +132,7 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
         )}
 
         {listing.skills_offered && listing.skills_offered.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {listing.skills_offered.slice(0, 4).map((skill, idx) => (
               <Badge key={idx} className="text-xs bg-purple-100 text-purple-700">
                 {skill}

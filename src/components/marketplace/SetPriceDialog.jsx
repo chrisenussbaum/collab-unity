@@ -70,19 +70,19 @@ export default function SetPriceDialog({ isOpen, onClose, project, existingListi
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-w-[95vw]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
             <DollarSign className="w-5 h-5 text-purple-600" />
-            Set Price for "{project?.title}"
+            <span className="line-clamp-1">Set Price for "{project?.title}"</span>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          <div>
-            <Label>Price Type</Label>
+        <div className="space-y-5 py-4">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Price Type</Label>
             <Select value={priceType} onValueChange={setPriceType}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -90,37 +90,37 @@ export default function SetPriceDialog({ isOpen, onClose, project, existingListi
                 <SelectItem value="fixed">Fixed Project Price</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 leading-relaxed">
               {priceType === "consultation" 
                 ? "Charge for consultation meetings about the project"
                 : "One-time price for the entire project"}
             </p>
           </div>
 
-          <div>
-            <Label>Price (USD)</Label>
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Price (USD)</Label>
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 type="number"
                 min="0"
                 step="0.01"
-                placeholder="0.00"
+                placeholder="10"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="pl-9"
+                className="pl-9 h-11"
               />
             </div>
           </div>
 
           {priceType === "consultation" && (
-            <div>
-              <Label>Session Duration (minutes)</Label>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Session Duration (minutes)</Label>
               <Select 
                 value={consultationDuration.toString()} 
                 onValueChange={(val) => setConsultationDuration(parseInt(val))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -136,30 +136,32 @@ export default function SetPriceDialog({ isOpen, onClose, project, existingListi
           )}
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-2">
           {existingListing && (
             <Button
               variant="destructive"
               onClick={handleRemoveListing}
               disabled={isSaving}
-              className="sm:mr-auto"
+              className="w-full sm:w-auto sm:mr-auto"
             >
               Remove from Marketplace
             </Button>
           )}
-          <Button variant="outline" onClick={onClose} disabled={isSaving}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving} className="cu-button">
-            {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              existingListing ? "Update Price" : "List Project"
-            )}
-          </Button>
+          <div className="flex flex-col-reverse sm:flex-row gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={onClose} disabled={isSaving} className="w-full sm:w-auto">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving} className="cu-button w-full sm:w-auto">
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                existingListing ? "Update Price" : "List Project"
+              )}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
