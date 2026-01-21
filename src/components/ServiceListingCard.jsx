@@ -219,7 +219,7 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
 
       {!isOwnListing && (
         <CardFooter className="bg-gray-50 border-t p-4">
-          <div className="w-full flex flex-col sm:flex-row gap-2">
+          <div className="w-full flex gap-2">
             {listing.booking_enabled && (
               <Button
                 size="sm"

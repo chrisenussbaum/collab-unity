@@ -383,7 +383,7 @@ export default function Marketplace({ currentUser }) {
                         </CardContent>
 
                         <CardFooter className="bg-gray-50 border-t p-4">
-                          <div className="w-full flex flex-col sm:flex-row gap-2">
+                          <div className="w-full flex gap-2">
                             {currentUser && !isOwner && (
                               <>
                                 <Button 
