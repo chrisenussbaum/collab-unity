@@ -229,25 +229,25 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
       )}
 
       {!isOwnListing && (
-        <CardFooter className="bg-gray-50 border-t p-3">
-          <div className="w-full flex gap-2">
+        <CardFooter className="bg-gray-50 border-t p-4">
+          <div className="w-full flex flex-col sm:flex-row gap-2">
             {listing.booking_enabled && (
               <Button
                 size="sm"
                 onClick={() => setShowBookingDialog(true)}
-                className="flex-1 cu-button"
+                className="flex-1 cu-button text-xs"
               >
-                <Calendar className="w-4 h-4 mr-2" />
-                Book Service
+                <Calendar className="w-3 h-3 mr-1" />
+                Book
               </Button>
             )}
             <Button
               size="sm"
               variant="outline"
               onClick={handleContactProvider}
-              className={listing.booking_enabled ? "flex-1" : "w-full"}
+              className={`${listing.booking_enabled ? "flex-1" : "w-full"} text-xs`}
             >
-              <MessageCircle className="w-4 h-4 mr-2" />
+              <MessageCircle className="w-3 h-3 mr-1" />
               Chat
             </Button>
           </div>

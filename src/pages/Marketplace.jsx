@@ -406,7 +406,7 @@ export default function Marketplace({ currentUser }) {
                               </>
                             )}
                             {(!currentUser || isOwner) && (
-                              <div className="flex items-center text-gray-600 text-xs justify-center py-2">
+                              <div className="flex items-center text-gray-600 text-xs justify-center w-full py-2">
                                 <Clock className="w-3 h-3 mr-1" />
                                 {formatDistanceToNow(new Date(listing.created_date))} ago
                               </div>
