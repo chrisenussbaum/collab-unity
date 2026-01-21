@@ -93,7 +93,7 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
               </h3>
               <Link 
                 to={createPageUrl(provider?.username ? `UserProfile?username=${provider.username}` : `UserProfile?email=${listing.provider_email}`)}
-                className="text-sm text-gray-600 hover:text-purple-600"
+                className="text-sm text-gray-600 hover:text-blue-600"
                 onClick={(e) => e.stopPropagation()}
               >
                 {provider?.full_name || 'Provider'}
@@ -118,13 +118,13 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
 
       <CardContent className="flex-grow pb-3">
         <div className="space-y-3">
-          <div className="flex items-center text-purple-600 font-semibold">
+          <div className="flex items-center text-green-600 font-semibold">
             <DollarSign className="w-4 h-4 mr-1" />
             {getRateDisplay()}
           </div>
 
           {listing.booking_enabled && (
-            <div className="flex items-center gap-2 text-sm text-purple-700 bg-purple-50 px-3 py-2 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-100 px-3 py-2 rounded-lg">
               <Calendar className="w-4 h-4" />
               <span className="font-medium">
                 {listing.session_duration_minutes} min sessions • Book up to {listing.advance_booking_days} days ahead
@@ -135,7 +135,7 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
           {listing.skills_offered && listing.skills_offered.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {listing.skills_offered.slice(0, 4).map((skill, idx) => (
-                <Badge key={idx} className="text-xs bg-purple-100 text-purple-700">
+                <Badge key={idx} className="text-xs bg-blue-100 text-blue-700">
                   {skill}
                 </Badge>
               ))}
@@ -150,7 +150,7 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
           {listing.media_attachments && listing.media_attachments.length > 0 && (
             <div className="pt-2">
               <div className="flex items-center gap-2 mb-2">
-                <Camera className="w-4 h-4 text-purple-600" />
+                <Camera className="w-4 h-4 text-gray-600" />
                 <span className="text-xs font-medium text-gray-700">Service Showcase</span>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -201,7 +201,7 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center text-xs text-purple-600 hover:underline"
+                  className="flex items-center text-xs text-blue-600 hover:underline"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <ExternalLink className="w-3 h-3 mr-1" />

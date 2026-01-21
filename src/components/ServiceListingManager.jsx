@@ -230,7 +230,7 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
         <CardHeader className="pb-3 sm:pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center text-base sm:text-lg">
-              <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-600" />
+              <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600" />
               Service Offerings
             </CardTitle>
             <Button
@@ -273,7 +273,7 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
                           {listing.availability_status}
                         </Badge>
                         {listing.booking_enabled && (
-                          <Badge className="bg-purple-100 text-purple-700">
+                          <Badge className="bg-gray-200 text-gray-700">
                             <Calendar className="w-3 h-3 mr-1" />
                             Booking Enabled
                           </Badge>
@@ -311,7 +311,7 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
                   {listing.media_attachments && listing.media_attachments.length > 0 && (
                     <div className="mt-3 pt-3 border-t">
                       <div className="flex items-center gap-2 mb-2">
-                        <Camera className="w-4 h-4 text-purple-600" />
+                        <Camera className="w-4 h-4 text-gray-600" />
                         <span className="text-xs font-medium text-gray-700">Showcase</span>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
@@ -356,7 +356,7 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center text-xs text-purple-600 hover:underline"
+                          className="flex items-center text-xs text-blue-600 hover:underline"
                         >
                           <ExternalLink className="w-3 h-3 mr-1" />
                           {link.title || link.url}
@@ -377,7 +377,7 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
                 variant="outline"
                 size="sm"
                 onClick={() => handleOpenDialog()}
-                className="text-purple-600 border-purple-300"
+                className="text-blue-600 border-blue-300"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Service Listing

@@ -70,7 +70,7 @@ export default function ServiceFeedCard({ listing, provider, currentUser }) {
   };
 
   return (
-    <Card className="cu-card mb-6 overflow-hidden border-t-4 border-purple-500 hover:shadow-lg transition-shadow">
+    <Card className="cu-card mb-6 overflow-hidden border-t-4 border-blue-500 hover:shadow-lg transition-shadow">
       <CardHeader className="px-3 sm:px-4 md:px-6 pb-3">
         <div className="flex items-start justify-between space-x-3">
           <div className="flex items-start space-x-3 flex-1 min-w-0">
@@ -89,7 +89,7 @@ export default function ServiceFeedCard({ listing, provider, currentUser }) {
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <Briefcase className="w-4 h-4 text-purple-600" />
+                <Briefcase className="w-4 h-4 text-blue-600" />
                 <span className="text-xs text-gray-500 font-medium">Service Offering</span>
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 line-clamp-2 mb-1">
@@ -100,7 +100,7 @@ export default function ServiceFeedCard({ listing, provider, currentUser }) {
                   to={createPageUrl(provider?.username ? `UserProfile?username=${provider.username}` : `UserProfile?email=${provider?.email}`)}
                   className="flex items-center space-x-1.5 group"
                 >
-                  <span className="text-xs sm:text-sm text-gray-600 group-hover:text-purple-600 transition-colors">
+                  <span className="text-xs sm:text-sm text-gray-600 group-hover:text-blue-600 transition-colors">
                     {provider?.full_name || 'Provider'}
                   </span>
                 </Link>
@@ -130,13 +130,13 @@ export default function ServiceFeedCard({ listing, provider, currentUser }) {
         </p>
 
         <div className="space-y-3">
-          <div className="flex items-center text-purple-600 font-semibold text-lg">
+          <div className="flex items-center text-green-600 font-semibold text-lg">
             <DollarSign className="w-5 h-5 mr-1" />
             {getRateDisplay()}
           </div>
 
           {listing.booking_enabled && (
-            <div className="flex items-center gap-2 text-sm text-purple-700 bg-purple-50 px-3 py-2 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-100 px-3 py-2 rounded-lg">
               <Calendar className="w-4 h-4" />
               <span className="font-medium">
                 {listing.session_duration_minutes} min sessions • Book up to {listing.advance_booking_days} days ahead
@@ -147,7 +147,7 @@ export default function ServiceFeedCard({ listing, provider, currentUser }) {
           {listing.skills_offered && listing.skills_offered.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {listing.skills_offered.slice(0, 6).map((skill, idx) => (
-                <Badge key={idx} className="text-xs bg-purple-100 text-purple-700 border border-purple-200">
+                <Badge key={idx} className="text-xs bg-blue-100 text-blue-700 border border-blue-200">
                   {skill}
                 </Badge>
               ))}
@@ -162,7 +162,7 @@ export default function ServiceFeedCard({ listing, provider, currentUser }) {
           {listing.media_attachments && listing.media_attachments.length > 0 && (
             <div className="pt-2">
               <div className="flex items-center gap-2 mb-2">
-                <Camera className="w-4 h-4 text-purple-600" />
+                <Camera className="w-4 h-4 text-gray-600" />
                 <span className="text-xs font-medium text-gray-700">Service Showcase</span>
               </div>
               
@@ -254,7 +254,7 @@ export default function ServiceFeedCard({ listing, provider, currentUser }) {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center text-sm text-purple-600 hover:underline"
+                  className="flex items-center text-sm text-blue-600 hover:underline"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
@@ -270,7 +270,7 @@ export default function ServiceFeedCard({ listing, provider, currentUser }) {
       </CardContent>
 
       {!isOwnListing && (
-        <CardFooter className="bg-gradient-to-r from-gray-50 to-purple-50/30 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-t border-purple-100/50">
+        <CardFooter className="bg-gradient-to-r from-gray-50 to-blue-50/30 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-t border-gray-200">
           <div className="w-full flex gap-2">
             {listing.booking_enabled && (
               <Button
