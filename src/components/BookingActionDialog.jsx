@@ -30,7 +30,11 @@ export default function BookingActionDialog({ open, onClose, booking, onActionCo
         type: "general",
         related_entity_id: booking.id,
         actor_email: booking.provider_email,
-        actor_name: booking.provider_name
+        actor_name: booking.provider_name,
+        metadata: {
+          booking_id: booking.id,
+          redirect_to: 'mybookings'
+        }
       });
 
       toast.success("Booking confirmed!");
@@ -60,7 +64,11 @@ export default function BookingActionDialog({ open, onClose, booking, onActionCo
         type: "general",
         related_entity_id: booking.id,
         actor_email: booking.provider_email,
-        actor_name: booking.provider_name
+        actor_name: booking.provider_name,
+        metadata: {
+          booking_id: booking.id,
+          redirect_to: 'mybookings'
+        }
       });
 
       toast.success("Booking declined");

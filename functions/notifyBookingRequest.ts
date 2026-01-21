@@ -41,7 +41,11 @@ Deno.serve(async (req) => {
       related_entity_id: booking_id,
       actor_email: booking.client_email,
       actor_name: booking.client_name,
-      read: false
+      read: false,
+      metadata: {
+        booking_id: booking_id,
+        redirect_to: 'mybookings'
+      }
     });
 
     return Response.json({ success: true, notification });
