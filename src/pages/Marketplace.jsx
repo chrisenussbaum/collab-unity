@@ -8,8 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { 
-  DollarSign, ShoppingCart, Search, Tag, Users, Clock, Eye, Lightbulb, 
-  MessageCircle, ExternalLink, Camera, Play, Globe, Calendar, X
+  DollarSign, ShoppingCart, Search, Tag, Clock, Lightbulb, 
+  MessageCircle, ExternalLink, Camera, Play, Globe, Calendar
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -24,8 +24,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import BookingDialog from "@/components/BookingDialog";
-import MediaDisplay from "@/components/MediaDisplay";
+import ClickableImage from "@/components/ClickableImage";
 
 export default function Marketplace({ currentUser }) {
   const navigate = useNavigate();
@@ -34,11 +33,9 @@ export default function Marketplace({ currentUser }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sellers, setSellers] = useState({});
   const [selectedProject, setSelectedProject] = useState(null);
-  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [purchaseMessage, setPurchaseMessage] = useState("");
   const [isSubmittingPurchase, setIsSubmittingPurchase] = useState(false);
-  const [showBookingDialog, setShowBookingDialog] = useState(false);
 
   useEffect(() => {
     const loadMarketplace = async () => {
@@ -203,7 +200,7 @@ export default function Marketplace({ currentUser }) {
               Project <span className="text-yellow-400">Marketplace</span>
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-purple-100 mb-8 max-w-3xl mx-auto px-4">
-              Discover and purchase unique projects from talented creators
+              Buy complete projects from talented creators in the community
             </p>
           </motion.div>
         </div>
@@ -254,6 +251,8 @@ export default function Marketplace({ currentUser }) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredListings.map((listing, index) => {
                 const seller = sellers[listing.created_by];
+                const isOwnProject = currentUser && listing.created_by === currentUser.email;
+                const highlights = listing.highlights || [];
                 
                 return (
                   <motion.div
@@ -262,97 +261,199 @@ export default function Marketplace({ currentUser }) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
                   >
-                    <Card 
-                      className="cu-card h-full flex flex-col hover:shadow-xl transition-all border-t-4 border-purple-500 cursor-pointer"
-                      onClick={() => {
-                        setSelectedProject(listing);
-                        setShowDetailsDialog(true);
-                      }}
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-start space-x-3 flex-1 min-w-0">
-                            {listing.logo_url && (
-                              <img 
-                                src={listing.logo_url} 
-                                alt={listing.title}
-                                className="w-12 h-12 rounded-lg object-cover border-2 border-gray-100 shadow-sm flex-shrink-0"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-bold text-base text-gray-900 hover:text-purple-600 transition-colors line-clamp-2 mb-1">
-                                {listing.title}
-                              </h3>
-                              {seller && (
-                                <div className="flex items-center gap-2 mt-1">
-                                  <OptimizedAvatar
-                                    src={seller.profile_image}
-                                    alt={seller.full_name}
-                                    fallback={seller.full_name?.[0] || 'U'}
-                                    size="xs"
-                                    className="w-5 h-5"
-                                  />
-                                  <span className="text-xs text-gray-600 hover:text-purple-600">
-                                    {seller.full_name}
-                                  </span>
-                                </div>
+                    <Card className="cu-card h-full flex flex-col border-t-4 border-purple-500 hover:shadow-xl transition-all">
+                      <Link to={createPageUrl(`ProjectDetail?id=${listing.id}`)}>
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-start space-x-3 flex-1 min-w-0">
+                              {listing.logo_url && (
+                                <img 
+                                  src={listing.logo_url} 
+                                  alt={listing.title}
+                                  className="w-12 h-12 rounded-lg object-cover border-2 border-gray-100 shadow-sm flex-shrink-0"
+                                />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-base text-gray-900 hover:text-purple-600 transition-colors line-clamp-2 mb-1">
+                                  {listing.title}
+                                </h3>
+                                {seller && (
+                                  <Link
+                                    to={createPageUrl(`UserProfile?username=${seller.username}`)}
+                                    className="flex items-center gap-2 mt-1"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <OptimizedAvatar
+                                      src={seller.profile_image}
+                                      alt={seller.full_name}
+                                      fallback={seller.full_name?.[0] || 'U'}
+                                      size="xs"
+                                      className="w-5 h-5"
+                                    />
+                                    <span className="text-xs text-gray-600 hover:text-purple-600">
+                                      {seller.full_name}
+                                    </span>
+                                  </Link>
+                                )}
+                              </div>
+                            </div>
+                            <Badge className="bg-green-100 text-green-700 border border-green-300 font-semibold flex-shrink-0">
+                              ${listing.sale_price}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+
+                        <CardContent className="flex-grow pb-3 space-y-3">
+                          <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed">
+                            {listing.sale_description || listing.description}
+                          </p>
+
+                          {listing.area_of_interest && (
+                            <Badge className="text-xs bg-purple-100 text-purple-700 border border-purple-200">
+                              <Tag className="w-3 h-3 mr-1" />
+                              {listing.area_of_interest}
+                            </Badge>
+                          )}
+
+                          {listing.skills_needed && listing.skills_needed.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {listing.skills_needed.slice(0, 4).map(skill => (
+                                <Badge key={skill} variant="secondary" className="text-xs">
+                                  {skill}
+                                </Badge>
+                              ))}
+                              {listing.skills_needed.length > 4 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{listing.skills_needed.length - 4}
+                                </Badge>
                               )}
                             </div>
+                          )}
+                        </CardContent>
+                      </Link>
+
+                      {/* Project Highlights */}
+                      {highlights.length > 0 && (
+                        <div className="border-t bg-gray-50/50 px-3 sm:px-4 md:px-6 py-3" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Camera className="w-4 h-4 text-purple-600" />
+                            <span className="text-xs font-medium text-gray-700">Project Highlights</span>
                           </div>
-                          <Badge className="bg-green-100 text-green-700 border border-green-300 font-semibold flex-shrink-0">
-                            ${listing.sale_price}
-                          </Badge>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {highlights.slice(0, 3).map((highlight, idx) => {
+                              const mediaUrl = highlight.media_url || highlight.image_url;
+                              const mediaType = highlight.media_type || 'image';
+                              
+                              return (
+                                <div key={idx} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 group">
+                                  {mediaType === 'video' ? (
+                                    <div className="relative w-full h-full">
+                                      {highlight.thumbnail_url ? (
+                                        <img 
+                                          src={highlight.thumbnail_url} 
+                                          alt={highlight.caption || 'Video thumbnail'}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <video 
+                                          src={mediaUrl}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      )}
+                                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                        <Play className="w-8 h-8 text-white" />
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <ClickableImage
+                                      src={mediaUrl} 
+                                      alt={highlight.caption || 'Project highlight'}
+                                      caption={highlight.caption}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                    />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </CardHeader>
+                      )}
 
-                      <CardContent className="flex-grow pb-3 space-y-3">
-                        <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed">
-                          {listing.sale_description || listing.description}
-                        </p>
-
-                        {listing.area_of_interest && (
-                          <Badge className="text-xs bg-purple-100 text-purple-700">
-                            <Tag className="w-3 h-3 mr-1" />
-                            {listing.area_of_interest}
-                          </Badge>
-                        )}
-
-                        {listing.skills_needed && listing.skills_needed.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {listing.skills_needed.slice(0, 3).map(skill => (
-                              <Badge key={skill} variant="secondary" className="text-xs">
-                                {skill}
-                              </Badge>
+                      {/* Project Links */}
+                      {listing.project_urls && listing.project_urls.length > 0 && (
+                        <div className="border-t bg-gray-50/50 px-3 sm:px-4 md:px-6 py-3" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Globe className="w-4 h-4 text-purple-600" />
+                            <span className="text-xs font-medium text-gray-700">Live Demo & Links</span>
+                          </div>
+                          <div className="space-y-2">
+                            {listing.project_urls.map((link, idx) => (
+                              <a
+                                key={idx}
+                                href={link.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-between p-2 rounded-lg bg-white border hover:border-purple-300 hover:shadow-sm transition-all group"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                                    <Globe className="w-4 h-4 text-white" />
+                                  </div>
+                                  <span className="text-xs font-medium text-gray-700 truncate group-hover:text-purple-600">
+                                    {link.title || link.url}
+                                  </span>
+                                </div>
+                                <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-purple-600 flex-shrink-0 ml-2" />
+                              </a>
                             ))}
-                            {listing.skills_needed.length > 3 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{listing.skills_needed.length - 3}
-                              </Badge>
-                            )}
                           </div>
-                        )}
-                      </CardContent>
-
-                      <CardFooter className="bg-gradient-to-r from-gray-50 to-purple-50/30 border-t border-purple-100/50 p-4">
-                        <div className="w-full flex items-center justify-between">
-                          <div className="flex items-center text-gray-600 text-xs">
-                            <Clock className="w-3 h-3 mr-1" />
-                            {formatDistanceToNow(new Date(listing.created_date))} ago
-                          </div>
-                          <Button 
-                            size="sm" 
-                            className="cu-button text-xs"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedProject(listing);
-                              setShowDetailsDialog(true);
-                            }}
-                          >
-                            <Eye className="w-3 h-3 mr-1" />
-                            View Details
-                          </Button>
                         </div>
-                      </CardFooter>
+                      )}
+
+                      {!isOwnProject && (
+                        <CardFooter className="bg-gradient-to-r from-gray-50 to-purple-50/30 border-t border-purple-100/50 px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+                          <div className="w-full flex flex-col sm:flex-row gap-2">
+                            <Button
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStartChat(listing);
+                              }}
+                              variant="outline"
+                              className="flex-1 text-xs sm:text-sm"
+                            >
+                              <MessageCircle className="w-4 h-4 mr-2" />
+                              Chat
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedProject(listing);
+                                setShowPurchaseDialog(true);
+                              }}
+                              className="flex-1 cu-button text-xs sm:text-sm"
+                            >
+                              <ShoppingCart className="w-4 h-4 mr-2" />
+                              Buy Now
+                            </Button>
+                          </div>
+                        </CardFooter>
+                      )}
+
+                      {isOwnProject && (
+                        <CardFooter className="bg-gray-100 border-t p-3">
+                          <div className="w-full text-center">
+                            <p className="text-xs text-gray-600 mb-2">This is your listing</p>
+                            <Link to={createPageUrl(`ProjectDetail?id=${listing.id}`)}>
+                              <Button variant="outline" size="sm" className="w-full">
+                                Manage Listing
+                              </Button>
+                            </Link>
+                          </div>
+                        </CardFooter>
+                      )}
                     </Card>
                   </motion.div>
                 );
@@ -362,185 +463,7 @@ export default function Marketplace({ currentUser }) {
         </div>
       </div>
 
-      {/* Project Details Dialog */}
-      <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
-        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
-          {selectedProject && (
-            <>
-              <DialogHeader>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    {selectedProject.logo_url && (
-                      <img 
-                        src={selectedProject.logo_url} 
-                        alt={selectedProject.title}
-                        className="w-16 h-16 rounded-lg object-cover border-2 border-gray-100 shadow-sm flex-shrink-0"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <DialogTitle className="text-2xl mb-2">{selectedProject.title}</DialogTitle>
-                      {sellers[selectedProject.created_by] && (
-                        <Link
-                          to={createPageUrl(`UserProfile?username=${sellers[selectedProject.created_by].username}`)}
-                          className="flex items-center gap-2 hover:opacity-80"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <OptimizedAvatar
-                            src={sellers[selectedProject.created_by].profile_image}
-                            alt={sellers[selectedProject.created_by].full_name}
-                            fallback={sellers[selectedProject.created_by].full_name?.[0] || 'U'}
-                            size="xs"
-                            className="w-6 h-6"
-                          />
-                          <span className="text-sm text-gray-600 hover:text-purple-600">
-                            {sellers[selectedProject.created_by].full_name}
-                          </span>
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                  <Badge className="bg-green-100 text-green-700 border border-green-300 font-bold text-lg px-4 py-2">
-                    ${selectedProject.sale_price}
-                  </Badge>
-                </div>
-              </DialogHeader>
 
-              <div className="space-y-6">
-                {/* Description */}
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">About This Project</h4>
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                    {selectedProject.sale_description || selectedProject.description}
-                  </p>
-                </div>
-
-                {/* Project Highlights */}
-                {selectedProject.highlights && selectedProject.highlights.length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Camera className="w-4 h-4 text-purple-600" />
-                      <h4 className="font-semibold text-gray-900">Project Highlights</h4>
-                    </div>
-                    <MediaDisplay media={selectedProject.highlights} maxDisplay={6} />
-                  </div>
-                )}
-
-                {/* Skills & Details */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {selectedProject.area_of_interest && (
-                    <div>
-                      <h5 className="text-sm font-medium text-gray-500 mb-1">Category</h5>
-                      <Badge className="bg-purple-100 text-purple-700">
-                        {selectedProject.area_of_interest}
-                      </Badge>
-                    </div>
-                  )}
-
-                  {selectedProject.industry && (
-                    <div>
-                      <h5 className="text-sm font-medium text-gray-500 mb-1">Industry</h5>
-                      <p className="text-gray-900">{selectedProject.industry}</p>
-                    </div>
-                  )}
-
-                  {selectedProject.classification && (
-                    <div>
-                      <h5 className="text-sm font-medium text-gray-500 mb-1">Type</h5>
-                      <p className="text-gray-900 capitalize">{selectedProject.classification.replace(/_/g, ' ')}</p>
-                    </div>
-                  )}
-
-                  {selectedProject.status && (
-                    <div>
-                      <h5 className="text-sm font-medium text-gray-500 mb-1">Status</h5>
-                      <p className="text-gray-900 capitalize">{selectedProject.status.replace(/_/g, ' ')}</p>
-                    </div>
-                  )}
-                </div>
-
-                {selectedProject.skills_needed && selectedProject.skills_needed.length > 0 && (
-                  <div>
-                    <h5 className="text-sm font-medium text-gray-500 mb-2">Skills Included</h5>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedProject.skills_needed.map(skill => (
-                        <Badge key={skill} className="bg-purple-100 text-purple-700">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Project Links */}
-                {selectedProject.project_urls && selectedProject.project_urls.length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Globe className="w-4 h-4 text-purple-600" />
-                      <h4 className="font-semibold text-gray-900">Live Demo & Links</h4>
-                    </div>
-                    <div className="space-y-2">
-                      {selectedProject.project_urls.map((link, idx) => (
-                        <a
-                          key={idx}
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border hover:border-purple-300 hover:shadow-sm transition-all group"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
-                              <Globe className="w-4 h-4 text-white" />
-                            </div>
-                            <span className="text-sm font-medium text-gray-700 truncate group-hover:text-purple-600">
-                              {link.title || link.url}
-                            </span>
-                          </div>
-                          <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600 flex-shrink-0 ml-2" />
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-                  <Button
-                    variant="outline"
-                    onClick={() => handleStartChat(selectedProject)}
-                    className="flex-1"
-                  >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Chat with Seller
-                  </Button>
-
-                  {!isOwner(selectedProject) && (
-                    <Button
-                      onClick={() => {
-                        setShowDetailsDialog(false);
-                        setShowPurchaseDialog(true);
-                      }}
-                      className="flex-1 cu-button"
-                    >
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      Buy Project
-                    </Button>
-                  )}
-
-                  {isOwner(selectedProject) && (
-                    <Link to={createPageUrl(`ProjectDetail?id=${selectedProject.id}`)} className="flex-1">
-                      <Button variant="outline" className="w-full">
-                        <Eye className="w-4 h-4 mr-2" />
-                        Manage Listing
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Purchase Dialog */}
       <Dialog open={showPurchaseDialog} onOpenChange={setShowPurchaseDialog}>
@@ -601,23 +524,7 @@ export default function Marketplace({ currentUser }) {
         </DialogContent>
       </Dialog>
 
-      {/* Booking Dialog */}
-      {selectedProject && (
-        <BookingDialog
-          isOpen={showBookingDialog}
-          onClose={() => setShowBookingDialog(false)}
-          service={{
-            id: selectedProject.id,
-            title: selectedProject.title,
-            provider_email: selectedProject.created_by,
-            session_duration_minutes: 60,
-            weekly_availability: {},
-            booking_enabled: false
-          }}
-          provider={sellers[selectedProject.created_by]}
-          currentUser={currentUser}
-        />
-      )}
+
     </div>
   );
 }
