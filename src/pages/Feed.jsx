@@ -2486,6 +2486,14 @@ export default function Feed({ currentUser, authIsLoading }) {
                             provider={item.content.provider}
                             currentUser={currentUser}
                           />
+                        ) : item.content.itemType === 'marketplace' ? (
+                          <MarketplaceFeedCard
+                            key={`marketplace-${item.content.id}`}
+                            project={item.content.project}
+                            marketplaceListing={item.content}
+                            seller={item.content.seller}
+                            currentUser={currentUser}
+                          />
                         ) : (
                           <FeedPostItem
                             key={`feedpost-${item.content.id}`}
@@ -2650,6 +2658,14 @@ export default function Feed({ currentUser, authIsLoading }) {
                             provider={item.content.provider}
                             currentUser={currentUser}
                           />
+                        ) : item.content.itemType === 'marketplace' ? (
+                          <MarketplaceFeedCard
+                            key={`marketplace-${item.content.id}`}
+                            project={item.content.project}
+                            marketplaceListing={item.content}
+                            seller={item.content.seller}
+                            currentUser={currentUser}
+                          />
                         ) : (
                           <FeedPostItem
                             key={`feedpost-${item.content.id}`}
@@ -2800,6 +2816,14 @@ export default function Feed({ currentUser, authIsLoading }) {
                             key={`service-${item.content.id}`}
                             listing={item.content}
                             provider={item.content.provider}
+                            currentUser={currentUser}
+                          />
+                        ) : item.content.itemType === 'marketplace' ? (
+                          <MarketplaceFeedCard
+                            key={`marketplace-${item.content.id}`}
+                            project={item.content.project}
+                            marketplaceListing={item.content}
+                            seller={item.content.seller}
                             currentUser={currentUser}
                           />
                         ) : (
