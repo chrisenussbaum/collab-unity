@@ -929,17 +929,17 @@ export default function Discover({ currentUser: propCurrentUser }) {
         </DialogContent>
       </Dialog>
 
-      <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 text-white py-16 sm:py-20 md:py-24 -mt-14 pt-28 sm:-mt-16 sm:pt-32 md:-mt-20 md:pt-36">
+      <div className="bg-white border-b border-gray-200 py-16 sm:py-20 md:py-24 -mt-14 pt-28 sm:-mt-16 sm:pt-32 md:-mt-20 md:pt-36">
         <div className="cu-container">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
-              Where <span className="text-yellow-400">Ideas</span> Happen
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 text-gray-900">
+              Where <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Ideas</span> Happen
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-purple-100 mb-8 sm:mb-10 max-w-3xl mx-auto px-4">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-8 sm:mb-10 max-w-3xl mx-auto px-4">
               Connect with talented professionals, collaborate on meaningful projects,
               and bring your vision to life.
             </p>
@@ -949,7 +949,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm cu-button-mobile-full"
+                  className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 cu-button-mobile-full"
                 >
                   <Building2 className="w-5 h-5 mr-2" />
                   Marketplace
@@ -959,7 +959,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
               <Link to={createPageUrl("CreateProject")}>
                 <Button
                   size="lg"
-                  className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold shadow-lg hover:shadow-xl transition-all cu-button-mobile-full"
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all cu-button-mobile-full"
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   Create Project
@@ -970,7 +970,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm cu-button-mobile-full"
+                  className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 cu-button-mobile-full"
                 >
                   <Megaphone className="w-5 h-5 mr-2" />
                   Promote Project
@@ -983,7 +983,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm w-full"
+                  className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 w-full"
                 >
                   <Building2 className="w-5 h-5 mr-2" />
                   Marketplace
@@ -993,7 +993,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
               <Link to={createPageUrl("CreateProject")} className="w-full">
                 <Button
                   size="lg"
-                  className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold shadow-lg hover:shadow-xl transition-all w-full"
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all w-full"
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   Create Project
@@ -1004,7 +1004,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm w-full"
+                  className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 w-full"
                 >
                   <Megaphone className="w-5 h-5 mr-2" />
                   Promote Project

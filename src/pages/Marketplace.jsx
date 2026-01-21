@@ -239,20 +239,20 @@ export default function Marketplace({ currentUser }) {
       )}
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 text-white py-16 sm:py-20 md:py-24 -mt-14 pt-28 sm:-mt-16 sm:pt-32 md:-mt-20 md:pt-36">
+      <div className="bg-white border-b border-gray-200 py-12 sm:py-16 md:py-20 -mt-14 pt-24 sm:-mt-16 sm:pt-28 md:-mt-20 md:pt-32">
         <div className="cu-container">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <div className="w-16 h-16 cu-gradient rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Building2 className="w-8 h-8 text-white" />
+            <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <ShoppingCart className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
-              Project <span className="text-yellow-400">Marketplace</span>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-gray-900">
+              Project <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Marketplace</span>
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-purple-100 mb-8 max-w-3xl mx-auto px-4">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-8 max-w-3xl mx-auto px-4">
               Buy and sell projects from talented creators in the Collab Unity community
             </p>
           </motion.div>
