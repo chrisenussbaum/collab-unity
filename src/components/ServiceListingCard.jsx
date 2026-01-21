@@ -73,8 +73,8 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
   return (
     <Card className="cu-card h-full flex flex-col hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-start space-x-3 flex-1">
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex items-start space-x-2 flex-1 min-w-0">
             <Link 
               to={createPageUrl(provider?.username ? `UserProfile?username=${provider.username}` : `UserProfile?email=${listing.provider_email}`)}
               onClick={(e) => e.stopPropagation()}
@@ -83,17 +83,17 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
                 src={provider?.profile_image}
                 alt={provider?.full_name || 'Provider'}
                 fallback={provider?.full_name?.[0] || 'P'}
-                size="md"
-                className="w-12 h-12 cursor-pointer"
+                size="sm"
+                className="w-10 h-10 sm:w-12 sm:h-12 cursor-pointer"
               />
             </Link>
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-gray-900 line-clamp-2 cu-text-responsive-sm">
+              <h3 className="font-bold text-gray-900 line-clamp-2 cu-text-responsive-sm leading-tight">
                 {listing.title}
               </h3>
               <Link 
                 to={createPageUrl(provider?.username ? `UserProfile?username=${provider.username}` : `UserProfile?email=${listing.provider_email}`)}
-                className="text-sm text-gray-600 hover:text-purple-600"
+                className="text-xs sm:text-sm text-gray-600 hover:text-purple-600"
                 onClick={(e) => e.stopPropagation()}
               >
                 {provider?.full_name || 'Provider'}
@@ -101,127 +101,116 @@ export default function ServiceListingCard({ listing, provider, currentUser }) {
             </div>
           </div>
           <Badge 
-            className={
+            className={`text-xs ${
               listing.availability_status === "available" ? "bg-green-100 text-green-700" :
               listing.availability_status === "busy" ? "bg-yellow-100 text-yellow-700" :
               "bg-gray-100 text-gray-700"
-            }
+            }`}
           >
             {listing.availability_status}
           </Badge>
         </div>
         
-        <p className="text-sm text-gray-700 line-clamp-3">
+        <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed">
           {listing.description}
         </p>
       </CardHeader>
 
-      <CardContent className="flex-grow pb-3">
-        <div className="space-y-3">
-          <div className="flex items-center text-green-600 font-semibold">
-            <DollarSign className="w-4 h-4 mr-1" />
-            {getRateDisplay()}
-          </div>
-
-          {listing.booking_enabled && (
-            <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-100 px-3 py-2 rounded-lg">
-              <Calendar className="w-4 h-4" />
-              <span className="font-medium">
-                {listing.session_duration_minutes} min sessions • Book up to {listing.advance_booking_days} days ahead
-              </span>
-            </div>
-          )}
-
-          {listing.skills_offered && listing.skills_offered.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {listing.skills_offered.slice(0, 4).map((skill, idx) => (
-                <Badge key={idx} className="text-xs bg-purple-100 text-purple-700">
-                  {skill}
-                </Badge>
-              ))}
-              {listing.skills_offered.length > 4 && (
-                <Badge variant="outline" className="text-xs">
-                  +{listing.skills_offered.length - 4}
-                </Badge>
-              )}
-            </div>
-          )}
-
-          {listing.media_attachments && listing.media_attachments.length > 0 && (
-            <div className="pt-2">
-              <div className="flex items-center gap-2 mb-2">
-                <Camera className="w-4 h-4 text-gray-600" />
-                <span className="text-xs font-medium text-gray-700">Service Showcase</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {listing.media_attachments.slice(0, 4).map((media, idx) => {
-                  const mediaUrl = media.media_url;
-                  const mediaType = media.media_type || 'image';
-                  
-                  return (
-                    <div key={idx} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
-                      {mediaType === 'video' ? (
-                        <div className="relative w-full h-full">
-                          {media.thumbnail_url ? (
-                            <img 
-                              src={media.thumbnail_url} 
-                              alt={media.caption || 'Video thumbnail'}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <video 
-                              src={mediaUrl}
-                              className="w-full h-full object-cover"
-                            />
-                          )}
-                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                            <Play className="w-6 h-6 text-white" />
-                          </div>
-                        </div>
-                      ) : (
-                        <ClickableImage
-                          src={mediaUrl} 
-                          alt={media.caption || 'Service showcase'}
-                          caption={media.caption}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform"
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-
+      <CardContent className="flex-grow pb-3 space-y-3">
+        <div className="flex items-center text-green-600 font-semibold cu-text-responsive-sm">
+          <DollarSign className="w-4 h-4 mr-1" />
+          {getRateDisplay()}
         </div>
+
+        {listing.booking_enabled && (
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700 bg-gray-100 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg">
+            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span className="font-medium">
+              {listing.session_duration_minutes} min sessions • Book up to {listing.advance_booking_days} days ahead
+            </span>
+          </div>
+        )}
+
+        {listing.skills_offered && listing.skills_offered.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {listing.skills_offered.slice(0, 4).map((skill, idx) => (
+              <Badge key={idx} className="text-xs bg-purple-100 text-purple-700">
+                {skill}
+              </Badge>
+            ))}
+            {listing.skills_offered.length > 4 && (
+              <Badge variant="outline" className="text-xs">
+                +{listing.skills_offered.length - 4}
+              </Badge>
+            )}
+          </div>
+        )}
+
+        {listing.media_attachments && listing.media_attachments.length > 0 && (
+          <div className="pt-2 border-t">
+            <div className="flex items-center gap-2 mb-2">
+              <Camera className="w-4 h-4 text-purple-600" />
+              <span className="text-xs font-medium text-gray-700">Service Showcase</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {listing.media_attachments.slice(0, 3).map((media, idx) => {
+                const mediaUrl = media.media_url;
+                const mediaType = media.media_type || 'image';
+                
+                return (
+                  <div key={idx} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+                    {mediaType === 'video' ? (
+                      <div className="relative w-full h-full">
+                        {media.thumbnail_url ? (
+                          <img 
+                            src={media.thumbnail_url} 
+                            alt={media.caption || 'Video thumbnail'}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <video 
+                            src={mediaUrl}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                          <Play className="w-6 h-6 text-white" />
+                        </div>
+                      </div>
+                    ) : (
+                      <ClickableImage
+                        src={mediaUrl} 
+                        alt={media.caption || 'Service showcase'}
+                        caption={media.caption}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </CardContent>
 
       {listing.portfolio_links && listing.portfolio_links.length > 0 && (
-        <div className="border-t bg-gray-50/50 px-3 sm:px-4 md:px-6 py-3">
+        <div className="border-t bg-gray-50/50 px-4 py-3">
           <div className="flex items-center gap-2 mb-2">
             <LinkIcon className="w-4 h-4 text-purple-600" />
             <span className="text-xs font-medium text-gray-700">Portfolio Links</span>
           </div>
-          <div className="space-y-2">
-            {listing.portfolio_links.map((link, idx) => (
+          <div className="space-y-1.5">
+            {listing.portfolio_links.slice(0, 2).map((link, idx) => (
               <a
                 key={idx}
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-between p-2 rounded-lg bg-white border hover:border-purple-300 hover:shadow-sm transition-all group"
+                className="flex items-center text-xs text-purple-600 hover:underline"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
-                    <Globe className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-xs font-medium text-gray-700 truncate group-hover:text-purple-600">
-                    {link.title || link.url}
-                  </span>
-                </div>
-                <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-purple-600 flex-shrink-0 ml-2" />
+                <ExternalLink className="w-3 h-3 mr-1 flex-shrink-0" />
+                <span className="truncate">{link.title || link.url}</span>
               </a>
             ))}
           </div>
