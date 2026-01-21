@@ -951,7 +951,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   variant="outline"
                   className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm cu-button-mobile-full"
                 >
-                  <DollarSign className="w-5 h-5 mr-2" />
+                  <Building2 className="w-5 h-5 mr-2" />
                   Marketplace
                 </Button>
               </Link>
@@ -985,7 +985,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   variant="outline"
                   className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm w-full"
                 >
-                  <DollarSign className="w-5 h-5 mr-2" />
+                  <Building2 className="w-5 h-5 mr-2" />
                   Marketplace
                 </Button>
               </Link>

@@ -6,12 +6,13 @@ import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { DollarSign, ShoppingCart, Search, Tag, Users, Clock, Eye, Lightbulb, Plus } from "lucide-react";
+import { DollarSign, ShoppingCart, Search, Tag, Users, Clock, Calendar, MessageCircle, Lightbulb, Plus, Building2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import { formatDistanceToNow } from "date-fns";
+import BookingDialog from "@/components/BookingDialog";
 
 export default function Marketplace({ currentUser }) {
   const navigate = useNavigate();
@@ -19,6 +20,8 @@ export default function Marketplace({ currentUser }) {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sellers, setSellers] = useState({});
+  const [showBookingDialog, setShowBookingDialog] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
 
   useEffect(() => {
     const loadMarketplace = async () => {
@@ -65,8 +68,92 @@ export default function Marketplace({ currentUser }) {
     );
   });
 
+  const handleBookProject = (project, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!currentUser) {
+      toast.error("Please sign in to book a project consultation");
+      return;
+    }
+    
+    setSelectedProject(project);
+    setShowBookingDialog(true);
+  };
+
+  const handleChatWithOwner = async (project, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!currentUser) {
+      toast.error("Please sign in to start a conversation");
+      return;
+    }
+
+    try {
+      const ownerEmail = project.created_by;
+      
+      // Find or create conversation
+      const [existingConv1, existingConv2] = await Promise.all([
+        base44.entities.Conversation.filter({
+          conversation_type: "direct",
+          participant_1_email: currentUser.email,
+          participant_2_email: ownerEmail
+        }),
+        base44.entities.Conversation.filter({
+          conversation_type: "direct",
+          participant_1_email: ownerEmail,
+          participant_2_email: currentUser.email
+        })
+      ]);
+
+      let conversation;
+      if (existingConv1.length > 0) {
+        conversation = existingConv1[0];
+      } else if (existingConv2.length > 0) {
+        conversation = existingConv2[0];
+      } else {
+        conversation = await base44.entities.Conversation.create({
+          conversation_type: "direct",
+          participant_1_email: currentUser.email,
+          participant_2_email: ownerEmail,
+          last_message: "",
+          last_message_time: new Date().toISOString(),
+          participant_1_unread_count: 0,
+          participant_2_unread_count: 0
+        });
+      }
+
+      navigate(createPageUrl(`Chat?conversation=${conversation.id}`));
+    } catch (error) {
+      console.error("Error starting conversation:", error);
+      toast.error("Failed to start conversation");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Booking Dialog */}
+      {selectedProject && (
+        <BookingDialog
+          isOpen={showBookingDialog}
+          onClose={() => {
+            setShowBookingDialog(false);
+            setSelectedProject(null);
+          }}
+          listing={{
+            id: selectedProject.id,
+            title: selectedProject.title,
+            provider_email: selectedProject.created_by,
+            provider_name: sellers[selectedProject.created_by]?.full_name || 'Project Owner',
+            duration_minutes: 60,
+            description: selectedProject.description
+          }}
+          provider={sellers[selectedProject.created_by]}
+          currentUser={currentUser}
+        />
+      )}
+
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 text-white py-16 sm:py-20 md:py-24 -mt-14 pt-28 sm:-mt-16 sm:pt-32 md:-mt-20 md:pt-36">
         <div className="cu-container">
@@ -76,7 +163,7 @@ export default function Marketplace({ currentUser }) {
             className="text-center"
           >
             <div className="w-16 h-16 cu-gradient rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <ShoppingCart className="w-8 h-8 text-white" />
+              <Building2 className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
               Project <span className="text-yellow-400">Marketplace</span>
@@ -105,37 +192,7 @@ export default function Marketplace({ currentUser }) {
             </div>
           </div>
 
-          {/* Coming Soon Notice */}
-          <Card className="cu-card mb-8 border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50">
-            <CardContent className="p-6 sm:p-8 text-center">
-              <div className="w-20 h-20 cu-gradient rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <DollarSign className="w-10 h-10 text-white" />
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-                Marketplace Coming Soon!
-              </h2>
-              <p className="text-gray-700 mb-4 max-w-2xl mx-auto">
-                Soon you'll be able to buy and sell projects with integrated Stripe payments. 
-                Users will set prices, handle transactions, manage payouts, and track order history all in one place.
-              </p>
-              <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
-                <div className="flex items-center">
-                  <DollarSign className="w-4 h-4 mr-2 text-purple-600" />
-                  <span>Secure Payments</span>
-                </div>
-                <div className="flex items-center">
-                  <ShoppingCart className="w-4 h-4 mr-2 text-purple-600" />
-                  <span>Order Tracking</span>
-                </div>
-                <div className="flex items-center">
-                  <Users className="w-4 h-4 mr-2 text-purple-600" />
-                  <span>Seller Payouts</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Preview: Projects Grid */}
+          {/* Projects Grid */}
           {isLoading ? (
             <div className="text-center py-16">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
@@ -225,15 +282,34 @@ export default function Marketplace({ currentUser }) {
                         </CardContent>
 
                         <CardFooter className="bg-gray-50 border-t p-4">
-                          <div className="w-full flex items-center justify-between">
-                            <div className="flex items-center text-gray-600 text-xs">
-                              <Clock className="w-3 h-3 mr-1" />
-                              {formatDistanceToNow(new Date(listing.created_date))} ago
-                            </div>
-                            <Button size="sm" className="cu-button text-xs" onClick={(e) => e.preventDefault()}>
-                              <Eye className="w-3 h-3 mr-1" />
-                              View Details
-                            </Button>
+                          <div className="w-full flex flex-col sm:flex-row gap-2">
+                            {currentUser && listing.created_by !== currentUser.email && (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  className="cu-button flex-1 text-xs"
+                                  onClick={(e) => handleBookProject(listing, e)}
+                                >
+                                  <Calendar className="w-3 h-3 mr-1" />
+                                  Book
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="flex-1 text-xs"
+                                  onClick={(e) => handleChatWithOwner(listing, e)}
+                                >
+                                  <MessageCircle className="w-3 h-3 mr-1" />
+                                  Chat
+                                </Button>
+                              </>
+                            )}
+                            {(!currentUser || listing.created_by === currentUser.email) && (
+                              <div className="flex items-center text-gray-600 text-xs justify-center py-2">
+                                <Clock className="w-3 h-3 mr-1" />
+                                {formatDistanceToNow(new Date(listing.created_date))} ago
+                              </div>
+                            )}
                           </div>
                         </CardFooter>
                       </Card>

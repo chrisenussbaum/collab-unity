@@ -11,6 +11,7 @@ import EditProject from './pages/EditProject';
 import FeatureRequest from './pages/FeatureRequest';
 import Feed from './pages/Feed';
 import Leaderboard from './pages/Leaderboard';
+import Marketplace from './pages/Marketplace';
 import MyBookings from './pages/MyBookings';
 import MyProjects from './pages/MyProjects';
 import NotificationSettings from './pages/NotificationSettings';
@@ -25,7 +26,6 @@ import TermsOfService from './pages/TermsOfService';
 import Testimonials from './pages/Testimonials';
 import UserProfile from './pages/UserProfile';
 import Welcome from './pages/Welcome';
-import Marketplace from './pages/Marketplace';
 import __Layout from './Layout.jsx';
 
 
@@ -43,6 +43,7 @@ export const PAGES = {
     "FeatureRequest": FeatureRequest,
     "Feed": Feed,
     "Leaderboard": Leaderboard,
+    "Marketplace": Marketplace,
     "MyBookings": MyBookings,
     "MyProjects": MyProjects,
     "NotificationSettings": NotificationSettings,
@@ -57,7 +58,6 @@ export const PAGES = {
     "Testimonials": Testimonials,
     "UserProfile": UserProfile,
     "Welcome": Welcome,
-    "Marketplace": Marketplace,
 }
 
 export const pagesConfig = {
