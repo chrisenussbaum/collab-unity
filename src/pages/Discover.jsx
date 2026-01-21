@@ -945,16 +945,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
             </p>
             
             <div className="hidden sm:flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-8 px-4">
-              <Link to={createPageUrl("CreateProject")}>
-                <Button
-                  size="lg"
-                  className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold shadow-lg hover:shadow-xl transition-all cu-button-mobile-full"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Create Project
-                </Button>
-              </Link>
-
               <Link to={createPageUrl("Marketplace")}>
                 <Button
                   size="lg"
@@ -963,6 +953,16 @@ export default function Discover({ currentUser: propCurrentUser }) {
                 >
                   <DollarSign className="w-5 h-5 mr-2" />
                   Marketplace
+                </Button>
+              </Link>
+              
+              <Link to={createPageUrl("CreateProject")}>
+                <Button
+                  size="lg"
+                  className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold shadow-lg hover:shadow-xl transition-all cu-button-mobile-full"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Create Project
                 </Button>
               </Link>
 
@@ -979,16 +979,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
             </div>
 
             <div className="flex sm:hidden flex-col items-center justify-center gap-3 mb-6 px-4">
-              <Link to={createPageUrl("CreateProject")} className="w-full">
-                <Button
-                  size="lg"
-                  className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold shadow-lg hover:shadow-xl transition-all w-full"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Create Project
-                </Button>
-              </Link>
-
               <Link to={createPageUrl("Marketplace")} className="w-full">
                 <Button
                   size="lg"
@@ -997,6 +987,16 @@ export default function Discover({ currentUser: propCurrentUser }) {
                 >
                   <DollarSign className="w-5 h-5 mr-2" />
                   Marketplace
+                </Button>
+              </Link>
+
+              <Link to={createPageUrl("CreateProject")} className="w-full">
+                <Button
+                  size="lg"
+                  className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold shadow-lg hover:shadow-xl transition-all w-full"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Create Project
                 </Button>
               </Link>
 
