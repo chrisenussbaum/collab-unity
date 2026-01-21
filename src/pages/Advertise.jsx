@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
-import { Building, Heart, GraduationCap, User, ArrowRight, ShieldCheck, CheckCircle, Sparkles, Target, TrendingUp } from 'lucide-react';
+import { Building, Heart, GraduationCap, User, ArrowRight, ShieldCheck, CheckCircle, Sparkles, Target, TrendingUp, Megaphone } from 'lucide-react';
 
 const promotionCategories = [
   {
@@ -78,33 +77,23 @@ export default function Advertise() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="cu-gradient text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+      <div className="bg-white border-b border-gray-200 py-12 sm:py-16 md:py-20 -mt-14 pt-24 sm:-mt-16 sm:pt-28 md:-mt-20 md:pt-32">
+        <div className="cu-container">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl mb-6"
+            className="text-center"
           >
-            <Sparkles className="w-10 h-10 text-white" />
+            <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <Megaphone className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-gray-900">
+              Amplify Your Reach
+            </h1>
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-8 max-w-3xl mx-auto px-4">
+              Connect with a vibrant community of creators, innovators, and leaders on Collab Unity.
+            </p>
           </motion.div>
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl md:text-6xl font-bold mb-4"
-          >
-            Amplify Your Reach
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xl md:text-2xl text-purple-100 max-w-3xl mx-auto"
-          >
-            Connect with a vibrant community of creators, innovators, and leaders on Collab Unity.
-          </motion.p>
         </div>
       </div>
 
@@ -121,7 +110,7 @@ export default function Advertise() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { step: 1, title: "Select Your Category", desc: "Choose the promotion type that best fits your goals.", icon: Target },
-              { step: 2, title: "Create Your Ad", desc: "Design a compelling ad with our easy-to-use tools.", icon: Sparkles },
+              { step: 2, title: "Create Your Ad", desc: "Design a compelling ad with our easy-to-use tools.", icon: Megaphone },
               { step: 3, title: "Get Verified & Go Live", desc: "Quick security check to ensure community safety.", icon: ShieldCheck }
             ].map((item, idx) => {
               const Icon = item.icon;
