@@ -52,7 +52,19 @@ import {
 
 // Visual mockup components from Demos page
 const FeedPostMockup = () => {
-  const [activeTab, setActiveTab] = React.useState('highlights');
+  const [activeTab, setActiveTab] = React.useState('showcase');
+  const [showcaseIndex, setShowcaseIndex] = React.useState(0);
+  
+  const showcaseItems = [
+    { title: "Product Demo Video", domain: "youtube.com", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=youtube.com" },
+    { title: "GitHub Repository", domain: "github.com", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=github.com" },
+    { title: "Live Website", domain: "vercel.app", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=vercel.app" }
+  ];
+  
+  const visibleShowcase = [
+    showcaseItems[showcaseIndex],
+    showcaseItems[(showcaseIndex + 1) % showcaseItems.length]
+  ];
   
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
@@ -60,14 +72,12 @@ const FeedPostMockup = () => {
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-start space-x-3 flex-1">
-            <img 
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces"
-              alt="User"
-              className="w-11 h-11 rounded-lg object-cover flex-shrink-0"
-            />
+            <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-gray-900 text-base mb-1">Redapt SKO 2026 Event</h3>
-              <p className="text-xs text-gray-500">Chris Nussbaum • 3 days ago</p>
+              <h3 className="font-bold text-gray-900 text-base mb-1">AI Recipe Generator</h3>
+              <p className="text-xs text-gray-500">Sarah Martinez • 5 days ago</p>
             </div>
           </div>
           <div className="flex items-center gap-0.5">
@@ -84,16 +94,16 @@ const FeedPostMockup = () => {
         <div className="flex flex-wrap gap-2 mb-3">
           <Badge className="bg-orange-100 text-orange-700 border-0 text-xs font-medium">Seeking Collaborators</Badge>
           <Badge className="bg-purple-100 text-purple-700 border-0 text-xs font-medium">Collaborative</Badge>
-          <Badge className="bg-blue-100 text-blue-700 border-0 text-xs font-medium">Business</Badge>
+          <Badge className="bg-blue-100 text-blue-700 border-0 text-xs font-medium">Startup</Badge>
           <div className="flex items-center gap-1 text-purple-600 text-xs">
             <Users className="w-3.5 h-3.5" />
-            <span>1 collaborator</span>
+            <span>2 collaborators</span>
           </div>
         </div>
         
         {/* Description */}
         <p className="text-sm text-gray-700 mb-4 leading-relaxed">
-          Sales kickoff event for attendees, focusing on innovation and collaboration within the tech industry. Sharing knowledge, networking, and...
+          Building an AI-powered recipe generator that creates personalized meal plans based on dietary preferences and available ingredients. Looking for collaboration on...
         </p>
         
         {/* Tabs */}
@@ -123,20 +133,45 @@ const FeedPostMockup = () => {
         </div>
 
         {/* Content Area */}
-        <div className="mb-4 rounded-lg overflow-hidden border border-gray-200">
+        <div className="mb-4">
           {activeTab === 'showcase' && (
-            <div className="bg-white h-[220px] overflow-hidden">
-              <div className="grid grid-cols-2 gap-3 p-3 h-full">
-                {[
-                  { title: "Event Day 2", domain: "youtube.com", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=youtube.com" },
-                  { title: "Event Day 1", domain: "youtube.com", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=youtube.com" }
-                ].map((link, i) => (
-                  <div key={i} className="bg-white rounded-lg border border-gray-200 hover:border-purple-400 transition-colors cursor-pointer p-4 flex flex-col items-center justify-center">
-                    <div className="w-12 h-12 bg-gray-900 rounded flex items-center justify-center mb-2">
-                      <img src={link.icon} alt={link.domain} className="w-8 h-8 object-contain" />
+            <div className="bg-white">
+              {/* Showcase Navigation Header */}
+              <div className="flex items-center justify-between mb-3 px-2">
+                <button 
+                  onClick={() => setShowcaseIndex((showcaseIndex - 1 + showcaseItems.length) % showcaseItems.length)}
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4 text-gray-600" />
+                </button>
+                <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                  <Globe className="w-3.5 h-3.5" />
+                  <span className="font-medium">Showcase</span>
+                  <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded">{showcaseItems.length}</span>
+                </div>
+                <button 
+                  onClick={() => setShowcaseIndex((showcaseIndex + 1) % showcaseItems.length)}
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4 text-gray-600" />
+                </button>
+              </div>
+              
+              {/* Showcase Grid */}
+              <div className="grid grid-cols-2 gap-3 h-[200px]">
+                {visibleShowcase.map((link, i) => (
+                  <div key={i} className="bg-white rounded-lg border border-gray-200 hover:border-purple-400 transition-colors cursor-pointer overflow-hidden">
+                    <div className="bg-green-100 px-2 py-1 flex items-center justify-start gap-1">
+                      <Globe className="w-3 h-3 text-green-700" />
+                      <span className="text-xs text-green-700 font-medium">Showcase</span>
                     </div>
-                    <p className="text-sm font-semibold text-gray-900 text-center mb-1">{link.title}</p>
-                    <p className="text-xs text-gray-500">Click to visit</p>
+                    <div className="p-4 flex flex-col items-center justify-center h-[calc(100%-28px)]">
+                      <div className="w-10 h-10 bg-gray-900 rounded flex items-center justify-center mb-2">
+                        <img src={link.icon} alt={link.domain} className="w-6 h-6 object-contain" />
+                      </div>
+                      <p className="text-sm font-semibold text-gray-900 text-center mb-1">{link.title}</p>
+                      <p className="text-xs text-gray-500">Click to visit</p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -144,14 +179,14 @@ const FeedPostMockup = () => {
           )}
 
           {activeTab === 'highlights' && (
-            <div className="h-[220px] relative bg-black">
+            <div className="h-[240px] relative bg-black rounded-lg overflow-hidden border border-gray-200">
               <img 
-                src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop"
-                alt="Event"
+                src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=2070&auto=format&fit=crop"
+                alt="Project Highlight"
                 className="w-full h-full object-cover"
               />
               <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
-                <p className="text-white text-xs font-medium">Event planning and coordination in progress</p>
+                <p className="text-white text-xs font-medium">UI mockups for the recipe browsing interface</p>
               </div>
             </div>
           )}
@@ -161,7 +196,7 @@ const FeedPostMockup = () => {
         <div className="flex items-center gap-4 text-xs text-gray-600 mb-3">
           <div className="flex items-center gap-1">
             <MapPin className="w-3.5 h-3.5" />
-            <span>Kirkland, WA</span>
+            <span>Remote</span>
           </div>
           <div className="flex items-center gap-1">
             <Building2 className="w-3.5 h-3.5" />
@@ -169,16 +204,16 @@ const FeedPostMockup = () => {
           </div>
           <div className="flex items-center gap-1">
             <Tag className="w-3.5 h-3.5" />
-            <span>Sales</span>
+            <span>Food & Health</span>
           </div>
         </div>
         
         {/* Skills Tags */}
         <div className="flex flex-wrap gap-1.5 pb-3 border-b">
-          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">Event Coordination</Badge>
-          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">Marketing</Badge>
-          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">YouTube</Badge>
-          <Badge variant="outline" className="text-xs border-purple-200 text-purple-600">+1 more</Badge>
+          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">React</Badge>
+          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">OpenAI</Badge>
+          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">Node.js</Badge>
+          <Badge variant="outline" className="text-xs border-purple-200 text-purple-600">+2 more</Badge>
         </div>
         
         {/* Action Buttons */}
