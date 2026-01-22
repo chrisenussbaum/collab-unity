@@ -2358,12 +2358,6 @@ export default function Feed({ currentUser, authIsLoading }) {
                       </div>
                     </div>
                   )}
-                  
-                  {displayedItemsCount >= allFeedItems.length && allFeedItems.length > 0 && (
-                    <div className="text-center py-8">
-                      <p className="cu-text-responsive-sm text-gray-500">You've reached the end of the feed!</p>
-                    </div>
-                  )}
                 </>
               )}
             </div>
@@ -2533,12 +2527,6 @@ export default function Feed({ currentUser, authIsLoading }) {
                       </div>
                     </div>
                   )}
-                  
-                  {displayedItemsCount >= allFeedItems.length && allFeedItems.length > 0 && (
-                    <div className="text-center py-8">
-                      <p className="cu-text-responsive-sm text-gray-500">You've reached the end of the feed!</p>
-                    </div>
-                  )}
                 </>
               )}
             </motion.div>
@@ -2691,12 +2679,6 @@ export default function Feed({ currentUser, authIsLoading }) {
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mr-3"></div>
                         <span className="cu-text-responsive-sm text-gray-600">Loading more posts...</span>
                       </div>
-                    </div>
-                  )}
-                  
-                  {displayedItemsCount >= allFeedItems.length && allFeedItems.length > 0 && (
-                    <div className="text-center py-8">
-                      <p className="cu-text-responsive-sm text-gray-500">You've reached the end of the feed!</p>
                     </div>
                   )}
                 </>
