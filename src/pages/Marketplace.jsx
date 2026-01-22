@@ -18,6 +18,8 @@ import ServiceListingCard from "@/components/ServiceListingCard";
 import ClickableImage from "@/components/ClickableImage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
+import MarketplaceCardSkeleton from "@/components/skeletons/MarketplaceCardSkeleton";
+import ServiceCardSkeleton from "@/components/skeletons/ServiceCardSkeleton";
 
 export default function Marketplace({ currentUser }) {
   const navigate = useNavigate();
@@ -542,9 +544,10 @@ export default function Marketplace({ currentUser }) {
 
             <TabsContent value="services">
               {isLoading ? (
-                <div className="text-center py-16">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading services...</p>
+                <div className="cu-grid-responsive-1-2-3">
+                  {[...Array(6)].map((_, i) => (
+                    <ServiceCardSkeleton key={i} />
+                  ))}
                 </div>
               ) : filteredServices.length === 0 ? (
                 <div className="text-center py-16">
