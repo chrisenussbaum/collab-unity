@@ -38,7 +38,9 @@ import {
   Menu,
   X,
   Image,
-  FolderOpen
+  FolderOpen,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
