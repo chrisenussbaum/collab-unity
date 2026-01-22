@@ -74,12 +74,21 @@ const FeedPostMockup = () => {
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-start space-x-3 flex-1">
-            <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center flex-shrink-0">
-              <BookOpen className="w-6 h-6 text-white" />
-            </div>
+            <img 
+              src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=100&h=100&fit=crop"
+              alt="Project Logo"
+              className="w-11 h-11 rounded-lg object-cover flex-shrink-0"
+            />
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-gray-900 text-base mb-1">The Forgotten Library</h3>
-              <p className="text-xs text-gray-500">Jordan Blake • 2 weeks ago</p>
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces"
+                  alt="Jordan Blake"
+                  className="w-4 h-4 rounded-full object-cover"
+                />
+                <p className="text-xs text-gray-500">Jordan Blake • 2 weeks ago</p>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-0.5">
