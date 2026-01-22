@@ -943,10 +943,23 @@ export default function Welcome() {
       mockup: <DiscoverProjectsMockup />
     },
     {
+      title: "Marketplace - Buy & Sell",
+      icon: DollarSign,
+      description: "Monetize your projects and find professional services from the community",
+      color: "green",
+      demoElements: [
+        { icon: Briefcase, label: "Project Sales", desc: "Sell completed projects" },
+        { icon: Users, label: "Service Listings", desc: "Offer your expertise" },
+        { icon: MessageCircle, label: "Consultations", desc: "Paid consultations" },
+        { icon: CheckCircle, label: "Booking System", desc: "Manage appointments" }
+      ],
+      mockup: <SyncChatMockup />
+    },
+    {
       title: "Chat - Message In Real-Time",
       icon: MessageCircle,
       description: "Stay connected with your team through instant messaging and collaboration",
-      color: "green",
+      color: "orange",
       demoElements: [
         { icon: MessageCircle, label: "Direct Messages", desc: "1-on-1 conversations" },
         { icon: Users, label: "Team Chats", desc: "Group discussions" },
@@ -959,7 +972,7 @@ export default function Welcome() {
       title: "Workspace - Collaborate Seamlessly",
       icon: Folder,
       description: "Everything you need to build together in one integrated workspace",
-      color: "orange",
+      color: "indigo",
       demoElements: [
         { icon: MessageSquare, label: "Discussion", desc: "Team communication" },
         { icon: Lightbulb, label: "Ideate", desc: "Rich text planning" },
@@ -972,25 +985,25 @@ export default function Welcome() {
     {
       title: "Profile - Showcase Your Work",
       icon: User,
-      description: "Build your portfolio and highlight your skills and achievements",
-      color: "indigo",
+      description: "Build your portfolio and highlight your skills with professional tools",
+      color: "pink",
       demoElements: [
         { icon: FolderOpen, label: "Projects Portfolio", desc: "Display your work" },
         { icon: Users, label: "Skills & Endorsements", desc: "Build credibility" },
-        { icon: FileText, label: "Education & Awards", desc: "Share achievements" },
-        { icon: FileText, label: "Generate Resume", desc: "PDF download" }
+        { icon: FileText, label: "Generate Resume", desc: "AI-powered PDF resume" },
+        { icon: DollarSign, label: "Service Offerings", desc: "List your services" }
       ],
       mockup: <ProfileMockup />
     }
   ];
 
   const colorClasses = {
-    purple: "from-purple-500 to-indigo-600",
-    blue: "from-blue-500 to-cyan-600",
-    green: "from-green-500 to-emerald-600",
-    orange: "from-orange-500 to-red-600",
-    pink: "from-pink-500 to-purple-600",
-    indigo: "from-indigo-500 to-purple-600"
+    purple: "from-purple-600 to-purple-700",
+    blue: "from-blue-600 to-cyan-600",
+    green: "from-green-600 to-emerald-600",
+    orange: "from-orange-600 to-red-600",
+    pink: "from-pink-600 to-purple-600",
+    indigo: "from-indigo-600 to-purple-600"
   };
 
   const badgeColors = {

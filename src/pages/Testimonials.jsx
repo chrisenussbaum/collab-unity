@@ -328,9 +328,28 @@ export default function Testimonials() {
 
             <div className="lg:col-span-2 space-y-6">
               {isLoading ? (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">{t.loading}</p>
+                <div className="space-y-6">
+                  {[...Array(3)].map((_, i) => (
+                    <Card key={i} className="cu-card animate-pulse">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-gray-200 rounded-full" />
+                            <div className="space-y-2">
+                              <div className="h-4 bg-gray-200 rounded w-32" />
+                              <div className="h-3 bg-gray-200 rounded w-24" />
+                            </div>
+                          </div>
+                          <div className="h-4 bg-gray-200 rounded w-24" />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="h-4 bg-gray-200 rounded w-full" />
+                          <div className="h-4 bg-gray-200 rounded w-5/6" />
+                          <div className="h-4 bg-gray-200 rounded w-4/6" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               ) : testimonials.length === 0 ? (
                 <Card className="cu-card">

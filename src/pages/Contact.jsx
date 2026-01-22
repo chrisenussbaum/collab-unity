@@ -141,14 +141,12 @@ Sent from Collab Unity Contact Form
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                <MessageCircle className="w-6 h-6 text-white" />
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+                <MessageCircle className="w-8 h-8 text-white" />
               </div>
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900">{t.title}</h1>
-                <p className="text-gray-600">{t.subtitle}</p>
-              </div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">{t.title}</h1>
+              <p className="text-xl text-gray-600">{t.subtitle}</p>
             </div>
           </motion.div>
 

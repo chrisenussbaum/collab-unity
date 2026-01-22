@@ -176,15 +176,15 @@ ${formData.email ? `Contact Email: ${formData.email}` : 'No contact email provid
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <Card className="cu-card">
           <CardHeader>
-            <div className="flex items-center space-x-3 mb-2">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <Lightbulb className="w-6 h-6 text-purple-600" />
+            <div className="text-center mb-4">
+              <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+                <Lightbulb className="w-8 h-8 text-white" />
               </div>
-              <CardTitle className="text-3xl">{t.title}</CardTitle>
+              <CardTitle className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">{t.title}</CardTitle>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                {t.subtitle}
+              </p>
             </div>
-            <p className="text-gray-600">
-              {t.subtitle}
-            </p>
           </CardHeader>
           
           <CardContent>

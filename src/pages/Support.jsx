@@ -28,7 +28,7 @@ export default function Support() {
                 Support Collab Unity
               </h1>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Help us build a platform where collaboration thrives and ideas become reality
+                Help us build a platform where collaboration, marketplaces, and professional growth thrive
               </p>
             </div>
           </motion.div>
@@ -54,9 +54,9 @@ export default function Support() {
                     <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Zap className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Platform Development</h3>
+                    <h3 className="font-semibold text-gray-900 mb-2">New Features</h3>
                     <p className="text-sm text-gray-600">
-                      Fund new features, bug fixes, and performance improvements
+                      Fund development of marketplace, resume generation, and AI-powered tools
                     </p>
                   </div>
 
@@ -66,7 +66,7 @@ export default function Support() {
                     </div>
                     <h3 className="font-semibold text-gray-900 mb-2">Community Growth</h3>
                     <p className="text-sm text-gray-600">
-                      Help us reach more creators and build a stronger community
+                      Help us reach more creators, professionals, and innovators
                     </p>
                   </div>
 
@@ -74,9 +74,9 @@ export default function Support() {
                     <div className="w-12 h-12 bg-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Sparkles className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Free For Everyone</h3>
+                    <h3 className="font-semibold text-gray-900 mb-2">Free Core Features</h3>
                     <p className="text-sm text-gray-600">
-                      Keep Collab Unity free and accessible to all creators
+                      Keep collaboration, portfolios, and project management free for everyone
                     </p>
                   </div>
                 </div>

@@ -61,13 +61,15 @@ export default function PrivacyPolicy() {
                       cover image, and date of birth</li>
                       <li><strong>Profile Information:</strong> Bio/mission statement, location, skills, interests, 
                       tools and technologies, education history, awards and certifications, phone number, website URLs, 
-                      social media links</li>
+                      social media links, service offerings, and portfolio items</li>
                       <li><strong>Project Information:</strong> Project titles, descriptions, images, videos, 
-                      collaborator details, project updates, and related content</li>
-                      <li><strong>Communication Data:</strong> Messages, comments, posts, feedback, and any other content 
-                      you share on the Platform</li>
-                      <li><strong>Payment Information:</strong> If applicable, payment details for premium features or 
-                      advertising (processed through secure third-party payment processors)</li>
+                      collaborator details, project updates, marketplace listings, pricing, and related content</li>
+                      <li><strong>Communication Data:</strong> Messages, comments, posts, feedback, booking requests, 
+                      and any other content you share on the Platform</li>
+                      <li><strong>Payment Information:</strong> If applicable, payment details for marketplace transactions, 
+                      service bookings, or advertising (processed through secure third-party payment processors)</li>
+                      <li><strong>Generated Content:</strong> AI-generated resumes and project suggestions created using 
+                      your profile data</li>
                     </ul>
 
                     <h3 className="text-lg font-semibold text-gray-800 mb-2 mt-4">2.2 Information Collected Automatically</h3>
@@ -107,8 +109,12 @@ export default function PrivacyPolicy() {
                       based on your preferences and activity</li>
                       <li><strong>Facilitate Collaboration:</strong> To connect users with projects, collaborators, and 
                       opportunities that match their interests and skills</li>
-                      <li><strong>Communication:</strong> To send you notifications, updates, newsletters, and respond to 
-                      your inquiries</li>
+                      <li><strong>Marketplace Operations:</strong> To enable buying and selling of projects, booking of 
+                      services, and processing of marketplace transactions</li>
+                      <li><strong>AI-Powered Features:</strong> To generate personalized resumes, project suggestions, 
+                      and recommendations using your profile and project data</li>
+                      <li><strong>Communication:</strong> To send you notifications, updates, booking confirmations, 
+                      newsletters, and respond to your inquiries</li>
                       <li><strong>Analytics and Improvements:</strong> To analyze usage patterns, identify trends, and 
                       improve the Platform's performance and user experience</li>
                       <li><strong>Security and Fraud Prevention:</strong> To detect, prevent, and address technical issues, 
@@ -146,8 +152,9 @@ export default function PrivacyPolicy() {
                     <ul className="list-disc pl-6 mt-2 space-y-1">
                       <li>Cloud hosting and storage providers (e.g., Supabase, AWS)</li>
                       <li>Analytics providers (e.g., Google Analytics)</li>
-                      <li>Payment processors (e.g., PayPal, Stripe)</li>
+                      <li>Payment processors for marketplace transactions (e.g., PayPal, Stripe, Venmo)</li>
                       <li>Email service providers</li>
+                      <li>AI service providers for resume generation and recommendations</li>
                       <li>Customer support tools</li>
                     </ul>
                     <p className="mt-2">

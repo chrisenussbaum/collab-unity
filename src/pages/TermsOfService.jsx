@@ -45,8 +45,9 @@ export default function TermsOfService() {
                     </p>
                     <p className="mt-2">
                       Collab Unity is a collaborative platform that connects creators, professionals, and innovators
-                      to work together on meaningful projects. These Terms govern your use of our website, services,
-                      and all related features.
+                      to work together on meaningful projects. We offer project collaboration tools, a marketplace for 
+                      buying and selling projects, professional service listings, AI-powered resume generation, and more. 
+                      These Terms govern your use of our website, services, and all related features.
                     </p>
                   </section>
 
@@ -167,15 +168,27 @@ export default function TermsOfService() {
                   </section>
 
                   <section>
-                    <h2 className="text-xl font-bold text-gray-900 mb-3">7. Advertising and Promotions</h2>
+                    <h2 className="text-xl font-bold text-gray-900 mb-3">7. Marketplace and Services</h2>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">7.1 Project Sales</h3>
+                    <p>
+                      Users may list their projects for sale on the Collab Unity marketplace. Project sellers are solely 
+                      responsible for the accuracy of their listings, fulfilling commitments to buyers, and complying with 
+                      all applicable laws. Collab Unity acts as a platform and is not a party to transactions between buyers 
+                      and sellers.
+                    </p>
+
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 mt-3">7.2 Service Offerings</h3>
+                    <p>
+                      Users may offer professional services through the platform. Service providers are responsible for 
+                      delivering services as described, maintaining professional standards, and managing client relationships. 
+                      Collab Unity does not guarantee the quality or outcomes of services provided by users.
+                    </p>
+
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 mt-3">7.3 Advertising and Promotions</h3>
                     <p>
                       Collab Unity may display advertisements on the Platform. Advertisers are responsible for ensuring
                       that their ads comply with all applicable laws and regulations. We reserve the right to reject,
                       modify, or remove any advertisement at our discretion.
-                    </p>
-                    <p className="mt-2">
-                      Paid promotional opportunities may be available. Users who wish to advertise must agree to our
-                      advertising policies and guidelines.
                     </p>
                   </section>
 
