@@ -634,52 +634,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
     };
   }, [projects, users, activeTab]);
 
-  // Initialize displayed items when filtered results change
-  React.useEffect(() => {
-    setDisplayedProjects(filteredProjects.slice(0, ITEMS_PER_PAGE));
-  }, [filteredProjects]);
-
-  React.useEffect(() => {
-    setDisplayedUsers(filteredUsers.slice(0, ITEMS_PER_PAGE));
-  }, [filteredUsers]);
-
-  // Infinite scroll handler
-  React.useEffect(() => {
-    const handleScroll = () => {
-      if (isLoadingMore) return;
-
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.offsetHeight;
-      const scrollPercentage = (scrollTop + windowHeight) / documentHeight;
-
-      if (scrollPercentage >= 0.8) {
-        if (activeTab === "projects" && displayedProjects.length < filteredProjects.length) {
-          setIsLoadingMore(true);
-          setTimeout(() => {
-            setDisplayedProjects(prev => {
-              const newLength = Math.min(prev.length + ITEMS_PER_PAGE, filteredProjects.length);
-              return filteredProjects.slice(0, newLength);
-            });
-            setIsLoadingMore(false);
-          }, 300);
-        } else if (activeTab === "people" && displayedUsers.length < filteredUsers.length) {
-          setIsLoadingMore(true);
-          setTimeout(() => {
-            setDisplayedUsers(prev => {
-              const newLength = Math.min(prev.length + ITEMS_PER_PAGE, filteredUsers.length);
-              return filteredUsers.slice(0, newLength);
-            });
-            setIsLoadingMore(false);
-          }, 300);
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isLoadingMore, activeTab, displayedProjects.length, filteredProjects, displayedUsers.length, filteredUsers]);
-
   const filteredProjects = useMemo(() => {
     let filtered = projects.filter(project => {
       const matchesSearch = searchQuery === "" || 
@@ -812,7 +766,51 @@ export default function Discover({ currentUser: propCurrentUser }) {
     return filtered;
   }, [users, searchQuery, selectedSkills, showOnlyMatching, currentUser, calculateUserMatchScore]);
 
+  // Initialize displayed items when filtered results change
+  React.useEffect(() => {
+    setDisplayedProjects(filteredProjects.slice(0, ITEMS_PER_PAGE));
+  }, [filteredProjects]);
 
+  React.useEffect(() => {
+    setDisplayedUsers(filteredUsers.slice(0, ITEMS_PER_PAGE));
+  }, [filteredUsers]);
+
+  // Infinite scroll handler
+  React.useEffect(() => {
+    const handleScroll = () => {
+      if (isLoadingMore) return;
+
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.offsetHeight;
+      const scrollPercentage = (scrollTop + windowHeight) / documentHeight;
+
+      if (scrollPercentage >= 0.8) {
+        if (activeTab === "projects" && displayedProjects.length < filteredProjects.length) {
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setDisplayedProjects(prev => {
+              const newLength = Math.min(prev.length + ITEMS_PER_PAGE, filteredProjects.length);
+              return filteredProjects.slice(0, newLength);
+            });
+            setIsLoadingMore(false);
+          }, 300);
+        } else if (activeTab === "people" && displayedUsers.length < filteredUsers.length) {
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setDisplayedUsers(prev => {
+              const newLength = Math.min(prev.length + ITEMS_PER_PAGE, filteredUsers.length);
+              return filteredUsers.slice(0, newLength);
+            });
+            setIsLoadingMore(false);
+          }, 300);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isLoadingMore, activeTab, displayedProjects.length, filteredProjects, displayedUsers.length, filteredUsers]);
 
   const toggleSkill = (skill) => {
     setSelectedSkills(prev =>
