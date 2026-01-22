@@ -2273,7 +2273,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
                   <p className="cu-text-responsive-sm text-gray-600">Loading feed...</p>
                 </div>
-              ) : displayedItems.length === 0 && !hasMorePosts ? (
+              ) : displayedItems.length === 0 ? (
                 <div className="text-center py-16">
                   <h3 className="cu-text-responsive-lg font-semibold">No posts found</h3>
                   <p className="text-gray-600 mt-2 cu-text-responsive-sm">
@@ -2347,7 +2347,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                     <div className="text-center py-8">
                       <div className="inline-flex items-center">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mr-3"></div>
-                        <span className="cu-text-responsive-sm text-gray-600">Loading more posts...</span>
+                        <span className="cu-text-responsive-sm text-gray-600">Loading more...</span>
                       </div>
                     </div>
                   )}
@@ -2605,7 +2605,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
                   <p className="cu-text-responsive-sm text-gray-600">Loading feed...</p>
                 </div>
-              ) : displayedItems.length === 0 && !hasMorePosts ? (
+              ) : displayedItems.length === 0 ? (
                 <div className="text-center py-16">
                   <h3 className="cu-text-responsive-lg font-semibold">No posts found</h3>
                   <p className="text-gray-600 mt-2 cu-text-responsive-sm">
