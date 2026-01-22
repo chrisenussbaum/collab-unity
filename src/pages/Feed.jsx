@@ -1658,16 +1658,12 @@ export default function Feed({ currentUser, authIsLoading }) {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMorePosts, setHasMorePosts] = useState(true);
   const [inlineAds, setInlineAds] = useState([]);
   const [allCollaboratorProfiles, setAllCollaboratorProfiles] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [displayedItemsCount, setDisplayedItemsCount] = useState(10);
   
-  // Use ref for synchronous tracking of loaded item IDs to prevent race conditions
-  const loadedItemIdsRef = useRef(new Set());
-  const consecutiveEmptyLoadsRef = useRef(0);
-  const MAX_EMPTY_LOAD_ATTEMPTS = 5; // Increased to be more lenient with duplicate detection
+
   
   const location = useLocation();
   const highlightedItemIdRef = useRef(null);
@@ -1678,11 +1674,10 @@ export default function Feed({ currentUser, authIsLoading }) {
   const navigate = useNavigate();
 
   const [showCreatePostDialog, setShowCreatePostDialog] = useState(false);
-
-  const POSTS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 10;
 
   // Load ads in background without blocking feed
-  const loadAdsForPage = useCallback(async (page, items) => {
+  const loadAdsForPage = useCallback(async (items) => {
     try {
       const getDeviceType = () => {
         const width = window.innerWidth;
@@ -1695,28 +1690,24 @@ export default function Feed({ currentUser, authIsLoading }) {
 
       const adsResponse = await injectAds({
         user_email: currentUser?.email || null,
-        organic_posts: items.slice(0, 20), // Pass a sample of combined items
+        organic_posts: items.slice(0, 20),
         device_type: deviceType,
         insertion_interval: 3,
-        current_page: page,
-        posts_per_page: POSTS_PER_PAGE
+        current_page: 1,
+        posts_per_page: ITEMS_PER_PAGE
       });
 
       const { data: adsData } = adsResponse;
       if (adsData) {
+        setAdvertisements(adsData);
+        
         let newInlineAds = [];
         if (deviceType === 'mobile') {
           newInlineAds = adsData.mobile?.inline || [];
         } else if (deviceType === 'tablet') {
           newInlineAds = adsData.tablet?.inline || [];
         }
-
-        if (page === 1) {
-          setAdvertisements(adsData);
-          setInlineAds(newInlineAds);
-        } else {
-          setInlineAds(prev => [...prev, ...newInlineAds]);
-        }
+        setInlineAds(newInlineAds);
       }
 
     } catch (error) {
@@ -1743,19 +1734,7 @@ export default function Feed({ currentUser, authIsLoading }) {
 
 
 
-  const loadFeedPosts = useCallback(async (page = 1, fetchLimit = POSTS_PER_PAGE, currentOffset = 0) => {
-    try {
-      const offset = (page - 1) * POSTS_PER_PAGE + currentOffset; // Adjusted offset for FeedPost
-      const posts = await withRetry(() =>
-        FeedPost.filter({ is_visible: true }, "-created_date", fetchLimit, offset)
-      );
-      
-      return posts || [];
-    } catch (error) {
-      console.error("Error loading feed posts:", error);
-      return [];
-    }
-  }, []);
+
 
   const loadFeedPostApplauds = useCallback(async (postIds) => {
     if (!postIds || postIds.length === 0) {
@@ -1778,26 +1757,21 @@ export default function Feed({ currentUser, authIsLoading }) {
     queryKey: ['feed-projects', currentUser?.email],
     queryFn: async () => {
       // Fetch ALL public projects, initial feed posts, service listings, and marketplace listings
+      // Fetch ALL data - no limits, use client-side pagination for display
       const [visibleProjectsData, initialFeedPostsData, serviceListingsData, marketplaceListingsData] = await Promise.all([
         withRetry(() =>
-          Project.filter({ is_visible_on_feed: true }, "-created_date", 20)
+          Project.filter({ is_visible_on_feed: true }, "-created_date")
         ),
         withRetry(() =>
-          FeedPost.filter({ is_visible: true }, "-created_date", POSTS_PER_PAGE * 2, 0)
+          FeedPost.filter({ is_visible: true }, "-created_date")
         ),
         withRetry(() =>
-          ServiceListing.list("-created_date", 10)
+          ServiceListing.list("-created_date")
         ),
         withRetry(() =>
-          base44.entities.MarketplaceListing.filter({ is_available: true }, "-created_date", 10)
+          base44.entities.MarketplaceListing.filter({ is_available: true }, "-created_date")
         )
       ]);
-      
-      // Track all loaded item IDs
-      visibleProjectsData.forEach(p => loadedItemIdsRef.current.add(p.id));
-      initialFeedPostsData.forEach(fp => loadedItemIdsRef.current.add(fp.id));
-      serviceListingsData.forEach(sl => loadedItemIdsRef.current.add(sl.id));
-      marketplaceListingsData.forEach(ml => loadedItemIdsRef.current.add(ml.id));
 
       // Separate projects, feed posts, services, and marketplace listings
       const initialProjects = visibleProjectsData;
@@ -1918,8 +1892,7 @@ export default function Feed({ currentUser, authIsLoading }) {
         marketplaceListings: fullyPopulatedMarketplaceListings,
         projectApplauds: fetchedProjectApplauds,
         feedPostApplauds: fetchedFeedPostApplauds,
-        collaboratorProfiles: collabProfilesMap,
-        hasMore: initialFeedPosts.length >= POSTS_PER_PAGE * 2 // Only feed posts paginate
+        collaboratorProfiles: collabProfilesMap
       };
     },
     enabled: !authIsLoading,
@@ -1941,9 +1914,7 @@ export default function Feed({ currentUser, authIsLoading }) {
       setProjectApplauds(cachedFeedData.projectApplauds);
       setFeedPostApplauds(cachedFeedData.feedPostApplauds);
       setAllCollaboratorProfiles(cachedFeedData.collaboratorProfiles);
-      setHasMorePosts(cachedFeedData.hasMore);
-      setCurrentPage(1);
-      consecutiveEmptyLoadsRef.current = 0;
+      setDisplayedItemsCount(ITEMS_PER_PAGE);
       
       // Load ads in background
       if (cachedFeedData.projects.length > 0 || cachedFeedData.feedPosts.length > 0 || cachedFeedData.serviceListings.length > 0 || (cachedFeedData.marketplaceListings && cachedFeedData.marketplaceListings.length > 0)) {
@@ -1952,8 +1923,8 @@ export default function Feed({ currentUser, authIsLoading }) {
           ...cachedFeedData.feedPosts.map(fp => ({ ...fp, itemType: 'feedPost' })),
           ...cachedFeedData.serviceListings.map(sl => ({ ...sl, itemType: 'service' })),
           ...(cachedFeedData.marketplaceListings || []).map(ml => ({ ...ml, itemType: 'marketplace' }))
-        ].slice(0, POSTS_PER_PAGE);
-        loadAdsForPage(1, items).catch(err => console.error("Background ad loading failed:", err));
+        ].slice(0, ITEMS_PER_PAGE);
+        loadAdsForPage(items).catch(err => console.error("Background ad loading failed:", err));
       }
     }
   }, [cachedFeedData, isQueryLoading, loadAdsForPage]);
@@ -1968,179 +1939,33 @@ export default function Feed({ currentUser, authIsLoading }) {
     setIsLoading(isQueryLoading);
   }, [isQueryLoading]);
 
-  const loadMorePosts = useCallback(async () => {
-    if (isLoadingMore || !hasMorePosts) return;
+  const loadMoreItems = useCallback(() => {
+    if (isLoadingMore) return;
+
+    const currentDisplayed = displayedItemsCount;
+    const totalAvailable = allFeedItems.length;
+    
+    if (currentDisplayed >= totalAvailable) return;
 
     setIsLoadingMore(true);
-    try {
-      const nextPage = currentPage + 1;
-      const offset = (currentPage) * POSTS_PER_PAGE; // Global offset for API calls
-      
-      console.log(`Loading more items - Page ${nextPage}, Global Offset ${offset}, Already loaded: ${loadedItemIdsRef.current.size} items`);
-
-      const fetchAmount = POSTS_PER_PAGE * 3; // Overfetch to ensure enough unique items
-      
-      // Only fetch more FeedPosts - all projects are already loaded in initial fetch
-      const moreFeedPostsData = await FeedPost.filter({ is_visible: true }, "-created_date", fetchAmount, offset);
-
-      console.log(`Fetched ${moreFeedPostsData.length} feed posts from database (requested ${fetchAmount})`);
-
-      const combinedFetchedItems = moreFeedPostsData.map(fp => ({ ...fp, itemType: 'feedPost', sortDate: new Date(fp.created_date) }));
-
-      // Filter out duplicates using the ref
-      const uniqueNewItems = combinedFetchedItems.filter(item => {
-        const isUnique = !loadedItemIdsRef.current.has(item.id);
-        if (!isUnique) {
-          console.log(`Filtering out duplicate item: ${item.id} - ${item.title || item.content}`);
-        }
-        return isUnique;
-      });
-      
-      console.log(`After filtering: ${uniqueNewItems.length} unique items`);
-
-      if (uniqueNewItems.length === 0) {
-        // Check if database returned nothing at all - means we're at the end
-        if (moreFeedPostsData.length === 0) {
-          console.log('Database returned no results, reached the end');
-          setHasMorePosts(false);
-          setIsLoadingMore(false);
-          consecutiveEmptyLoadsRef.current = 0;
-          return;
-        }
-        
-        // Otherwise, all items were duplicates - try loading from further offset
-        consecutiveEmptyLoadsRef.current++;
-        console.log(`All fetched items were duplicates (attempt ${consecutiveEmptyLoadsRef.current}/${MAX_EMPTY_LOAD_ATTEMPTS})`);
-        
-        if (consecutiveEmptyLoadsRef.current >= MAX_EMPTY_LOAD_ATTEMPTS) {
-          console.log('Max empty load attempts reached, no more unique posts');
-          setHasMorePosts(false);
-          setIsLoadingMore(false);
-          consecutiveEmptyLoadsRef.current = 0;
-          return;
-        }
-        
-        // Use functional update to ensure correct page number
-        setCurrentPage(prev => prev + 1);
-        setIsLoadingMore(false);
-        // Retry immediately instead of setTimeout
-        requestAnimationFrame(() => loadMorePosts());
-        return;
-      }
-
-      // Reset consecutive empty loads counter since we found unique items
-      consecutiveEmptyLoadsRef.current = 0;
-
-      // Take only the number we need for this page
-      const itemsToAdd = uniqueNewItems.slice(0, POSTS_PER_PAGE);
-      console.log(`Adding ${itemsToAdd.length} items to feed`);
-
-      // Immediately add these IDs to the ref to prevent duplicates in concurrent calls
-      itemsToAdd.forEach(item => loadedItemIdsRef.current.add(item.id));
-
-      const newProjectItems = itemsToAdd.filter(item => item.itemType === 'project');
-      const newFeedPostItems = itemsToAdd.filter(item => item.itemType === 'feedPost');
-
-      const allNewOwnerEmails = [...new Set(itemsToAdd.map(item => item.created_by))];
-      
-      const newProjectIds = newProjectItems.map(p => p.id);
-      const newFeedPostIds = newFeedPostItems.map(fp => fp.id);
-
-      // PARALLEL LOAD: profiles and applauds
-      const [profilesResponse, fetchedNewProjectApplauds, fetchedNewFeedPostApplauds] = await Promise.all([
-        withRetry(() => getPublicUserProfiles({ emails: allNewOwnerEmails }), 2, 2000),
-        newProjectIds.length > 0 ? withRetry(() => ProjectApplaud.filter({ project_id: { $in: newProjectIds } })) : Promise.resolve([]),
-        newFeedPostIds.length > 0 ? withRetry(() => FeedPostApplaud.filter({ feed_post_id: { $in: newFeedPostIds } })) : Promise.resolve([])
-      ]);
-
-      const newProfilesMap = (profilesResponse.data || []).reduce((acc, profile) => {
-        acc[profile.email] = profile;
-        return acc;
-      }, {});
-
-      const populatedNewProjectItems = newProjectItems.map(project => {
-        const owner = newProfilesMap[project.created_by] || {
-          email: project.created_by,
-          full_name: project.created_by.split('@')[0],
-          profile_image: null,
-          location: null
-        };
-        return { ...project, owner };
-      });
-      const populatedNewFeedPostItems = newFeedPostItems.map(post => {
-        const owner = newProfilesMap[post.created_by] || {
-          email: post.created_by,
-          full_name: post.created_by.split('@')[0],
-          profile_image: null,
-          location: null
-        };
-        return { ...post, owner };
-      });
-
-      // Update state
-      setProjects(prev => [...prev, ...populatedNewProjectItems]);
-      setFeedPosts(prev => [...prev, ...populatedNewFeedPostItems]);
-
-      // Fetch collaborator profiles for new projects
-      const newCollaboratorEmails = new Set();
-      newProjectItems.forEach(p => {
-        if (p.collaborator_emails) {
-          p.collaborator_emails.forEach(email => newCollaboratorEmails.add(email));
-        }
-      });
-      
-      if (newCollaboratorEmails.size > 0) {
-        try {
-          const { data: newCollabProfiles } = await withRetry(() => 
-            getPublicUserProfiles({ emails: Array.from(newCollaboratorEmails) })
-          );
-          const newCollabProfilesMap = {};
-          (newCollabProfiles || []).forEach(profile => {
-            newCollabProfilesMap[profile.email] = profile;
-          });
-          setAllCollaboratorProfiles(prev => ({ ...prev, ...newCollabProfilesMap }));
-        } catch (error) {
-          console.error("Error fetching new collaborator profiles for activity:", error);
-        }
-      }
-        
-      // Load ads in background - don't await or block on this
-      loadAdsForPage(nextPage, itemsToAdd).catch(err => {
-        console.error("Background ad loading failed:", err);
-      });
-      
-      setProjectApplauds(prev => [...prev, ...(fetchedNewProjectApplauds || [])]);
-      setFeedPostApplauds(prev => [...prev, ...(fetchedNewFeedPostApplauds || [])]);
-      
-      setCurrentPage(nextPage);
-      
-      console.log(`Successfully loaded ${itemsToAdd.length} new items. Total loaded: ${loadedItemIdsRef.current.size}`);
-
-    } catch (error) {
-      console.error("Error loading more posts:", error);
-      toast.error("Failed to load more posts. Please try again.");
-      setHasMorePosts(false);
-    } finally {
+    setTimeout(() => {
+      setDisplayedItemsCount(prev => Math.min(prev + ITEMS_PER_PAGE, totalAvailable));
       setIsLoadingMore(false);
-    }
-  }, [currentPage, isLoadingMore, hasMorePosts, loadAdsForPage, loadFeedPosts, loadApplauds, loadFeedPostApplauds]);
+    }, 300);
+  }, [isLoadingMore, displayedItemsCount, allFeedItems.length]);
 
   useEffect(() => {
     const handleScroll = () => {
-      if (isLoadingMore || !hasMorePosts) return;
-
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.offsetHeight;
-
-      // Prefetch when 70% scrolled (aggressive prefetching)
       const scrollPercentage = (scrollTop + windowHeight) / documentHeight;
-      if (scrollPercentage >= 0.7) {
-        loadMorePosts();
+
+      if (scrollPercentage >= 0.8) {
+        loadMoreItems();
       }
     };
 
-    // Throttle scroll events for better performance
     let ticking = false;
     const throttledScroll = () => {
       if (!ticking) {
@@ -2154,7 +1979,7 @@ export default function Feed({ currentUser, authIsLoading }) {
 
     window.addEventListener('scroll', throttledScroll, { passive: true });
     return () => window.removeEventListener('scroll', throttledScroll);
-  }, [loadMorePosts, isLoadingMore, hasMorePosts]);
+  }, [loadMoreItems]);
 
   useEffect(() => {
     if (location.hash && location.hash.startsWith('#project-')) {
@@ -2227,12 +2052,13 @@ export default function Feed({ currentUser, authIsLoading }) {
     }
   }, [projects, feedPosts]);
   
-  // Filter feed items based on search query
+  // Filter and paginate feed items
   const displayedItems = React.useMemo(() => {
-    if (!searchQuery.trim()) return allFeedItems;
+    let filtered = allFeedItems;
     
-    const query = searchQuery.toLowerCase();
-    return allFeedItems.filter(item => {
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = allFeedItems.filter(item => {
       if (item.itemType === 'project') {
         return item.title?.toLowerCase().includes(query) ||
                item.description?.toLowerCase().includes(query) ||
@@ -2253,9 +2079,13 @@ export default function Feed({ currentUser, authIsLoading }) {
         return item.title?.toLowerCase().includes(query) ||
                item.content?.toLowerCase().includes(query) ||
                item.tags?.some(tag => tag.toLowerCase().includes(query));
-      }
-    });
-  }, [allFeedItems, searchQuery]);
+               }
+               });
+               }
+
+               // Return only the items that should be displayed (client-side pagination)
+               return filtered.slice(0, displayedItemsCount);
+               }, [allFeedItems, searchQuery, displayedItemsCount]);
 
   useEffect(() => {
     const checkUserProjects = async () => {
@@ -2522,7 +2352,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                     </div>
                   )}
                   
-                  {!hasMorePosts && displayedItems.length > 0 && ( // Ensure there are posts before showing end message
+                  {displayedItemsCount >= allFeedItems.length && allFeedItems.length > 0 && (
                     <div className="text-center py-8">
                       <p className="cu-text-responsive-sm text-gray-500">You've reached the end of the feed!</p>
                     </div>
