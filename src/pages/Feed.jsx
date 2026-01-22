@@ -2273,10 +2273,13 @@ export default function Feed({ currentUser, authIsLoading }) {
 
             <div className="cu-content-grid min-h-[800px]">
               {isLoading ? (
-                <div className="text-center py-16">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                  <p className="cu-text-responsive-sm text-gray-600">Loading feed...</p>
-                </div>
+                <>
+                  {[...Array(4)].map((_, i) => (
+                    <React.Fragment key={i}>
+                      {i % 3 === 0 ? <ProjectCardSkeleton /> : i % 3 === 1 ? <FeedPostSkeleton /> : <ServiceCardSkeleton />}
+                    </React.Fragment>
+                  ))}
+                </>
               ) : displayedItems.length === 0 ? (
                 <div className="text-center py-16">
                   <h3 className="cu-text-responsive-lg font-semibold">No posts found</h3>
