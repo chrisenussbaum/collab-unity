@@ -1698,12 +1698,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
                     </div>
                   </div>
                 )}
-                
-                {displayedUsers.length >= filteredUsers.length && filteredUsers.length > 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-sm text-gray-500">You've viewed all collaborators</p>
-                  </div>
-                )}
                 </>
               )}
             </TabsContent>
