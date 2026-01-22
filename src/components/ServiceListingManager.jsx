@@ -15,7 +15,7 @@ import ClickableImage from "./ClickableImage";
 import { generateVideoThumbnail } from "@/functions/generateVideoThumbnail";
 import BookingAvailabilityManager from "./BookingAvailabilityManager";
 
-export default function ServiceListingManager({ currentUser, isOwner }) {
+export default function ServiceListingManager({ currentUser, isOwner, enableHorizontalScroll = false }) {
   const [listings, setListings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
@@ -249,9 +249,9 @@ export default function ServiceListingManager({ currentUser, isOwner }) {
               <p className="text-sm text-gray-500">Loading service listings...</p>
             </div>
           ) : listings.length > 0 ? (
-            <div className="space-y-4">
+            <div className={enableHorizontalScroll ? "flex gap-4 overflow-x-auto pb-2 scrollbar-hide" : "space-y-4"}>
               {listings.map(listing => (
-                <div key={listing.id} className="p-4 border rounded-lg bg-gray-50">
+                <div key={listing.id} className={`p-4 border rounded-lg bg-gray-50 ${enableHorizontalScroll ? 'flex-shrink-0 w-80 sm:w-96' : ''}`}>
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-900">{listing.title}</h4>
