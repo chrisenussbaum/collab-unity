@@ -281,11 +281,11 @@ export default function Marketplace({ currentUser }) {
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <div className="w-20 h-20 bg-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
               <ShoppingCart className="w-10 h-10 text-white" />
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-gray-900">
-              Project & Service <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Marketplace</span>
+              Project & Service <span className="text-green-600">Marketplace</span>
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-8 max-w-3xl mx-auto px-4">
               Buy and sell projects and services from talented creators in the Collab Unity community
@@ -555,7 +555,7 @@ export default function Marketplace({ currentUser }) {
 
           {/* Sell Your Projects Section */}
           {currentUser && myProjects.length > 0 && !isLoading && activeTab === "projects" && (
-            <Card className="cu-card mt-12 border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-indigo-50">
+            <Card className="cu-card mt-12 border-2 border-purple-300 bg-purple-50">
               <CardHeader>
                 <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                   <DollarSign className="w-6 h-6 text-purple-600" />

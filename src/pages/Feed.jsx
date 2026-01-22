@@ -538,7 +538,7 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
               {/* Related Project for Status Updates */}
               {relatedProject && (
                 <Link to={createPageUrl(`ProjectDetail?id=${relatedProject.id}`)}>
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-3">
                       {relatedProject.logo_url ? (
                         <img 
@@ -547,7 +547,7 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
                           className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-sm"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center border-2 border-white shadow-sm">
+                        <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center border-2 border-white shadow-sm">
                           <Lightbulb className="w-6 h-6 text-blue-600" />
                         </div>
                       )}
@@ -574,7 +574,7 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
               {/* Related Project for Narratives */}
               {relatedProject && (
                 <Link to={createPageUrl(`ProjectDetail?id=${relatedProject.id}`)}>
-                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-3">
                       {relatedProject.logo_url ? (
                         <img 
@@ -583,7 +583,7 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
                           className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-sm"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center border-2 border-white shadow-sm">
+                        <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center border-2 border-white shadow-sm">
                           <Lightbulb className="w-6 h-6 text-purple-600" />
                         </div>
                       )}
@@ -610,7 +610,7 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
               {/* Related Project */}
               {relatedProject && (
                 <Link to={createPageUrl(`ProjectDetail?id=${relatedProject.id}`)}>
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-3">
                       {relatedProject.logo_url ? (
                         <img 
@@ -619,7 +619,7 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
                           className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-sm"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center border-2 border-white shadow-sm">
+                        <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center border-2 border-white shadow-sm">
                           <Lightbulb className="w-6 h-6 text-green-600" />
                         </div>
                       )}
@@ -677,7 +677,7 @@ const FeedPostItem = ({ post, owner, currentUser, feedPostApplauds, onPostDelete
           )}
         </CardContent>
 
-        <CardFooter className="bg-gradient-to-r from-gray-50 to-blue-50/30 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-t border-blue-100/50">
+        <CardFooter className="bg-gray-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-t border-gray-200">
           <div className="w-full">
             <div className="flex justify-around pb-4 border-b">
               <Button
@@ -1029,7 +1029,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
             {project.paypal_link && (
               <Button
                 onClick={() => handlePaymentRedirect('paypal')}
-                className="w-full flex items-center justify-between p-4 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                className="w-full flex items-center justify-between p-4 h-auto bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <div className="flex items-center space-x-3">
                   <CreditCard className="w-5 h-5" />
@@ -1045,7 +1045,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
             {project.venmo_link && (
               <Button
                 onClick={() => handlePaymentRedirect('venmo')}
-                className="w-full flex items-center justify-between p-4 h-auto bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+                className="w-full flex items-center justify-between p-4 h-auto bg-cyan-500 hover:bg-cyan-600 text-white"
               >
                 <div className="flex items-center space-x-3">
                   <Wallet className="w-5 h-5" />
@@ -1061,7 +1061,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
             {project.cashapp_link && (
               <Button
                 onClick={() => handlePaymentRedirect('cashapp')}
-                className="w-full flex items-center justify-between p-4 h-auto bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white"
+                className="w-full flex items-center justify-between p-4 h-auto bg-green-600 hover:bg-green-700 text-white"
               >
                 <div className="flex items-center space-x-3">
                   <DollarSign className="w-5 h-5" />
@@ -1187,13 +1187,13 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
                       className="w-12 h-12 rounded-lg object-cover border-2 border-gray-100 shadow-sm"
                       loading="lazy"
                       fallback={
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center border-2 border-gray-100 shadow-sm">
+                        <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center border-2 border-gray-100 shadow-sm">
                           <Lightbulb className="w-6 h-6 text-purple-600" />
                         </div>
                       }
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center border-2 border-gray-100 shadow-sm">
+                    <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center border-2 border-gray-100 shadow-sm">
                       <Lightbulb className="w-6 h-6 text-purple-600" />
                     </div>
                   )}
@@ -1269,7 +1269,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
                     {config.icon}
                     <span className="ml-1">{formatEnumLabel(project.status)}</span>
                   </Badge>
-                  <Badge className="text-xs bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 border border-purple-200 shadow-sm">
+                  <Badge className="text-xs bg-purple-100 text-purple-700 border border-purple-200 shadow-sm">
                     {project.project_type}
                   </Badge>
                   {project.classification && (
@@ -1580,7 +1580,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
             {project.skills_needed && project.skills_needed.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {project.skills_needed.slice(0, 5).map(skill => (
-                  <Badge key={skill} className="cu-text-responsive-xs bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 border border-purple-200">
+                  <Badge key={skill} className="cu-text-responsive-xs bg-purple-50 text-purple-700 border border-purple-200">
                     {skill}
                   </Badge>
                 ))}
@@ -1593,7 +1593,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
             )}
           </CardContent>
 
-          <CardFooter className="bg-gradient-to-r from-gray-50 to-purple-50/30 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-t border-purple-100/50">
+          <CardFooter className="bg-gray-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-t border-gray-200">
             <div className="w-full">
               <div className="flex justify-around pb-4 border-b">
                 <Button
@@ -1780,16 +1780,16 @@ export default function Feed({ currentUser, authIsLoading }) {
       // Fetch ALL public projects, initial feed posts, service listings, and marketplace listings
       const [visibleProjectsData, initialFeedPostsData, serviceListingsData, marketplaceListingsData] = await Promise.all([
         withRetry(() =>
-          Project.filter({ is_visible_on_feed: true }, "-created_date")
+          Project.filter({ is_visible_on_feed: true }, "-created_date", 20)
         ),
         withRetry(() =>
           FeedPost.filter({ is_visible: true }, "-created_date", POSTS_PER_PAGE * 2, 0)
         ),
         withRetry(() =>
-          ServiceListing.list("-created_date")
+          ServiceListing.list("-created_date", 10)
         ),
         withRetry(() =>
-          base44.entities.MarketplaceListing.filter({ is_available: true }, "-created_date")
+          base44.entities.MarketplaceListing.filter({ is_available: true }, "-created_date", 10)
         )
       ]);
       
@@ -2338,8 +2338,8 @@ export default function Feed({ currentUser, authIsLoading }) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'var(--cu-primary)' }}>
+              <Sparkles className="w-5 h-5 text-white" />
               </div>
               <DialogTitle className="text-xl font-bold">Create Your First Project!</DialogTitle>
             </div>

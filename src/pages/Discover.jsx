@@ -874,7 +874,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
             className="text-center"
           >
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 text-gray-900">
-              Where <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Ideas</span> Happen
+              Where <span style={{ color: 'var(--cu-primary)' }}>Ideas</span> Happen
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-8 sm:mb-10 max-w-3xl mx-auto px-4">
               Connect with talented professionals, collaborate on meaningful projects,
@@ -896,7 +896,8 @@ export default function Discover({ currentUser: propCurrentUser }) {
               <Link to={createPageUrl("CreateProject")}>
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all cu-button-mobile-full"
+                  style={{ background: 'var(--cu-primary)' }}
+                  className="text-white font-semibold shadow-lg hover:opacity-90 transition-opacity cu-button-mobile-full"
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   Create Project
@@ -930,7 +931,8 @@ export default function Discover({ currentUser: propCurrentUser }) {
               <Link to={createPageUrl("CreateProject")} className="w-full">
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all w-full"
+                  style={{ background: 'var(--cu-primary)' }}
+                  className="text-white font-semibold shadow-lg hover:opacity-90 transition-opacity w-full"
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   Create Project
@@ -974,7 +976,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-8"
                 >
-                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-200">
+                  <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
                     <div className="flex items-center gap-2 mb-4">
                       <Sparkles className="w-5 h-5 text-purple-600" />
                       <h2 className="text-xl font-bold text-gray-900">Recommended for You</h2>
@@ -1357,7 +1359,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                               {project.skills_needed && project.skills_needed.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5">
                                   {project.skills_needed.slice(0, 4).map(skill => (
-                                    <Badge key={skill} className="cu-text-responsive-xs bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 border border-purple-200">
+                                    <Badge key={skill} className="cu-text-responsive-xs bg-purple-50 text-purple-700 border border-purple-200">
                                       {skill}
                                     </Badge>
                                   ))}
@@ -1440,7 +1442,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                               )}
                             </CardContent>
 
-                            <CardFooter className="bg-gradient-to-r from-gray-50 to-purple-50/30 border-t border-purple-100/50 p-4">
+                            <CardFooter className="bg-gray-50 border-t border-gray-200 p-4">
                               <div className="flex items-center justify-between w-full gap-3">
                               <div className="flex items-center gap-3 text-gray-600 cu-text-responsive-xs">
                                 <div className="flex items-center gap-1.5 text-purple-600">
