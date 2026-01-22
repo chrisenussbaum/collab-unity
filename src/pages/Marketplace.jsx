@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
@@ -17,6 +17,7 @@ import SetPriceDialog from "@/components/marketplace/SetPriceDialog";
 import ServiceListingCard from "@/components/ServiceListingCard";
 import ClickableImage from "@/components/ClickableImage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Marketplace({ currentUser }) {
   const navigate = useNavigate();
