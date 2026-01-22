@@ -1579,8 +1579,58 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <p className="text-sm sm:text-base">Loading profile...</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+          {/* Cover and avatar skeleton */}
+          <Card className="cu-card mb-4 sm:mb-6 md:mb-8 overflow-hidden animate-pulse">
+            <CardContent className="p-0">
+              <div className="h-32 sm:h-40 md:h-48 lg:h-64 bg-gray-200" />
+              <div className="relative px-3 sm:px-4 md:px-6 py-6 sm:py-8">
+                <div className="flex flex-col md:flex-row md:items-start md:space-x-6">
+                  <div className="flex justify-center md:justify-start -mt-16 sm:-mt-20 md:-mt-24 mb-4 md:mb-0">
+                    <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-gray-300 border-4 border-white" />
+                  </div>
+                  <div className="flex-1 space-y-3">
+                    <div className="h-8 bg-gray-200 rounded w-48 mx-auto md:mx-0" />
+                    <div className="h-4 bg-gray-200 rounded w-32 mx-auto md:mx-0" />
+                    <div className="h-4 bg-gray-200 rounded w-40 mx-auto md:mx-0" />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Grid skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 md:gap-8">
+            <div className="lg:col-span-8 space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <Card key={i} className="cu-card animate-pulse">
+                  <CardHeader className="space-y-3">
+                    <div className="h-5 bg-gray-200 rounded w-32" />
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-full" />
+                    <div className="h-4 bg-gray-200 rounded w-5/6" />
+                    <div className="h-4 bg-gray-200 rounded w-4/6" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <div className="lg:col-span-4 space-y-4">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i} className="cu-card animate-pulse">
+                  <CardHeader>
+                    <div className="h-5 bg-gray-200 rounded w-24" />
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-full" />
+                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

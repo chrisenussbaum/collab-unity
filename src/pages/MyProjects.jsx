@@ -30,6 +30,7 @@ import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import ProjectActivityIndicator, { isProjectActive } from "@/components/ProjectActivityIndicator";
 import OptimizedImage from "@/components/OptimizedImage";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
+import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -180,9 +181,10 @@ export default function MyProjects({ currentUser, authIsLoading }) {
   if (authIsLoading || isLoading) {
     return (
       <div className="cu-container py-8">
-        <div className="text-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your projects...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+          {[...Array(6)].map((_, i) => (
+            <ProjectCardSkeleton key={i} />
+          ))}
         </div>
       </div>
     );

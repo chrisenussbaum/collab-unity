@@ -34,6 +34,7 @@ import NewGroupChatDialog from "@/components/chat/NewGroupChatDialog";
 import GroupSettingsDialog from "@/components/chat/GroupSettingsDialog";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import EmojiPicker from "emoji-picker-react";
+import ConversationSkeleton from "@/components/skeletons/ConversationSkeleton";
 
 export default function Chat({ currentUser, authIsLoading }) {
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -783,9 +784,24 @@ export default function Chat({ currentUser, authIsLoading }) {
   if (authIsLoading || isLoading) {
     return (
       <div className="cu-container py-8">
-        <div className="text-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading conversations...</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="cu-card lg:col-span-1">
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {[...Array(6)].map((_, i) => (
+                  <ConversationSkeleton key={i} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="cu-card lg:col-span-2">
+            <div className="flex items-center justify-center h-[680px]">
+              <div className="text-center">
+                <MessageCircle className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                <p className="text-gray-600">Loading...</p>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
     );
@@ -848,9 +864,10 @@ export default function Chat({ currentUser, authIsLoading }) {
             <CardContent className="p-0">
               <ScrollArea className="h-[600px]">
                 {isLoading ? (
-                  <div className="text-center py-12 px-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
-                    <p className="text-gray-500 text-sm">Loading conversations...</p>
+                  <div className="divide-y">
+                    {[...Array(4)].map((_, i) => (
+                      <ConversationSkeleton key={i} />
+                    ))}
                   </div>
                 ) : filteredConversations.length === 0 ? (
                   <div className="text-center py-12 px-4">
@@ -1148,9 +1165,16 @@ export default function Chat({ currentUser, authIsLoading }) {
 
             <ScrollArea className="h-[400px]">
               {isLoadingUsers ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
-                  <p className="text-sm text-gray-500">Loading users...</p>
+                <div className="space-y-2 p-2">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="flex items-center space-x-3 p-3 animate-pulse">
+                      <div className="w-10 h-10 rounded-full bg-gray-200" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-32" />
+                        <div className="h-3 bg-gray-200 rounded w-24" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : allUsers.filter(user =>
                   user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
