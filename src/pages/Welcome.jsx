@@ -52,24 +52,25 @@ import {
 
 // Visual mockup components from Demos page
 const FeedPostMockup = () => {
-  const [activeTab, setActiveTab] = React.useState('showcase');
+  const [activeTab, setActiveTab] = React.useState('highlights');
   
   return (
-    <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
-      <div className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-start space-x-3">
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+      <div className="p-5">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-start space-x-3 flex-1">
             <img 
               src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces"
               alt="User"
-              className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+              className="w-11 h-11 rounded-lg object-cover flex-shrink-0"
             />
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-gray-900 text-base mb-0.5">Redapt SKO 2026 Event</h3>
+              <h3 className="font-bold text-gray-900 text-base mb-1">Redapt SKO 2026 Event</h3>
               <p className="text-xs text-gray-500">Chris Nussbaum • 3 days ago</p>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
               <Share2 className="w-4 h-4 text-gray-400" />
             </button>
@@ -79,59 +80,63 @@ const FeedPostMockup = () => {
           </div>
         </div>
         
+        {/* Badges */}
         <div className="flex flex-wrap gap-2 mb-3">
-          <Badge className="bg-orange-100 text-orange-700 border-0 text-xs">Seeking Collaborators</Badge>
-          <Badge className="bg-purple-100 text-purple-700 border-0 text-xs">Collaborative</Badge>
-          <Badge className="bg-blue-100 text-blue-700 border-0 text-xs">Business</Badge>
-          <div className="flex items-center text-purple-600 text-xs">
-            <Users className="w-3 h-3 mr-1" />
+          <Badge className="bg-orange-100 text-orange-700 border-0 text-xs font-medium">Seeking Collaborators</Badge>
+          <Badge className="bg-purple-100 text-purple-700 border-0 text-xs font-medium">Collaborative</Badge>
+          <Badge className="bg-blue-100 text-blue-700 border-0 text-xs font-medium">Business</Badge>
+          <div className="flex items-center gap-1 text-purple-600 text-xs">
+            <Users className="w-3.5 h-3.5" />
             <span>1 collaborator</span>
           </div>
         </div>
         
+        {/* Description */}
         <p className="text-sm text-gray-700 mb-4 leading-relaxed">
           Sales kickoff event for attendees, focusing on innovation and collaboration within the tech industry. Sharing knowledge, networking, and...
         </p>
         
-        {/* Content Toggle Tabs */}
+        {/* Tabs */}
         <div className="flex gap-2 mb-3">
           <button
             onClick={() => setActiveTab('showcase')}
-            className={`flex-1 py-2 px-3 text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1 ${
+            className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2 ${
               activeTab === 'showcase'
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-purple-600 text-white shadow-sm'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            <Globe className="w-3 h-3" />
+            <Globe className="w-4 h-4" />
             Showcase
           </button>
           <button
             onClick={() => setActiveTab('highlights')}
-            className={`flex-1 py-2 px-3 text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1 ${
+            className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2 ${
               activeTab === 'highlights'
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-purple-600 text-white shadow-sm'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            <Image className="w-3 h-3" />
+            <Image className="w-4 h-4" />
             Highlights
           </button>
         </div>
 
-        {/* Tab Content */}
-        <div className="mb-4 h-[200px]">
+        {/* Content Area */}
+        <div className="mb-4 rounded-lg overflow-hidden border border-gray-200">
           {activeTab === 'showcase' && (
-            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 h-full overflow-hidden">
-              <div className="grid grid-cols-2 gap-2 h-full">
+            <div className="bg-white h-[220px] overflow-hidden">
+              <div className="grid grid-cols-2 gap-3 p-3 h-full">
                 {[
-                  { name: "youtube.com", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=youtube.com", title: "Event Day 2" },
-                  { name: "youtube.com", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=youtube.com", title: "Event Day 1" }
+                  { title: "Event Day 2", domain: "youtube.com", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=youtube.com" },
+                  { title: "Event Day 1", domain: "youtube.com", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=youtube.com" }
                 ].map((link, i) => (
-                  <div key={i} className="bg-white rounded-lg p-3 border border-gray-200 hover:border-purple-300 transition-colors cursor-pointer flex flex-col items-center justify-center text-center">
-                    <img src={link.icon} alt={link.name} className="w-8 h-8 mb-2 object-contain" />
-                    <p className="text-xs font-medium text-gray-900 truncate w-full">{link.title}</p>
-                    <p className="text-xs text-gray-500 truncate w-full">{link.name}</p>
+                  <div key={i} className="bg-white rounded-lg border border-gray-200 hover:border-purple-400 transition-colors cursor-pointer p-4 flex flex-col items-center justify-center">
+                    <div className="w-12 h-12 bg-gray-900 rounded flex items-center justify-center mb-2">
+                      <img src={link.icon} alt={link.domain} className="w-8 h-8 object-contain" />
+                    </div>
+                    <p className="text-sm font-semibold text-gray-900 text-center mb-1">{link.title}</p>
+                    <p className="text-xs text-gray-500">Click to visit</p>
                   </div>
                 ))}
               </div>
@@ -139,44 +144,56 @@ const FeedPostMockup = () => {
           )}
 
           {activeTab === 'highlights' && (
-            <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200 h-full relative">
+            <div className="h-[220px] relative bg-black">
               <img 
                 src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop"
-                alt="Project Highlight"
+                alt="Event"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
-                <p className="text-white text-xs">Event planning and coordination in progress</p>
+              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
+                <p className="text-white text-xs font-medium">Event planning and coordination in progress</p>
               </div>
             </div>
           )}
         </div>
         
-        <div className="flex items-center space-x-3 text-xs text-gray-600 mb-3">
-          <div className="flex items-center"><MapPin className="w-3 h-3 mr-1" />Kirkland, WA</div>
-          <div className="flex items-center"><Building2 className="w-3 h-3 mr-1" />Technology</div>
-          <div className="flex items-center"><Tag className="w-3 h-3 mr-1" />Sales</div>
+        {/* Metadata Icons */}
+        <div className="flex items-center gap-4 text-xs text-gray-600 mb-3">
+          <div className="flex items-center gap-1">
+            <MapPin className="w-3.5 h-3.5" />
+            <span>Kirkland, WA</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Building2 className="w-3.5 h-3.5" />
+            <span>Technology</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Tag className="w-3.5 h-3.5" />
+            <span>Sales</span>
+          </div>
         </div>
         
-        <div className="flex flex-wrap gap-1.5 mb-4 pt-3 border-t">
-          <Badge variant="secondary" className="text-xs">Event Coordination</Badge>
-          <Badge variant="secondary" className="text-xs">Marketing</Badge>
-          <Badge variant="secondary" className="text-xs">YouTube</Badge>
-          <Badge variant="outline" className="text-xs">+1 more</Badge>
+        {/* Skills Tags */}
+        <div className="flex flex-wrap gap-1.5 pb-3 border-b">
+          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">Event Coordination</Badge>
+          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">Marketing</Badge>
+          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">YouTube</Badge>
+          <Badge variant="outline" className="text-xs border-purple-200 text-purple-600">+1 more</Badge>
         </div>
         
-        <div className="flex items-center justify-between pt-3 border-t">
-          <button className="flex items-center space-x-1.5 text-gray-600 hover:text-purple-600 transition-colors">
-            <HandHeart className="w-4 h-4" />
-            <span className="text-xs font-medium">Applaud</span>
+        {/* Action Buttons */}
+        <div className="flex items-center justify-around pt-3">
+          <button className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors group">
+            <HandHeart className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-medium">Applaud</span>
           </button>
-          <button className="flex items-center space-x-1.5 text-gray-600 hover:text-purple-600 transition-colors">
-            <MessageSquare className="w-4 h-4" />
-            <span className="text-xs font-medium">Comment</span>
+          <button className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors group">
+            <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-medium">Comment</span>
           </button>
-          <button className="flex items-center space-x-1.5 text-gray-600 hover:text-green-600 transition-colors">
-            <DollarSign className="w-4 h-4" />
-            <span className="text-xs font-medium">Fund</span>
+          <button className="flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors group">
+            <DollarSign className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-medium">Fund</span>
           </button>
         </div>
       </div>
