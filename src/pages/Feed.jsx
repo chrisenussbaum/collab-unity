@@ -2236,7 +2236,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                   transition={{ duration: 0.3, delay: 0.05 }}
                 >
                   <Link to={createPageUrl("CreateProject")} className="block">
-                    <div className="cu-gradient rounded-xl p-4 sm:p-5 text-white shadow-lg hover:shadow-xl transition-all duration-300 border-0">
+                    <div className="cu-gradient rounded-xl p-4 sm:p-5 text-white shadow-lg hover:shadow-xl transition-all duration-300">
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
                           <h3 className="font-bold text-base sm:text-lg mb-1">Got an idea?</h3>
@@ -2400,7 +2400,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                   transition={{ duration: 0.3, delay: 0.05 }}
                 >
                   <Link to={createPageUrl("CreateProject")} className="block">
-                    <div className="cu-gradient rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group border-0">
+                    <div className="cu-gradient rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group">
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
                           <h3 className="font-bold text-xl mb-1.5">Got an idea?</h3>
@@ -2562,7 +2562,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                   transition={{ duration: 0.3, delay: 0.05 }}
                 >
                   <Link to={createPageUrl("CreateProject")} className="block">
-                    <div className="cu-gradient rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 border-0">
+                    <div className="cu-gradient rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300">
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
                           <h3 className="font-bold text-xl mb-1.5">Got an idea?</h3>
