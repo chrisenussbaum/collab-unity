@@ -30,6 +30,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import ClickableImage from "../components/ClickableImage";
+import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
+import UserCardSkeleton from "@/components/skeletons/UserCardSkeleton";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -1265,8 +1267,10 @@ export default function Discover({ currentUser: propCurrentUser }) {
               </motion.div>
 
               {isLoading ? (
-                <div className="text-center py-16">
-                  <p className="cu-text-responsive-sm text-gray-500">Loading projects...</p>
+                <div className="cu-grid-responsive-1-2-3">
+                  {[...Array(6)].map((_, i) => (
+                    <ProjectCardSkeleton key={i} />
+                  ))}
                 </div>
               ) : filteredProjects.length === 0 ? (
                 <div className="text-center py-16">
@@ -1656,8 +1660,10 @@ export default function Discover({ currentUser: propCurrentUser }) {
               </motion.div>
 
               {isLoadingUsers ? (
-                <div className="text-center py-16">
-                  <p className="cu-text-responsive-sm text-gray-500">Loading collaborators...</p>
+                <div className="cu-grid-responsive-1-2-3">
+                  {[...Array(6)].map((_, i) => (
+                    <UserCardSkeleton key={i} />
+                  ))}
                 </div>
               ) : filteredUsers.length === 0 ? (
                 <div className="text-center py-16">
