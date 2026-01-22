@@ -52,162 +52,132 @@ import {
 
 // Visual mockup components from Demos page
 const FeedPostMockup = () => {
-  const [activeTab, setActiveTab] = React.useState('published');
+  const [activeTab, setActiveTab] = React.useState('showcase');
   
   return (
     <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
       <div className="p-6">
-        <div className="flex items-start space-x-3 mb-4">
-          <img 
-            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces"
-            alt="User"
-            className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-          />
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-gray-900 text-lg mb-1">Blogs</h3>
-            <p className="text-sm text-gray-600">John Snow • 2 days ago</p>
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start space-x-3">
+            <img 
+              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces"
+              alt="User"
+              className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-gray-900 text-base mb-0.5">Redapt SKO 2026 Event</h3>
+              <p className="text-xs text-gray-500">Chris Nussbaum • 3 days ago</p>
+            </div>
           </div>
-          {/* Modified section: Added Share2 and wrapped buttons */}
           <div className="flex items-center gap-1">
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
               <Share2 className="w-4 h-4 text-gray-400" />
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
               <Bookmark className="w-4 h-4 text-gray-400" />
             </button>
           </div>
-          {/* End modified section */}
         </div>
         
-        <div className="flex flex-wrap gap-2 mb-4">
-          <Badge className="bg-blue-100 text-blue-700 border-0">In Progress</Badge>
-          <Badge className="bg-purple-100 text-purple-700 border-0">Educational</Badge>
-          <Badge className="bg-green-100 text-green-700 border-0">Career Development</Badge>
-          <div className="flex items-center text-purple-600 text-sm">
-            <div className="flex items-center -space-x-2 mr-2">
-              <img 
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces"
-                alt="Collaborator 1"
-                className="w-6 h-6 rounded-full border-2 border-white object-cover"
-              />
-              <img 
-                src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=faces"
-                alt="Collaborator 2"
-                className="w-6 h-6 rounded-full border-2 border-white object-cover"
-              />
-              <img 
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces"
-                alt="Collaborator 3"
-                className="w-6 h-6 rounded-full border-2 border-white object-cover"
-              />
-            </div>
-            <span>3 collaborators</span>
+        <div className="flex flex-wrap gap-2 mb-3">
+          <Badge className="bg-orange-100 text-orange-700 border-0 text-xs">Seeking Collaborators</Badge>
+          <Badge className="bg-purple-100 text-purple-700 border-0 text-xs">Collaborative</Badge>
+          <Badge className="bg-blue-100 text-blue-700 border-0 text-xs">Business</Badge>
+          <div className="flex items-center text-purple-600 text-xs">
+            <Users className="w-3 h-3 mr-1" />
+            <span>1 collaborator</span>
           </div>
         </div>
         
-        <p className="text-gray-700 mb-4 leading-relaxed">
-          Writing and publishing blogs weekly on Medium. Collab with me or follow my project to keep up with my latest work! Your support is appreciated!
+        <p className="text-sm text-gray-700 mb-4 leading-relaxed">
+          Sales kickoff event for attendees, focusing on innovation and collaboration within the tech industry. Sharing knowledge, networking, and...
         </p>
         
         {/* Content Toggle Tabs */}
         <div className="flex gap-2 mb-3">
           <button
-            onClick={() => setActiveTab('published')}
-            className={`flex-1 py-2 px-3 text-sm font-medium rounded-lg transition-colors ${
-              activeTab === 'published'
+            onClick={() => setActiveTab('showcase')}
+            className={`flex-1 py-2 px-3 text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1 ${
+              activeTab === 'showcase'
                 ? 'bg-purple-600 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            🔗 Showcase
+            <Globe className="w-3 h-3" />
+            Showcase
           </button>
           <button
             onClick={() => setActiveTab('highlights')}
-            className={`flex-1 py-2 px-3 text-sm font-medium rounded-lg transition-colors ${
+            className={`flex-1 py-2 px-3 text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1 ${
               activeTab === 'highlights'
                 ? 'bg-purple-600 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            📸 Highlights
+            <Image className="w-3 h-3" />
+            Highlights
           </button>
         </div>
 
-        {/* Fixed Height Container for Tab Content */}
-        <div className="mb-4 h-[280px]">
-          {/* Published Tab Content */}
-          {activeTab === 'published' && (
-            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 h-full flex flex-col">
-              <div className="flex items-center justify-between mb-2 px-2">
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                  <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                </div>
-                <span className="text-xs text-gray-500">medium.com</span>
-                <img 
-                  src="https://www.google.com/s2/favicons?sz=64&domain_url=medium.com"
-                  alt="Medium"
-                  className="w-4 h-4"
-                />
-              </div>
-              <div className="flex-1 bg-white rounded p-6 flex items-center justify-center border border-gray-200">
-                <div className="text-center">
-                  <img 
-                    src="https://www.google.com/s2/favicons?sz=128&domain_url=medium.com"
-                    alt="Medium"
-                    className="w-16 h-16 mx-auto mb-2 object-contain"
-                  />
-                  <p className="text-sm font-medium text-gray-900">Published Project</p>
-                  <p className="text-xs text-gray-500 mt-1">Click to visit</p>
-                </div>
+        {/* Tab Content */}
+        <div className="mb-4 h-[200px]">
+          {activeTab === 'showcase' && (
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 h-full overflow-hidden">
+              <div className="grid grid-cols-2 gap-2 h-full">
+                {[
+                  { name: "youtube.com", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=youtube.com", title: "Event Day 2" },
+                  { name: "youtube.com", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=youtube.com", title: "Event Day 1" }
+                ].map((link, i) => (
+                  <div key={i} className="bg-white rounded-lg p-3 border border-gray-200 hover:border-purple-300 transition-colors cursor-pointer flex flex-col items-center justify-center text-center">
+                    <img src={link.icon} alt={link.name} className="w-8 h-8 mb-2 object-contain" />
+                    <p className="text-xs font-medium text-gray-900 truncate w-full">{link.title}</p>
+                    <p className="text-xs text-gray-500 truncate w-full">{link.name}</p>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Highlights Tab Content */}
           {activeTab === 'highlights' && (
             <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200 h-full relative">
               <img 
-                src="https://images.unsplash.com/photo-1519337265831-281ec6cc8514?q=80&w=2070&auto=format&fit=crop"
+                src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop"
                 alt="Project Highlight"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
-                <p className="text-white text-sm">Team brainstorming session - curating a content calendar for January.</p>
+              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
+                <p className="text-white text-xs">Event planning and coordination in progress</p>
               </div>
             </div>
           )}
         </div>
         
-        <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
-          <div className="flex items-center"><MapPin className="w-4 h-4 mr-1" />Remote</div>
-          <div className="flex items-center"><Building2 className="w-4 h-4 mr-1" />Technology</div>
-          <div className="flex items-center"><Tag className="w-4 h-4 mr-1" />Education</div>
+        <div className="flex items-center space-x-3 text-xs text-gray-600 mb-3">
+          <div className="flex items-center"><MapPin className="w-3 h-3 mr-1" />Kirkland, WA</div>
+          <div className="flex items-center"><Building2 className="w-3 h-3 mr-1" />Technology</div>
+          <div className="flex items-center"><Tag className="w-3 h-3 mr-1" />Sales</div>
         </div>
         
-        <div className="flex flex-wrap gap-2 mb-4 pt-4 border-t">
-          <Badge variant="secondary" className="text-xs">Blogging</Badge>
-          <Badge variant="secondary" className="text-xs">Content</Badge>
+        <div className="flex flex-wrap gap-1.5 mb-4 pt-3 border-t">
+          <Badge variant="secondary" className="text-xs">Event Coordination</Badge>
           <Badge variant="secondary" className="text-xs">Marketing</Badge>
-          <Badge variant="secondary" className="text-xs">Journalism</Badge>
+          <Badge variant="secondary" className="text-xs">YouTube</Badge>
+          <Badge variant="outline" className="text-xs">+1 more</Badge>
         </div>
         
-        <div className="flex items-center justify-between pt-4 border-t">
-          <button className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors">
-            <HandHeart className="w-5 h-5" /> {/* Changed from HatIcon */}
-            <span className="text-sm font-medium">Applaud</span> {/* Changed from Hats Off */}
+        <div className="flex items-center justify-between pt-3 border-t">
+          <button className="flex items-center space-x-1.5 text-gray-600 hover:text-purple-600 transition-colors">
+            <HandHeart className="w-4 h-4" />
+            <span className="text-xs font-medium">Applaud</span>
           </button>
-          <button className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors">
-            <MessageSquare className="w-5 h-5" />
-            <span className="text-sm font-medium">Comment</span>
+          <button className="flex items-center space-x-1.5 text-gray-600 hover:text-purple-600 transition-colors">
+            <MessageSquare className="w-4 h-4" />
+            <span className="text-xs font-medium">Comment</span>
           </button>
-          {/* Modified button: Changed icon from ArrowRight to DollarSign and text */}
-          <button className="flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors">
-            <DollarSign className="w-5 h-5" />
-            <span className="text-sm font-medium">Fund</span>
+          <button className="flex items-center space-x-1.5 text-gray-600 hover:text-green-600 transition-colors">
+            <DollarSign className="w-4 h-4" />
+            <span className="text-xs font-medium">Fund</span>
           </button>
-          {/* End modified section */}
         </div>
       </div>
     </div>
@@ -287,64 +257,101 @@ const DiscoverProjectsMockup = () => (
 );
 
 const MarketplaceMockup = () => {
+  const [activeTab, setActiveTab] = React.useState('projects');
+  
+  const projectListings = [
+    { 
+      name: "E-commerce Platform", 
+      price: "$2,500",
+      seller: "Sarah K.",
+      type: "Fixed Price",
+      image: "https://images.unsplash.com/photo-1661956602116-aa6865609028?w=100&h=100&fit=crop",
+      skills: ["React", "Node.js"]
+    },
+    { 
+      name: "Social Dashboard", 
+      price: "$1,800",
+      seller: "Alex J.",
+      type: "Fixed Price",
+      image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=100&h=100&fit=crop",
+      skills: ["Analytics", "Design"]
+    }
+  ];
+
+  const serviceListings = [
+    {
+      name: "UI/UX Design Services",
+      rate: "$150/hr",
+      provider: "Sarah K.",
+      type: "Consultation - 60 min",
+      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces",
+      skills: ["Figma", "User Research"]
+    },
+    {
+      name: "Full-Stack Development",
+      rate: "$200/hr",
+      provider: "Alex J.",
+      type: "Consultation - 90 min",
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces",
+      skills: ["React", "Node.js"]
+    }
+  ];
+  
   return (
     <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-bold text-gray-900 text-lg">Project Marketplace</h3>
           <div className="flex gap-2">
-            <button className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium">
+            <button 
+              onClick={() => setActiveTab('projects')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === 'projects' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
               Projects
             </button>
-            <button className="px-3 py-1 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100">
+            <button 
+              onClick={() => setActiveTab('services')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === 'services' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
               Services
             </button>
           </div>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[
-            { 
-              name: "E-commerce Platform", 
-              price: "$2,500",
-              seller: "Sarah K.",
-              type: "Fixed Price",
-              image: "https://images.unsplash.com/photo-1661956602116-aa6865609028?w=100&h=100&fit=crop",
-              skills: ["React", "Node.js"]
-            },
-            { 
-              name: "Social Dashboard", 
-              price: "$150/hr",
-              seller: "Alex J.",
-              type: "Consultation",
-              image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=100&h=100&fit=crop",
-              skills: ["Analytics", "Design"]
-            }
-          ].map((project, i) => (
+          {(activeTab === 'projects' ? projectListings : serviceListings).map((item, i) => (
             <div key={i} className="bg-white rounded-lg border-2 border-gray-200 overflow-hidden hover:border-purple-300 transition-all cursor-pointer">
               <div className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-start gap-3 flex-1">
                     <img 
-                      src={project.image} 
-                      alt={project.name}
+                      src={item.image} 
+                      alt={item.name}
                       className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-gray-900 mb-1 line-clamp-1">{project.name}</h4>
-                      <p className="text-xs text-gray-600">by {project.seller}</p>
+                      <h4 className="font-bold text-sm text-gray-900 mb-1 line-clamp-1">{item.name}</h4>
+                      <p className="text-xs text-gray-600">by {activeTab === 'projects' ? item.seller : item.provider}</p>
                     </div>
                   </div>
-                  <div className="bg-green-100 text-green-700 px-2 py-1 rounded text-sm font-bold">
-                    {project.price}
+                  <div className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">
+                    {activeTab === 'projects' ? item.price : item.rate}
                   </div>
                 </div>
                 
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">
-                    {project.type}
+                    {item.type}
                   </span>
-                  {project.skills.map(skill => (
+                  {item.skills.map(skill => (
                     <span key={skill} className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
                       {skill}
                     </span>
@@ -352,7 +359,7 @@ const MarketplaceMockup = () => {
                 </div>
                 
                 <div className="flex gap-2 pt-3 border-t">
-                  <button className="flex-1 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors">
+                  <button className="flex-1 py-2 bg-purple-600 text-white rounded-lg text-xs font-medium hover:bg-purple-700 transition-colors">
                     Book Now
                   </button>
                   <button className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
@@ -364,11 +371,11 @@ const MarketplaceMockup = () => {
           ))}
         </div>
         
-        <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
-          <div className="flex items-start gap-3">
-            <DollarSign className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+        <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
+          <div className="flex items-start gap-2">
+            <DollarSign className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-purple-900 text-sm mb-1">Sell Your Projects</h4>
+              <h4 className="font-semibold text-purple-900 text-xs mb-0.5">Sell Your Projects</h4>
               <p className="text-xs text-purple-700">List your projects and services to earn from your work</p>
             </div>
           </div>
