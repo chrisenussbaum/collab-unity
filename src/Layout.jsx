@@ -479,9 +479,9 @@ export default function Layout({ children, currentPageName }) {
       />
       <style>{`
         :root {
-          --cu-primary: #4338CA;
-          --cu-primary-dark: #3730A3;
-          --cu-primary-light: #6366F1;
+          --cu-primary: #5B47DB;
+          --cu-primary-dark: #4A37C0;
+          --cu-primary-light: #7C6AE8;
           
           --cu-padding-sm: 0.75rem;
           --cu-padding-md: 1rem;
@@ -598,7 +598,7 @@ export default function Layout({ children, currentPageName }) {
         }
         
         .cu-gradient {
-          background: linear-gradient(135deg, var(--cu-primary) 0%, var(--cu-primary-light) 100%);
+          background: var(--cu-primary);
         }
         
         .cu-card {
@@ -616,7 +616,6 @@ export default function Layout({ children, currentPageName }) {
         
         .cu-card:hover {
           box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-          transform: translateY(-1px);
         }
         
         @media (min-width: 769px) {
@@ -633,7 +632,7 @@ export default function Layout({ children, currentPageName }) {
           padding: 8px 16px;
           font-weight: 500;
           font-size: var(--cu-text-sm);
-          transition: all 0.2s ease-in-out;
+          transition: background-color 0.2s ease-in-out;
           display: inline-flex;
           align-items: center;
           justify-content: center;
@@ -657,7 +656,6 @@ export default function Layout({ children, currentPageName }) {
         
         .cu-button:hover {
           background: var(--cu-primary-dark);
-          transform: translateY(-1px);
         }
         
         .cu-button-sm {
@@ -1102,7 +1100,7 @@ export default function Layout({ children, currentPageName }) {
               {currentUser ? (
                 <>
                   <Link to={createPageUrl("CreateProject")}>
-                    <Button className="cu-button cu-text-responsive-sm">
+                    <Button style={{ background: 'var(--cu-primary)' }} className="text-white cu-text-responsive-sm hover:opacity-90">
                       <Plus className="cu-icon-sm mr-2" />
                       Create Project
                     </Button>
