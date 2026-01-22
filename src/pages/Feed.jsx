@@ -2446,9 +2446,9 @@ export default function Feed({ currentUser, authIsLoading }) {
             >
               {isLoading ? (
                 <>
-                  {[...Array(3)].map((_, i) => (
+                  {[...Array(4)].map((_, i) => (
                     <React.Fragment key={i}>
-                      {i % 2 === 0 ? <ProjectCardSkeleton /> : <FeedPostSkeleton />}
+                      {i % 3 === 0 ? <ProjectCardSkeleton /> : i % 3 === 1 ? <FeedPostSkeleton /> : <ServiceCardSkeleton />}
                     </React.Fragment>
                   ))}
                 </>
