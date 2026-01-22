@@ -286,7 +286,99 @@ const DiscoverProjectsMockup = () => (
   </div>
 );
 
-const SyncChatMockup = () => {
+const MarketplaceMockup = () => {
+  return (
+    <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-bold text-gray-900 text-lg">Project Marketplace</h3>
+          <div className="flex gap-2">
+            <button className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium">
+              Projects
+            </button>
+            <button className="px-3 py-1 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100">
+              Services
+            </button>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[
+            { 
+              name: "E-commerce Platform", 
+              price: "$2,500",
+              seller: "Sarah K.",
+              type: "Fixed Price",
+              image: "https://images.unsplash.com/photo-1661956602116-aa6865609028?w=100&h=100&fit=crop",
+              skills: ["React", "Node.js"]
+            },
+            { 
+              name: "Social Dashboard", 
+              price: "$150/hr",
+              seller: "Alex J.",
+              type: "Consultation",
+              image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=100&h=100&fit=crop",
+              skills: ["Analytics", "Design"]
+            }
+          ].map((project, i) => (
+            <div key={i} className="bg-white rounded-lg border-2 border-gray-200 overflow-hidden hover:border-purple-300 transition-all cursor-pointer">
+              <div className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start gap-3 flex-1">
+                    <img 
+                      src={project.image} 
+                      alt={project.name}
+                      className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-gray-900 mb-1 line-clamp-1">{project.name}</h4>
+                      <p className="text-xs text-gray-600">by {project.seller}</p>
+                    </div>
+                  </div>
+                  <div className="bg-green-100 text-green-700 px-2 py-1 rounded text-sm font-bold">
+                    {project.price}
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">
+                    {project.type}
+                  </span>
+                  {project.skills.map(skill => (
+                    <span key={skill} className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+                
+                <div className="flex gap-2 pt-3 border-t">
+                  <button className="flex-1 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors">
+                    Book Now
+                  </button>
+                  <button className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <MessageCircle className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+          <div className="flex items-start gap-3">
+            <DollarSign className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-purple-900 text-sm mb-1">Sell Your Projects</h4>
+              <p className="text-xs text-purple-700">List your projects and services to earn from your work</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ChatMockup = () => {
   const [activeChat, setActiveChat] = React.useState(0);
   
   const chats = [
@@ -953,7 +1045,7 @@ export default function Welcome() {
         { icon: MessageCircle, label: "Consultations", desc: "Paid consultations" },
         { icon: CheckCircle, label: "Booking System", desc: "Manage appointments" }
       ],
-      mockup: <SyncChatMockup />
+      mockup: <MarketplaceMockup />
     },
     {
       title: "Chat - Message In Real-Time",
@@ -964,9 +1056,9 @@ export default function Welcome() {
         { icon: MessageCircle, label: "Direct Messages", desc: "1-on-1 conversations" },
         { icon: Users, label: "Team Chats", desc: "Group discussions" },
         { icon: FileText, label: "Share Updates", desc: "Quick notifications" },
-        { icon: CheckSquare, label: "Task Mentions", desc: "Coordinate work" }
+        { icon: CheckCircle, label: "Task Mentions", desc: "Coordinate work" }
       ],
-      mockup: <SyncChatMockup />
+      mockup: <ChatMockup />
     },
     {
       title: "Workspace - Collaborate Seamlessly",
@@ -1016,7 +1108,7 @@ export default function Welcome() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1122,7 +1214,7 @@ export default function Welcome() {
       )}
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -1222,7 +1314,7 @@ export default function Welcome() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {stats.map((stat, index) => {
@@ -1249,7 +1341,7 @@ export default function Welcome() {
       </section>
 
       {/* Platform Features Section - Integrated from Demos */}
-      <section id="demos" className="py-20 px-4 sm:px-6 lg:px-8">
+      <section id="demos" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1281,7 +1373,7 @@ export default function Welcome() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                 >
-                  <Card className="overflow-hidden border-2 border-gray-100 hover:border-purple-200 transition-colors">
+                  <Card className="overflow-hidden border border-gray-200 shadow-lg hover:shadow-xl transition-all">
                     <CardContent className="p-0">
                       <div className={`grid grid-cols-1 lg:grid-cols-2 gap-0 ${!isEven ? 'lg:grid-flow-dense' : ''}`}>
                         {/* Content Side */}
@@ -1334,7 +1426,7 @@ export default function Welcome() {
       </section>
 
       {/* About Section - Integrated from About page */}
-      <section id="about" className="py-20 bg-gradient-to-br from-purple-50 to-indigo-50 px-4 sm:px-6 lg:px-8">
+      <section id="about" className="py-20 bg-gray-50 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1458,7 +1550,7 @@ export default function Welcome() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 bg-white px-4 sm:px-6 lg:px-8">
+      <section className="py-20 bg-gradient-to-b from-white to-gray-50 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1535,7 +1627,7 @@ export default function Welcome() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
