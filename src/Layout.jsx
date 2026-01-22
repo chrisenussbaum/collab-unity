@@ -979,7 +979,7 @@ export default function Layout({ children, currentPageName }) {
       `}</style>
 
       {/* Mobile/Tablet Header (visible on screens < 1024px) */}
-      <nav className="lg:hidden fixed top-0 left-0 right-0 bg-white z-50 safe-area-inset-top">
+      <nav className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 safe-area-inset-top">
         <div className="flex items-center justify-between px-3 md:px-6 h-14 md:h-16 gap-3">
           <Link 
             to={createPageUrl("Feed")}
@@ -1056,7 +1056,7 @@ export default function Layout({ children, currentPageName }) {
       </nav>
 
       {/* Desktop Navigation (visible on screens >= 1024px) */}
-      <nav className="hidden lg:block fixed top-0 left-0 right-0 bg-white z-50">
+      <nav className="hidden lg:block fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
         <div className="cu-container">
           <div className="flex justify-between items-center h-16 gap-6">
             <Link 
@@ -1177,7 +1177,7 @@ export default function Layout({ children, currentPageName }) {
       </main>
 
       {/* Mobile/Tablet Bottom Navigation (visible on screens < 1024px) */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white lg:hidden z-50 safe-area-inset-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden z-50 safe-area-inset-bottom">
         <div className="relative">
           <div className={`grid h-16 md:h-20 ${currentUser ? 'grid-cols-5' : 'grid-cols-3'}`}>
             {mobileNavItems.map((item, index) => {
