@@ -58,9 +58,9 @@ const FeedPostMockup = () => {
   const [showcaseIndex, setShowcaseIndex] = React.useState(0);
   
   const showcaseItems = [
-    { title: "Product Demo Video", domain: "youtube.com", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=youtube.com" },
-    { title: "GitHub Repository", domain: "github.com", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=github.com" },
-    { title: "Live Website", domain: "vercel.app", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=vercel.app" }
+    { title: "Chapter 1 Draft", domain: "googledocs.com", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=docs.google.com" },
+    { title: "Character Sketches", domain: "notion.so", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=notion.so" },
+    { title: "Book Outline", domain: "miro.com", icon: "https://www.google.com/s2/favicons?sz=64&domain_url=miro.com" }
   ];
   
   const visibleShowcase = [
@@ -74,12 +74,12 @@ const FeedPostMockup = () => {
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-start space-x-3 flex-1">
-            <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-6 h-6 text-white" />
+            <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center flex-shrink-0">
+              <BookOpen className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-gray-900 text-base mb-1">AI Recipe Generator</h3>
-              <p className="text-xs text-gray-500">Sarah Martinez • 5 days ago</p>
+              <h3 className="font-bold text-gray-900 text-base mb-1">The Forgotten Library</h3>
+              <p className="text-xs text-gray-500">Jordan Blake • 2 weeks ago</p>
             </div>
           </div>
           <div className="flex items-center gap-0.5">
@@ -96,16 +96,16 @@ const FeedPostMockup = () => {
         <div className="flex flex-wrap gap-2 mb-3">
           <Badge className="bg-orange-100 text-orange-700 border-0 text-xs font-medium">Seeking Collaborators</Badge>
           <Badge className="bg-purple-100 text-purple-700 border-0 text-xs font-medium">Collaborative</Badge>
-          <Badge className="bg-blue-100 text-blue-700 border-0 text-xs font-medium">Startup</Badge>
+          <Badge className="bg-green-100 text-green-700 border-0 text-xs font-medium">Educational</Badge>
           <div className="flex items-center gap-1 text-purple-600 text-xs">
             <Users className="w-3.5 h-3.5" />
-            <span>2 collaborators</span>
+            <span>3 collaborators</span>
           </div>
         </div>
         
         {/* Description */}
         <p className="text-sm text-gray-700 mb-4 leading-relaxed">
-          Building an AI-powered recipe generator that creates personalized meal plans based on dietary preferences and available ingredients. Looking for collaboration on...
+          Writing a fantasy novel about a hidden library containing books that can alter reality. Looking for co-authors, editors, and illustrators to bring this story to life...
         </p>
         
         {/* Tabs */}
@@ -183,12 +183,12 @@ const FeedPostMockup = () => {
           {activeTab === 'highlights' && (
             <div className="h-[240px] relative bg-black rounded-lg overflow-hidden border border-gray-200">
               <img 
-                src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=2070&auto=format&fit=crop"
+                src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=2070&auto=format&fit=crop"
                 alt="Project Highlight"
                 className="w-full h-full object-cover"
               />
               <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
-                <p className="text-white text-xs font-medium">UI mockups for the recipe browsing interface</p>
+                <p className="text-white text-xs font-medium">Character development brainstorming session</p>
               </div>
             </div>
           )}
@@ -202,19 +202,19 @@ const FeedPostMockup = () => {
           </div>
           <div className="flex items-center gap-1">
             <Building2 className="w-3.5 h-3.5" />
-            <span>Technology</span>
+            <span>Creative Writing</span>
           </div>
           <div className="flex items-center gap-1">
             <Tag className="w-3.5 h-3.5" />
-            <span>Food & Health</span>
+            <span>Fantasy</span>
           </div>
         </div>
         
         {/* Skills Tags */}
         <div className="flex flex-wrap gap-1.5 pb-3 border-b">
-          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">React</Badge>
-          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">OpenAI</Badge>
-          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">Node.js</Badge>
+          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">Creative Writing</Badge>
+          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">Storytelling</Badge>
+          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">Editing</Badge>
           <Badge variant="outline" className="text-xs border-purple-200 text-purple-600">+2 more</Badge>
         </div>
         
