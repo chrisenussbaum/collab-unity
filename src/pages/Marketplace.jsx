@@ -20,90 +20,86 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Marketplace({ currentUser }) {
   const navigate = useNavigate();
-  const [listings, setListings] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sellers, setSellers] = useState({});
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [showSetPriceDialog, setShowSetPriceDialog] = useState(false);
-  const [myProjects, setMyProjects] = useState([]);
-  const [marketplaceListings, setMarketplaceListings] = useState([]);
   const [activeTab, setActiveTab] = useState("projects");
-  const [serviceListings, setServiceListings] = useState([]);
-  const [serviceProviders, setServiceProviders] = useState({});
 
-  useEffect(() => {
-    const loadMarketplace = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch marketplace listings
-        const allListings = await base44.entities.MarketplaceListing.filter({
-          is_available: true
-        }, "-created_date");
+  // Use React Query for efficient data fetching with caching
+  const { data: marketplaceData, isLoading, refetch } = useQuery({
+    queryKey: ['marketplace-data', currentUser?.email, activeTab],
+    queryFn: async () => {
+      // Fetch marketplace listings (limit to 30)
+      const allListings = await base44.entities.MarketplaceListing.filter({
+        is_available: true
+      }, "-created_date", 30);
 
-        setMarketplaceListings(allListings);
+      // Fetch the projects for these listings - PARALLEL fetch instead of loop
+      const projectIds = allListings.map(l => l.project_id);
+      const projectPromises = projectIds.map(projectId => 
+        base44.entities.Project.filter({ id: projectId }).catch(err => {
+          console.error("Error fetching project:", err);
+          return [];
+        })
+      );
+      
+      const projectResults = await Promise.all(projectPromises);
+      const allProjects = projectResults
+        .filter(result => result.length > 0)
+        .map(result => result[0]);
 
-        // Fetch the projects for these listings
-        const projectIds = allListings.map(l => l.project_id);
-        const allProjects = [];
-        
-        for (const projectId of projectIds) {
-          try {
-            const projects = await base44.entities.Project.filter({ id: projectId });
-            if (projects.length > 0) {
-              allProjects.push(projects[0]);
-            }
-          } catch (error) {
-            console.error("Error fetching project:", error);
-          }
-        }
-
-        setListings(allProjects);
-
-        // Fetch seller profiles
-        const sellerEmails = [...new Set(allProjects.map(p => p.created_by))];
-        if (sellerEmails.length > 0) {
-          const { data: profiles } = await getPublicUserProfiles({ emails: sellerEmails });
-          const profilesMap = {};
-          (profiles || []).forEach(profile => {
-            profilesMap[profile.email] = profile;
-          });
-          setSellers(profilesMap);
-        }
-
-        // If user is logged in, fetch their projects for the "Sell" section
-        if (currentUser) {
-          const userProjects = await base44.entities.Project.filter({
-            created_by: currentUser.email
-          }, "-created_date");
-          setMyProjects(userProjects);
-        }
-
-        // Fetch service listings
-        const allServiceListings = await base44.entities.ServiceListing.filter({});
-        setServiceListings(allServiceListings);
-
-        // Fetch service provider profiles
-        const providerEmails = [...new Set(allServiceListings.map(l => l.provider_email))];
-        if (providerEmails.length > 0) {
-          const { data: providerProfiles } = await getPublicUserProfiles({ emails: providerEmails });
-          const providersMap = {};
-          (providerProfiles || []).forEach(profile => {
-            providersMap[profile.email] = profile;
-          });
-          setServiceProviders(providersMap);
-        }
-      } catch (error) {
-        console.error("Error loading marketplace:", error);
-        toast.error("Failed to load marketplace items");
-      } finally {
-        setIsLoading(false);
+      // Fetch seller profiles
+      const sellerEmails = [...new Set(allProjects.map(p => p.created_by))];
+      let profilesMap = {};
+      if (sellerEmails.length > 0) {
+        const { data: profiles } = await getPublicUserProfiles({ emails: sellerEmails });
+        (profiles || []).forEach(profile => {
+          profilesMap[profile.email] = profile;
+        });
       }
-    };
 
-    loadMarketplace();
-  }, [currentUser]);
+      // Fetch user's projects for "Sell" section
+      let userProjects = [];
+      if (currentUser) {
+        userProjects = await base44.entities.Project.filter({
+          created_by: currentUser.email
+        }, "-created_date", 20);
+      }
+
+      // Fetch service listings (limit to 30)
+      const allServiceListings = await base44.entities.ServiceListing.filter({}, "-created_date", 30);
+
+      // Fetch service provider profiles
+      const providerEmails = [...new Set(allServiceListings.map(l => l.provider_email))];
+      let providersMap = {};
+      if (providerEmails.length > 0) {
+        const { data: providerProfiles } = await getPublicUserProfiles({ emails: providerEmails });
+        (providerProfiles || []).forEach(profile => {
+          providersMap[profile.email] = profile;
+        });
+      }
+
+      return {
+        listings: allProjects,
+        marketplaceListings: allListings,
+        sellers: profilesMap,
+        myProjects: userProjects,
+        serviceListings: allServiceListings,
+        serviceProviders: providersMap
+      };
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  const listings = marketplaceData?.listings || [];
+  const marketplaceListings = marketplaceData?.marketplaceListings || [];
+  const sellers = marketplaceData?.sellers || {};
+  const myProjects = marketplaceData?.myProjects || [];
+  const serviceListings = marketplaceData?.serviceListings || [];
+  const serviceProviders = marketplaceData?.serviceProviders || {};
 
   const filteredListings = listings.filter(listing => {
     if (!searchQuery.trim()) return true;
@@ -154,42 +150,8 @@ export default function Marketplace({ currentUser }) {
     setShowSetPriceDialog(true);
   };
 
-  const reloadMarketplace = async () => {
-    setIsLoading(true);
-    try {
-      const allListings = await base44.entities.MarketplaceListing.filter({
-        is_available: true
-      }, "-created_date");
-
-      setMarketplaceListings(allListings);
-
-      const projectIds = allListings.map(l => l.project_id);
-      const allProjects = [];
-      
-      for (const projectId of projectIds) {
-        try {
-          const projects = await base44.entities.Project.filter({ id: projectId });
-          if (projects.length > 0) {
-            allProjects.push(projects[0]);
-          }
-        } catch (error) {
-          console.error("Error fetching project:", error);
-        }
-      }
-
-      setListings(allProjects);
-
-      if (currentUser) {
-        const userProjects = await base44.entities.Project.filter({
-          created_by: currentUser.email
-        }, "-created_date");
-        setMyProjects(userProjects);
-      }
-    } catch (error) {
-      console.error("Error reloading marketplace:", error);
-    } finally {
-      setIsLoading(false);
-    }
+  const reloadMarketplace = () => {
+    refetch();
   };
 
   const handleChatWithOwner = async (project, e) => {

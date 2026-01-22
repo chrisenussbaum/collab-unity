@@ -226,12 +226,12 @@ export default function Discover({ currentUser: propCurrentUser }) {
   const { data: projectsQueryData, isLoading: isProjectsQueryLoading } = useQuery({
     queryKey: ['discover-projects', currentUser?.email],
     queryFn: async () => {
-      // Parallel fetch projects and applauds
+      // Parallel fetch projects and applauds (limit to improve performance)
       const [rawAllProjects, allApplauds] = await Promise.all([
         withRetry(() => base44.entities.Project.filter({ 
           is_visible_on_feed: true
-        }, "-created_date")),
-        withRetry(() => base44.entities.ProjectApplaud.filter({}))
+        }, "-created_date", 50)),
+        withRetry(() => base44.entities.ProjectApplaud.filter({}, "-created_date", 200))
       ]);
       
       // Fetch owner profiles for ALL projects
