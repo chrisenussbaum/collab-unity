@@ -26,6 +26,10 @@ export default function Marketplace({ currentUser }) {
   const [selectedProject, setSelectedProject] = useState(null);
   const [showSetPriceDialog, setShowSetPriceDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("projects");
+  const [displayedListings, setDisplayedListings] = useState([]);
+  const [displayedServices, setDisplayedServices] = useState([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const ITEMS_PER_PAGE = 12;
 
   // Use React Query for efficient data fetching with caching
   const { data: marketplaceData, isLoading, refetch } = useQuery({
@@ -102,31 +106,82 @@ export default function Marketplace({ currentUser }) {
   const serviceListings = marketplaceData?.serviceListings || [];
   const serviceProviders = marketplaceData?.serviceProviders || {};
 
-  const filteredListings = listings.filter(listing => {
-    if (!searchQuery.trim()) return true;
-    
-    const seller = sellers[listing.created_by];
-    return (
-      listing.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      seller?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.area_of_interest?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
+  // Initialize displayed items when data loads
+  React.useEffect(() => {
+    if (marketplaceData) {
+      setDisplayedListings(marketplaceData.listings.slice(0, ITEMS_PER_PAGE));
+      setDisplayedServices(marketplaceData.serviceListings.slice(0, ITEMS_PER_PAGE));
+    }
+  }, [marketplaceData]);
 
-  const filteredServices = serviceListings.filter(listing => {
-    if (!searchQuery.trim()) return true;
-    
-    const provider = serviceProviders[listing.provider_email];
-    return (
-      listing.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      provider?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (listing.skills_offered && listing.skills_offered.some(skill =>
-        skill.toLowerCase().includes(searchQuery.toLowerCase())
-      ))
-    );
-  });
+  // Infinite scroll handler
+  React.useEffect(() => {
+    const handleScroll = () => {
+      if (isLoadingMore) return;
+
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.offsetHeight;
+      const scrollPercentage = (scrollTop + windowHeight) / documentHeight;
+
+      if (scrollPercentage >= 0.8) {
+        if (activeTab === "projects" && displayedListings.length < listings.length) {
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setDisplayedListings(prev => {
+              const newLength = Math.min(prev.length + ITEMS_PER_PAGE, listings.length);
+              return listings.slice(0, newLength);
+            });
+            setIsLoadingMore(false);
+          }, 300);
+        } else if (activeTab === "services" && displayedServices.length < serviceListings.length) {
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setDisplayedServices(prev => {
+              const newLength = Math.min(prev.length + ITEMS_PER_PAGE, serviceListings.length);
+              return serviceListings.slice(0, newLength);
+            });
+            setIsLoadingMore(false);
+          }, 300);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isLoadingMore, activeTab, displayedListings.length, listings.length, displayedServices.length, serviceListings.length, listings, serviceListings]);
+
+  const filteredListings = React.useMemo(() => {
+    const filtered = displayedListings.filter(listing => {
+      if (!searchQuery.trim()) return true;
+      
+      const seller = sellers[listing.created_by];
+      return (
+        listing.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        listing.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        seller?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        listing.area_of_interest?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    });
+    return filtered;
+  }, [displayedListings, searchQuery, sellers]);
+
+  const filteredServices = React.useMemo(() => {
+    const filtered = displayedServices.filter(listing => {
+      if (!searchQuery.trim()) return true;
+      
+      const provider = serviceProviders[listing.provider_email];
+      return (
+        listing.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        listing.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        provider?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (listing.skills_offered && listing.skills_offered.some(skill =>
+          skill.toLowerCase().includes(searchQuery.toLowerCase())
+        ))
+      );
+    });
+    return filtered;
+  }, [displayedServices, searchQuery, serviceProviders]);
 
   const handleBookProject = (project, marketplaceListing, e) => {
     e.preventDefault();
@@ -309,7 +364,7 @@ export default function Marketplace({ currentUser }) {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredListings.slice(0, 12).map((listing, index) => {
+              {filteredListings.map((listing, index) => {
                 const seller = sellers[listing.created_by];
                 const marketplaceListing = marketplaceListings.find(ml => ml.project_id === listing.id);
                 const isOwner = currentUser && listing.created_by === currentUser.email;
@@ -511,6 +566,22 @@ export default function Marketplace({ currentUser }) {
                       currentUser={currentUser}
                     />
                   ))}
+                </div>
+              )}
+
+              {/* Loading More Indicator */}
+              {isLoadingMore && activeTab === "services" && (
+                <div className="text-center py-8">
+                  <div className="inline-flex items-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mr-3"></div>
+                    <span className="text-sm text-gray-600">Loading more...</span>
+                  </div>
+                </div>
+              )}
+              
+              {displayedServices.length >= serviceListings.length && serviceListings.length > 0 && (
+                <div className="text-center py-8">
+                  <p className="text-sm text-gray-500">You've viewed all available services</p>
                 </div>
               )}
             </TabsContent>

@@ -72,6 +72,10 @@ export default function Discover({ currentUser: propCurrentUser }) {
   const [userInitialized, setUserInitialized] = useState(false);
   const [activeTab, setActiveTab] = useState("projects");
   const [userInterests, setUserInterests] = useState(new Set());
+  const [displayedProjects, setDisplayedProjects] = useState([]);
+  const [displayedUsers, setDisplayedUsers] = useState([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const ITEMS_PER_PAGE = 12;
   
   const [sortBy, setSortBy] = useState("most_recent");
   const [projectTypeFilter, setProjectTypeFilter] = useState("all");
@@ -629,6 +633,52 @@ export default function Discover({ currentUser: propCurrentUser }) {
       allIndustries: Array.from(industriesSet).sort()
     };
   }, [projects, users, activeTab]);
+
+  // Initialize displayed items when filtered results change
+  React.useEffect(() => {
+    setDisplayedProjects(filteredProjects.slice(0, ITEMS_PER_PAGE));
+  }, [filteredProjects]);
+
+  React.useEffect(() => {
+    setDisplayedUsers(filteredUsers.slice(0, ITEMS_PER_PAGE));
+  }, [filteredUsers]);
+
+  // Infinite scroll handler
+  React.useEffect(() => {
+    const handleScroll = () => {
+      if (isLoadingMore) return;
+
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.offsetHeight;
+      const scrollPercentage = (scrollTop + windowHeight) / documentHeight;
+
+      if (scrollPercentage >= 0.8) {
+        if (activeTab === "projects" && displayedProjects.length < filteredProjects.length) {
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setDisplayedProjects(prev => {
+              const newLength = Math.min(prev.length + ITEMS_PER_PAGE, filteredProjects.length);
+              return filteredProjects.slice(0, newLength);
+            });
+            setIsLoadingMore(false);
+          }, 300);
+        } else if (activeTab === "people" && displayedUsers.length < filteredUsers.length) {
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setDisplayedUsers(prev => {
+              const newLength = Math.min(prev.length + ITEMS_PER_PAGE, filteredUsers.length);
+              return filteredUsers.slice(0, newLength);
+            });
+            setIsLoadingMore(false);
+          }, 300);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isLoadingMore, activeTab, displayedProjects.length, filteredProjects, displayedUsers.length, filteredUsers]);
 
   const filteredProjects = useMemo(() => {
     let filtered = projects.filter(project => {
@@ -1238,8 +1288,9 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   )}
                 </div>
               ) : (
+                <>
                 <div className="cu-grid-responsive-1-2-3">
-                  {filteredProjects.map((project, index) => {
+                  {displayedProjects.map((project, index) => {
                     const config = statusConfig[project.status] || {};
                     const isHighMatch = currentUser && project.matchScore >= 5;
                     const isInterested = userInterests.has(project.id);
@@ -1490,6 +1541,23 @@ export default function Discover({ currentUser: propCurrentUser }) {
                     );
                   })}
                 </div>
+
+                {/* Loading More Indicator */}
+                {isLoadingMore && activeTab === "projects" && (
+                  <div className="text-center py-8">
+                    <div className="inline-flex items-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mr-3"></div>
+                      <span className="text-sm text-gray-600">Loading more...</span>
+                    </div>
+                  </div>
+                )}
+                
+                {displayedProjects.length >= filteredProjects.length && filteredProjects.length > 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-gray-500">You've viewed all projects</p>
+                  </div>
+                )}
+                </>
               )}
             </TabsContent>
 
@@ -1611,8 +1679,9 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   )}
                 </div>
               ) : (
+                <>
                 <div className="cu-grid-responsive-1-2-3">
-                  {filteredUsers.map((user, index) => (
+                  {displayedUsers.map((user, index) => (
                     <UserCard
                       key={user.id}
                       user={user}
@@ -1621,6 +1690,23 @@ export default function Discover({ currentUser: propCurrentUser }) {
                     />
                   ))}
                 </div>
+
+                {/* Loading More Indicator */}
+                {isLoadingMore && activeTab === "people" && (
+                  <div className="text-center py-8">
+                    <div className="inline-flex items-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mr-3"></div>
+                      <span className="text-sm text-gray-600">Loading more...</span>
+                    </div>
+                  </div>
+                )}
+                
+                {displayedUsers.length >= filteredUsers.length && filteredUsers.length > 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-gray-500">You've viewed all collaborators</p>
+                  </div>
+                )}
+                </>
               )}
             </TabsContent>
 
