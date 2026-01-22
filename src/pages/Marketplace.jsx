@@ -350,9 +350,10 @@ export default function Marketplace({ currentUser }) {
 
           {/* Projects Grid */}
           {isLoading ? (
-            <div className="text-center py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading marketplace...</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <MarketplaceCardSkeleton key={i} />
+              ))}
             </div>
           ) : filteredListings.length === 0 ? (
             <div className="text-center py-16">
