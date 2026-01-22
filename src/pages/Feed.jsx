@@ -1939,6 +1939,18 @@ export default function Feed({ currentUser, authIsLoading }) {
     setIsLoading(isQueryLoading);
   }, [isQueryLoading]);
 
+  // Combine and sort all feed items by creation date - MOVED UP to fix initialization order
+  const allFeedItems = React.useMemo(() => {
+    const combined = [
+      ...projects.map(p => ({ ...p, itemType: 'project', sortDate: new Date(p.created_date) })),
+      ...feedPosts.map(fp => ({ ...fp, itemType: 'feedPost', sortDate: new Date(fp.created_date) })),
+      ...serviceListings.map(sl => ({ ...sl, itemType: 'service', sortDate: new Date(sl.created_date) })),
+      ...marketplaceListings.map(ml => ({ ...ml, itemType: 'marketplace', sortDate: new Date(ml.created_date) }))
+    ];
+    
+    return combined.sort((a, b) => b.sortDate - a.sortDate);
+  }, [projects, feedPosts, serviceListings, marketplaceListings]);
+
   const loadMoreItems = useCallback(() => {
     if (isLoadingMore) return;
 
@@ -2008,18 +2020,6 @@ export default function Feed({ currentUser, authIsLoading }) {
       }, 500);
     }
   }, [isLoading]);
-
-  // Combine and sort all feed items by creation date
-  const allFeedItems = React.useMemo(() => {
-    const combined = [
-      ...projects.map(p => ({ ...p, itemType: 'project', sortDate: new Date(p.created_date) })),
-      ...feedPosts.map(fp => ({ ...fp, itemType: 'feedPost', sortDate: new Date(fp.created_date) })),
-      ...serviceListings.map(sl => ({ ...sl, itemType: 'service', sortDate: new Date(sl.created_date) })),
-      ...marketplaceListings.map(ml => ({ ...ml, itemType: 'marketplace', sortDate: new Date(ml.created_date) }))
-    ];
-    
-    return combined.sort((a, b) => b.sortDate - a.sortDate);
-  }, [projects, feedPosts, serviceListings, marketplaceListings]);
 
   const handleApplaudUpdate = useCallback(async () => {
     const allProjectIdsInFeed = projects.map(p => p.id);
@@ -2524,7 +2524,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                     </div>
                   )}
                   
-                  {!hasMorePosts && displayedItems.length > 0 && ( 
+                  {displayedItemsCount >= allFeedItems.length && allFeedItems.length > 0 && (
                     <div className="text-center py-8">
                       <p className="cu-text-responsive-sm text-gray-500">You've reached the end of the feed!</p>
                     </div>
