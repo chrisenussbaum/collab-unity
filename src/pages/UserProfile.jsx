@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { User, Project, SkillEndorsement, CollaboratorReview, Notification, ProjectApplication } from "@/entities/all";
+import { User, Project, SkillEndorsement, CollaboratorReview, Notification } from "@/entities/all";
 import { getUserByUsername } from "@/functions/getUserByUsername";
-import ApplicationsSection from "../components/profile/ApplicationsSection";
 
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -689,9 +688,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
   const [isSyncing, setIsSyncing] = useState(false);
   const [userGameStats, setUserGameStats] = useState(null);
   const [isLoadingGameStats, setIsLoadingGameStats] = useState(false);
-  const [userApplications, setUserApplications] = useState([]);
-  const [applicationProjects, setApplicationProjects] = useState({});
-  const [isLoadingApplications, setIsLoadingApplications] = useState(false);
 
   const handleSafeNavigation = useCallback(() => {
     const referrer = document.referrer;
@@ -917,43 +913,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
             setUserGameStats(null);
           } finally {
             setIsLoadingGameStats(false);
-          }
-
-          // Load user's project applications ONLY if viewing own profile
-          if (isOwnerCheck) {
-            try {
-              setIsLoadingApplications(true);
-              const applications = await base44.entities.ProjectApplication.filter({
-                applicant_email: normalizedUser.email
-              }, '-created_date');
-              
-              setUserApplications(applications || []);
-              
-              // Fetch project details for applications
-              if (applications && applications.length > 0) {
-                const projectIds = [...new Set(applications.map(app => app.project_id))];
-                const projectPromises = projectIds.map(projectId =>
-                  base44.entities.Project.filter({ id: projectId }).catch(() => [])
-                );
-                const projectResults = await Promise.all(projectPromises);
-                const projectsMap = {};
-                projectResults.forEach(result => {
-                  if (result && result.length > 0) {
-                    projectsMap[result[0].id] = result[0];
-                  }
-                });
-                setApplicationProjects(projectsMap);
-              }
-            } catch (error) {
-              console.error("Error loading applications:", error);
-              setUserApplications([]);
-              setApplicationProjects({});
-            } finally {
-              setIsLoadingApplications(false);
-            }
-          } else {
-            setUserApplications([]);
-            setApplicationProjects({});
           }
 
           // Load shared projects ONLY if viewing someone else's profile AND current user is logged in
@@ -2432,13 +2391,15 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                     </Card>
                   )}
 
-                  {/* Applications Section - Only visible to profile owner */}
-                  {isOwner && (
-                   <ApplicationsSection 
-                     applications={userApplications}
-                     isLoading={isLoadingApplications}
-                     projects={applicationProjects}
-                   />
+                  {/* Service Offerings - Moved from sidebar */}
+                  {isOwner && propCurrentUser && (
+                   <div className="overflow-x-auto">
+                     <ServiceListingManager 
+                       currentUser={propCurrentUser}
+                       isOwner={isOwner}
+                       enableHorizontalScroll={true}
+                     />
+                   </div>
                   )}
 
                   <Card className="cu-card">
@@ -2915,14 +2876,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                         )}
                       </CardContent>
                     </Card>
-                  )}
-
-                  {/* Service Offerings */}
-                  {isOwner && propCurrentUser && (
-                    <ServiceListingManager 
-                      currentUser={propCurrentUser}
-                      isOwner={isOwner}
-                    />
                   )}
 
                   {/* Recommended Collaborators */}
