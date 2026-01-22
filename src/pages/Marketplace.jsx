@@ -581,12 +581,6 @@ export default function Marketplace({ currentUser }) {
                   </div>
                 </div>
               )}
-              
-              {displayedServices.length >= serviceListings.length && serviceListings.length > 0 && (
-                <div className="text-center py-8">
-                  <p className="text-sm text-gray-500">You've viewed all available services</p>
-                </div>
-              )}
             </TabsContent>
           </Tabs>
 
