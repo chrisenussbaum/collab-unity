@@ -1043,17 +1043,6 @@ export default function Layout({ children, currentPageName }) {
                       <Eye className="cu-icon-sm mr-2" /> View Profile
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={toggleTheme} className="cursor-pointer">
-                    {theme === 'light' ? (
-                      <>
-                        <Moon className="cu-icon-sm mr-2" /> Dark Mode
-                      </>
-                    ) : (
-                      <>
-                        <Sun className="cu-icon-sm mr-2" /> Light Mode
-                      </>
-                    )}
-                  </DropdownMenuItem>
                   {currentUser?.role === 'admin' && (
                     <>
                       <DropdownMenuSeparator />
