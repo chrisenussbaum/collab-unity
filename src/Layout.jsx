@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, ShieldCheck, User as UserIcon, Lightbulb, Settings, Compass, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar, Sun, Moon } from "lucide-react";
+import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, ShieldCheck, User as UserIcon, Lightbulb, Settings, Compass, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import GlobalSearchBar from "./components/GlobalSearchBar";
 
@@ -75,31 +75,6 @@ export default function Layout({ children, currentPageName }) {
   const [authChecked, setAuthChecked] = useState(false);
   const [hasNavigated, setHasNavigated] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [theme, setTheme] = useState(() => {
-    try {
-      return localStorage.getItem('cu_theme') || 'light';
-    } catch {
-      return 'light';
-    }
-  });
-
-  // Apply theme to document
-  useEffect(() => {
-    try {
-      localStorage.setItem('cu_theme', theme);
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    } catch (e) {
-      console.warn('Error setting theme:', e);
-    }
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  };
 
   const publicRoutes = [
     createPageUrl("Welcome"),
@@ -489,7 +464,7 @@ export default function Layout({ children, currentPageName }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden transition-colors">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       <Toaster 
         position="top-right" 
         richColors 
@@ -1004,7 +979,7 @@ export default function Layout({ children, currentPageName }) {
       `}</style>
 
       {/* Mobile/Tablet Header (visible on screens < 1024px) */}
-      <nav className="lg:hidden fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-50 safe-area-inset-top transition-colors">
+      <nav className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 safe-area-inset-top">
         <div className="flex items-center justify-between px-3 md:px-6 h-14 md:h-16 gap-3">
           <Link 
             to={createPageUrl("Feed")}
@@ -1081,7 +1056,7 @@ export default function Layout({ children, currentPageName }) {
       </nav>
 
       {/* Desktop Navigation (visible on screens >= 1024px) */}
-      <nav className="hidden lg:block fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-50 transition-colors">
+      <nav className="hidden lg:block fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
         <div className="cu-container">
           <div className="flex justify-between items-center h-16 gap-6">
             <Link 
@@ -1151,17 +1126,6 @@ export default function Layout({ children, currentPageName }) {
                           <Eye className="cu-icon-sm mr-2" /> View Profile
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={toggleTheme} className="cursor-pointer">
-                        {theme === 'light' ? (
-                          <>
-                            <Moon className="cu-icon-sm mr-2" /> Dark Mode
-                          </>
-                        ) : (
-                          <>
-                            <Sun className="cu-icon-sm mr-2" /> Light Mode
-                          </>
-                        )}
-                      </DropdownMenuItem>
                       {currentUser?.role === 'admin' && (
                         <>
                           <DropdownMenuSeparator />
@@ -1213,7 +1177,7 @@ export default function Layout({ children, currentPageName }) {
       </main>
 
       {/* Mobile/Tablet Bottom Navigation (visible on screens < 1024px) */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 lg:hidden z-50 safe-area-inset-bottom transition-colors">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden z-50 safe-area-inset-bottom">
         <div className="relative">
           <div className={`grid h-16 md:h-20 ${currentUser ? 'grid-cols-5' : 'grid-cols-3'}`}>
             {mobileNavItems.map((item, index) => {
