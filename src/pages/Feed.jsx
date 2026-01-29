@@ -73,6 +73,7 @@ import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import ProjectLinkPreviewDialog from "@/components/ProjectLinkPreviewDialog";
 import FeedProjectHighlights from "../components/FeedProjectHighlights";
 import ProjectActivityIndicator, { isProjectActive } from "../components/ProjectActivityIndicator";
+import ProjectActivityFeed from "@/components/feed/ProjectActivityFeed";
 import OptimizedImage from "@/components/OptimizedImage";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 import ServiceFeedCard from "@/components/feed/ServiceFeedCard";
@@ -1559,6 +1560,9 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
                 onProjectUpdate={onProjectUpdate}
               />
             )}
+
+            {/* Project Activity - After Highlights */}
+            <ProjectActivityFeed project={project} />
 
             <div className="flex flex-wrap items-center gap-x-4 sm:gap-x-6 gap-y-2 cu-text-responsive-sm text-gray-600 mb-4">
               {project.location && (
