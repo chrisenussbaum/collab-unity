@@ -21,14 +21,30 @@ import { formatDistanceToNow } from "date-fns";
 const ICON_MAP = {
   asset_uploaded: FileStack,
   asset_updated: FileStack,
+  asset_deleted: FileStack,
   task_created: CheckSquare,
+  task_updated: CheckSquare,
   task_completed: CheckSquare,
+  task_deleted: CheckSquare,
+  task_assigned: CheckSquare,
   thought_created: BookOpen,
   thought_updated: BookOpen,
-  ideation_updated: BookOpen, // Added this line
+  thought_deleted: BookOpen,
+  ideation_updated: BookOpen,
   comment_posted: MessageSquare,
   member_added: UserPlus,
+  member_left: UserPlus,
+  member_removed: UserPlus,
   status_changed: RefreshCw,
+  milestone_created: CheckSquare,
+  milestone_updated: CheckSquare,
+  milestone_completed: CheckSquare,
+  milestone_deleted: CheckSquare,
+  tool_added: RefreshCw,
+  tool_removed: RefreshCw,
+  project_updated: RefreshCw,
+  link_added: RefreshCw,
+  link_removed: RefreshCw,
 };
 
 // Utility function to handle rate limits with exponential backoff
