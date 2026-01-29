@@ -31,6 +31,7 @@ import ProjectActivityIndicator, { isProjectActive } from "@/components/ProjectA
 import OptimizedImage from "@/components/OptimizedImage";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
+import ProjectDashboard from "@/components/ProjectDashboard";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -205,6 +206,9 @@ export default function MyProjects({ currentUser, authIsLoading }) {
       />
 
       <div className="cu-container py-6 sm:py-8">
+        {/* Project Dashboard */}
+        <ProjectDashboard projects={projects} currentUser={currentUser} />
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
