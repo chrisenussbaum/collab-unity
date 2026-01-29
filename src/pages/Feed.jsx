@@ -1561,9 +1561,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
               />
             )}
 
-            {/* Project Activity - After Highlights */}
-            <ProjectActivityFeed project={project} />
-
             <div className="flex flex-wrap items-center gap-x-4 sm:gap-x-6 gap-y-2 cu-text-responsive-sm text-gray-600 mb-4">
               {project.location && (
                 <div className="flex items-center">
@@ -1599,6 +1596,9 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
                 )}
               </div>
             )}
+
+            {/* Project Activity - After tags */}
+            <ProjectActivityFeed project={project} />
           </CardContent>
 
           <CardFooter className="bg-gray-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-t border-gray-200">
