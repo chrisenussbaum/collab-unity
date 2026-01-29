@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   Activity,
   MessageSquare,
@@ -11,12 +10,11 @@ import {
   BookOpen,
   UserPlus,
   RefreshCw,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import { ActivityLog } from "@/entities/all";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import { formatDistanceToNow } from "date-fns";
+import HorizontalScrollContainer from "../HorizontalScrollContainer";
 
 const ICON_MAP = {
   asset_uploaded: FileStack,
@@ -35,7 +33,6 @@ export default function ProjectActivityFeed({ project }) {
   const [activities, setActivities] = useState([]);
   const [profiles, setProfiles] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [activityCount, setActivityCount] = useState(0);
 
   useEffect(() => {
@@ -91,71 +88,49 @@ export default function ProjectActivityFeed({ project }) {
     return null;
   }
 
-  const displayedActivities = isExpanded ? activities : activities.slice(0, 3);
-
   return (
     <div className="mt-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Activity className="w-4 h-4 text-purple-600" />
-          <h4 className="text-sm font-semibold text-gray-900">Recent Activity</h4>
-          <Badge variant="secondary" className="text-xs">
-            {activityCount}
-          </Badge>
-        </div>
-        
-        {activities.length > 3 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="h-auto py-1 px-2 text-xs text-purple-600 hover:text-purple-700"
-          >
-            {isExpanded ? (
-              <>
-                <ChevronUp className="w-3 h-3 mr-1" />
-                Show Less
-              </>
-            ) : (
-              <>
-                <ChevronDown className="w-3 h-3 mr-1" />
-                View All
-              </>
-            )}
-          </Button>
-        )}
+      <div className="flex items-center gap-2 mb-3">
+        <Activity className="w-4 h-4 text-purple-600" />
+        <h4 className="text-sm font-semibold text-gray-900">Recent Activity</h4>
+        <Badge variant="secondary" className="text-xs">
+          {activityCount}
+        </Badge>
       </div>
 
-      <div className="space-y-3">
-        {displayedActivities.map(activity => {
+      <HorizontalScrollContainer showArrows={activities.length > 2}>
+        {activities.map(activity => {
           const ActionIcon = ICON_MAP[activity.action_type] || Activity;
           const userProfile = profiles[activity.user_email];
           
           return (
-            <div key={activity.id} className="flex items-start space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-              <Avatar className="h-7 w-7 flex-shrink-0">
-                <AvatarImage src={userProfile?.profile_image} />
-                <AvatarFallback className="text-xs">
-                  {userProfile?.full_name?.[0]?.toUpperCase() || activity.user_email?.[0]?.toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-700">
-                  <span className="font-semibold">{userProfile?.full_name || activity.user_name || activity.user_email}</span>
-                  {' '}
-                  <span className="text-gray-600">{activity.action_description}</span>
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {formatDistanceToNow(new Date(activity.created_date), { addSuffix: true })}
-                </p>
+            <div key={activity.id} className="flex-shrink-0 w-[280px] sm:w-[320px] p-3 rounded-lg bg-white border border-gray-200 hover:shadow-md transition-all">
+              <div className="flex items-start space-x-2">
+                <Avatar className="h-8 w-8 flex-shrink-0">
+                  <AvatarImage src={userProfile?.profile_image} />
+                  <AvatarFallback className="text-xs">
+                    {userProfile?.full_name?.[0]?.toUpperCase() || activity.user_email?.[0]?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-700 leading-relaxed">
+                    <span className="font-semibold">{userProfile?.full_name || activity.user_name || activity.user_email}</span>
+                    {' '}
+                    <span className="text-gray-600">{activity.action_description}</span>
+                  </p>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-xs text-gray-500">
+                      {formatDistanceToNow(new Date(activity.created_date), { addSuffix: true })}
+                    </p>
+                    <ActionIcon className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  </div>
+                </div>
               </div>
-              
-              <ActionIcon className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
             </div>
           );
         })}
-      </div>
+      </HorizontalScrollContainer>
     </div>
   );
 }
