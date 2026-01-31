@@ -281,9 +281,8 @@ export default function CreateProject() {
     try {
       for (const file of files) {
         const isVideo = file.type.startsWith('video/');
-        const { file_url } = await UploadFile({ file });
         
-        // Generate thumbnail for videos
+        // Generate thumbnail for videos BEFORE uploading the video
         let thumbnailUrl = null;
         if (isVideo) {
           try {
@@ -294,8 +293,12 @@ export default function CreateProject() {
             }
           } catch (thumbError) {
             console.warn("Could not generate video thumbnail:", thumbError);
+            // Continue without thumbnail rather than failing
           }
         }
+        
+        // Upload the actual file (image or video)
+        const { file_url } = await UploadFile({ file });
         
         const newHighlight = {
           media_url: file_url,
@@ -316,52 +319,93 @@ export default function CreateProject() {
       toast.success(`Uploaded ${files.length} file(s)`);
     } catch (error) {
       console.error("Error uploading media:", error);
-      toast.error("Failed to upload media.");
+      toast.error(error.message || "Failed to upload media.");
     } finally {
       if (mediaInputRef.current) mediaInputRef.current.value = "";
       setIsUploadingMedia(false);
     }
   };
 
-  // Function to generate thumbnail from video
+  // Function to generate thumbnail from video - robust version
   const generateVideoThumbnail = (videoFile) => {
     return new Promise((resolve, reject) => {
       const video = document.createElement('video');
-      video.preload = 'metadata';
+      video.preload = 'auto';
       video.muted = true;
       video.playsInline = true;
+      video.crossOrigin = 'anonymous';
       
       const videoURL = URL.createObjectURL(videoFile);
       video.src = videoURL;
 
-      video.addEventListener('loadeddata', () => {
-        const seekTime = Math.min(1, video.duration * 0.1);
-        video.currentTime = seekTime;
+      let hasGenerated = false;
+
+      const cleanup = () => {
+        URL.revokeObjectURL(videoURL);
+      };
+
+      const generateThumbnail = () => {
+        if (hasGenerated) return;
+        hasGenerated = true;
+
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth || 1280;
+          canvas.height = video.videoHeight || 720;
+          
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          
+          canvas.toBlob((blob) => {
+            cleanup();
+            if (blob) {
+              const thumbnailFile = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' });
+              resolve(thumbnailFile);
+            } else {
+              reject(new Error('Canvas toBlob failed to generate thumbnail'));
+            }
+          }, 'image/jpeg', 0.9);
+        } catch (err) {
+          cleanup();
+          reject(new Error('Error drawing video frame: ' + err.message));
+        }
+      };
+
+      video.addEventListener('loadedmetadata', () => {
+        // Wait for enough data to be loaded
+        if (video.readyState >= 2) {
+          const seekTime = Math.min(0.5, video.duration * 0.05);
+          video.currentTime = seekTime;
+        }
       });
 
-      video.addEventListener('seeked', () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        canvas.toBlob((blob) => {
-          URL.revokeObjectURL(videoURL);
-          if (blob) {
-            const thumbnailFile = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' });
-            resolve(thumbnailFile);
-          } else {
-            reject(new Error('Failed to generate thumbnail'));
-          }
-        }, 'image/jpeg', 0.85);
+      video.addEventListener('loadeddata', () => {
+        // Ensure video has valid dimensions
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+          const seekTime = Math.min(0.5, video.duration * 0.05);
+          video.currentTime = seekTime;
+        } else {
+          cleanup();
+          reject(new Error('Video has invalid dimensions'));
+        }
       });
+
+      video.addEventListener('seeked', generateThumbnail);
 
       video.addEventListener('error', (e) => {
-        URL.revokeObjectURL(videoURL);
-        reject(new Error('Failed to load video for thumbnail generation'));
+        cleanup();
+        reject(new Error('Failed to load video: ' + (e.message || 'Unknown error')));
       });
+
+      // Timeout fallback - if seeking takes too long, try generating anyway
+      setTimeout(() => {
+        if (!hasGenerated && video.readyState >= 2) {
+          generateThumbnail();
+        } else if (!hasGenerated) {
+          cleanup();
+          reject(new Error('Video thumbnail generation timeout'));
+        }
+      }, 10000);
 
       video.load();
     });
