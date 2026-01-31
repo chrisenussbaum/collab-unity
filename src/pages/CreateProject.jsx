@@ -294,8 +294,8 @@ export default function CreateProject() {
         if (isVideo) {
           try {
             await validateVideo(file, {
-              maxSizeMB: 100,
-              maxDurationSeconds: 300
+              maxSizeMB: 40,
+              maxDurationSeconds: 180
             });
           } catch (error) {
             // If it's a metadata loading error, warn but continue with upload

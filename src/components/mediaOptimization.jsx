@@ -97,8 +97,8 @@ export async function optimizeImage(file, options = {}) {
  */
 export async function validateVideo(file, options = {}) {
   const {
-    maxSizeMB = 50, // Max 50MB for videos
-    maxDurationSeconds = 300 // Max 5 minutes (300 seconds) - reasonable for 50MB
+    maxSizeMB = 40, // Max 40MB for videos (backend limit)
+    maxDurationSeconds = 180 // Max 3 minutes (180 seconds) - reasonable for 40MB
   } = options;
 
   return new Promise((resolve, reject) => {
@@ -125,7 +125,7 @@ export async function validateVideo(file, options = {}) {
       
       if (video.duration > maxDurationSeconds) {
         const maxMinutes = Math.floor(maxDurationSeconds / 60);
-        reject(new Error(`Video is too long (${durationText}). Maximum duration is ${maxMinutes} minutes for a 50MB file limit.`));
+        reject(new Error(`Video is too long (${durationText}). Maximum duration is ${maxMinutes} minutes. Please compress your video or use a shorter clip.`));
         return;
       }
       
