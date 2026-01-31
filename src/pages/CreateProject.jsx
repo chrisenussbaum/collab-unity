@@ -45,7 +45,7 @@ export default function CreateProject() {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentUser, setCurrentUser] = useState(null);
-  const [currentStep, setCurrentStep] = useState(0); // 0 = initial choice, 1 = step 1, 2 = step 2
+  const [currentStep, setCurrentStep] = useState(0); // 0 = initial choice, 1 = step 1, 2 = step 2, 3 = step 3
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [isGenerating, setIsGenerating] = useState(false);
@@ -462,7 +462,7 @@ export default function CreateProject() {
 
   const nextStep = () => {
     if (validateStep()) {
-      if (currentStep < 2) setCurrentStep(currentStep + 1);
+      if (currentStep < 3) setCurrentStep(currentStep + 1);
     }
   };
 
@@ -605,6 +605,7 @@ export default function CreateProject() {
                 <span>
                   {currentStep === 1 && "Project Information"}
                   {currentStep === 2 && "Collaboration Requirements"}
+                  {currentStep === 3 && "Media"}
                 </span>
               </CardTitle>
             </CardHeader>
@@ -853,6 +854,166 @@ export default function CreateProject() {
                 </motion.div>
               )}
 
+              {currentStep === 3 && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-8"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-sm font-medium flex items-center gap-2">
+                          <Image className="w-4 h-4" />
+                          Photos & Videos (Optional)
+                        </Label>
+                        <p className="text-xs text-gray-500 mt-1">Add media to showcase your project</p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => mediaInputRef.current.click()}
+                        disabled={isUploadingMedia}
+                        className="flex items-center gap-2"
+                      >
+                        {isUploadingMedia ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            Upload Media
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    
+                    {formData.highlights.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {formData.highlights.map((highlight, index) => (
+                          <div key={index} className="relative group">
+                            <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-200">
+                              {highlight.media_type === 'video' ? (
+                                <div className="relative w-full h-full">
+                                  {highlight.thumbnail_url ? (
+                                    <img 
+                                      src={highlight.thumbnail_url} 
+                                      alt="Video thumbnail"
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <Video className="w-8 h-8 text-gray-400" />
+                                    </div>
+                                  )}
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                                    <Video className="w-8 h-8 text-white" />
+                                  </div>
+                                </div>
+                              ) : (
+                                <img 
+                                  src={highlight.media_url} 
+                                  alt={highlight.caption || 'Project media'}
+                                  className="w-full h-full object-cover"
+                                />
+                              )}
+                            </div>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => removeHighlight(index)}
+                              className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {formData.highlights.length === 0 && (
+                      <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
+                        <Image className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                        <p className="text-sm text-gray-500">No media added yet</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-4 pt-6 border-t">
+                    <div>
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <LinkIcon className="w-4 h-4" />
+                        Project Links (Optional)
+                      </Label>
+                      <p className="text-xs text-gray-500 mt-1">Add relevant links for your project (max 10)</p>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Link title (e.g., GitHub Repo, Live Demo)"
+                          value={newLinkTitle}
+                          onChange={(e) => setNewLinkTitle(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="https://..."
+                          value={newLink}
+                          onChange={(e) => setNewLink(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addLink();
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          onClick={addLink}
+                          variant="outline"
+                          disabled={formData.project_urls.length >= 10}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {formData.project_urls.length > 0 && (
+                      <div className="space-y-2">
+                        {formData.project_urls.map((link, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                            <div className="flex-1 min-w-0">
+                              {link.title && (
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  {link.title}
+                                </p>
+                              )}
+                              <p className="text-xs text-gray-500 truncate">
+                                {link.url}
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeLink(index)}
+                              className="ml-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
 
 
               <div className="flex justify-between pt-6 border-t">
@@ -864,7 +1025,7 @@ export default function CreateProject() {
                 </Button>
 
                 <div className="flex space-x-3">
-                  {currentStep < 2 ? (
+                  {currentStep < 3 ? (
                     <Button
                       onClick={nextStep}
                       className="cu-button"
