@@ -94,6 +94,33 @@ const HatIcon = ({ className }) => (
   </svg>
 );
 
+// Load followers function
+const loadFollowers = async () => {
+  if (!projectId) return;
+
+  setIsLoadingFollowers(true);
+  try {
+    const allUsers = await withRetry(() => User.filter({}));
+    const projectFollowers = allUsers.filter(user => 
+      user.followed_projects?.includes(projectId)
+    );
+
+    // Get profiles for followers
+    const followerEmails = projectFollowers.map(f => f.email);
+    if (followerEmails.length > 0) {
+      const { data: followerProfiles } = await getPublicUserProfiles({ emails: followerEmails });
+      setFollowers(Array.isArray(followerProfiles) ? followerProfiles : []);
+    } else {
+      setFollowers([]);
+    }
+  } catch (error) {
+    console.error("Error loading followers:", error);
+    setFollowers([]);
+  } finally {
+    setIsLoadingFollowers(false);
+  }
+};
+
 // Enhanced retry logic with more aggressive backoff for rate limiting
 const withRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -166,6 +193,10 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   // New state for invitations
   const [pendingInvitation, setPendingInvitation] = useState(null);
   const [isRespondingToInvite, setIsRespondingToInvite] = useState(false);
+  
+  // State for followers
+  const [followers, setFollowers] = useState([]);
+  const [isLoadingFollowers, setIsLoadingFollowers] = useState(false);
 
 
 
@@ -338,6 +369,9 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
 
       retryCountRef.current = 0;
       hasInitialized.current = true;
+      
+      // Load followers (non-blocking)
+      loadFollowers();
 
     } catch (error) {
       if (isMounted.current) {
@@ -1169,6 +1203,99 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                         </Badge>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* Project Collaborators */}
+                {projectUsers && projectUsers.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="font-semibold text-gray-900 mb-3 text-sm sm:text-base flex items-center">
+                      <Users className="w-4 h-4 mr-2 text-purple-600" />
+                      Team Members ({projectUsers.length})
+                    </h3>
+                    <div className="flex flex-wrap gap-3">
+                      {projectUsers.slice(0, 8).map((user) => (
+                        <Link
+                          key={user.email}
+                          to={createPageUrl(`UserProfile?username=${user.username}`)}
+                          className="group"
+                        >
+                          <div className="flex flex-col items-center space-y-1">
+                            <Avatar className="h-10 w-10 ring-2 ring-white group-hover:ring-purple-200 transition-all">
+                              <AvatarImage src={user.profile_image} />
+                              <AvatarFallback className="text-xs bg-purple-100 text-purple-600">
+                                {user.full_name?.[0] || user.email?.[0] || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-xs text-gray-600 group-hover:text-purple-600 transition-colors max-w-[80px] truncate text-center">
+                              {user.full_name || user.email}
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                      {projectUsers.length > 8 && (
+                        <div className="flex flex-col items-center space-y-1">
+                          <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                            <span className="text-xs font-medium text-gray-600">
+                              +{projectUsers.length - 8}
+                            </span>
+                          </div>
+                          <span className="text-xs text-gray-500">more</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Project Followers */}
+                {(followers.length > 0 || project.followers_count > 0) && (
+                  <div className="mt-6">
+                    <h3 className="font-semibold text-gray-900 mb-3 text-sm sm:text-base flex items-center">
+                      <Heart className="w-4 h-4 mr-2 text-pink-600" />
+                      Followers ({project.followers_count || followers.length})
+                    </h3>
+                    {isLoadingFollowers ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+                        <span className="text-xs text-gray-500">Loading followers...</span>
+                      </div>
+                    ) : followers.length > 0 ? (
+                      <div className="flex flex-wrap gap-3">
+                        {followers.slice(0, 8).map((follower) => (
+                          <Link
+                            key={follower.email}
+                            to={createPageUrl(`UserProfile?username=${follower.username}`)}
+                            className="group"
+                          >
+                            <div className="flex flex-col items-center space-y-1">
+                              <Avatar className="h-10 w-10 ring-2 ring-white group-hover:ring-pink-200 transition-all">
+                                <AvatarImage src={follower.profile_image} />
+                                <AvatarFallback className="text-xs bg-pink-100 text-pink-600">
+                                  {follower.full_name?.[0] || follower.email?.[0] || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-xs text-gray-600 group-hover:text-pink-600 transition-colors max-w-[80px] truncate text-center">
+                                {follower.full_name || follower.email}
+                              </span>
+                            </div>
+                          </Link>
+                        ))}
+                        {followers.length > 8 && (
+                          <div className="flex flex-col items-center space-y-1">
+                            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                              <span className="text-xs font-medium text-gray-600">
+                                +{followers.length - 8}
+                              </span>
+                            </div>
+                            <span className="text-xs text-gray-500">more</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        Be the first to follow this project!
+                      </p>
+                    )}
                   </div>
                 )}
               </CardContent>
