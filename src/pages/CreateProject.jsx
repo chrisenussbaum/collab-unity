@@ -294,7 +294,7 @@ export default function CreateProject() {
         if (isVideo) {
           try {
             await validateVideo(file, {
-              maxSizeMB: 50,
+              maxSizeMB: 100,
               maxDurationSeconds: 300
             });
           } catch (error) {
