@@ -45,6 +45,7 @@ import {
 import { toast } from "sonner";
 import WorkspaceTabs from "@/components/workspace/WorkspaceTabs";
 import ProjectHighlights from "../components/project/ProjectHighlights";
+import ProjectAnalyticsDashboard from "../components/project/ProjectAnalyticsDashboard";
 import ClickableImage from "../components/ClickableImage";
 import ContextualSearchAssistant from "../components/workspace/ContextualSearchAssistant";
 
@@ -1174,6 +1175,13 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
             </Card>
 
 
+
+            {/* Project Analytics Dashboard - Show if there's activity or user can contribute */}
+            <ProjectAnalyticsDashboard
+              project={project}
+              currentUser={currentUser}
+              isCollaborator={userCanContribute}
+            />
 
             {/* Project Links Section */}
             {project.project_urls && project.project_urls.length > 0 ? (
