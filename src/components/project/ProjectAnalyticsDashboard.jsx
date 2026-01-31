@@ -135,9 +135,9 @@ export default function ProjectAnalyticsDashboard({ project, currentUser, isColl
     activityByType[type] = filteredActivities.filter(a => a.action_type === type).length;
   });
 
-  // Activity over time (last 30 days, grouped by day)
+  // Activity over time (grouped by day for the selected time range)
   const activityOverTime = [];
-  for (let i = Math.min(daysAgo, 30) - 1; i >= 0; i--) {
+  for (let i = daysAgo - 1; i >= 0; i--) {
     const date = subDays(new Date(), i);
     const dayStart = startOfDay(date);
     const dayActivities = filteredActivities.filter(a => {
@@ -252,7 +252,7 @@ export default function ProjectAnalyticsDashboard({ project, currentUser, isColl
               </Badge>
             </div>
             <div className="text-2xl font-bold text-gray-900">
-              {(totalActivities / Math.min(daysAgo, 30)).toFixed(1)}
+              {(totalActivities / daysAgo).toFixed(1)}
             </div>
             <div className="text-xs text-gray-600">Activities/Day</div>
           </div>
@@ -415,22 +415,6 @@ export default function ProjectAnalyticsDashboard({ project, currentUser, isColl
           </div>
         )}
 
-        {/* Project Visibility Metric (for public projects) */}
-        {project.is_visible_on_feed && (
-          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center">
-                <Eye className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-900">Public Project</p>
-                <p className="text-xs text-gray-600">
-                  Visible on the community feed • {project.followers_count || 0} {project.followers_count === 1 ? 'follower' : 'followers'}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
