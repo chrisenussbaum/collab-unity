@@ -40,7 +40,8 @@ import {
   ExternalLink,
   Upload,
   Camera,
-  BookOpen
+  BookOpen,
+  Bookmark
 } from "lucide-react";
 import { toast } from "sonner";
 import WorkspaceTabs from "@/components/workspace/WorkspaceTabs";
@@ -48,6 +49,7 @@ import ProjectHighlights from "../components/project/ProjectHighlights";
 import ProjectAnalyticsDashboard from "../components/project/ProjectAnalyticsDashboard";
 import ClickableImage from "../components/ClickableImage";
 import ContextualSearchAssistant from "../components/workspace/ContextualSearchAssistant";
+import OptimizedAvatar from "../components/OptimizedAvatar";
 
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion"; // Added motion for banner animation
@@ -1055,6 +1057,50 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
               </Card>
             )}
             {isOwner && <ProjectApplicationsManager project={project} onProjectUpdate={handleProjectUpdate} />}
+            
+            {/* Collaborators and Followers Display */}
+            <div className="flex items-center gap-4 mb-4">
+              {/* Collaborators */}
+              <div className="flex items-center gap-2">
+                {projectUsers.length > 0 ? (
+                  <div className="flex items-center -space-x-2">
+                    {projectUsers.slice(0, 3).map((collab) => (
+                      <OptimizedAvatar
+                        key={collab.email}
+                        src={collab.profile_image}
+                        alt={collab.full_name || 'Collaborator'}
+                        fallback={collab.full_name?.[0] || collab.email?.[0] || 'U'}
+                        size="xs"
+                        className="w-8 h-8 border-2 border-white shadow-sm"
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <Users className="w-4 h-4 text-purple-600" />
+                )}
+                <span className="text-sm font-medium text-purple-600">
+                  {(() => {
+                    const count = project.collaborator_emails?.length || 1;
+                    return count > 3 
+                      ? `3+ collaborators`
+                      : `${count} ${count === 1 ? 'collaborator' : 'collaborators'}`;
+                  })()}
+                </span>
+              </div>
+
+              {/* Followers */}
+              {project.followers_count > 0 && (
+                <>
+                  <span className="text-gray-400">•</span>
+                  <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                    <Bookmark className="w-4 h-4" />
+                    <span className="font-medium">
+                      {project.followers_count} {project.followers_count === 1 ? 'follower' : 'followers'}
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
             
             <Card className="cu-card">
               <CardHeader className="p-4 sm:p-6">
