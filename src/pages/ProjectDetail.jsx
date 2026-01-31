@@ -94,33 +94,6 @@ const HatIcon = ({ className }) => (
   </svg>
 );
 
-// Load followers function
-const loadFollowers = async () => {
-  if (!projectId) return;
-
-  setIsLoadingFollowers(true);
-  try {
-    const allUsers = await withRetry(() => User.filter({}));
-    const projectFollowers = allUsers.filter(user => 
-      user.followed_projects?.includes(projectId)
-    );
-
-    // Get profiles for followers
-    const followerEmails = projectFollowers.map(f => f.email);
-    if (followerEmails.length > 0) {
-      const { data: followerProfiles } = await getPublicUserProfiles({ emails: followerEmails });
-      setFollowers(Array.isArray(followerProfiles) ? followerProfiles : []);
-    } else {
-      setFollowers([]);
-    }
-  } catch (error) {
-    console.error("Error loading followers:", error);
-    setFollowers([]);
-  } finally {
-    setIsLoadingFollowers(false);
-  }
-};
-
 // Enhanced retry logic with more aggressive backoff for rate limiting
 const withRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -199,6 +172,33 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   const [isLoadingFollowers, setIsLoadingFollowers] = useState(false);
 
 
+
+  // Load followers function
+  const loadFollowers = useCallback(async () => {
+    if (!projectId) return;
+    
+    setIsLoadingFollowers(true);
+    try {
+      const allUsers = await withRetry(() => User.filter({}));
+      const projectFollowers = allUsers.filter(user => 
+        user.followed_projects?.includes(projectId)
+      );
+      
+      // Get profiles for followers
+      const followerEmails = projectFollowers.map(f => f.email);
+      if (followerEmails.length > 0) {
+        const { data: followerProfiles } = await getPublicUserProfiles({ emails: followerEmails });
+        setFollowers(Array.isArray(followerProfiles) ? followerProfiles : []);
+      } else {
+        setFollowers([]);
+      }
+    } catch (error) {
+      console.error("Error loading followers:", error);
+      setFollowers([]);
+    } finally {
+      setIsLoadingFollowers(false);
+    }
+  }, [projectId]);
 
   // Function to check if current user can contribute to this project
   const canContribute = useCallback((project, user, userApplication) => {
