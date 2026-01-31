@@ -41,11 +41,15 @@ const CHART_COLORS = {
 };
 
 const ACTIVITY_TYPES = {
+  task_created: { label: "Tasks Created", icon: CheckSquare, color: CHART_COLORS.primary },
   task_completed: { label: "Tasks Completed", icon: CheckSquare, color: CHART_COLORS.primary },
   asset_uploaded: { label: "Assets Uploaded", icon: FileStack, color: CHART_COLORS.secondary },
   thought_created: { label: "Thoughts Created", icon: BookOpen, color: CHART_COLORS.tertiary },
-  milestone_completed: { label: "Milestones Completed", icon: CheckSquare, color: CHART_COLORS.quaternary },
-  comment_posted: { label: "Comments Posted", icon: MessageSquare, color: CHART_COLORS.quinary },
+  milestone_created: { label: "Milestones Created", icon: TrendingUp, color: CHART_COLORS.quaternary },
+  milestone_completed: { label: "Milestones Completed", icon: TrendingUp, color: CHART_COLORS.quaternary },
+  ideation_updated: { label: "Ideation Sessions", icon: Activity, color: CHART_COLORS.quinary },
+  tool_added: { label: "Tools Added", icon: Activity, color: "#ec4899" },
+  comment_posted: { label: "Comments Posted", icon: MessageSquare, color: "#14b8a6" },
 };
 
 export default function ProjectAnalyticsDashboard({ project, currentUser, isCollaborator }) {
