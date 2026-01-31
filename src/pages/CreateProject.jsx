@@ -290,7 +290,7 @@ export default function CreateProject() {
           continue;
         }
         
-        // Validate video files - skip validation if browser can't decode the video
+        // Validate video files
         if (isVideo) {
           try {
             await validateVideo(file, {
@@ -298,15 +298,8 @@ export default function CreateProject() {
               maxDurationSeconds: 300
             });
           } catch (error) {
-            // If it's a metadata loading error, warn but continue with upload
-            if (error.message.includes('Failed to load video metadata')) {
-              console.warn(`Could not validate ${file.name}, but will attempt upload:`, error);
-              toast.warning(`${file.name}: Could not validate video format, but will attempt upload. Video may not play in all browsers.`);
-            } else {
-              // For other errors (size, duration), block the upload
-              toast.error(`${file.name}: ${error.message}`);
-              continue;
-            }
+            toast.error(`${file.name}: ${error.message}`);
+            continue;
           }
         }
         
