@@ -67,7 +67,12 @@ export default function ProjectActivityFeed({ project }) {
           10
         );
         
-        const safeActivities = Array.isArray(projectActivities) ? projectActivities : [];
+        // Filter out project highlight activities (asset_uploaded with entity_type: highlight)
+        const safeActivities = Array.isArray(projectActivities) 
+          ? projectActivities.filter(activity => 
+              !(activity.action_type === 'asset_uploaded' && activity.entity_type === 'highlight')
+            )
+          : [];
         setActivities(safeActivities);
         setActivityCount(safeActivities.length);
 

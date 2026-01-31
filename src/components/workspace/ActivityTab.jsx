@@ -88,7 +88,13 @@ export default function ActivityTab({ project, currentUser, isCollaborator, isPr
       await new Promise(resolve => setTimeout(resolve, 500));
       
       const projectActivities = await withRetry(() => ActivityLog.filter({ project_id: project.id }, "-created_date", 50));
-      const safeActivities = Array.isArray(projectActivities) ? projectActivities : [];
+      
+      // Filter out project highlight activities (asset_uploaded with entity_type: highlight)
+      const safeActivities = Array.isArray(projectActivities) 
+        ? projectActivities.filter(activity => 
+            !(activity.action_type === 'asset_uploaded' && activity.entity_type === 'highlight')
+          )
+        : [];
       setActivities(safeActivities);
 
       // Load profile images for all users who appear in activities
