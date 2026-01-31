@@ -18,6 +18,7 @@ import ConfirmationDialog from "@/components/ConfirmationDialog";
 import ArrayInputWithSearch from "@/components/ArrayInputWithSearch";
 import { generateProjectSuggestions } from "@/functions/generateProjectSuggestions";
 import { base44 } from "@/api/base44Client";
+import { validateVideo, isImageFile, isVideoFile, optimizeImage, formatFileSize } from "@/components/mediaOptimization";
 
 const PROJECT_CLASSIFICATIONS = [
   { value: "educational", label: "Educational" },
@@ -280,7 +281,47 @@ export default function CreateProject() {
     setIsUploadingMedia(true);
     try {
       for (const file of files) {
-        const isVideo = file.type.startsWith('video/');
+        const isVideo = isVideoFile(file);
+        const isImage = isImageFile(file);
+        
+        // Validate file type
+        if (!isVideo && !isImage) {
+          toast.error(`${file.name}: Invalid file type. Please upload images or videos only.`);
+          continue;
+        }
+        
+        // Validate video files
+        if (isVideo) {
+          try {
+            await validateVideo(file, {
+              maxSizeMB: 50,
+              maxDurationSeconds: 300
+            });
+          } catch (error) {
+            toast.error(`${file.name}: ${error.message}`);
+            continue;
+          }
+        }
+        
+        // Validate image files
+        if (isImage && file.size > 10 * 1024 * 1024) {
+          toast.error(`${file.name}: Image is too large. Maximum size is 10MB.`);
+          continue;
+        }
+        
+        // Optimize images before upload
+        let fileToUpload = file;
+        if (isImage) {
+          try {
+            fileToUpload = await optimizeImage(file, {
+              maxWidth: 1920,
+              maxHeight: 1920,
+              quality: 0.85
+            });
+          } catch (error) {
+            console.warn("Could not optimize image, uploading original:", error);
+          }
+        }
         
         // Generate thumbnail for videos BEFORE uploading the video
         let thumbnailUrl = null;
@@ -298,7 +339,7 @@ export default function CreateProject() {
         }
         
         // Upload the actual file (image or video)
-        const { file_url } = await UploadFile({ file });
+        const { file_url } = await UploadFile({ file: fileToUpload });
         
         const newHighlight = {
           media_url: file_url,
