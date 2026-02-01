@@ -74,11 +74,6 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
   };
 
   const handleSave = async () => {
-    if (editedLinks.length === 0) {
-      toast.error("Please add at least one project link");
-      return;
-    }
-
     setIsSaving(true);
     try {
       // Ensure all links are in the proper object format {title, url}
@@ -347,7 +342,7 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
             </Button>
             <Button
               onClick={handleSave}
-              disabled={isSaving || editedLinks.length === 0}
+              disabled={isSaving}
               className="cu-button"
               type="button"
             >
