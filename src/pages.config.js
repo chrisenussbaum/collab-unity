@@ -67,6 +67,7 @@ import NotificationSettings from './pages/NotificationSettings';
 import Notifications from './pages/Notifications';
 import Onboarding from './pages/Onboarding';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import ProjectDetail from './pages/ProjectDetail';
 import ReportBug from './pages/ReportBug';
 import Support from './pages/Support';
 import SupportCU from './pages/SupportCU';
@@ -74,7 +75,6 @@ import TermsOfService from './pages/TermsOfService';
 import Testimonials from './pages/Testimonials';
 import UserProfile from './pages/UserProfile';
 import Welcome from './pages/Welcome';
-import ProjectDetail from './pages/ProjectDetail';
 import __Layout from './Layout.jsx';
 
 
@@ -99,6 +99,7 @@ export const PAGES = {
     "Notifications": Notifications,
     "Onboarding": Onboarding,
     "PrivacyPolicy": PrivacyPolicy,
+    "ProjectDetail": ProjectDetail,
     "ReportBug": ReportBug,
     "Support": Support,
     "SupportCU": SupportCU,
@@ -106,7 +107,6 @@ export const PAGES = {
     "Testimonials": Testimonials,
     "UserProfile": UserProfile,
     "Welcome": Welcome,
-    "ProjectDetail": ProjectDetail,
 }
 
 export const pagesConfig = {

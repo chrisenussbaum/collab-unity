@@ -729,6 +729,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
   const [applaudCount, setApplaudCount] = useState(0);
   const commentsRef = useRef(null);
   const [showAllLinksDialog, setShowAllLinksDialog] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   // Initialize applaud state from projectApplauds prop
   useEffect(() => {
@@ -1318,7 +1319,19 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
           </CardHeader>
 
           <CardContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 pt-2">
-            <p className="text-gray-700 line-clamp-3 mb-4 cu-text-responsive-sm leading-relaxed">{project.description}</p>
+            <div className="mb-4">
+              <p className={`text-gray-700 cu-text-responsive-sm leading-relaxed ${!showFullDescription ? 'line-clamp-3' : ''}`}>
+                {project.description}
+              </p>
+              {project.description && project.description.length > 500 && (
+                <button
+                  onClick={() => setShowFullDescription(!showFullDescription)}
+                  className="text-purple-600 hover:text-purple-700 text-sm font-medium mt-2 transition-colors"
+                >
+                  {showFullDescription ? 'Show less' : 'Show more'}
+                </button>
+              )}
+            </div>
 
             {/* Content Navigation with Arrows - Showcase, IDEs, Highlights */}
             {hasAnyContent && (
