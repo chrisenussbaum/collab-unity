@@ -66,11 +66,16 @@ export default function Chat({ currentUser, authIsLoading }) {
   const queryClient = useQueryClient();
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+    // Use requestAnimationFrame to ensure DOM is updated before scrolling
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+    });
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
   }, [messages]);
 
   // Close emoji picker when clicking outside
@@ -213,7 +218,7 @@ export default function Chat({ currentUser, authIsLoading }) {
 
       setMessages(msgs || []);
 
-      // Mark messages as read
+      // Mark messages as read and clear notifications
       const unreadMessages = msgs.filter(msg => 
         msg.sender_email !== currentUser.email && 
         (!msg.is_read || (msg.read_by && !msg.read_by.includes(currentUser.email)))
@@ -229,7 +234,7 @@ export default function Chat({ currentUser, authIsLoading }) {
           return base44.entities.Message.update(msg.id, updateData);
         }));
 
-        // Update conversation unread count
+        // Update conversation unread count to 0
         if (conversation.conversation_type === 'group') {
           const unreadCounts = { ...(conversation.unread_counts || {}) };
           unreadCounts[currentUser.email] = 0;
@@ -241,8 +246,27 @@ export default function Chat({ currentUser, authIsLoading }) {
           });
         }
 
-        // Immediately refresh conversations to update badge
-        queryClient.invalidateQueries(['conversations']);
+        // Mark related notifications as read
+        try {
+          const notifications = await base44.entities.Notification.filter({
+            user_email: currentUser.email,
+            type: 'direct_message',
+            'metadata.conversation_id': conversation.id,
+            read: false
+          });
+
+          if (notifications.length > 0) {
+            await Promise.all(notifications.map(notif => 
+              base44.entities.Notification.update(notif.id, { read: true })
+            ));
+          }
+        } catch (err) {
+          console.error("Error marking notifications as read:", err);
+        }
+
+        // Force immediate refresh of conversations list
+        await queryClient.invalidateQueries(['conversations']);
+        await queryClient.refetchQueries(['conversations']);
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -930,7 +954,19 @@ export default function Chat({ currentUser, authIsLoading }) {
                               </p>
                               {conv.last_message_time && (
                                 <p className="text-xs text-gray-400 mt-1">
-                                  {formatDistanceToNow(new Date(conv.last_message_time), { addSuffix: true })}
+                                  {(() => {
+                                    try {
+                                      const messageDate = new Date(conv.last_message_time);
+                                      const now = new Date();
+                                      // Only format if the date is valid and not in the future
+                                      if (messageDate <= now) {
+                                        return formatDistanceToNow(messageDate, { addSuffix: true });
+                                      }
+                                      return 'Just now';
+                                    } catch (e) {
+                                      return '';
+                                    }
+                                  })()}
                                 </p>
                               )}
                             </div>
