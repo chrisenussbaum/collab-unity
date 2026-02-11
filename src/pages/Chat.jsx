@@ -251,19 +251,26 @@ export default function Chat({ currentUser, authIsLoading }) {
           });
         }
 
-        // Mark related notifications as read
+        // Mark related notifications as read - use sequential updates to avoid race conditions
         try {
           const notifications = await base44.entities.Notification.filter({
             user_email: currentUser.email,
             type: 'direct_message',
-            'metadata.conversation_id': conversation.id,
             read: false
           });
 
-          if (notifications.length > 0) {
-            await Promise.all(notifications.map(notif => 
-              base44.entities.Notification.update(notif.id, { read: true })
-            ));
+          // Filter for this conversation in code to avoid complex query
+          const conversationNotifs = notifications.filter(n => 
+            n.metadata?.conversation_id === conversation.id
+          );
+
+          if (conversationNotifs.length > 0) {
+            // Mark notifications as read one at a time to ensure real-time updates trigger properly
+            for (const notif of conversationNotifs) {
+              await base44.entities.Notification.update(notif.id, { read: true });
+              // Small delay to ensure real-time subscription processes each update
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
           }
         } catch (err) {
           console.error("Error marking notifications as read:", err);

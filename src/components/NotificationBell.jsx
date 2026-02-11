@@ -165,10 +165,13 @@ export default function NotificationBell() {
         setNotifications(prev => [event.data, ...prev].slice(0, 10));
         setUnreadCount(prev => prev + 1);
       } else if (event.type === 'update' && event.data.user_email === currentUser.email) {
-        setNotifications(prev => prev.map(n => n.id === event.id ? event.data : n));
-        if (event.data.read && !event.old_data?.read) {
-          setUnreadCount(prev => Math.max(0, prev - 1));
-        }
+        setNotifications(prev => {
+          const updated = prev.map(n => n.id === event.id ? event.data : n);
+          // Recalculate unread count from the updated list
+          const newUnreadCount = updated.filter(n => !n.read).length;
+          setUnreadCount(newUnreadCount);
+          return updated;
+        });
       }
     });
 
