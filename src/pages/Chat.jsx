@@ -33,6 +33,7 @@ import MediaAttachmentButton from "@/components/chat/MediaAttachmentButton";
 import NewGroupChatDialog from "@/components/chat/NewGroupChatDialog";
 import GroupSettingsDialog from "@/components/chat/GroupSettingsDialog";
 import TypingIndicator from "@/components/chat/TypingIndicator";
+import VideoCallButton from "@/components/chat/VideoCallButton";
 import EmojiPicker from "emoji-picker-react";
 import ConversationSkeleton from "@/components/skeletons/ConversationSkeleton";
 
@@ -373,6 +374,120 @@ export default function Chat({ currentUser, authIsLoading }) {
   const handleEmojiClick = (emojiData) => {
     setNewMessage(prev => prev + emojiData.emoji);
     setShowEmojiPicker(false);
+  };
+
+  // Handle video call initiation
+  const handleStartVideoCall = async (videoCallData) => {
+    if (!selectedConversation || isSending) return;
+
+    setIsSending(true);
+    try {
+      const isGroup = selectedConversation.conversation_type === 'group';
+      const messageContent = `📹 ${currentUser.full_name || currentUser.email} started a ${videoCallData.platform} call`;
+
+      const messageData = {
+        conversation_id: selectedConversation.id,
+        sender_email: currentUser.email,
+        content: messageContent,
+        is_read: false,
+        metadata: {
+          video_call: videoCallData
+        },
+        ...(isGroup && {
+          read_by: []
+        })
+      };
+
+      const createdMessage = await base44.entities.Message.create(messageData);
+      setMessages(prev => [...prev, createdMessage]);
+
+      // Update conversation
+      const conversationUpdate = {
+        last_message: messageContent.substring(0, 100),
+        last_message_time: new Date().toISOString()
+      };
+
+      if (isGroup) {
+        const unreadCounts = { ...(selectedConversation.unread_counts || {}) };
+        selectedConversation.participants?.forEach(email => {
+          if (email !== currentUser.email) {
+            unreadCounts[email] = (unreadCounts[email] || 0) + 1;
+          }
+        });
+        conversationUpdate.unread_counts = unreadCounts;
+
+        // Create notifications for all group members
+        const notificationPromises = selectedConversation.participants
+          ?.filter(email => email !== currentUser.email)
+          .map(email => 
+            base44.entities.Notification.create({
+              user_email: email,
+              title: `Video call in ${selectedConversation.group_name || 'Group Chat'}`,
+              message: `${currentUser.full_name || currentUser.email} started a ${videoCallData.platform} call`,
+              type: 'direct_message',
+              related_entity_id: selectedConversation.id,
+              actor_email: currentUser.email,
+              actor_name: currentUser.full_name || currentUser.email,
+              read: false,
+              metadata: {
+                conversation_id: selectedConversation.id,
+                sender_profile_image: currentUser.profile_image,
+                message_preview: messageContent,
+                is_group: true,
+                group_name: selectedConversation.group_name
+              }
+            })
+          );
+
+        Promise.all([
+          base44.entities.Conversation.update(selectedConversation.id, conversationUpdate),
+          ...(notificationPromises || [])
+        ]).then(() => {
+          queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'none' });
+        }).catch(err => console.error("Error in background updates:", err));
+
+      } else {
+        const isParticipant1 = selectedConversation.participant_1_email === currentUser.email;
+        const otherParticipantUnreadField = isParticipant1 
+          ? 'participant_2_unread_count' 
+          : 'participant_1_unread_count';
+        const otherParticipantEmail = isParticipant1
+          ? selectedConversation.participant_2_email
+          : selectedConversation.participant_1_email;
+
+        conversationUpdate[otherParticipantUnreadField] = 
+          (selectedConversation[otherParticipantUnreadField] || 0) + 1;
+
+        Promise.all([
+          base44.entities.Conversation.update(selectedConversation.id, conversationUpdate),
+          base44.entities.Notification.create({
+            user_email: otherParticipantEmail,
+            title: `Video call from ${currentUser.full_name || currentUser.email}`,
+            message: `Started a ${videoCallData.platform} call`,
+            type: 'direct_message',
+            related_entity_id: selectedConversation.id,
+            actor_email: currentUser.email,
+            actor_name: currentUser.full_name || currentUser.email,
+            read: false,
+            metadata: {
+              conversation_id: selectedConversation.id,
+              sender_profile_image: currentUser.profile_image,
+              message_preview: messageContent
+            }
+          })
+        ]).then(() => {
+          queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'none' });
+        }).catch(err => console.error("Error in background updates:", err));
+      }
+
+      toast.success('Video call link shared');
+    } catch (error) {
+      console.error("Error starting video call:", error);
+      toast.error("Failed to share video call link");
+      setMessages(prev => prev.slice(0, -1));
+    } finally {
+      setIsSending(false);
+    }
   };
 
   // Handle sending a message
@@ -1054,21 +1169,27 @@ export default function Chat({ currentUser, authIsLoading }) {
                         )}
                       </div>
                     </div>
-                    {selectedInfo.isGroup && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="w-5 h-5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setShowGroupSettings(true)}>
-                            <Settings className="w-4 h-4 mr-2" />
-                            Group Settings
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <VideoCallButton 
+                        onStartCall={handleStartVideoCall}
+                        disabled={isSending || isUploadingMedia}
+                      />
+                      {selectedInfo.isGroup && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="w-5 h-5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setShowGroupSettings(true)}>
+                              <Settings className="w-4 h-4 mr-2" />
+                              Group Settings
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
 
