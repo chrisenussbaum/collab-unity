@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, Send, Search, Plus, Users, Trash2, Smile, MoreVertical, Settings, ArrowLeft } from "lucide-react";
+import { MessageCircle, Send, Search, Plus, Users, Trash2, Smile, MoreVertical, Settings, ArrowLeft, Video } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -35,6 +35,8 @@ import GroupSettingsDialog from "@/components/chat/GroupSettingsDialog";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import EmojiPicker from "emoji-picker-react";
 import ConversationSkeleton from "@/components/skeletons/ConversationSkeleton";
+import VideoCallModal from "@/components/chat/VideoCallModal";
+import { createVideoCall } from "@/functions/createVideoCall";
 
 export default function Chat({ currentUser, authIsLoading }) {
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -57,6 +59,9 @@ export default function Chat({ currentUser, authIsLoading }) {
   const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState([]);
   const [showGroupSettings, setShowGroupSettings] = useState(false);
+  const [showVideoCall, setShowVideoCall] = useState(false);
+  const [videoCallUrl, setVideoCallUrl] = useState(null);
+  const [isStartingCall, setIsStartingCall] = useState(false);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const emojiPickerRef = useRef(null);
@@ -818,6 +823,25 @@ export default function Chat({ currentUser, authIsLoading }) {
     }
   };
 
+  const handleStartVideoCall = async () => {
+    if (!selectedConversation || isStartingCall) return;
+
+    setIsStartingCall(true);
+    try {
+      const { data } = await createVideoCall({
+        conversation_id: selectedConversation.id
+      });
+
+      setVideoCallUrl(data.room_url);
+      setShowVideoCall(true);
+    } catch (error) {
+      console.error('Error starting video call:', error);
+      toast.error('Failed to start video call');
+    } finally {
+      setIsStartingCall(false);
+    }
+  };
+
   const filteredConversations = conversations.filter(conv => {
     if (!searchQuery.trim()) return true;
     const info = getConversationInfo(conv);
@@ -1054,21 +1078,33 @@ export default function Chat({ currentUser, authIsLoading }) {
                         )}
                       </div>
                     </div>
-                    {selectedInfo.isGroup && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="w-5 h-5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setShowGroupSettings(true)}>
-                            <Settings className="w-4 h-4 mr-2" />
-                            Group Settings
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleStartVideoCall}
+                        disabled={isStartingCall}
+                        className="text-purple-600 hover:bg-purple-50"
+                        title="Start video call"
+                      >
+                        <Video className="w-5 h-5" />
+                      </Button>
+                      {selectedInfo.isGroup && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="w-5 h-5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setShowGroupSettings(true)}>
+                              <Settings className="w-4 h-4 mr-2" />
+                              Group Settings
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
 
@@ -1304,6 +1340,17 @@ export default function Chat({ currentUser, authIsLoading }) {
         onLeaveGroup={handleLeaveGroup}
         onDeleteGroup={handleDeleteGroup}
         allUsers={allUsers}
+      />
+
+      {/* Video Call Modal */}
+      <VideoCallModal
+        isOpen={showVideoCall}
+        onClose={() => {
+          setShowVideoCall(false);
+          setVideoCallUrl(null);
+        }}
+        roomUrl={videoCallUrl}
+        userName={currentUser?.full_name || currentUser?.email}
       />
     </>
   );
