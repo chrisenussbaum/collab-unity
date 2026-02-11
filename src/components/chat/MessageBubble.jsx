@@ -131,7 +131,19 @@ export default function MessageBubble({
           <div className="flex items-center justify-between mt-1 px-2">
             <div className="flex items-center space-x-2">
               <p className="text-xs text-gray-400">
-                {formatDistanceToNow(new Date(message.created_date), { addSuffix: true })}
+                {(() => {
+                  try {
+                    const messageDate = new Date(message.created_date);
+                    const now = new Date();
+                    // Only format if the date is valid and not in the future
+                    if (messageDate <= now) {
+                      return formatDistanceToNow(messageDate, { addSuffix: true });
+                    }
+                    return 'Just now';
+                  } catch (e) {
+                    return '';
+                  }
+                })()}
               </p>
               {isOwn && (
                 <div className="flex items-center">
