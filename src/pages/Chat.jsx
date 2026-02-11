@@ -65,6 +65,8 @@ export default function Chat({ currentUser, authIsLoading }) {
   const location = useLocation();
   const queryClient = useQueryClient();
 
+  const prevMessagesLengthRef = useRef(0);
+
   const scrollToBottom = () => {
     // Use requestAnimationFrame to ensure DOM is updated before scrolling
     requestAnimationFrame(() => {
@@ -72,10 +74,12 @@ export default function Chat({ currentUser, authIsLoading }) {
     });
   };
 
+  // Only scroll when a new message is added, not on updates to existing messages
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length > prevMessagesLengthRef.current) {
       scrollToBottom();
     }
+    prevMessagesLengthRef.current = messages.length;
   }, [messages]);
 
   // Close emoji picker when clicking outside
