@@ -1,7 +1,7 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Trash2, Download, Check, CheckCheck, Image as ImageIcon, Video, FileText } from "lucide-react";
+import { Trash2, Download, Check, CheckCheck, Image as ImageIcon, Video, FileText, ExternalLink } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import ClickableImage from "../ClickableImage";
@@ -15,6 +15,36 @@ export default function MessageBubble({
   isGroupChat = false,
   isRead = false
 }) {
+  // Check if this is a video call message
+  const isVideoCallMessage = message.metadata?.video_call;
+
+  // Render video call invite
+  const renderVideoCallInvite = () => {
+    const { platform, link, icon } = message.metadata.video_call;
+    
+    return (
+      <div className="bg-gradient-to-br from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-2xl">{icon}</span>
+          <div>
+            <p className="font-semibold text-gray-900">{platform} Video Call</p>
+            <p className="text-xs text-gray-600">Tap to join the meeting</p>
+          </div>
+        </div>
+        <a
+          href={link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+        >
+          <Video className="w-4 h-4" />
+          Join Call
+          <ExternalLink className="w-3 h-3" />
+        </a>
+      </div>
+    );
+  };
+
   // Render message content with clickable links
   const renderMessageContent = (content) => {
     if (!content) return null;
@@ -125,8 +155,12 @@ export default function MessageBubble({
               ? 'bg-purple-600 text-white' 
               : 'bg-gray-100 text-gray-900'
           }`}>
-            {message.content && renderMessageContent(message.content)}
-            {renderMediaContent()}
+            {isVideoCallMessage ? renderVideoCallInvite() : (
+              <>
+                {message.content && renderMessageContent(message.content)}
+                {renderMediaContent()}
+              </>
+            )}
           </div>
           <div className="flex items-center justify-between mt-1 px-2">
             <div className="flex items-center space-x-2">
