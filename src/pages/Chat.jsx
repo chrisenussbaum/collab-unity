@@ -218,6 +218,11 @@ export default function Chat({ currentUser, authIsLoading }) {
 
       setMessages(msgs || []);
 
+      // Scroll to bottom after messages are loaded and DOM is updated
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      }, 100);
+
       // Mark messages as read and clear notifications
       const unreadMessages = msgs.filter(msg => 
         msg.sender_email !== currentUser.email && 
