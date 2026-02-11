@@ -18,6 +18,7 @@ import {
 import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, ShieldCheck, User as UserIcon, Lightbulb, Settings, Compass, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import GlobalSearchBar from "./components/GlobalSearchBar";
+import OnboardingWrapper from "./components/onboarding/OnboardingWrapper";
 
 // Force logout timestamp - update this to force all users to re-authenticate
 const FORCE_LOGOUT_AFTER = new Date('2025-01-17T16:00:00Z').getTime();
@@ -1173,7 +1174,9 @@ export default function Layout({ children, currentPageName }) {
       </nav>
 
       <main className="pt-14 md:pt-16 pb-20 md:pb-24 lg:pt-16 lg:pb-8">
-        {React.cloneElement(children, { currentUser, authIsLoading: isLoading })}
+        <OnboardingWrapper currentUser={currentUser}>
+          {React.cloneElement(children, { currentUser, authIsLoading: isLoading })}
+        </OnboardingWrapper>
       </main>
 
       {/* Mobile/Tablet Bottom Navigation (visible on screens < 1024px) */}
