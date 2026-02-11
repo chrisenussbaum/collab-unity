@@ -1719,8 +1719,8 @@ export default function Feed({ currentUser, authIsLoading }) {
       }
 
     } catch (error) {
-      console.error("Error loading ads for page", page, ":", error);
-      // Don't throw - just log the error so ads don't block feed
+    console.error("Error loading ads:", error);
+    // Don't throw - just log the error so ads don't block feed
     }
   }, [currentUser]);
 
@@ -1761,7 +1761,7 @@ export default function Feed({ currentUser, authIsLoading }) {
   }, []);
 
   // React Query: Fetch initial feed data with caching
-  const { data: cachedFeedData, isLoading: isQueryLoading } = useQuery({
+  const { data: cachedFeedData, isLoading: isQueryLoading, error: queryError } = useQuery({
     queryKey: ['feed-projects', currentUser?.email],
     queryFn: async () => {
       // Fetch ALL public projects, initial feed posts, service listings, and marketplace listings
@@ -1904,16 +1904,25 @@ export default function Feed({ currentUser, authIsLoading }) {
       };
     },
     enabled: !authIsLoading,
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnWindowFocus: true,
-    refetchOnMount: 'always',
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    retry: 2,
+    retryDelay: 1000,
   });
 
   const queryClient = useQueryClient();
 
   // Update local state when cached data changes
   useEffect(() => {
+    if (queryError) {
+      console.error("Feed query error:", queryError);
+      toast.error("Failed to load feed. Please refresh the page.");
+      setIsLoading(false);
+      return;
+    }
+    
     if (cachedFeedData && !isQueryLoading) {
       setProjects(cachedFeedData.projects);
       setFeedPosts(cachedFeedData.feedPosts);
