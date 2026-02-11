@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, Send, Search, Plus, Users, Trash2, Smile, MoreVertical, Settings } from "lucide-react";
+import { MessageCircle, Send, Search, Plus, Users, Trash2, Smile, MoreVertical, Settings, ArrowLeft } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -66,7 +66,7 @@ export default function Chat({ currentUser, authIsLoading }) {
   const queryClient = useQueryClient();
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
   };
 
   useEffect(() => {
@@ -220,26 +220,29 @@ export default function Chat({ currentUser, authIsLoading }) {
       );
 
       if (unreadMessages.length > 0) {
-        Promise.all(unreadMessages.map(msg => {
+        // Mark all messages as read
+        await Promise.all(unreadMessages.map(msg => {
           const updateData = conversation.conversation_type === 'group'
             ? { read_by: [...(msg.read_by || []), currentUser.email] }
             : { is_read: true, read_at: new Date().toISOString() };
           
           return base44.entities.Message.update(msg.id, updateData);
-        })).catch(err => console.error("Error marking messages as read:", err));
+        }));
 
         // Update conversation unread count
         if (conversation.conversation_type === 'group') {
           const unreadCounts = { ...(conversation.unread_counts || {}) };
           unreadCounts[currentUser.email] = 0;
-          base44.entities.Conversation.update(conversation.id, { unread_counts: unreadCounts })
-            .catch(err => console.error("Error updating unread count:", err));
+          await base44.entities.Conversation.update(conversation.id, { unread_counts: unreadCounts });
         } else {
           const isParticipant1 = conversation.participant_1_email === currentUser.email;
-          base44.entities.Conversation.update(conversation.id, {
+          await base44.entities.Conversation.update(conversation.id, {
             [isParticipant1 ? 'participant_1_unread_count' : 'participant_2_unread_count']: 0
-          }).catch(err => console.error("Error updating unread count:", err));
+          });
         }
+
+        // Immediately refresh conversations to update badge
+        queryClient.invalidateQueries(['conversations']);
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -849,7 +852,7 @@ export default function Chat({ currentUser, authIsLoading }) {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Conversations List */}
-          <Card className="cu-card lg:col-span-1">
+          <Card className={`cu-card lg:col-span-1 ${selectedConversation ? 'hidden lg:block' : ''}`}>
             <CardHeader className="pb-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -956,7 +959,7 @@ export default function Chat({ currentUser, authIsLoading }) {
           </Card>
 
           {/* Chat Area */}
-          <Card className="cu-card lg:col-span-2">
+          <Card className={`cu-card lg:col-span-2 ${!selectedConversation ? 'hidden lg:block' : ''}`}>
             {!selectedConversation ? (
               <div className="flex items-center justify-center h-[680px]">
                 <div className="text-center">
@@ -970,6 +973,14 @@ export default function Chat({ currentUser, authIsLoading }) {
                 <CardHeader className="border-b">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setSelectedConversation(null)}
+                        className="lg:hidden"
+                      >
+                        <ArrowLeft className="w-5 h-5" />
+                      </Button>
                       <Avatar className="w-10 h-10">
                         <AvatarImage src={selectedInfo.image} />
                         <AvatarFallback className="bg-purple-100 text-purple-600">
