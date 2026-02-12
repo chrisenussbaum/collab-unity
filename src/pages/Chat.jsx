@@ -139,6 +139,7 @@ export default function Chat({ currentUser, authIsLoading }) {
     if (!currentUser) return;
 
     const unsubscribe = base44.entities.Conversation.subscribe((event) => {
+      // Only refetch if this is a conversation the current user is part of
       if (event.type === 'create' || event.type === 'update') {
         const conversation = event.data;
         
@@ -149,39 +150,10 @@ export default function Chat({ currentUser, authIsLoading }) {
             : conversation.participant_1_email === currentUser.email || 
               conversation.participant_2_email === currentUser.email;
         
-        if (isParticipant) {
-          // If this is the currently selected conversation, update it directly in cache
-          // without refetching to preserve our optimistic unread count of 0
-          if (selectedConversation && selectedConversation.id === conversation.id) {
-            queryClient.setQueryData(['conversations', currentUser.email], (oldData) => {
-              if (!oldData) return oldData;
-              
-              return {
-                ...oldData,
-                conversations: oldData.conversations.map(conv => {
-                  if (conv.id === conversation.id) {
-                    // Preserve the unread count as 0 for selected conversation
-                    const preservedUnreadCount = conversation.conversation_type === 'group'
-                      ? { unread_counts: { ...(conversation.unread_counts || {}), [currentUser.email]: 0 } }
-                      : {
-                          [conversation.participant_1_email === currentUser.email 
-                            ? 'participant_1_unread_count' 
-                            : 'participant_2_unread_count']: 0
-                        };
-                    
-                    return {
-                      ...conversation,
-                      ...preservedUnreadCount
-                    };
-                  }
-                  return conv;
-                })
-              };
-            });
-          } else {
-            // For other conversations, refetch normally
-            queryClient.invalidateQueries({ queryKey: ['conversations'] });
-          }
+        // Only refetch if user is part of the conversation AND it's not the currently selected one
+        // (to avoid overwriting optimistic updates)
+        if (isParticipant && (!selectedConversation || selectedConversation.id !== conversation.id)) {
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
         }
       }
     });
@@ -1153,7 +1125,7 @@ export default function Chat({ currentUser, authIsLoading }) {
                                </div>
                              )}
                            </div>
-                            <div className="flex-1 min-w-0 py-1 pr-2">
+                            <div className="flex-1 min-w-0 py-1 overflow-hidden max-w-full">
                               <div className="flex items-center justify-between gap-2 mb-1">
                                 <p className="font-medium text-gray-900 truncate flex-1 min-w-0">
                                   {info.name}
@@ -1169,7 +1141,15 @@ export default function Chat({ currentUser, authIsLoading }) {
                                   {info.participantCount} members
                                 </p>
                               )}
-                              <p className="text-sm text-gray-600 overflow-hidden text-ellipsis whitespace-nowrap">
+                              <p 
+                                className="text-sm text-gray-600 w-full overflow-hidden"
+                                style={{
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 1,
+                                  WebkitBoxOrient: 'vertical',
+                                  textOverflow: 'ellipsis'
+                                }}
+                              >
                                 {conv.last_message || "Start a conversation"}
                               </p>
                               {conv.last_message_time && (
