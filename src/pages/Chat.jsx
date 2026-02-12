@@ -467,9 +467,7 @@ export default function Chat({ currentUser, authIsLoading }) {
         Promise.all([
           base44.entities.Conversation.update(selectedConversation.id, conversationUpdate),
           ...(notificationPromises || [])
-        ]).then(() => {
-          queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'none' });
-        }).catch(err => console.error("Error in background updates:", err));
+        ]).catch(err => console.error("Error in background updates:", err));
 
       } else {
         const isParticipant1 = selectedConversation.participant_1_email === currentUser.email;
