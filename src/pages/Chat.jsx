@@ -1103,7 +1103,7 @@ export default function Chat({ currentUser, authIsLoading }) {
                         >
                           <button
                            onClick={() => handleSelectConversation(conv)}
-                           className="flex-1 flex items-start space-x-3 text-left min-w-0"
+                           className="flex-1 flex items-start space-x-3 text-left min-w-0 overflow-hidden"
                           >
                            <div className="relative flex-shrink-0">
                              <Avatar className="w-10 h-10">
@@ -1125,7 +1125,7 @@ export default function Chat({ currentUser, authIsLoading }) {
                                </div>
                              )}
                            </div>
-                            <div className="flex-1 min-w-0 py-1 overflow-hidden">
+                            <div className="flex-1 min-w-0 py-1 overflow-hidden max-w-full">
                               <div className="flex items-center justify-between gap-2 mb-1">
                                 <p className="font-medium text-gray-900 truncate flex-1 min-w-0">
                                   {info.name}
@@ -1141,7 +1141,15 @@ export default function Chat({ currentUser, authIsLoading }) {
                                   {info.participantCount} members
                                 </p>
                               )}
-                              <p className="text-sm text-gray-600 overflow-hidden text-ellipsis whitespace-nowrap">
+                              <p 
+                                className="text-sm text-gray-600 w-full overflow-hidden"
+                                style={{
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 1,
+                                  WebkitBoxOrient: 'vertical',
+                                  textOverflow: 'ellipsis'
+                                }}
+                              >
                                 {conv.last_message || "Start a conversation"}
                               </p>
                               {conv.last_message_time && (
@@ -1171,7 +1179,7 @@ export default function Chat({ currentUser, authIsLoading }) {
                                 setConversationToDelete(conv);
                                 setShowDeleteConversationDialog(true);
                               }}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity h-8 px-2"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity h-8 px-2 flex-shrink-0"
                               title="Delete conversation"
                             >
                               <Trash2 className="w-4 h-4 text-red-500" />
