@@ -34,6 +34,7 @@ import NewGroupChatDialog from "@/components/chat/NewGroupChatDialog";
 import GroupSettingsDialog from "@/components/chat/GroupSettingsDialog";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import VideoCallButton from "@/components/chat/VideoCallButton";
+import PresenceIndicator from "@/components/chat/PresenceIndicator";
 import EmojiPicker from "emoji-picker-react";
 import ConversationSkeleton from "@/components/skeletons/ConversationSkeleton";
 
@@ -67,6 +68,7 @@ export default function Chat({ currentUser, authIsLoading }) {
   const queryClient = useQueryClient();
 
   const prevMessagesLengthRef = useRef(0);
+  const shouldScrollRef = useRef(false);
 
   const scrollToBottom = () => {
     // Use requestAnimationFrame to ensure DOM is updated before scrolling
@@ -75,10 +77,11 @@ export default function Chat({ currentUser, authIsLoading }) {
     });
   };
 
-  // Only scroll when a new message is added, not on updates to existing messages
+  // Scroll when new messages are added OR when explicitly triggered
   useEffect(() => {
-    if (messages.length > prevMessagesLengthRef.current) {
+    if (messages.length > prevMessagesLengthRef.current || shouldScrollRef.current) {
       scrollToBottom();
+      shouldScrollRef.current = false;
     }
     prevMessagesLengthRef.current = messages.length;
   }, [messages]);
@@ -222,11 +225,9 @@ export default function Chat({ currentUser, authIsLoading }) {
       }, "created_date");
 
       setMessages(msgs || []);
-
-      // Scroll to bottom after messages are loaded and DOM is updated
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-      }, 100);
+      
+      // Trigger scroll when messages are loaded
+      shouldScrollRef.current = true;
 
       // Mark messages as read and clear notifications
       const unreadMessages = msgs.filter(msg => 
@@ -1048,22 +1049,29 @@ export default function Chat({ currentUser, authIsLoading }) {
                           }`}
                         >
                           <button
-                            onClick={() => handleSelectConversation(conv)}
-                            className="flex-1 flex items-start space-x-3 text-left"
+                           onClick={() => handleSelectConversation(conv)}
+                           className="flex-1 flex items-start space-x-3 text-left"
                           >
-                            <div className="relative">
-                              <Avatar className="w-10 h-10">
-                                <AvatarImage src={info.image} />
-                                <AvatarFallback className="bg-purple-100 text-purple-600">
-                                  {info.isGroup ? <Users className="w-5 h-5" /> : info.name?.[0] || 'U'}
-                                </AvatarFallback>
-                              </Avatar>
-                              {info.isGroup && (
-                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center border-2 border-white">
-                                  <Users className="w-3 h-3 text-white" />
-                                </div>
-                              )}
-                            </div>
+                           <div className="relative">
+                             <Avatar className="w-10 h-10">
+                               <AvatarImage src={info.image} />
+                               <AvatarFallback className="bg-purple-100 text-purple-600">
+                                 {info.isGroup ? <Users className="w-5 h-5" /> : info.name?.[0] || 'U'}
+                               </AvatarFallback>
+                             </Avatar>
+                             {info.isGroup ? (
+                               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center border-2 border-white">
+                                 <Users className="w-3 h-3 text-white" />
+                               </div>
+                             ) : (
+                               <div className="absolute -bottom-0.5 -right-0.5">
+                                 <PresenceIndicator 
+                                   lastActive={userProfiles[conv.participant_1_email === currentUser.email ? conv.participant_2_email : conv.participant_1_email]?.last_active}
+                                   size="small"
+                                 />
+                               </div>
+                             )}
+                           </div>
                             <div className="flex-1 min-w-0 py-1 pr-2">
                               <div className="flex items-center justify-between mb-1">
                                 <p className="font-medium text-gray-900 truncate">
@@ -1148,12 +1156,22 @@ export default function Chat({ currentUser, authIsLoading }) {
                       >
                         <ArrowLeft className="w-5 h-5" />
                       </Button>
-                      <Avatar className="w-10 h-10">
-                        <AvatarImage src={selectedInfo.image} />
-                        <AvatarFallback className="bg-purple-100 text-purple-600">
-                          {selectedInfo.isGroup ? <Users className="w-5 h-5" /> : selectedInfo.name?.[0] || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar className="w-10 h-10">
+                          <AvatarImage src={selectedInfo.image} />
+                          <AvatarFallback className="bg-purple-100 text-purple-600">
+                            {selectedInfo.isGroup ? <Users className="w-5 h-5" /> : selectedInfo.name?.[0] || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        {!selectedInfo.isGroup && (
+                          <div className="absolute -bottom-0.5 -right-0.5">
+                            <PresenceIndicator 
+                              lastActive={userProfiles[selectedConversation.participant_1_email === currentUser.email ? selectedConversation.participant_2_email : selectedConversation.participant_1_email]?.last_active}
+                              size="default"
+                            />
+                          </div>
+                        )}
+                      </div>
                       <div>
                         <h3 className="font-semibold text-gray-900">
                           {selectedInfo.name}
@@ -1163,9 +1181,15 @@ export default function Chat({ currentUser, authIsLoading }) {
                             {selectedInfo.participantCount} members
                           </p>
                         ) : (
-                          <p className="text-sm text-gray-500">
-                            @{selectedInfo.username}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm text-gray-500">
+                              @{selectedInfo.username}
+                            </p>
+                            <PresenceIndicator 
+                              lastActive={userProfiles[selectedConversation.participant_1_email === currentUser.email ? selectedConversation.participant_2_email : selectedConversation.participant_1_email]?.last_active}
+                              showLabel
+                            />
+                          </div>
                         )}
                       </div>
                     </div>
