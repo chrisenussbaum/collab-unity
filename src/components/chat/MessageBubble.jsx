@@ -18,24 +18,36 @@ export default function MessageBubble({
   // Check if this is a video call message
   const isVideoCallMessage = message.metadata?.video_call;
 
+  // Get platform icon component
+  const getPlatformIcon = (platformKey) => {
+    const iconMap = {
+      'meet': () => <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>,
+      'zoom': () => <Video className="w-5 h-5" />,
+      'teams': () => <Users className="w-5 h-5" />
+    };
+    return iconMap[platformKey] ? iconMap[platformKey]() : <Video className="w-5 h-5" />;
+  };
+
   // Render video call invite
   const renderVideoCallInvite = () => {
-    const { platform, link, icon } = message.metadata.video_call;
+    const { platform, link, platformKey, bgColor = 'bg-purple-50', borderColor = 'border-purple-200', iconColor = 'text-purple-600' } = message.metadata.video_call;
     
     return (
-      <div className="bg-gradient-to-br from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-2xl">{icon}</span>
+      <div className={`${bgColor} p-4 rounded-xl border-2 ${borderColor} min-w-[280px]`}>
+        <div className="flex items-center gap-3 mb-4">
+          <div className={`w-10 h-10 ${bgColor} rounded-lg flex items-center justify-center ${iconColor} border ${borderColor}`}>
+            {getPlatformIcon(platformKey)}
+          </div>
           <div>
-            <p className="font-semibold text-gray-900">{platform} Video Call</p>
-            <p className="text-xs text-gray-600">Tap to join the meeting</p>
+            <p className="font-semibold text-gray-900 text-sm">{platform} Video Call</p>
+            <p className="text-xs text-gray-600">Click to join the meeting</p>
           </div>
         </div>
         <a
           href={link}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+          className={`flex items-center justify-center gap-2 ${iconColor.replace('text-', 'bg-')} hover:opacity-90 text-white px-4 py-2.5 rounded-lg transition-all font-medium text-sm shadow-sm`}
         >
           <Video className="w-4 h-4" />
           Join Call
