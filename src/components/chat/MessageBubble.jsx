@@ -91,7 +91,7 @@ export default function MessageBubble({
 
     if (message.media_type === 'image') {
       return (
-        <div className="mt-2 rounded-lg overflow-hidden max-w-sm">
+        <div className="mt-2 rounded-lg overflow-hidden max-w-[280px] sm:max-w-sm">
           <ClickableImage
             src={message.media_url}
             alt="Shared image"
@@ -104,7 +104,7 @@ export default function MessageBubble({
 
     if (message.media_type === 'video') {
       return (
-        <div className="mt-2 rounded-lg overflow-hidden max-w-sm">
+        <div className="mt-2 rounded-lg overflow-hidden max-w-[280px] sm:max-w-sm">
           <video 
             src={message.media_url} 
             controls 
@@ -122,18 +122,18 @@ export default function MessageBubble({
           download={message.media_name}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-2 flex items-center space-x-3 p-3 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+          className="mt-2 flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-white/10 rounded-lg hover:bg-white/20 transition-colors max-w-[280px] sm:max-w-sm"
         >
-          <FileText className="w-8 h-8 flex-shrink-0" />
+          <FileText className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{message.media_name || 'File'}</p>
+            <p className="text-xs sm:text-sm font-medium truncate">{message.media_name || 'File'}</p>
             {message.media_size && (
               <p className="text-xs opacity-75">
                 {(message.media_size / 1024).toFixed(1)} KB
               </p>
             )}
           </div>
-          <Download className="w-4 h-4 flex-shrink-0" />
+          <Download className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
         </a>
       );
     }
@@ -145,7 +145,7 @@ export default function MessageBubble({
       animate={{ opacity: 1, y: 0 }}
       className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4 group`}
     >
-      <div className={`flex items-end space-x-2 max-w-[75%] ${isOwn ? 'flex-row-reverse space-x-reverse' : ''}`}>
+      <div className={`flex items-end space-x-2 max-w-[85%] sm:max-w-[75%] ${isOwn ? 'flex-row-reverse space-x-reverse' : ''}`}>
         {!isOwn && showAvatar && (
           <Avatar className="w-8 h-8">
             <AvatarImage src={senderProfile?.profile_image} />

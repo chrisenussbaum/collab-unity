@@ -1103,9 +1103,9 @@ export default function Chat({ currentUser, authIsLoading }) {
                         >
                           <button
                            onClick={() => handleSelectConversation(conv)}
-                           className="flex-1 flex items-start space-x-3 text-left"
+                           className="flex-1 flex items-start space-x-3 text-left min-w-0"
                           >
-                           <div className="relative">
+                           <div className="relative flex-shrink-0">
                              <Avatar className="w-10 h-10">
                                <AvatarImage src={info.image} />
                                <AvatarFallback className="bg-purple-100 text-purple-600">
@@ -1125,13 +1125,13 @@ export default function Chat({ currentUser, authIsLoading }) {
                                </div>
                              )}
                            </div>
-                            <div className="flex-1 min-w-0 py-1 pr-2">
-                              <div className="flex items-center justify-between mb-1">
-                                <p className="font-medium text-gray-900 truncate">
+                            <div className="flex-1 min-w-0 py-1">
+                              <div className="flex items-center justify-between gap-2 mb-1">
+                                <p className="font-medium text-gray-900 truncate flex-1">
                                   {info.name}
                                 </p>
                                 {unreadCount > 0 && (
-                                  <Badge className="bg-purple-600 text-white ml-2">
+                                  <Badge className="bg-purple-600 text-white flex-shrink-0">
                                     {unreadCount}
                                   </Badge>
                                 )}
@@ -1141,7 +1141,7 @@ export default function Chat({ currentUser, authIsLoading }) {
                                   {info.participantCount} members
                                 </p>
                               )}
-                              <p className="text-sm text-gray-600 line-clamp-1">
+                              <p className="text-sm text-gray-600 truncate pr-2">
                                 {conv.last_message || "Start a conversation"}
                               </p>
                               {conv.last_message_time && (
