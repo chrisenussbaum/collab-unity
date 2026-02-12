@@ -1125,9 +1125,9 @@ export default function Chat({ currentUser, authIsLoading }) {
                                </div>
                              )}
                            </div>
-                            <div className="flex-1 min-w-0 py-1">
+                            <div className="flex-1 min-w-0 py-1 overflow-hidden">
                               <div className="flex items-center justify-between gap-2 mb-1">
-                                <p className="font-medium text-gray-900 truncate flex-1">
+                                <p className="font-medium text-gray-900 truncate flex-1 min-w-0">
                                   {info.name}
                                 </p>
                                 {unreadCount > 0 && (
@@ -1141,7 +1141,7 @@ export default function Chat({ currentUser, authIsLoading }) {
                                   {info.participantCount} members
                                 </p>
                               )}
-                              <p className="text-sm text-gray-600 truncate pr-2">
+                              <p className="text-sm text-gray-600 overflow-hidden text-ellipsis whitespace-nowrap">
                                 {conv.last_message || "Start a conversation"}
                               </p>
                               {conv.last_message_time && (
