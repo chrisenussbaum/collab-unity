@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, Send, Search, Plus, Users, Trash2, Smile, MoreVertical, Settings, ArrowLeft } from "lucide-react";
+import { MessageCircle, Send, Search, Plus, Users, Trash2, Smile, MoreVertical, Settings, ArrowLeft, ArrowDown } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -69,11 +69,13 @@ export default function Chat({ currentUser, authIsLoading }) {
 
   const prevMessagesLengthRef = useRef(0);
   const shouldScrollRef = useRef(false);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const scrollAreaRef = useRef(null);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = (behavior = "auto") => {
     // Use requestAnimationFrame to ensure DOM is updated before scrolling
     requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      messagesEndRef.current?.scrollIntoView({ behavior });
     });
   };
 
@@ -82,9 +84,17 @@ export default function Chat({ currentUser, authIsLoading }) {
     if (messages.length > prevMessagesLengthRef.current || shouldScrollRef.current) {
       scrollToBottom();
       shouldScrollRef.current = false;
+      setShowScrollButton(false);
     }
     prevMessagesLengthRef.current = messages.length;
   }, [messages]);
+
+  // Detect scroll position to show/hide scroll button
+  const handleScroll = (e) => {
+    const element = e.target;
+    const isNearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 100;
+    setShowScrollButton(!isNearBottom);
+  };
 
   // Close emoji picker when clicking outside
   useEffect(() => {
@@ -257,7 +267,7 @@ export default function Chat({ currentUser, authIsLoading }) {
           });
         }
 
-        // Mark related notifications as read - use sequential updates to avoid race conditions
+        // Mark related notifications as read
         try {
           const notifications = await base44.entities.Notification.filter({
             user_email: currentUser.email,
@@ -265,18 +275,18 @@ export default function Chat({ currentUser, authIsLoading }) {
             read: false
           });
 
-          // Filter for this conversation in code to avoid complex query
+          // Filter for this conversation and mark all as read
           const conversationNotifs = notifications.filter(n => 
             n.metadata?.conversation_id === conversation.id
           );
 
           if (conversationNotifs.length > 0) {
-            // Mark notifications as read one at a time to ensure real-time updates trigger properly
-            for (const notif of conversationNotifs) {
-              await base44.entities.Notification.update(notif.id, { read: true });
-              // Small delay to ensure real-time subscription processes each update
-              await new Promise(resolve => setTimeout(resolve, 100));
-            }
+            // Mark all notifications as read in parallel for faster processing
+            await Promise.all(
+              conversationNotifs.map(notif => 
+                base44.entities.Notification.update(notif.id, { read: true })
+              )
+            );
           }
         } catch (err) {
           console.error("Error marking notifications as read:", err);
@@ -1217,8 +1227,12 @@ export default function Chat({ currentUser, authIsLoading }) {
                   </div>
                 </CardHeader>
 
-                <CardContent className="p-0">
-                  <ScrollArea className="h-[500px] p-4">
+                <CardContent className="p-0 relative">
+                  <ScrollArea 
+                    className="h-[500px] p-4" 
+                    ref={scrollAreaRef}
+                    onScrollCapture={handleScroll}
+                  >
                     {isLoadingMessages ? (
                       <div className="flex items-center justify-center h-full">
                         <div className="text-center">
@@ -1271,6 +1285,20 @@ export default function Chat({ currentUser, authIsLoading }) {
                     
                     <div ref={messagesEndRef} />
                   </ScrollArea>
+
+                  {/* Scroll to Bottom Button */}
+                  {showScrollButton && messages.length > 0 && (
+                    <button
+                      onClick={() => {
+                        scrollToBottom("smooth");
+                        setShowScrollButton(false);
+                      }}
+                      className="absolute bottom-20 right-6 z-10 w-10 h-10 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110"
+                      title="Scroll to bottom"
+                    >
+                      <ArrowDown className="w-5 h-5" />
+                    </button>
+                  )}
 
                   <div className="border-t p-4">
                     <form onSubmit={handleSendMessage} className="flex items-end space-x-2">
