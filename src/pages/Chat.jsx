@@ -243,6 +243,35 @@ export default function Chat({ currentUser, authIsLoading }) {
     setSelectedConversation(conversation);
     setIsLoadingMessages(true);
     
+    // Optimistically update the unread count in local state
+    queryClient.setQueryData(['conversations', currentUser?.email], (oldData) => {
+      if (!oldData) return oldData;
+      
+      return {
+        ...oldData,
+        conversations: oldData.conversations.map(conv => {
+          if (conv.id === conversation.id) {
+            if (conv.conversation_type === 'group') {
+              return {
+                ...conv,
+                unread_counts: {
+                  ...(conv.unread_counts || {}),
+                  [currentUser.email]: 0
+                }
+              };
+            } else {
+              const isParticipant1 = conv.participant_1_email === currentUser.email;
+              return {
+                ...conv,
+                [isParticipant1 ? 'participant_1_unread_count' : 'participant_2_unread_count']: 0
+              };
+            }
+          }
+          return conv;
+        })
+      };
+    });
+    
     try {
       const msgs = await base44.entities.Message.filter({
         conversation_id: conversation.id
@@ -305,10 +334,6 @@ export default function Chat({ currentUser, authIsLoading }) {
         } catch (err) {
           console.error("Error marking notifications as read:", err);
         }
-
-        // Force immediate refresh of conversations list
-        await queryClient.invalidateQueries(['conversations']);
-        await queryClient.refetchQueries(['conversations']);
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
