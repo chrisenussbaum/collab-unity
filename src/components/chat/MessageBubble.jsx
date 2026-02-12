@@ -18,25 +18,23 @@ export default function MessageBubble({
   // Check if this is a video call message
   const isVideoCallMessage = message.metadata?.video_call;
 
-  // Get platform icon component
-  const getPlatformIcon = (platformKey) => {
-    const iconMap = {
-      'meet': () => <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>,
-      'zoom': () => <Video className="w-5 h-5" />,
-      'teams': () => <Users className="w-5 h-5" />
-    };
-    return iconMap[platformKey] ? iconMap[platformKey]() : <Video className="w-5 h-5" />;
-  };
-
   // Render video call invite
   const renderVideoCallInvite = () => {
-    const { platform, link, platformKey, bgColor = 'bg-purple-50', borderColor = 'border-purple-200', iconColor = 'text-purple-600' } = message.metadata.video_call;
+    const { platform, link, iconUrl, bgColor = 'bg-purple-50', borderColor = 'border-purple-200', iconColor = 'text-purple-600' } = message.metadata.video_call;
     
     return (
       <div className={`${bgColor} p-4 rounded-xl border-2 ${borderColor} min-w-[280px]`}>
         <div className="flex items-center gap-3 mb-4">
-          <div className={`w-10 h-10 ${bgColor} rounded-lg flex items-center justify-center ${iconColor} border ${borderColor}`}>
-            {getPlatformIcon(platformKey)}
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-white border border-gray-200">
+            {iconUrl ? (
+              <img 
+                src={iconUrl} 
+                alt={platform}
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              <Video className="w-5 h-5 text-gray-600" />
+            )}
           </div>
           <div>
             <p className="font-semibold text-gray-900 text-sm">{platform} Video Call</p>

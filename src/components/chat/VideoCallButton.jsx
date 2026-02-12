@@ -13,14 +13,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Video, ExternalLink, Camera, Users, Building2 } from 'lucide-react';
+import { Video, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 const VIDEO_PLATFORMS = {
   meet: {
     name: 'Google Meet',
     color: 'bg-green-600',
-    icon: Camera,
+    iconUrl: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/1af17670a_googlemeets.jpeg',
     iconColor: 'text-green-600',
     bgColor: 'bg-green-50',
     borderColor: 'border-green-200',
@@ -32,7 +32,7 @@ const VIDEO_PLATFORMS = {
   zoom: {
     name: 'Zoom',
     color: 'bg-blue-600',
-    icon: Video,
+    iconUrl: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/e6424dd7e_zoom.png',
     iconColor: 'text-blue-600',
     bgColor: 'bg-blue-50',
     borderColor: 'border-blue-200',
@@ -44,7 +44,7 @@ const VIDEO_PLATFORMS = {
   teams: {
     name: 'Microsoft Teams',
     color: 'bg-purple-600',
-    icon: Users,
+    iconUrl: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/b052cf8e5_teams.jpeg',
     iconColor: 'text-purple-600',
     bgColor: 'bg-purple-50',
     borderColor: 'border-purple-200',
@@ -88,6 +88,7 @@ export default function VideoCallButton({ onStartCall, disabled }) {
       platform: platform.name,
       link: meetingLink.trim(),
       platformKey: selectedPlatform,
+      iconUrl: platform.iconUrl,
       iconColor: platform.iconColor,
       bgColor: platform.bgColor,
       borderColor: platform.borderColor
@@ -119,10 +120,12 @@ export default function VideoCallButton({ onStartCall, disabled }) {
             onClick={() => handleSelectPlatform('meet')}
             className="py-3 cursor-pointer"
           >
-            <div className={`w-10 h-10 ${VIDEO_PLATFORMS.meet.bgColor} rounded-lg flex items-center justify-center mr-3`}>
-              {React.createElement(VIDEO_PLATFORMS.meet.icon, { 
-                className: `w-5 h-5 ${VIDEO_PLATFORMS.meet.iconColor}` 
-              })}
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center mr-3 overflow-hidden bg-white">
+              <img 
+                src={VIDEO_PLATFORMS.meet.iconUrl} 
+                alt={VIDEO_PLATFORMS.meet.name}
+                className="w-full h-full object-contain"
+              />
             </div>
             <span className="font-medium">{VIDEO_PLATFORMS.meet.name}</span>
           </DropdownMenuItem>
@@ -130,10 +133,12 @@ export default function VideoCallButton({ onStartCall, disabled }) {
             onClick={() => handleSelectPlatform('zoom')}
             className="py-3 cursor-pointer"
           >
-            <div className={`w-10 h-10 ${VIDEO_PLATFORMS.zoom.bgColor} rounded-lg flex items-center justify-center mr-3`}>
-              {React.createElement(VIDEO_PLATFORMS.zoom.icon, { 
-                className: `w-5 h-5 ${VIDEO_PLATFORMS.zoom.iconColor}` 
-              })}
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center mr-3 overflow-hidden bg-white">
+              <img 
+                src={VIDEO_PLATFORMS.zoom.iconUrl} 
+                alt={VIDEO_PLATFORMS.zoom.name}
+                className="w-full h-full object-contain"
+              />
             </div>
             <span className="font-medium">{VIDEO_PLATFORMS.zoom.name}</span>
           </DropdownMenuItem>
@@ -141,10 +146,12 @@ export default function VideoCallButton({ onStartCall, disabled }) {
             onClick={() => handleSelectPlatform('teams')}
             className="py-3 cursor-pointer"
           >
-            <div className={`w-10 h-10 ${VIDEO_PLATFORMS.teams.bgColor} rounded-lg flex items-center justify-center mr-3`}>
-              {React.createElement(VIDEO_PLATFORMS.teams.icon, { 
-                className: `w-5 h-5 ${VIDEO_PLATFORMS.teams.iconColor}` 
-              })}
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center mr-3 overflow-hidden bg-white">
+              <img 
+                src={VIDEO_PLATFORMS.teams.iconUrl} 
+                alt={VIDEO_PLATFORMS.teams.name}
+                className="w-full h-full object-contain"
+              />
             </div>
             <span className="font-medium">{VIDEO_PLATFORMS.teams.name}</span>
           </DropdownMenuItem>
@@ -155,10 +162,14 @@ export default function VideoCallButton({ onStartCall, disabled }) {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-xl">
-              <div className={`w-12 h-12 ${platform?.bgColor} rounded-xl flex items-center justify-center`}>
-                {platform && React.createElement(platform.icon, { 
-                  className: `w-6 h-6 ${platform.iconColor}` 
-                })}
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden bg-white border-2 border-gray-100">
+                {platform && (
+                  <img 
+                    src={platform.iconUrl} 
+                    alt={platform.name}
+                    className="w-full h-full object-contain"
+                  />
+                )}
               </div>
               Start {platform?.name} Call
             </DialogTitle>
