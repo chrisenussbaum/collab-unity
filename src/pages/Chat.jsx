@@ -134,6 +134,20 @@ export default function Chat({ currentUser, authIsLoading }) {
     return () => clearInterval(interval);
   }, [selectedConversation, currentUser]);
 
+  // Real-time subscription for conversation updates
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const unsubscribe = base44.entities.Conversation.subscribe((event) => {
+      // Refetch conversations when any conversation is created or updated
+      if (event.type === 'create' || event.type === 'update') {
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      }
+    });
+
+    return unsubscribe;
+  }, [currentUser, queryClient]);
+
   // Use React Query for conversations with real-time polling
   const { data: conversationsData, isLoading, isFetching } = useQuery({
     queryKey: ['conversations', currentUser?.email],
@@ -486,9 +500,7 @@ export default function Chat({ currentUser, authIsLoading }) {
               message_preview: messageContent
             }
           })
-        ]).then(() => {
-          queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'none' });
-        }).catch(err => console.error("Error in background updates:", err));
+        ]).catch(err => console.error("Error in background updates:", err));
       }
 
       toast.success('Video call link shared');
@@ -579,9 +591,7 @@ export default function Chat({ currentUser, authIsLoading }) {
         Promise.all([
           base44.entities.Conversation.update(selectedConversation.id, conversationUpdate),
           ...(notificationPromises || [])
-        ]).then(() => {
-          queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'none' });
-        }).catch(err => console.error("Error in background updates:", err));
+        ]).catch(err => console.error("Error in background updates:", err));
 
       } else {
         const isParticipant1 = selectedConversation.participant_1_email === currentUser.email;
@@ -612,9 +622,7 @@ export default function Chat({ currentUser, authIsLoading }) {
               message_preview: lastMessagePreview
             }
           })
-        ]).then(() => {
-          queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'none' });
-        }).catch(err => console.error("Error in background updates:", err));
+        ]).catch(err => console.error("Error in background updates:", err));
       }
 
     } catch (error) {
