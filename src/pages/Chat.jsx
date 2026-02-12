@@ -139,14 +139,27 @@ export default function Chat({ currentUser, authIsLoading }) {
     if (!currentUser) return;
 
     const unsubscribe = base44.entities.Conversation.subscribe((event) => {
-      // Refetch conversations when any conversation is created or updated
+      // Only refetch if this is a conversation the current user is part of
       if (event.type === 'create' || event.type === 'update') {
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        const conversation = event.data;
+        
+        // Check if current user is part of this conversation
+        const isParticipant = 
+          conversation.conversation_type === 'group'
+            ? conversation.participants?.includes(currentUser.email)
+            : conversation.participant_1_email === currentUser.email || 
+              conversation.participant_2_email === currentUser.email;
+        
+        // Only refetch if user is part of the conversation AND it's not the currently selected one
+        // (to avoid overwriting optimistic updates)
+        if (isParticipant && (!selectedConversation || selectedConversation.id !== conversation.id)) {
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        }
       }
     });
 
     return unsubscribe;
-  }, [currentUser, queryClient]);
+  }, [currentUser, queryClient, selectedConversation]);
 
   // Use React Query for conversations with real-time polling
   const { data: conversationsData, isLoading, isFetching } = useQuery({
@@ -227,12 +240,11 @@ export default function Chat({ currentUser, authIsLoading }) {
       };
     },
     enabled: !authIsLoading && !!currentUser,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    refetchInterval: 5000,
+    refetchInterval: false, // Rely on real-time subscription instead
     refetchOnWindowFocus: true,
     refetchOnMount: false,
-    keepPreviousData: true,
   });
 
   const conversations = conversationsData?.conversations || [];
