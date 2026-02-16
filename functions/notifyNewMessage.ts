@@ -3,7 +3,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { message_id } = await req.json();
+    const payload = await req.json();
+    
+    // Handle both direct calls and entity automation events
+    const message_id = payload.message_id || payload.event?.entity_id;
 
     if (!message_id) {
       return Response.json({ error: 'Message ID required' }, { status: 400 });
