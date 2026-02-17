@@ -455,6 +455,38 @@ export default function PostOnboardingProjects({ currentUser }) {
         )}
       </div>
 
+      {/* Apply Dialog */}
+      <Dialog open={!!applyDialogProject} onOpenChange={(open) => !open && setApplyDialogProject(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Apply to join "{applyDialogProject?.title}"</DialogTitle>
+            <DialogDescription>
+              Send a message to the project owner explaining why you'd be a great collaborator.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Your Message <span className="text-red-500">*</span></label>
+            <Textarea
+              placeholder="Introduce yourself, mention relevant skills, and express your interest..."
+              value={applyMessage}
+              onChange={e => setApplyMessage(e.target.value)}
+              className="h-32 resize-none"
+            />
+            <p className="text-xs text-gray-400">{applyMessage.length} characters</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setApplyDialogProject(null)} disabled={!!applyingId}>Cancel</Button>
+            <Button
+              className="cu-button"
+              onClick={handleApply}
+              disabled={!applyMessage.trim() || !!applyingId}
+            >
+              {applyingId ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Application"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Sticky Footer */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 z-10">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
