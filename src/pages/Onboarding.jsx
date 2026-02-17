@@ -29,6 +29,11 @@ export default function Onboarding({ currentUser }) {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [usernameError, setUsernameError] = useState("");
+  const [bio, setBio] = useState("");
+  const [skills, setSkills] = useState([]);
+  const [interests, setInterests] = useState([]);
+  const [skillInput, setSkillInput] = useState("");
+  const [interestInput, setInterestInput] = useState("");
   const [hasScrolledTerms, setHasScrolledTerms] = useState(false);
 
   // Step 4: Project discovery state
