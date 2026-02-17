@@ -266,18 +266,14 @@ export default function Onboarding({ currentUser }) {
     }
   };
 
-  const loadCollaboratorsForApplied = async (currentAppliedIds, currentUser) => {
-    if (currentAppliedIds.size === 0) return;
+  const loadCollaborators = async () => {
     setIsLoadingCollaborators(true);
     try {
-      const appliedProjects = projects.filter(p => currentAppliedIds.has(p.id));
-      const ownerEmails = [...new Set(appliedProjects.map(p => p.created_by).filter(Boolean))];
-      if (ownerEmails.length === 0) return;
-      const { data: profiles } = await getPublicUserProfiles({ emails: ownerEmails });
-      const userEmail = currentUser?.email || completedUser?.email;
-      setCollaborators((profiles || []).filter(u => u.email !== userEmail));
+      const user = completedUser || await base44.auth.me();
+      const { data: profiles } = await getAllPublicUserProfiles();
+      setCollaborators((profiles || []).filter(u => u.email !== user.email).slice(0, 12));
     } catch (e) {
-      // silently fail
+      setCollaborators([]);
     } finally {
       setIsLoadingCollaborators(false);
     }
