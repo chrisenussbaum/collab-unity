@@ -32,8 +32,10 @@ export default function Onboarding({ currentUser }) {
   const [bio, setBio] = useState("");
   const [skills, setSkills] = useState([]);
   const [interests, setInterests] = useState([]);
+  const [tools, setTools] = useState([]);
   const [skillInput, setSkillInput] = useState("");
   const [interestInput, setInterestInput] = useState("");
+  const [toolInput, setToolInput] = useState("");
   const [hasScrolledTerms, setHasScrolledTerms] = useState(false);
 
   // Step 4: Project discovery state
