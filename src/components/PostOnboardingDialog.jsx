@@ -61,6 +61,7 @@ export default function PostOnboardingDialog({ isOpen, onClose, currentUser }) {
   ];
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
