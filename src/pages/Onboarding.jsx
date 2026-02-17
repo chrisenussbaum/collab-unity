@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import { getAllPublicUserProfiles } from "@/functions/getAllPublicUserProfiles";
+import ArrayInputWithSearch from "@/components/ArrayInputWithSearch";
 
 export default function Onboarding({ currentUser }) {
   const navigate = useNavigate();
