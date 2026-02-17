@@ -326,10 +326,10 @@ export default function PostOnboardingProjects({ currentUser }) {
                           </button>
                         )}
                         <Button
-                          className={`${isApplied ? "bg-purple-100 text-purple-700 hover:bg-purple-100 cursor-default border border-purple-200" : "cu-button"}`}
-                          size="sm"
-                          onClick={() => !isApplied && handleApply(project)}
-                          disabled={isApplying || isApplied}
+                         className={`${isApplied ? "bg-purple-100 text-purple-700 hover:bg-purple-100 cursor-default border border-purple-200" : "cu-button"}`}
+                         size="sm"
+                         onClick={() => !isApplied && openApplyDialog(project)}
+                         disabled={isApplying || isApplied}
                         >
                           {isApplying ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
