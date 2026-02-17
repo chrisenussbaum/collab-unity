@@ -107,9 +107,8 @@ export default function RecommendedCollaborators({ currentUser, profileUser, lim
 
         if (!isMounted) return;
 
-        // Filter out users with no score and sort by score
+        // Sort by score, always show top users even if score is 0
         const topRecommendations = scoredUsers
-          .filter(u => u.score > 0)
           .sort((a, b) => b.score - a.score)
           .slice(0, limit);
 
