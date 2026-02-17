@@ -680,6 +680,41 @@ export default function Onboarding({ currentUser }) {
                       </div>
                     </div>
 
+                    {/* Tools & Technologies */}
+                    <div>
+                      <Label className="text-base font-medium mb-2 block">
+                        Tools & Technologies <span className="text-red-500">*</span>
+                        <span className="text-sm font-normal text-gray-500 ml-2">(at least 1)</span>
+                      </Label>
+                      <div className="flex gap-2 mb-2">
+                        <Input
+                          placeholder="e.g. Figma, React, Notion..."
+                          value={toolInput}
+                          onChange={(e) => setToolInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if ((e.key === 'Enter' || e.key === ',') && toolInput.trim()) {
+                              e.preventDefault();
+                              const val = toolInput.trim().replace(/,$/, '');
+                              if (val && !tools.includes(val)) setTools(prev => [...prev, val]);
+                              setToolInput('');
+                            }
+                          }}
+                        />
+                        <Button type="button" variant="outline" size="icon" onClick={() => {
+                          const val = toolInput.trim();
+                          if (val && !tools.includes(val)) setTools(prev => [...prev, val]);
+                          setToolInput('');
+                        }}><Plus className="w-4 h-4" /></Button>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {tools.map(s => (
+                          <Badge key={s} className="bg-blue-100 text-blue-700 border border-blue-200 cursor-pointer" onClick={() => setTools(prev => prev.filter(x => x !== s))}>
+                            {s} <X className="w-3 h-3 ml-1" />
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
                     {/* Interests */}
                     <div>
                       <Label className="text-base font-medium mb-2 block">
