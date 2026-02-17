@@ -222,7 +222,8 @@ export default function Onboarding({ currentUser }) {
       });
 
       // Move to project discovery step (step 4)
-      setCompletedUser(await base44.auth.me());
+      const freshUser = await base44.auth.me();
+      setCompletedUser(freshUser);
       setStep(4);
       loadProjects();
     } catch (error) {
