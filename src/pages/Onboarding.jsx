@@ -650,107 +650,53 @@ export default function Onboarding({ currentUser }) {
 
                     {/* Skills */}
                     <div>
-                      <Label className="text-base font-medium mb-2 block">
+                      <Label className="text-base font-medium mb-1 block">
                         Skills <span className="text-red-500">*</span>
                         <span className="text-sm font-normal text-gray-500 ml-2">(at least 1)</span>
                       </Label>
-                      <div className="flex gap-2 mb-2">
-                        <Input
-                          placeholder="e.g. JavaScript, Design, Marketing..."
-                          value={skillInput}
-                          onChange={(e) => setSkillInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if ((e.key === 'Enter' || e.key === ',') && skillInput.trim()) {
-                              e.preventDefault();
-                              const val = skillInput.trim().replace(/,$/, '');
-                              if (val && !skills.includes(val)) setSkills(prev => [...prev, val]);
-                              setSkillInput('');
-                            }
-                          }}
-                        />
-                        <Button type="button" variant="outline" size="icon" onClick={() => {
-                          const val = skillInput.trim();
-                          if (val && !skills.includes(val)) setSkills(prev => [...prev, val]);
-                          setSkillInput('');
-                        }}><Plus className="w-4 h-4" /></Button>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {skills.map(s => (
-                          <Badge key={s} className="bg-purple-100 text-purple-700 border border-purple-200 cursor-pointer" onClick={() => setSkills(prev => prev.filter(x => x !== s))}>
-                            {s} <X className="w-3 h-3 ml-1" />
-                          </Badge>
-                        ))}
-                      </div>
+                      <ArrayInputWithSearch
+                        title=""
+                        field="skills"
+                        items={skills}
+                        onAdd={(val) => setSkills(prev => [...prev, val])}
+                        onRemove={(val) => setSkills(prev => prev.filter(x => x !== val))}
+                        placeholder="e.g. JavaScript, Design, Marketing..."
+                        type="skills"
+                      />
                     </div>
 
                     {/* Tools & Technologies */}
                     <div>
-                      <Label className="text-base font-medium mb-2 block">
+                      <Label className="text-base font-medium mb-1 block">
                         Tools & Technologies <span className="text-red-500">*</span>
                         <span className="text-sm font-normal text-gray-500 ml-2">(at least 1)</span>
                       </Label>
-                      <div className="flex gap-2 mb-2">
-                        <Input
-                          placeholder="e.g. Figma, React, Notion..."
-                          value={toolInput}
-                          onChange={(e) => setToolInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if ((e.key === 'Enter' || e.key === ',') && toolInput.trim()) {
-                              e.preventDefault();
-                              const val = toolInput.trim().replace(/,$/, '');
-                              if (val && !tools.includes(val)) setTools(prev => [...prev, val]);
-                              setToolInput('');
-                            }
-                          }}
-                        />
-                        <Button type="button" variant="outline" size="icon" onClick={() => {
-                          const val = toolInput.trim();
-                          if (val && !tools.includes(val)) setTools(prev => [...prev, val]);
-                          setToolInput('');
-                        }}><Plus className="w-4 h-4" /></Button>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {tools.map(s => (
-                          <Badge key={s} className="bg-blue-100 text-blue-700 border border-blue-200 cursor-pointer" onClick={() => setTools(prev => prev.filter(x => x !== s))}>
-                            {s} <X className="w-3 h-3 ml-1" />
-                          </Badge>
-                        ))}
-                      </div>
+                      <ArrayInputWithSearch
+                        title=""
+                        field="tools"
+                        items={tools}
+                        onAdd={(val) => setTools(prev => [...prev, val])}
+                        onRemove={(val) => setTools(prev => prev.filter(x => x !== val))}
+                        placeholder="e.g. Figma, React, Notion..."
+                        type="tools"
+                      />
                     </div>
 
                     {/* Interests */}
                     <div>
-                      <Label className="text-base font-medium mb-2 block">
+                      <Label className="text-base font-medium mb-1 block">
                         Interests <span className="text-red-500">*</span>
                         <span className="text-sm font-normal text-gray-500 ml-2">(at least 1)</span>
                       </Label>
-                      <div className="flex gap-2 mb-2">
-                        <Input
-                          placeholder="e.g. AI, Music, Education..."
-                          value={interestInput}
-                          onChange={(e) => setInterestInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if ((e.key === 'Enter' || e.key === ',') && interestInput.trim()) {
-                              e.preventDefault();
-                              const val = interestInput.trim().replace(/,$/, '');
-                              if (val && !interests.includes(val)) setInterests(prev => [...prev, val]);
-                              setInterestInput('');
-                            }
-                          }}
-                        />
-                        <Button type="button" variant="outline" size="icon" onClick={() => {
-                          const val = interestInput.trim();
-                          if (val && !interests.includes(val)) setInterests(prev => [...prev, val]);
-                          setInterestInput('');
-                        }}><Plus className="w-4 h-4" /></Button>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {interests.map(s => (
-                          <Badge key={s} className="bg-indigo-100 text-indigo-700 border border-indigo-200 cursor-pointer" onClick={() => setInterests(prev => prev.filter(x => x !== s))}>
-                            {s} <X className="w-3 h-3 ml-1" />
-                          </Badge>
-                        ))}
-                      </div>
+                      <ArrayInputWithSearch
+                        title=""
+                        field="interests"
+                        items={interests}
+                        onAdd={(val) => setInterests(prev => [...prev, val])}
+                        onRemove={(val) => setInterests(prev => prev.filter(x => x !== val))}
+                        placeholder="e.g. AI, Music, Education..."
+                        type="interests"
+                      />
                     </div>
 
                     <Button
