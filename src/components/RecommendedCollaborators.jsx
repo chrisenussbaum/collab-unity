@@ -23,12 +23,12 @@ export default function RecommendedCollaborators({ currentUser, profileUser, lim
         return;
       }
 
-      // Check if profile has necessary fields for matching (skills, tools, or interests)
+      // Require at least 1 skill, 1 tool, and 1 interest before showing recommendations
       const hasSkills = profileUser.skills && profileUser.skills.length > 0;
       const hasTools = profileUser.tools_technologies && profileUser.tools_technologies.length > 0;
       const hasInterests = profileUser.interests && profileUser.interests.length > 0;
       
-      if (!hasSkills && !hasTools && !hasInterests) {
+      if (!hasSkills || !hasTools || !hasInterests) {
         setIsLoading(false);
         setRecommendations([]);
         return;
