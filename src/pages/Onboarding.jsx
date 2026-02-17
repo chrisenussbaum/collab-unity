@@ -78,6 +78,7 @@ export default function Onboarding({ currentUser }) {
     if (currentUser.bio) setBio(currentUser.bio);
     if (currentUser.skills?.length) setSkills(currentUser.skills);
     if (currentUser.interests?.length) setInterests(currentUser.interests);
+    if (currentUser.tools_technologies?.length) setTools(currentUser.tools_technologies);
   }, [currentUser, navigate]);
 
   const checkUsernameAvailability = async (usernameToCheck) => {
