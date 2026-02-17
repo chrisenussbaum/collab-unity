@@ -15,6 +15,7 @@ import { Lightbulb, Loader2, Upload, Camera, CheckCircle, XCircle, FileText, Shi
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
+import { getAllPublicUserProfiles } from "@/functions/getAllPublicUserProfiles";
 
 export default function Onboarding({ currentUser }) {
   const navigate = useNavigate();
