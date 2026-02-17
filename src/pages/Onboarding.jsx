@@ -28,9 +28,22 @@ export default function Onboarding({ currentUser }) {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [usernameError, setUsernameError] = useState("");
-  const [showPostOnboardingDialog, setShowPostOnboardingDialog] = useState(false);
-  const [completedUser, setCompletedUser] = useState(null);
   const [hasScrolledTerms, setHasScrolledTerms] = useState(false);
+
+  // Step 4: Project discovery state
+  const [projects, setProjects] = useState([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
+  const [appliedIds, setAppliedIds] = useState(new Set());
+  const [skippedIds, setSkippedIds] = useState(new Set());
+  const [applyingId, setApplyingId] = useState(null);
+  const [applyDialogProject, setApplyDialogProject] = useState(null);
+  const [applyMessage, setApplyMessage] = useState("");
+
+  // Step 5: Collaborators state
+  const [collaborators, setCollaborators] = useState([]);
+  const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(false);
+  const [startingChatWith, setStartingChatWith] = useState(null);
+  const [completedUser, setCompletedUser] = useState(null);
   const [hasScrolledPrivacy, setHasScrolledPrivacy] = useState(false);
   const [hasScrolledCookies, setHasScrolledCookies] = useState(false);
   const termsScrollRef = useRef(null);
