@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { createPageUrl } from "@/utils";
 import {
   Dialog,
@@ -11,8 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { User, Compass, Plus, LayoutGrid } from "lucide-react";
 import { motion } from "framer-motion";
+import DiscoverProjectsDialog from "./DiscoverProjectsDialog";
 
 export default function PostOnboardingDialog({ isOpen, onClose, currentUser }) {
+  const [showDiscoverProjects, setShowDiscoverProjects] = useState(false);
   // Force a full page reload to ensure Layout fetches updated user data
   const handleNavigation = (path) => {
     onClose();
