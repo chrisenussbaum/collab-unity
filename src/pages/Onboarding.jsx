@@ -311,7 +311,18 @@ export default function Onboarding({ currentUser }) {
       const user = completedUser || await base44.auth.me();
       const result = await getAllPublicUserProfiles();
       const profiles = result?.data || result || [];
-      setCollaborators((Array.isArray(profiles) ? profiles : []).filter(u => u.email !== user.email).slice(0, 12));
+      const userSkills = user.skills || [];
+      const userInterests = user.interests || [];
+
+      // Score and sort collaborators by match
+      let sorted = (Array.isArray(profiles) ? profiles : []).filter(u => u.email !== user.email).map(u => {
+        let score = 0;
+        if (u.skills) score += u.skills.filter(s => userSkills.some(us => us.toLowerCase() === s.toLowerCase())).length * 3;
+        if (u.interests) score += u.interests.filter(i => userInterests.some(ui => ui.toLowerCase() === i.toLowerCase())).length * 2;
+        return { ...u, _matchScore: score };
+      }).sort((a, b) => b._matchScore - a._matchScore);
+
+      setCollaborators(sorted.slice(0, 12));
     } catch (e) {
       setCollaborators([]);
     } finally {
