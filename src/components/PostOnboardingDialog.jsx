@@ -42,7 +42,7 @@ export default function PostOnboardingDialog({ isOpen, onClose, currentUser }) {
       title: "Join & Discover Projects",
       description: "Find exciting projects looking for collaborators",
       color: "from-blue-500 to-cyan-600",
-      action: () => handleNavigation(createPageUrl("Discover"))
+      action: () => { onClose(); setShowDiscoverProjects(true); }
     },
     {
       icon: Plus,
