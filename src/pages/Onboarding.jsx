@@ -254,11 +254,12 @@ export default function Onboarding({ currentUser }) {
         read: false,
         metadata: { applicant_profile_image: user.profile_image }
       });
-      setAppliedIds(prev => new Set([...prev, project.id]));
+      const newAppliedIds = new Set([...appliedIds, project.id]);
+      setAppliedIds(newAppliedIds);
       setApplyDialogProject(null);
       toast.success(`Applied to "${project.title}"!`);
       // Load collaborators after first apply
-      loadCollaboratorsForApplied(new Set([...appliedIds, project.id]));
+      loadCollaboratorsForApplied(newAppliedIds, completedUser);
     } catch (e) {
       toast.error("Failed to apply. Please try again.");
     } finally {
