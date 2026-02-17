@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function PostOnboardingProjects({ currentUser }) {
   const navigate = useNavigate();
