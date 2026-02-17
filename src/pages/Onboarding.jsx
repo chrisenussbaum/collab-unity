@@ -322,6 +322,7 @@ export default function Onboarding({ currentUser }) {
       const profiles = result?.data || result || [];
       const userSkills = (user.skills || skills || []);
       const userInterests = (user.interests || interests || []);
+      const userTools = (user.tools_technologies || tools || []);
 
       const allProfiles = Array.isArray(profiles) ? profiles : [];
       const filtered = allProfiles.filter(u => u.email !== user.email);
@@ -331,6 +332,7 @@ export default function Onboarding({ currentUser }) {
         let score = 0;
         if (u.skills) score += u.skills.filter(s => userSkills.some(us => us.toLowerCase() === s.toLowerCase())).length * 3;
         if (u.interests) score += u.interests.filter(i => userInterests.some(ui => ui.toLowerCase() === i.toLowerCase())).length * 2;
+        if (u.tools_technologies) score += u.tools_technologies.filter(t => userTools.some(ut => ut.toLowerCase() === t.toLowerCase())).length;
         return { ...u, _matchScore: score };
       }).sort((a, b) => b._matchScore - a._matchScore);
 
