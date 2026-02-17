@@ -180,11 +180,8 @@ export default function Onboarding({ currentUser }) {
         cookies_accepted_at: new Date().toISOString()
       });
 
-      // Fetch the updated user to pass to dialog
-      const updatedUser = await base44.auth.me();
-      setCompletedUser(updatedUser);
-
-      setShowPostOnboardingDialog(true);
+      // Navigate directly to Feed after onboarding
+      window.location.href = createPageUrl("Feed");
     } catch (error) {
       console.error("Error completing onboarding:", error);
       toast.error("Failed to complete onboarding. Please try again.");
