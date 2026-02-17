@@ -75,14 +75,20 @@ export default function PostOnboardingProjects({ currentUser }) {
     fetchCollaborators();
   }, [appliedIds]);
 
-  const handleApply = async (project) => {
-    if (applyingId) return;
+  const openApplyDialog = (project) => {
+    setApplyDialogProject(project);
+    setApplyMessage("");
+  };
+
+  const handleApply = async () => {
+    if (!applyDialogProject || !applyMessage.trim()) return;
+    const project = applyDialogProject;
     setApplyingId(project.id);
     try {
       await base44.entities.ProjectApplication.create({
         project_id: project.id,
         applicant_email: currentUser.email,
-        message: `Hi! I'm ${currentUser.full_name || 'a new member'} and I'm interested in collaborating on "${project.title}". I'd love to contribute my skills to your project!`,
+        message: applyMessage.trim(),
         status: "pending"
       });
 
@@ -99,6 +105,7 @@ export default function PostOnboardingProjects({ currentUser }) {
       });
 
       setAppliedIds(prev => new Set([...prev, project.id]));
+      setApplyDialogProject(null);
       toast.success(`Applied to "${project.title}"!`);
     } catch (e) {
       toast.error("Failed to apply. Please try again.");
