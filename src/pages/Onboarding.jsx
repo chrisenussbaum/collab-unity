@@ -180,8 +180,8 @@ export default function Onboarding({ currentUser }) {
         cookies_accepted_at: new Date().toISOString()
       });
 
-      // Navigate directly to Feed after onboarding
-      window.location.href = createPageUrl("Feed");
+      // Navigate to post-onboarding project discovery
+      window.location.href = createPageUrl("PostOnboardingProjects");
     } catch (error) {
       console.error("Error completing onboarding:", error);
       toast.error("Failed to complete onboarding. Please try again.");
