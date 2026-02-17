@@ -19,6 +19,8 @@ export default function PostOnboardingProjects({ currentUser }) {
   const [appliedIds, setAppliedIds] = useState(new Set());
   const [skippedIds, setSkippedIds] = useState(new Set());
   const [applyingId, setApplyingId] = useState(null);
+  const [applyDialogProject, setApplyDialogProject] = useState(null);
+  const [applyMessage, setApplyMessage] = useState("");
 
   // Collaborators section
   const [collaborators, setCollaborators] = useState([]);
