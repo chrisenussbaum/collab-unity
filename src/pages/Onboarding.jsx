@@ -590,10 +590,95 @@ export default function Onboarding({ currentUser }) {
                       </div>
                     </div>
 
+                    {/* Bio */}
+                    <div>
+                      <Label className="text-base font-medium mb-2 block">
+                        Bio <span className="text-red-500">*</span>
+                      </Label>
+                      <Textarea
+                        placeholder="Tell others a bit about yourself..."
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        maxLength={300}
+                        className="h-20 resize-none"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">{bio.length}/300</p>
+                    </div>
+
+                    {/* Skills */}
+                    <div>
+                      <Label className="text-base font-medium mb-2 block">
+                        Skills <span className="text-red-500">*</span>
+                        <span className="text-sm font-normal text-gray-500 ml-2">(at least 1)</span>
+                      </Label>
+                      <div className="flex gap-2 mb-2">
+                        <Input
+                          placeholder="e.g. JavaScript, Design, Marketing..."
+                          value={skillInput}
+                          onChange={(e) => setSkillInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if ((e.key === 'Enter' || e.key === ',') && skillInput.trim()) {
+                              e.preventDefault();
+                              const val = skillInput.trim().replace(/,$/, '');
+                              if (val && !skills.includes(val)) setSkills(prev => [...prev, val]);
+                              setSkillInput('');
+                            }
+                          }}
+                        />
+                        <Button type="button" variant="outline" size="icon" onClick={() => {
+                          const val = skillInput.trim();
+                          if (val && !skills.includes(val)) setSkills(prev => [...prev, val]);
+                          setSkillInput('');
+                        }}><Plus className="w-4 h-4" /></Button>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {skills.map(s => (
+                          <Badge key={s} className="bg-purple-100 text-purple-700 border border-purple-200 cursor-pointer" onClick={() => setSkills(prev => prev.filter(x => x !== s))}>
+                            {s} <X className="w-3 h-3 ml-1" />
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Interests */}
+                    <div>
+                      <Label className="text-base font-medium mb-2 block">
+                        Interests <span className="text-red-500">*</span>
+                        <span className="text-sm font-normal text-gray-500 ml-2">(at least 1)</span>
+                      </Label>
+                      <div className="flex gap-2 mb-2">
+                        <Input
+                          placeholder="e.g. AI, Music, Education..."
+                          value={interestInput}
+                          onChange={(e) => setInterestInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if ((e.key === 'Enter' || e.key === ',') && interestInput.trim()) {
+                              e.preventDefault();
+                              const val = interestInput.trim().replace(/,$/, '');
+                              if (val && !interests.includes(val)) setInterests(prev => [...prev, val]);
+                              setInterestInput('');
+                            }
+                          }}
+                        />
+                        <Button type="button" variant="outline" size="icon" onClick={() => {
+                          const val = interestInput.trim();
+                          if (val && !interests.includes(val)) setInterests(prev => [...prev, val]);
+                          setInterestInput('');
+                        }}><Plus className="w-4 h-4" /></Button>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {interests.map(s => (
+                          <Badge key={s} className="bg-indigo-100 text-indigo-700 border border-indigo-200 cursor-pointer" onClick={() => setInterests(prev => prev.filter(x => x !== s))}>
+                            {s} <X className="w-3 h-3 ml-1" />
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
                     <Button
                       type="submit"
                       className="cu-button w-full"
-                      disabled={isCheckingUsername || !username.trim() || !fullName.trim() || !profileImage || !coverImage || !!usernameError}
+                      disabled={isCheckingUsername || !username.trim() || !fullName.trim() || !profileImage || !coverImage || !bio.trim() || skills.length === 0 || interests.length === 0 || !!usernameError}
                     >
                       {isCheckingUsername ? (
                         <>
