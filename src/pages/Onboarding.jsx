@@ -221,6 +221,7 @@ export default function Onboarding({ currentUser }) {
         bio: bio.trim(),
         skills,
         interests,
+        tools_technologies: tools,
         has_completed_onboarding: true,
         accepted_terms: true,
         terms_accepted_at: new Date().toISOString(),
