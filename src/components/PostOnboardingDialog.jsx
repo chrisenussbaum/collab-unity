@@ -115,5 +115,6 @@ export default function PostOnboardingDialog({ isOpen, onClose, currentUser }) {
       onClose={() => setShowDiscoverProjects(false)}
       currentUser={currentUser}
     />
+    </>
   );
 }
