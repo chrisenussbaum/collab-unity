@@ -718,7 +718,7 @@ export default function Onboarding({ currentUser }) {
                     <Button
                       type="submit"
                       className="cu-button w-full"
-                      disabled={isCheckingUsername || !username.trim() || !fullName.trim() || !profileImage || !coverImage || !bio.trim() || skills.length === 0 || interests.length === 0 || !!usernameError}
+                      disabled={isCheckingUsername || !username.trim() || !fullName.trim() || !profileImage || !coverImage || !bio.trim() || skills.length === 0 || interests.length === 0 || tools.length === 0 || !!usernameError}
                     >
                       {isCheckingUsername ? (
                         <>
