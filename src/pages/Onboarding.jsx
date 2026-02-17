@@ -176,6 +176,10 @@ export default function Onboarding({ currentUser }) {
       toast.error("Please add at least one interest.");
       return;
     }
+    if (tools.length === 0) {
+      toast.error("Please add at least one tool or technology.");
+      return;
+    }
 
     setIsCheckingUsername(true);
 
