@@ -305,23 +305,27 @@ export default function Onboarding({ currentUser }) {
     }
   };
 
-  const loadCollaborators = async () => {
+  const loadCollaborators = async (resolvedUser) => {
     setIsLoadingCollaborators(true);
     try {
-      const user = completedUser || await base44.auth.me();
+      const user = resolvedUser || completedUser || await base44.auth.me();
       const result = await getAllPublicUserProfiles();
       const profiles = result?.data || result || [];
-      const userSkills = user.skills || [];
-      const userInterests = user.interests || [];
+      const userSkills = (user.skills || skills || []);
+      const userInterests = (user.interests || interests || []);
 
-      // Score and sort collaborators by match
-      let sorted = (Array.isArray(profiles) ? profiles : []).filter(u => u.email !== user.email).map(u => {
+      const allProfiles = Array.isArray(profiles) ? profiles : [];
+      const filtered = allProfiles.filter(u => u.email !== user.email);
+
+      // Score collaborators by match — but always show some even if score is 0
+      let sorted = filtered.map(u => {
         let score = 0;
         if (u.skills) score += u.skills.filter(s => userSkills.some(us => us.toLowerCase() === s.toLowerCase())).length * 3;
         if (u.interests) score += u.interests.filter(i => userInterests.some(ui => ui.toLowerCase() === i.toLowerCase())).length * 2;
         return { ...u, _matchScore: score };
       }).sort((a, b) => b._matchScore - a._matchScore);
 
+      // Always show up to 12, regardless of match score
       setCollaborators(sorted.slice(0, 12));
     } catch (e) {
       setCollaborators([]);
