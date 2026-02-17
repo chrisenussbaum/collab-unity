@@ -161,6 +161,18 @@ export default function Onboarding({ currentUser }) {
       toast.error("Please upload a cover photo.");
       return;
     }
+    if (!bio.trim()) {
+      toast.error("Please add a short bio.");
+      return;
+    }
+    if (skills.length === 0) {
+      toast.error("Please add at least one skill.");
+      return;
+    }
+    if (interests.length === 0) {
+      toast.error("Please add at least one interest.");
+      return;
+    }
 
     setIsCheckingUsername(true);
 
