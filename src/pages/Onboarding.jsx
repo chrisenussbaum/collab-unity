@@ -270,8 +270,9 @@ export default function Onboarding({ currentUser }) {
     setIsLoadingCollaborators(true);
     try {
       const user = completedUser || await base44.auth.me();
-      const { data: profiles } = await getAllPublicUserProfiles();
-      setCollaborators((profiles || []).filter(u => u.email !== user.email).slice(0, 12));
+      const result = await getAllPublicUserProfiles();
+      const profiles = result?.data || result || [];
+      setCollaborators((Array.isArray(profiles) ? profiles : []).filter(u => u.email !== user.email).slice(0, 12));
     } catch (e) {
       setCollaborators([]);
     } finally {
