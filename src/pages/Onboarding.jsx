@@ -19,7 +19,7 @@ import { getAllPublicUserProfiles } from "@/functions/getAllPublicUserProfiles";
 
 export default function Onboarding({ currentUser }) {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1 = profile, 2 = terms, 3 = cookies
+  const [step, setStep] = useState(1); // 1 = profile, 2 = terms, 3 = cookies, 4 = projects, 5 = collaborators
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [profileImage, setProfileImage] = useState("");
