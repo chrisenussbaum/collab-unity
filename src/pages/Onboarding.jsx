@@ -1025,6 +1025,177 @@ export default function Onboarding({ currentUser }) {
               )}
             </motion.div>
           )}
+          {step === 4 && (
+            <motion.div
+              key="projects-step"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="w-full max-w-5xl"
+            >
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Compass className="w-8 h-8 text-white" />
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Projects Looking for You</h1>
+                <p className="text-gray-600 max-w-md mx-auto">Apply to projects you're interested in, or skip to explore later.</p>
+              </div>
+
+              {isLoadingProjects ? (
+                <div className="flex justify-center py-16"><Loader2 className="w-10 h-10 animate-spin text-purple-600" /></div>
+              ) : projects.length === 0 ? (
+                <div className="text-center py-12">
+                  <Compass className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                  <p className="text-gray-600 mb-6">No open projects right now — check back soon!</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+                  <AnimatePresence>
+                    {projects.filter(p => !skippedIds.has(p.id)).map((project, index) => {
+                      const isApplied = appliedIds.has(project.id);
+                      const isApplying = applyingId === project.id;
+                      const skillsToShow = project.skills_needed?.slice(0, 3) || [];
+                      const extraSkills = (project.skills_needed?.length || 0) - 3;
+                      return (
+                        <motion.div
+                          key={project.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          transition={{ delay: index * 0.05 }}
+                          className={`bg-white rounded-2xl border-2 shadow-sm flex flex-col transition-all ${isApplied ? "border-purple-400" : "border-gray-100 hover:border-purple-200 hover:shadow-md"}`}
+                        >
+                          <div className="p-4 flex-1 space-y-3">
+                            <div className="flex items-start gap-3">
+                              {project.logo_url ? (
+                                <img src={project.logo_url} alt={project.title} className="w-12 h-12 rounded-xl object-cover flex-shrink-0 border border-gray-100" />
+                              ) : (
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-lg font-bold text-purple-600">{project.title?.[0] || "P"}</span>
+                                </div>
+                              )}
+                              <h3 className="font-semibold text-gray-900 leading-snug line-clamp-2">{project.title}</h3>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              <Badge variant="outline" className="text-xs border-orange-400 text-orange-600 flex items-center gap-1">
+                                <Users className="w-3 h-3" /> Seeking Collaborators
+                              </Badge>
+                              {project.classification && (
+                                <Badge variant="outline" className="text-xs text-purple-600 border-purple-300">
+                                  {project.classification.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 line-clamp-3">{project.description}</p>
+                            <div className="space-y-1">
+                              {project.location && <div className="flex items-center gap-1.5 text-xs text-gray-500"><MapPin className="w-3.5 h-3.5 text-purple-400" /><span>{project.location}</span></div>}
+                              {project.industry && <div className="flex items-center gap-1.5 text-xs text-gray-500"><Building2 className="w-3.5 h-3.5 text-purple-400" /><span>{project.industry}</span></div>}
+                              {project.area_of_interest && <div className="flex items-center gap-1.5 text-xs text-gray-500"><Tag className="w-3.5 h-3.5 text-purple-400" /><span>{project.area_of_interest}</span></div>}
+                            </div>
+                            {skillsToShow.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {skillsToShow.map(skill => (
+                                  <Badge key={skill} className="text-xs bg-purple-50 text-purple-700 border border-purple-200 font-medium">{skill}</Badge>
+                                ))}
+                                {extraSkills > 0 && <Badge variant="outline" className="text-xs text-gray-500">+{extraSkills}</Badge>}
+                              </div>
+                            )}
+                          </div>
+                          <div className="border-t border-gray-100 px-4 py-3 flex items-center gap-2">
+                            <div className="flex items-center text-xs text-gray-400 mr-auto gap-1">
+                              <Users className="w-3.5 h-3.5" /><span>{project.current_collaborators_count || 1}</span>
+                            </div>
+                            {!isApplied && (
+                              <button onClick={() => setSkippedIds(prev => new Set([...prev, project.id]))} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Skip">
+                                <X className="w-4 h-4" />
+                              </button>
+                            )}
+                            <Button
+                              className={isApplied ? "bg-purple-100 text-purple-700 hover:bg-purple-100 cursor-default border border-purple-200" : "cu-button"}
+                              size="sm"
+                              onClick={() => !isApplied && openApplyDialog(project)}
+                              disabled={isApplying || isApplied}
+                            >
+                              {isApplying ? <Loader2 className="w-4 h-4 animate-spin" /> : isApplied ? <><CheckCircle className="w-4 h-4 mr-1" />Applied</> : <><Briefcase className="w-4 h-4 mr-1" />Apply</>}
+                            </Button>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {/* Collaborators Section */}
+              {(collaborators.length > 0 || isLoadingCollaborators) && (
+                <div className="mt-4 mb-8">
+                  <div className="text-center mb-6">
+                    <h2 className="text-xl font-bold text-gray-900 mb-1">Meet Project Owners</h2>
+                    <p className="text-gray-500 text-sm">Start a conversation with the owners of projects you applied to.</p>
+                  </div>
+                  {isLoadingCollaborators ? (
+                    <div className="flex justify-center py-8"><Loader2 className="w-8 h-8 animate-spin text-purple-600" /></div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {collaborators.map((user, i) => (
+                        <motion.div key={user.email} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+                          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-all">
+                            <div className="h-20 bg-gradient-to-r from-purple-500 to-indigo-500 relative">
+                              {user.cover_image && <img src={user.cover_image} alt="" className="w-full h-full object-cover" />}
+                            </div>
+                            <div className="px-5 pb-5 flex flex-col items-center text-center -mt-10">
+                              <Avatar className="w-16 h-16 border-4 border-white shadow-md mb-2">
+                                <AvatarImage src={user.profile_image} />
+                                <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white font-bold text-lg">{user.full_name?.[0] || 'U'}</AvatarFallback>
+                              </Avatar>
+                              <p className="font-bold text-gray-900">{user.full_name || 'Anonymous'}</p>
+                              {user.username && <p className="text-sm text-gray-500 mb-2">@{user.username}</p>}
+                              {user.bio && <p className="text-xs text-gray-500 line-clamp-2 mb-3">{user.bio}</p>}
+                              <div className="w-full space-y-1.5 mb-4">
+                                {user.skills?.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 justify-center">
+                                    {user.skills.slice(0, 3).map((s, idx) => <Badge key={idx} className="text-xs bg-purple-50 border-purple-200 text-purple-700">{s}</Badge>)}
+                                    {user.skills.length > 3 && <Badge variant="outline" className="text-xs text-gray-500">+{user.skills.length - 3}</Badge>}
+                                  </div>
+                                )}
+                                {user.interests?.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 justify-center">
+                                    {user.interests.slice(0, 3).map((s, idx) => <Badge key={idx} className="text-xs bg-indigo-50 border-indigo-200 text-indigo-700 flex items-center"><Sparkles className="w-3 h-3 mr-1" />{s}</Badge>)}
+                                    {user.interests.length > 3 && <Badge variant="outline" className="text-xs text-gray-500">+{user.interests.length - 3}</Badge>}
+                                  </div>
+                                )}
+                                {user.tools_technologies?.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 justify-center">
+                                    {user.tools_technologies.slice(0, 3).map((s, idx) => <Badge key={idx} className="text-xs bg-blue-50 border-blue-200 text-blue-700 flex items-center"><Wrench className="w-3 h-3 mr-1" />{s}</Badge>)}
+                                    {user.tools_technologies.length > 3 && <Badge variant="outline" className="text-xs text-gray-500">+{user.tools_technologies.length - 3}</Badge>}
+                                  </div>
+                                )}
+                              </div>
+                              <Button
+                                className="w-full cu-button bg-gradient-to-r from-purple-600 to-purple-700"
+                                size="sm"
+                                onClick={() => handleStartChat(user)}
+                                disabled={startingChatWith === user.email}
+                              >
+                                {startingChatWith === user.email ? <Loader2 className="w-4 h-4 animate-spin" /> : <><MessageCircle className="w-4 h-4 mr-2" />Chat</>}
+                              </Button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="flex justify-center pt-4 pb-8">
+                <Button onClick={handleFinish} className="cu-button px-10">
+                  Finish <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </>
