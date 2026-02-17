@@ -236,13 +236,29 @@ export default function Onboarding({ currentUser }) {
   const loadProjects = async () => {
     setIsLoadingProjects(true);
     try {
-      const user = await base44.auth.me();
+      const user = completedUser || await base44.auth.me();
       const [results, applications] = await Promise.all([
-        base44.entities.Project.filter({ status: "seeking_collaborators", is_visible_on_feed: true }, "-created_date", 20),
+        base44.entities.Project.filter({ status: "seeking_collaborators", is_visible_on_feed: true }, "-created_date", 50),
         base44.entities.ProjectApplication.filter({ applicant_email: user.email })
       ]);
       const existingIds = new Set(applications.map(a => a.project_id));
-      setProjects(results.filter(p => p.created_by !== user.email && !existingIds.has(p.id)).slice(0, 9));
+      let filtered = results.filter(p => p.created_by !== user.email && !existingIds.has(p.id));
+
+      // Score projects by match with user's skills/interests
+      const userSkills = user.skills || [];
+      const userInterests = user.interests || [];
+      filtered = filtered.map(p => {
+        let score = 0;
+        if (p.skills_needed) {
+          score += p.skills_needed.filter(s => userSkills.some(us => us.toLowerCase() === s.toLowerCase())).length * 3;
+        }
+        if (p.area_of_interest) {
+          score += userInterests.filter(i => p.area_of_interest.toLowerCase().includes(i.toLowerCase()) || i.toLowerCase().includes(p.area_of_interest.toLowerCase())).length * 2;
+        }
+        return { ...p, _matchScore: score };
+      }).sort((a, b) => b._matchScore - a._matchScore);
+
+      setProjects(filtered.slice(0, 9));
     } catch (e) {
       setProjects([]);
     } finally {
