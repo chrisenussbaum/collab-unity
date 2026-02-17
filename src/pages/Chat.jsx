@@ -640,24 +640,41 @@ export default function Chat({ currentUser, authIsLoading }) {
         conversationUpdate[otherParticipantUnreadField] = 
           (selectedConversation[otherParticipantUnreadField] || 0) + 1;
 
-        Promise.all([
-          base44.entities.Conversation.update(selectedConversation.id, conversationUpdate),
-          base44.entities.Notification.create({
-            user_email: otherParticipantEmail,
-            title: `New message from ${currentUser.full_name || currentUser.email}`,
-            message: lastMessagePreview,
-            type: 'direct_message',
-            related_entity_id: selectedConversation.id,
-            actor_email: currentUser.email,
-            actor_name: currentUser.full_name || currentUser.email,
-            read: false,
-            metadata: {
-              conversation_id: selectedConversation.id,
-              sender_profile_image: currentUser.profile_image,
-              message_preview: lastMessagePreview
-            }
-          })
-        ]).catch(err => console.error("Error in background updates:", err));
+        // Check for existing unread notification for this conversation to avoid duplicates
+        base44.entities.Notification.filter({
+          user_email: otherParticipantEmail,
+          type: 'direct_message',
+          read: false,
+          actor_email: currentUser.email
+        }).then(existingNotifs => {
+          const hasPendingNotif = existingNotifs.some(n => n.metadata?.conversation_id === selectedConversation.id);
+          const updates = [base44.entities.Conversation.update(selectedConversation.id, conversationUpdate)];
+          if (!hasPendingNotif) {
+            updates.push(base44.entities.Notification.create({
+              user_email: otherParticipantEmail,
+              title: `New message from ${currentUser.full_name || currentUser.email}`,
+              message: lastMessagePreview,
+              type: 'direct_message',
+              related_entity_id: selectedConversation.id,
+              actor_email: currentUser.email,
+              actor_name: currentUser.full_name || currentUser.email,
+              read: false,
+              metadata: {
+                conversation_id: selectedConversation.id,
+                sender_profile_image: currentUser.profile_image,
+                message_preview: lastMessagePreview
+              }
+            }));
+          } else {
+            // Update existing notification with latest message preview
+            const notif = existingNotifs.find(n => n.metadata?.conversation_id === selectedConversation.id);
+            updates.push(base44.entities.Notification.update(notif.id, {
+              message: lastMessagePreview,
+              metadata: { ...notif.metadata, message_preview: lastMessagePreview }
+            }));
+          }
+          return Promise.all(updates);
+        }).catch(err => console.error("Error in background updates:", err));
       }
 
     } catch (error) {
