@@ -209,6 +209,120 @@ export default function Onboarding({ currentUser }) {
     }
   };
 
+  const loadProjects = async () => {
+    setIsLoadingProjects(true);
+    try {
+      const user = await base44.auth.me();
+      const [results, applications] = await Promise.all([
+        base44.entities.Project.filter({ status: "seeking_collaborators", is_visible_on_feed: true }, "-created_date", 20),
+        base44.entities.ProjectApplication.filter({ applicant_email: user.email })
+      ]);
+      const existingIds = new Set(applications.map(a => a.project_id));
+      setProjects(results.filter(p => p.created_by !== user.email && !existingIds.has(p.id)).slice(0, 9));
+    } catch (e) {
+      setProjects([]);
+    } finally {
+      setIsLoadingProjects(false);
+    }
+  };
+
+  const openApplyDialog = (project) => {
+    setApplyDialogProject(project);
+    setApplyMessage("");
+  };
+
+  const handleApply = async () => {
+    if (!applyDialogProject || !applyMessage.trim()) return;
+    const project = applyDialogProject;
+    const user = completedUser;
+    setApplyingId(project.id);
+    try {
+      await base44.entities.ProjectApplication.create({
+        project_id: project.id,
+        applicant_email: user.email,
+        message: applyMessage.trim(),
+        status: "pending"
+      });
+      await base44.entities.Notification.create({
+        user_email: project.created_by,
+        title: "New Collaboration Request",
+        message: `${user.full_name || user.email} wants to join "${project.title}"`,
+        type: "project_application",
+        related_project_id: project.id,
+        actor_email: user.email,
+        actor_name: user.full_name || user.email,
+        read: false,
+        metadata: { applicant_profile_image: user.profile_image }
+      });
+      setAppliedIds(prev => new Set([...prev, project.id]));
+      setApplyDialogProject(null);
+      toast.success(`Applied to "${project.title}"!`);
+      // Load collaborators after first apply
+      loadCollaboratorsForApplied(new Set([...appliedIds, project.id]));
+    } catch (e) {
+      toast.error("Failed to apply. Please try again.");
+    } finally {
+      setApplyingId(null);
+    }
+  };
+
+  const loadCollaboratorsForApplied = async (currentAppliedIds) => {
+    if (currentAppliedIds.size === 0) return;
+    setIsLoadingCollaborators(true);
+    try {
+      const appliedProjects = projects.filter(p => currentAppliedIds.has(p.id));
+      const ownerEmails = [...new Set(appliedProjects.map(p => p.created_by).filter(Boolean))];
+      if (ownerEmails.length === 0) return;
+      const { data: profiles } = await getPublicUserProfiles({ emails: ownerEmails });
+      setCollaborators((profiles || []).filter(u => u.email !== completedUser?.email));
+    } catch (e) {
+      // silently fail
+    } finally {
+      setIsLoadingCollaborators(false);
+    }
+  };
+
+  const handleStartChat = async (user) => {
+    if (startingChatWith) return;
+    setStartingChatWith(user.email);
+    try {
+      const me = completedUser;
+      const [conv1, conv2] = await Promise.all([
+        base44.entities.Conversation.filter({ participant_1_email: me.email, participant_2_email: user.email }),
+        base44.entities.Conversation.filter({ participant_1_email: user.email, participant_2_email: me.email })
+      ]);
+      let conversation;
+      if (conv1.length > 0) conversation = conv1[0];
+      else if (conv2.length > 0) conversation = conv2[0];
+      else {
+        conversation = await base44.entities.Conversation.create({
+          conversation_type: "direct",
+          participant_1_email: me.email,
+          participant_2_email: user.email,
+          last_message: "",
+          last_message_time: new Date().toISOString(),
+          participant_1_unread_count: 0,
+          participant_2_unread_count: 0
+        });
+      }
+      window.location.href = `${createPageUrl("Chat")}?conversation=${conversation.id}`;
+    } catch (e) {
+      toast.error("Failed to start conversation.");
+    } finally {
+      setStartingChatWith(null);
+    }
+  };
+
+  const handleFinish = () => {
+    const redirectUrl = sessionStorage.getItem('postOnboardingRedirect');
+    if (redirectUrl) {
+      sessionStorage.removeItem('postOnboardingRedirect');
+      window.location.href = redirectUrl;
+    } else {
+      window.location.href = createPageUrl("Feed");
+    }
+  };
+
   const handleDeclineTerms = async () => {
     // Log the decline and redirect to welcome page
     try {
