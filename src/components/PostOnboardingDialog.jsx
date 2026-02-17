@@ -108,5 +108,11 @@ export default function PostOnboardingDialog({ isOpen, onClose, currentUser }) {
         </p>
       </DialogContent>
     </Dialog>
+
+    <DiscoverProjectsDialog
+      isOpen={showDiscoverProjects}
+      onClose={() => setShowDiscoverProjects(false)}
+      currentUser={currentUser}
+    />
   );
 }
