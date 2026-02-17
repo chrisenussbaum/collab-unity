@@ -266,7 +266,7 @@ export default function Onboarding({ currentUser }) {
     }
   };
 
-  const loadCollaboratorsForApplied = async (currentAppliedIds) => {
+  const loadCollaboratorsForApplied = async (currentAppliedIds, currentUser) => {
     if (currentAppliedIds.size === 0) return;
     setIsLoadingCollaborators(true);
     try {
@@ -274,7 +274,8 @@ export default function Onboarding({ currentUser }) {
       const ownerEmails = [...new Set(appliedProjects.map(p => p.created_by).filter(Boolean))];
       if (ownerEmails.length === 0) return;
       const { data: profiles } = await getPublicUserProfiles({ emails: ownerEmails });
-      setCollaborators((profiles || []).filter(u => u.email !== completedUser?.email));
+      const userEmail = currentUser?.email || completedUser?.email;
+      setCollaborators((profiles || []).filter(u => u.email !== userEmail));
     } catch (e) {
       // silently fail
     } finally {
