@@ -197,8 +197,10 @@ export default function Onboarding({ currentUser }) {
         cookies_accepted_at: new Date().toISOString()
       });
 
-      // Navigate to post-onboarding project discovery
-      window.location.href = createPageUrl("PostOnboardingProjects");
+      // Move to project discovery step (step 4)
+      setCompletedUser(await base44.auth.me());
+      setStep(4);
+      loadProjects();
     } catch (error) {
       console.error("Error completing onboarding:", error);
       toast.error("Failed to complete onboarding. Please try again.");
