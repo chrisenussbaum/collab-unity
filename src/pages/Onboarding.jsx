@@ -73,6 +73,9 @@ export default function Onboarding({ currentUser }) {
     if (currentUser.full_name) setFullName(currentUser.full_name);
     if (currentUser.profile_image) setProfileImage(currentUser.profile_image);
     if (currentUser.cover_image) setCoverImage(currentUser.cover_image);
+    if (currentUser.bio) setBio(currentUser.bio);
+    if (currentUser.skills?.length) setSkills(currentUser.skills);
+    if (currentUser.interests?.length) setInterests(currentUser.interests);
   }, [currentUser, navigate]);
 
   const checkUsernameAvailability = async (usernameToCheck) => {
