@@ -259,8 +259,6 @@ export default function Onboarding({ currentUser }) {
       setAppliedIds(newAppliedIds);
       setApplyDialogProject(null);
       toast.success(`Applied to "${project.title}"!`);
-      // Load collaborators after first apply
-      loadCollaboratorsForApplied(newAppliedIds, completedUser);
     } catch (e) {
       toast.error("Failed to apply. Please try again.");
     } finally {
