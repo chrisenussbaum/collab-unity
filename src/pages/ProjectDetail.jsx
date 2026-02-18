@@ -1510,6 +1510,12 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                   onProjectUpdate={handleProjectUpdate}
                 />
                 <ContextualSearchAssistant project={project} />
+                <ProjectOwnerAssistant
+                  project={project}
+                  currentUser={currentUser}
+                  isOwner={isOwner}
+                  onProjectUpdate={handleProjectUpdate}
+                />
                 <CommunicationsPanel 
                   project={project}
                   isCollaborator={userCanContribute}
