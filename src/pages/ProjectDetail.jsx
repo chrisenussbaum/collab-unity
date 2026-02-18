@@ -189,9 +189,14 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
       const followerEmails = projectFollowers.map(f => f.email);
       if (followerEmails.length > 0) {
         const { data: followerProfiles } = await getPublicUserProfiles({ emails: followerEmails });
-        setFollowers(Array.isArray(followerProfiles) ? followerProfiles : []);
+        const profiles = Array.isArray(followerProfiles) ? followerProfiles : [];
+        setFollowers(profiles);
+        // Sync followers_count with actual count
+        setProject(prev => prev ? { ...prev, followers_count: profiles.length } : prev);
       } else {
         setFollowers([]);
+        // Sync followers_count to 0 if no followers
+        setProject(prev => prev ? { ...prev, followers_count: 0 } : prev);
       }
     } catch (error) {
       console.error("Error loading followers:", error);
