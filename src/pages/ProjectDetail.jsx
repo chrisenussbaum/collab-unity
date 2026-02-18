@@ -46,6 +46,7 @@ import { toast } from "sonner";
 import WorkspaceTabs from "@/components/workspace/WorkspaceTabs";
 import ProjectHighlights from "../components/project/ProjectHighlights";
 import ProjectAnalyticsDashboard from "../components/project/ProjectAnalyticsDashboard";
+import ProjectOwnerAssistant from "../components/project/ProjectOwnerAssistant";
 import ClickableImage from "../components/ClickableImage";
 import ContextualSearchAssistant from "../components/workspace/ContextualSearchAssistant";
 
