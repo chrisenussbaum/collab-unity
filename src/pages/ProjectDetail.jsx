@@ -1253,7 +1253,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                   <div className="mt-6">
                     <h3 className="font-semibold text-gray-900 mb-3 text-sm sm:text-base flex items-center">
                       <Heart className="w-4 h-4 mr-2 text-pink-600" />
-                      Followers ({project.followers_count || followers.length})
+                      Followers ({followers.length})
                     </h3>
                     {isLoadingFollowers ? (
                       <div className="flex items-center space-x-2">
