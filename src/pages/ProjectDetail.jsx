@@ -1443,6 +1443,14 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
 
 
 
+              {/* Project Owner Assistant */}
+              <ProjectOwnerAssistant
+                project={project}
+                currentUser={currentUser}
+                isOwner={isOwner}
+                onProjectUpdate={handleProjectUpdate}
+              />
+
               {/* Team Communications Panel */}
               <CommunicationsPanel 
                 project={project}
