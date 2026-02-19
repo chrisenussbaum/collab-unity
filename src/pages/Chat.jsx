@@ -72,13 +72,17 @@ export default function Chat({ currentUser, authIsLoading }) {
 
   const scrollToBottom = () => {
     requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      }
     });
   };
 
-  // Always scroll to bottom when messages change
+  // Scroll to bottom when messages change (new message or initial load)
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
   }, [messages]);
 
   // Close emoji picker when clicking outside
