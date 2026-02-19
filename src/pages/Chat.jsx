@@ -580,6 +580,19 @@ export default function Chat({ currentUser, authIsLoading }) {
         last_message_time: new Date().toISOString()
       };
 
+      // Optimistically update conversation preview in the list
+      queryClient.setQueryData(['conversations', currentUser?.email], (oldData) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          conversations: oldData.conversations.map(conv =>
+            conv.id === selectedConversation.id
+              ? { ...conv, last_message: lastMessagePreview.substring(0, 100), last_message_time: new Date().toISOString() }
+              : conv
+          )
+        };
+      });
+
       if (isGroup) {
         const unreadCounts = { ...(selectedConversation.unread_counts || {}) };
         selectedConversation.participants?.forEach(email => {
