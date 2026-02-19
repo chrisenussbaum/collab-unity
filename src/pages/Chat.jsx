@@ -354,7 +354,7 @@ export default function Chat({ currentUser, authIsLoading }) {
     }
   };
 
-  // Handle deep linking from notifications, and auto-select most recent conversation on load
+  // Handle deep linking from notifications
   useEffect(() => {
     if (!currentUser || isLoading) return;
 
@@ -367,9 +367,6 @@ export default function Chat({ currentUser, authIsLoading }) {
         handleSelectConversation(conversation);
         navigate(createPageUrl('Chat'), { replace: true });
       }
-    } else if (!conversationId && !selectedConversation && conversations.length > 0) {
-      // Auto-select the most recent conversation (already sorted by last_message_time desc)
-      handleSelectConversation(conversations[0]);
     }
   }, [currentUser, conversations, location.search, isLoading]);
 
