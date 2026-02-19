@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, Send, Search, Plus, Users, Trash2, Smile, MoreVertical, Settings, ArrowLeft, ArrowDown } from "lucide-react";
+import { MessageCircle, Send, Search, Plus, Users, Trash2, Smile, MoreVertical, Settings, ArrowLeft } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
