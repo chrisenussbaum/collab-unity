@@ -1280,10 +1280,9 @@ export default function Chat({ currentUser, authIsLoading }) {
                 </CardHeader>
 
                 <CardContent className="p-0 relative">
-                  <ScrollArea 
-                    className="h-[500px] p-4" 
-                    ref={scrollAreaRef}
-                    onScrollCapture={handleScroll}
+                  <div 
+                    className="h-[500px] overflow-y-auto p-4"
+                    ref={messagesContainerRef}
                   >
                     {isLoadingMessages ? (
                       <div className="flex items-center justify-center h-full">
