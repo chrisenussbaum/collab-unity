@@ -634,6 +634,9 @@ export default function Chat({ currentUser, authIsLoading }) {
         };
       });
 
+      // Also update the selectedConversation ref so subsequent messages use the latest unread counts
+      setSelectedConversation(prev => prev ? { ...prev, ...conversationUpdate } : prev);
+
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
