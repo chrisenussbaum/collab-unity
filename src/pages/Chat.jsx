@@ -570,7 +570,7 @@ export default function Chat({ currentUser, authIsLoading }) {
       const isGroup = selectedConversation.conversation_type === 'group';
 
       // Update conversation
-      const lastMessagePreview = messageContent || 
+      const lastMessagePreview = messageContent ||
         (mediaData?.media_type === 'image' ? '📷 Image' : 
          mediaData?.media_type === 'video' ? '🎥 Video' : 
          mediaData?.media_type === 'file' ? `📎 ${mediaData.media_name}` : '');
