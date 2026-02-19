@@ -615,6 +615,7 @@ export default function Chat({ currentUser, authIsLoading }) {
 
         // Notifications are handled by the "Notify on New Message" automation
         base44.entities.Conversation.update(selectedConversation.id, conversationUpdate)
+          .then(() => queryClient.invalidateQueries({ queryKey: ['conversations'] }))
           .catch(err => console.error("Error updating conversation:", err));
       }
 
