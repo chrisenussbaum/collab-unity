@@ -62,6 +62,7 @@ export default function Chat({ currentUser, authIsLoading }) {
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const emojiPickerRef = useRef(null);
+  const [showScrollButton, setShowScrollButton] = useState(false); // kept for compatibility but unused
 
   const navigate = useNavigate();
   const location = useLocation();
