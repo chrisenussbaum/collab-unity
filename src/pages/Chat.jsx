@@ -274,9 +274,6 @@ export default function Chat({ currentUser, authIsLoading }) {
       }, "created_date");
 
       setMessages(msgs || []);
-      
-      // Trigger scroll when messages are loaded
-      shouldScrollRef.current = true;
 
       // Mark messages as read and clear notifications
       const unreadMessages = msgs.filter(msg => 
