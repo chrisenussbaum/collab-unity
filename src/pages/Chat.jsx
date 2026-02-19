@@ -600,39 +600,82 @@ export default function Chat({ currentUser, authIsLoading }) {
         });
         conversationUpdate.unread_counts = unreadCounts;
 
-        // Notifications are handled by the "Notify on New Message" automation
-        base44.entities.Conversation.update(selectedConversation.id, conversationUpdate)
-          .catch(err => console.error("Error updating conversation:", err));
+        // Create notifications for all group members
+        const notificationPromises = selectedConversation.participants
+          ?.filter(email => email !== currentUser.email)
+          .map(email => 
+            base44.entities.Notification.create({
+              user_email: email,
+              title: `${selectedConversation.group_name || 'Group Chat'}`,
+              message: `${currentUser.full_name || currentUser.email}: ${lastMessagePreview}`,
+              type: 'direct_message',
+              related_entity_id: selectedConversation.id,
+              actor_email: currentUser.email,
+              actor_name: currentUser.full_name || currentUser.email,
+              read: false,
+              metadata: {
+                conversation_id: selectedConversation.id,
+                sender_profile_image: currentUser.profile_image,
+                message_preview: lastMessagePreview,
+                is_group: true,
+                group_name: selectedConversation.group_name
+              }
+            })
+          );
+
+        Promise.all([
+          base44.entities.Conversation.update(selectedConversation.id, conversationUpdate),
+          ...(notificationPromises || [])
+        ]).catch(err => console.error("Error in background updates:", err));
 
       } else {
         const isParticipant1 = selectedConversation.participant_1_email === currentUser.email;
         const otherParticipantUnreadField = isParticipant1 
           ? 'participant_2_unread_count' 
           : 'participant_1_unread_count';
+        const otherParticipantEmail = isParticipant1
+          ? selectedConversation.participant_2_email
+          : selectedConversation.participant_1_email;
 
         conversationUpdate[otherParticipantUnreadField] = 
           (selectedConversation[otherParticipantUnreadField] || 0) + 1;
 
-        // Notifications are handled by the "Notify on New Message" automation
-        base44.entities.Conversation.update(selectedConversation.id, conversationUpdate)
-          .catch(err => console.error("Error updating conversation:", err));
+        // Check for existing unread notification for this conversation to avoid duplicates
+        base44.entities.Notification.filter({
+          user_email: otherParticipantEmail,
+          type: 'direct_message',
+          read: false,
+          actor_email: currentUser.email
+        }).then(existingNotifs => {
+          const hasPendingNotif = existingNotifs.some(n => n.metadata?.conversation_id === selectedConversation.id);
+          const updates = [base44.entities.Conversation.update(selectedConversation.id, conversationUpdate)];
+          if (!hasPendingNotif) {
+            updates.push(base44.entities.Notification.create({
+              user_email: otherParticipantEmail,
+              title: `New message from ${currentUser.full_name || currentUser.email}`,
+              message: lastMessagePreview,
+              type: 'direct_message',
+              related_entity_id: selectedConversation.id,
+              actor_email: currentUser.email,
+              actor_name: currentUser.full_name || currentUser.email,
+              read: false,
+              metadata: {
+                conversation_id: selectedConversation.id,
+                sender_profile_image: currentUser.profile_image,
+                message_preview: lastMessagePreview
+              }
+            }));
+          } else {
+            // Update existing notification with latest message preview
+            const notif = existingNotifs.find(n => n.metadata?.conversation_id === selectedConversation.id);
+            updates.push(base44.entities.Notification.update(notif.id, {
+              message: lastMessagePreview,
+              metadata: { ...notif.metadata, message_preview: lastMessagePreview }
+            }));
+          }
+          return Promise.all(updates);
+        }).catch(err => console.error("Error in background updates:", err));
       }
-
-      // Optimistically update the conversation list in the sidebar
-      queryClient.setQueryData(['conversations', currentUser?.email], (oldData) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          conversations: oldData.conversations
-            .map(conv => {
-              if (conv.id !== selectedConversation.id) return conv;
-              return { ...conv, ...conversationUpdate };
-            })
-            .sort((a, b) =>
-              new Date(b.last_message_time || b.created_date) - new Date(a.last_message_time || a.created_date)
-            )
-        };
-      });
 
     } catch (error) {
       console.error("Error sending message:", error);
