@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, Send, Search, Plus, Users, Trash2, Smile, MoreVertical, Settings, ArrowLeft } from "lucide-react";
+import { MessageCircle, Send, Search, Plus, Users, Trash2, Smile, MoreVertical, Settings, ArrowLeft, ArrowDown } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -63,23 +63,38 @@ export default function Chat({ currentUser, authIsLoading }) {
   const typingTimeoutRef = useRef(null);
   const emojiPickerRef = useRef(null);
 
-
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
 
-  const messagesContainerRef = useRef(null);
+  const prevMessagesLengthRef = useRef(0);
+  const shouldScrollRef = useRef(false);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const scrollAreaRef = useRef(null);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = (behavior = "auto") => {
+    // Use requestAnimationFrame to ensure DOM is updated before scrolling
     requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      messagesEndRef.current?.scrollIntoView({ behavior });
     });
   };
 
-  // Always scroll to bottom when messages change
+  // Scroll when new messages are added OR when explicitly triggered
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > prevMessagesLengthRef.current || shouldScrollRef.current) {
+      scrollToBottom();
+      shouldScrollRef.current = false;
+      setShowScrollButton(false);
+    }
+    prevMessagesLengthRef.current = messages.length;
   }, [messages]);
+
+  // Detect scroll position to show/hide scroll button
+  const handleScroll = (e) => {
+    const element = e.target;
+    const isNearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 100;
+    setShowScrollButton(!isNearBottom);
+  };
 
   // Close emoji picker when clicking outside
   useEffect(() => {
@@ -275,6 +290,9 @@ export default function Chat({ currentUser, authIsLoading }) {
       }, "created_date");
 
       setMessages(msgs || []);
+      
+      // Trigger scroll when messages are loaded
+      shouldScrollRef.current = true;
 
       // Mark messages as read and clear notifications
       const unreadMessages = msgs.filter(msg => 
@@ -1281,9 +1299,10 @@ export default function Chat({ currentUser, authIsLoading }) {
                 </CardHeader>
 
                 <CardContent className="p-0 relative">
-                  <div 
-                    className="h-[500px] overflow-y-auto p-4"
-                    ref={messagesContainerRef}
+                  <ScrollArea 
+                    className="h-[500px] p-4" 
+                    ref={scrollAreaRef}
+                    onScrollCapture={handleScroll}
                   >
                     {isLoadingMessages ? (
                       <div className="flex items-center justify-center h-full">
@@ -1336,7 +1355,21 @@ export default function Chat({ currentUser, authIsLoading }) {
                     <TypingIndicator users={typingUsers} />
                     
                     <div ref={messagesEndRef} />
-                  </div>
+                  </ScrollArea>
+
+                  {/* Scroll to Bottom Button */}
+                  {showScrollButton && messages.length > 0 && (
+                    <button
+                      onClick={() => {
+                        scrollToBottom("smooth");
+                        setShowScrollButton(false);
+                      }}
+                      className="absolute bottom-20 right-6 z-10 w-10 h-10 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110"
+                      title="Scroll to bottom"
+                    >
+                      <ArrowDown className="w-5 h-5" />
+                    </button>
+                  )}
 
                   <div className="border-t p-4">
                     <form onSubmit={handleSendMessage} className="flex items-end space-x-2">
