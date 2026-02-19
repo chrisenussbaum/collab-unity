@@ -72,17 +72,13 @@ export default function Chat({ currentUser, authIsLoading }) {
 
   const scrollToBottom = () => {
     requestAnimationFrame(() => {
-      if (messagesContainerRef.current) {
-        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-      }
+      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
     });
   };
 
-  // Scroll to bottom when messages change (new message or initial load)
+  // Always scroll to bottom when messages change
   useEffect(() => {
-    if (messages.length > 0) {
-      scrollToBottom();
-    }
+    scrollToBottom();
   }, [messages]);
 
   // Close emoji picker when clicking outside
@@ -570,7 +566,7 @@ export default function Chat({ currentUser, authIsLoading }) {
       const isGroup = selectedConversation.conversation_type === 'group';
 
       // Update conversation
-      const lastMessagePreview = messageContent ||
+      const lastMessagePreview = messageContent || 
         (mediaData?.media_type === 'image' ? '📷 Image' : 
          mediaData?.media_type === 'video' ? '🎥 Video' : 
          mediaData?.media_type === 'file' ? `📎 ${mediaData.media_name}` : '');
@@ -579,19 +575,6 @@ export default function Chat({ currentUser, authIsLoading }) {
         last_message: lastMessagePreview.substring(0, 100),
         last_message_time: new Date().toISOString()
       };
-
-      // Optimistically update conversation preview in the list
-      queryClient.setQueryData(['conversations', currentUser?.email], (oldData) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          conversations: oldData.conversations.map(conv =>
-            conv.id === selectedConversation.id
-              ? { ...conv, last_message: lastMessagePreview.substring(0, 100), last_message_time: new Date().toISOString() }
-              : conv
-          )
-        };
-      });
 
       if (isGroup) {
         const unreadCounts = { ...(selectedConversation.unread_counts || {}) };
