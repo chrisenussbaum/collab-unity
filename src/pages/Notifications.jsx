@@ -182,8 +182,9 @@ export default function Notifications({ currentUser, authIsLoading }) {
         "-created_date",
         100
       );
-      setNotifications(userNotifications);
-      setFilteredNotifications(userNotifications);
+      const filtered = userNotifications.filter(n => n.type !== 'direct_message');
+      setNotifications(filtered);
+      setFilteredNotifications(filtered);
       await fetchRelatedEntities(userNotifications);
     } catch (error) {
       console.error("Error loading notifications:", error);
