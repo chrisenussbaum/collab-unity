@@ -1335,21 +1335,7 @@ export default function Chat({ currentUser, authIsLoading }) {
                     <TypingIndicator users={typingUsers} />
                     
                     <div ref={messagesEndRef} />
-                  </ScrollArea>
-
-                  {/* Scroll to Bottom Button */}
-                  {showScrollButton && messages.length > 0 && (
-                    <button
-                      onClick={() => {
-                        scrollToBottom("smooth");
-                        setShowScrollButton(false);
-                      }}
-                      className="absolute bottom-20 right-6 z-10 w-10 h-10 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110"
-                      title="Scroll to bottom"
-                    >
-                      <ArrowDown className="w-5 h-5" />
-                    </button>
-                  )}
+                  </div>
 
                   <div className="border-t p-4">
                     <form onSubmit={handleSendMessage} className="flex items-end space-x-2">
