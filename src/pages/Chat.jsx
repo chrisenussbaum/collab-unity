@@ -67,34 +67,18 @@ export default function Chat({ currentUser, authIsLoading }) {
   const location = useLocation();
   const queryClient = useQueryClient();
 
-  const prevMessagesLengthRef = useRef(0);
-  const shouldScrollRef = useRef(false);
-  const [showScrollButton, setShowScrollButton] = useState(false);
-  const scrollAreaRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
-  const scrollToBottom = (behavior = "auto") => {
-    // Use requestAnimationFrame to ensure DOM is updated before scrolling
+  const scrollToBottom = () => {
     requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior });
+      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
     });
   };
 
-  // Scroll when new messages are added OR when explicitly triggered
+  // Always scroll to bottom when messages change
   useEffect(() => {
-    if (messages.length > prevMessagesLengthRef.current || shouldScrollRef.current) {
-      scrollToBottom();
-      shouldScrollRef.current = false;
-      setShowScrollButton(false);
-    }
-    prevMessagesLengthRef.current = messages.length;
+    scrollToBottom();
   }, [messages]);
-
-  // Detect scroll position to show/hide scroll button
-  const handleScroll = (e) => {
-    const element = e.target;
-    const isNearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 100;
-    setShowScrollButton(!isNearBottom);
-  };
 
   // Close emoji picker when clicking outside
   useEffect(() => {
