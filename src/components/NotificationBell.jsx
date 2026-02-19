@@ -117,9 +117,8 @@ export default function NotificationBell() {
       if (!isMounted.current) return;
       
       if (Array.isArray(data)) {
-        const filtered = data.filter(n => n.type !== 'direct_message');
-        setNotifications(filtered);
-        setUnreadCount(filtered.filter(n => !n.read).length);
+        setNotifications(data);
+        setUnreadCount(data.filter(n => !n.read).length);
         setLastFetchTime(now);
       }
     } catch (e) {
@@ -162,7 +161,7 @@ export default function NotificationBell() {
     if (!currentUser) return;
 
     const unsubscribe = base44.entities.Notification.subscribe((event) => {
-      if (event.type === 'create' && event.data.user_email === currentUser.email && event.data.type !== 'direct_message') {
+      if (event.type === 'create' && event.data.user_email === currentUser.email) {
         setNotifications(prev => [event.data, ...prev].slice(0, 10));
         setUnreadCount(prev => prev + 1);
       } else if (event.type === 'update' && event.data.user_email === currentUser.email) {

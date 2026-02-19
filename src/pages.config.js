@@ -50,6 +50,7 @@
 import AboutUs from './pages/AboutUs';
 import AdminVerificationPanel from './pages/AdminVerificationPanel';
 import Advertise from './pages/Advertise';
+import Chat from './pages/Chat';
 import Contact from './pages/Contact';
 import CreateAd from './pages/CreateAd';
 import CreateProject from './pages/CreateProject';
@@ -74,7 +75,6 @@ import TermsOfService from './pages/TermsOfService';
 import Testimonials from './pages/Testimonials';
 import UserProfile from './pages/UserProfile';
 import Welcome from './pages/Welcome';
-import Chat from './pages/Chat';
 import __Layout from './Layout.jsx';
 
 
@@ -82,6 +82,7 @@ export const PAGES = {
     "AboutUs": AboutUs,
     "AdminVerificationPanel": AdminVerificationPanel,
     "Advertise": Advertise,
+    "Chat": Chat,
     "Contact": Contact,
     "CreateAd": CreateAd,
     "CreateProject": CreateProject,
@@ -106,7 +107,6 @@ export const PAGES = {
     "Testimonials": Testimonials,
     "UserProfile": UserProfile,
     "Welcome": Welcome,
-    "Chat": Chat,
 }
 
 export const pagesConfig = {
