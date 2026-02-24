@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Project } from "@/entities/all";
 
 export default function ProjectLinksManager({ project, currentUser, onProjectUpdate }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editedLinks, setEditedLinks] = useState(project.project_urls || []);
   const [newLink, setNewLink] = useState("");
