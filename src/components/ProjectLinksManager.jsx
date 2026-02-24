@@ -195,7 +195,7 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
             </div>
           ) : (
             <div className="space-y-2">
-              {projectLinks.map((linkItem, index) => {
+              {(projectLinks.length >= 3 && !isExpanded ? projectLinks.slice(0, 2) : projectLinks).map((linkItem, index) => {
                 const url = getLinkUrl(linkItem);
                 const title = getLinkTitle(linkItem);
                 return (
@@ -224,6 +224,15 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
                   </a>
                 );
               })}
+              {projectLinks.length >= 3 && (
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                >
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                  {isExpanded ? 'Show less' : `Show ${projectLinks.length - 2} more link${projectLinks.length - 2 !== 1 ? 's' : ''}`}
+                </button>
+              )}
             </div>
           )}
         </CardContent>
