@@ -195,7 +195,7 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
             </div>
           ) : (
             <div className="space-y-2">
-              {projectLinks.map((linkItem, index) => {
+              {(isExpanded ? projectLinks : projectLinks.slice(0, 2)).map((linkItem, index) => {
                 const url = getLinkUrl(linkItem);
                 const title = getLinkTitle(linkItem);
                 return (
@@ -224,6 +224,18 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
                   </a>
                 );
               })}
+              {projectLinks.length > 2 && (
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="w-full flex items-center justify-center gap-1 pt-1 text-xs text-purple-600 hover:text-purple-800 transition-colors"
+                >
+                  {isExpanded ? (
+                    <><ChevronUp className="w-3 h-3" /> Show less</>
+                  ) : (
+                    <><ChevronDown className="w-3 h-3" /> Show {projectLinks.length - 2} more</>
+                  )}
+                </button>
+              )}
             </div>
           )}
         </CardContent>
