@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { ExternalLink, Edit, Trash2, Plus, ChevronUp, ChevronDown, Link as LinkIcon } from "lucide-react";
+import { ExternalLink, Edit, Trash2, Plus, ChevronUp, ChevronDown, Link as LinkIcon, ChevronDown as ExpandIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Project } from "@/entities/all";
 
