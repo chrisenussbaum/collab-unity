@@ -1161,7 +1161,7 @@ export default function Layout({ children, currentPageName }) {
                 </>
               ) : (
                 <Button 
-                  onClick={() => User.login()} 
+                  onClick={() => base44.auth.redirectToLogin()} 
                   className="cu-button cu-text-responsive-sm"
                 >
                   Sign In
@@ -1220,7 +1220,7 @@ export default function Layout({ children, currentPageName }) {
             
             {!currentUser && (
               <button
-                onClick={() => User.login()}
+                onClick={() => base44.auth.redirectToLogin()}
                 className="flex flex-col items-center justify-center transition-colors text-gray-500 hover:text-purple-600"
               >
                 <UserIcon className="cu-icon-sm" />
