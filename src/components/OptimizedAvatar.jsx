@@ -1,7 +1,8 @@
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const OptimizedAvatar = ({ src, alt, fallback, className, size, ...props }) => {
+const OptimizedAvatar = (props) => {
+  const { src, alt, fallback, className, size, ...rest } = props;
   const resolvedClassName = className || '';
   const resolvedSize = size || 'default';
   const isSupabaseImage = src?.includes('.supabase.co/storage/v1/object/public/');
@@ -29,7 +30,7 @@ const OptimizedAvatar = ({ src, alt, fallback, className, size, ...props }) => {
   const optimizedSrc = src ? getOptimizedAvatarUrl(src) : null;
 
   return (
-    <Avatar className={resolvedClassName} {...props}>
+    <Avatar className={resolvedClassName} {...rest}>
       {optimizedSrc && <AvatarImage src={optimizedSrc} alt={alt} className="object-cover" />}
       <AvatarFallback>{fallback}</AvatarFallback>
     </Avatar>
