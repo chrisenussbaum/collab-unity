@@ -54,7 +54,7 @@ const OptimizedAvatar = ({
   const optimizedSrc = src ? getOptimizedAvatarUrl(src) : null;
 
   return (
-    <Avatar className={className} {...props}>
+    <Avatar className={className}>
       {optimizedSrc && (
         <AvatarImage src={optimizedSrc} alt={alt} className="object-cover" />
       )}
