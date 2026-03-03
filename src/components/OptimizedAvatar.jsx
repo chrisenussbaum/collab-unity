@@ -33,7 +33,6 @@ const OptimizedAvatar = ({
       params.append('height', avatarSize);
       params.append('quality', '90');
       params.append('format', 'webp');
-      params.append('t', Date.now());
       
       return `${transformUrl}?${params.toString()}`;
     } catch (e) {
