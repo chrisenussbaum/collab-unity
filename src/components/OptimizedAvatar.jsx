@@ -12,7 +12,8 @@ const OptimizedAvatar = ({
   alt, 
   fallback,
   className = '',
-  size = 'default' // 'sm', 'default', 'lg'
+  size = 'default', // 'sm', 'default', 'lg'
+  ...props 
 }) => {
   // Check if the image is from Supabase storage
   const isSupabaseImage = src?.includes('.supabase.co/storage/v1/object/public/');
@@ -54,7 +55,7 @@ const OptimizedAvatar = ({
   const optimizedSrc = src ? getOptimizedAvatarUrl(src) : null;
 
   return (
-    <Avatar className={className}>
+    <Avatar className={className} {...props}>
       {optimizedSrc && (
         <AvatarImage src={optimizedSrc} alt={alt} className="object-cover" />
       )}
