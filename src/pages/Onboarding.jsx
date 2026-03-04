@@ -1365,7 +1365,7 @@ Return only relevant, specific items (not generic terms). Focus on what would he
             </motion.div>
           )}
 
-          {step === 5 && (
+          {step === 6 && (
             <motion.div
               key="collaborators-step"
               initial={{ opacity: 0, y: 20 }}
