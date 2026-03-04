@@ -329,10 +329,10 @@ Return only relevant, specific items (not generic terms). Focus on what would he
     loadProjects(user, resumeAnalysis);
   };
 
-  const loadProjects = async () => {
+  const loadProjects = async (resolvedUser, analysis) => {
     setIsLoadingProjects(true);
     try {
-      const user = completedUser || await base44.auth.me();
+      const user = resolvedUser || completedUser || await base44.auth.me();
       const [results, applications] = await Promise.all([
         base44.entities.Project.filter({ status: "seeking_collaborators", is_visible_on_feed: true }, "-created_date", 50),
         base44.entities.ProjectApplication.filter({ applicant_email: user.email })
@@ -340,16 +340,30 @@ Return only relevant, specific items (not generic terms). Focus on what would he
       const existingIds = new Set(applications.map(a => a.project_id));
       let filtered = results.filter(p => p.created_by !== user.email && !existingIds.has(p.id));
 
-      // Score projects by match with user's skills/interests
       const userSkills = user.skills || [];
       const userInterests = user.interests || [];
+      const userTools = user.tools_technologies || [];
+      // Resume keywords boost matching
+      const resumeKeywords = analysis ? [...(analysis.keywords || []), ...(analysis.skills || []), ...(analysis.tools_technologies || [])] : [];
+
       filtered = filtered.map(p => {
         let score = 0;
         if (p.skills_needed) {
           score += p.skills_needed.filter(s => userSkills.some(us => us.toLowerCase() === s.toLowerCase())).length * 3;
+          // Resume keyword boost
+          score += p.skills_needed.filter(s => resumeKeywords.some(k => k.toLowerCase() === s.toLowerCase())).length * 2;
         }
         if (p.area_of_interest) {
           score += userInterests.filter(i => p.area_of_interest.toLowerCase().includes(i.toLowerCase()) || i.toLowerCase().includes(p.area_of_interest.toLowerCase())).length * 2;
+          score += resumeKeywords.filter(k => p.area_of_interest.toLowerCase().includes(k.toLowerCase())).length;
+        }
+        if (p.tools_needed) {
+          score += p.tools_needed.filter(t => userTools.some(ut => ut.toLowerCase() === t.toLowerCase())).length * 2;
+          score += p.tools_needed.filter(t => resumeKeywords.some(k => k.toLowerCase() === t.toLowerCase())).length;
+        }
+        // Description keyword matching from resume
+        if (analysis && p.description) {
+          score += resumeKeywords.filter(k => p.description.toLowerCase().includes(k.toLowerCase())).length * 0.5;
         }
         return { ...p, _matchScore: score };
       }).sort((a, b) => b._matchScore - a._matchScore);
