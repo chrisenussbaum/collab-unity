@@ -12,8 +12,8 @@ const OptimizedAvatar = ({
   alt, 
   fallback,
   className = '',
-  size = 'default', // 'sm', 'default', 'lg'
-  ...props 
+  size = 'default',
+  ...props
 }) => {
   // Check if the image is from Supabase storage
   const isSupabaseImage = src?.includes('.supabase.co/storage/v1/object/public/');
