@@ -1,3 +1,4 @@
+// OptimizedAvatar v3
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
