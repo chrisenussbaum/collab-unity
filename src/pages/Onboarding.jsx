@@ -1358,7 +1358,7 @@ Return only relevant, specific items (not generic terms). Focus on what would he
               )}
 
               <div className="flex justify-center pt-4 pb-8">
-                <Button onClick={() => { setStep(5); loadCollaborators(completedUser); }} className="cu-button px-10">
+                <Button onClick={() => { setStep(6); loadCollaborators(completedUser); }} className="cu-button px-10">
                   Next: Meet Collaborators <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
