@@ -424,20 +424,28 @@ Return only relevant, specific items (not generic terms). Focus on what would he
       const userSkills = (user.skills || skills || []);
       const userInterests = (user.interests || interests || []);
       const userTools = (user.tools_technologies || tools || []);
+      const resumeKeywords = resumeAnalysis ? [...(resumeAnalysis.keywords || []), ...(resumeAnalysis.skills || []), ...(resumeAnalysis.tools_technologies || [])] : [];
 
       const allProfiles = Array.isArray(profiles) ? profiles : [];
       const filtered = allProfiles.filter(u => u.email !== user.email);
 
-      // Score collaborators by match — but always show some even if score is 0
       let sorted = filtered.map(u => {
         let score = 0;
-        if (u.skills) score += u.skills.filter(s => userSkills.some(us => us.toLowerCase() === s.toLowerCase())).length * 3;
-        if (u.interests) score += u.interests.filter(i => userInterests.some(ui => ui.toLowerCase() === i.toLowerCase())).length * 2;
-        if (u.tools_technologies) score += u.tools_technologies.filter(t => userTools.some(ut => ut.toLowerCase() === t.toLowerCase())).length;
+        if (u.skills) {
+          score += u.skills.filter(s => userSkills.some(us => us.toLowerCase() === s.toLowerCase())).length * 3;
+          score += u.skills.filter(s => resumeKeywords.some(k => k.toLowerCase() === s.toLowerCase())).length * 2;
+        }
+        if (u.interests) {
+          score += u.interests.filter(i => userInterests.some(ui => ui.toLowerCase() === i.toLowerCase())).length * 2;
+          score += u.interests.filter(i => resumeKeywords.some(k => k.toLowerCase() === i.toLowerCase())).length;
+        }
+        if (u.tools_technologies) {
+          score += u.tools_technologies.filter(t => userTools.some(ut => ut.toLowerCase() === t.toLowerCase())).length;
+          score += u.tools_technologies.filter(t => resumeKeywords.some(k => k.toLowerCase() === t.toLowerCase())).length;
+        }
         return { ...u, _matchScore: score };
       }).sort((a, b) => b._matchScore - a._matchScore);
 
-      // Always show up to 12, regardless of match score
       setCollaborators(sorted.slice(0, 12));
     } catch (e) {
       setCollaborators([]);
