@@ -55,10 +55,16 @@ export default function Onboarding({ currentUser }) {
   const [completedUser, setCompletedUser] = useState(null);
   const [hasScrolledPrivacy, setHasScrolledPrivacy] = useState(false);
   const [hasScrolledCookies, setHasScrolledCookies] = useState(false);
+  const [resumeFile, setResumeFile] = useState(null);
+  const [resumeUrl, setResumeUrl] = useState("");
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const [isAnalyzingResume, setIsAnalyzingResume] = useState(false);
+  const [resumeAnalysis, setResumeAnalysis] = useState(null); // extracted skills/interests/tools from resume
   const termsScrollRef = useRef(null);
   const privacyScrollRef = useRef(null);
   const profileImageInputRef = useRef(null);
   const coverImageInputRef = useRef(null);
+  const resumeInputRef = useRef(null);
 
   useEffect(() => {
     if (!currentUser) {
