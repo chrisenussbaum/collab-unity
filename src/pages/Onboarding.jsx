@@ -236,17 +236,97 @@ export default function Onboarding({ currentUser }) {
         cookies_accepted_at: new Date().toISOString()
       });
 
-      // Move to project discovery step (step 4)
       const freshUser = await base44.auth.me();
       setCompletedUser(freshUser);
+      // Move to resume upload step (step 4)
       setStep(4);
-      loadProjects();
     } catch (error) {
       console.error("Error completing onboarding:", error);
       toast.error("Failed to complete onboarding. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please upload a PDF, DOC, DOCX, or TXT file.");
+      return;
+    }
+
+    setResumeFile(file);
+    setIsUploadingResume(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setResumeUrl(file_url);
+      toast.success("Resume uploaded! Analyzing your profile...");
+      
+      // Analyze resume with LLM
+      setIsAnalyzingResume(true);
+      const analysis = await base44.integrations.Core.InvokeLLM({
+        prompt: `Analyze this resume and extract relevant information to help match this person with collaborators and projects on a collaboration platform.
+
+Resume file URL: ${file_url}
+
+Please extract and return structured data with:
+1. skills: List of technical and professional skills mentioned
+2. interests: Topics, domains, or areas of interest inferred from experience and projects
+3. tools_technologies: Specific tools, technologies, frameworks, and software mentioned
+4. keywords: Important keywords and domain terms for project/collaborator matching
+5. summary: A 1-2 sentence professional summary of this person's background
+
+Return only relevant, specific items (not generic terms). Focus on what would help match them with relevant projects and collaborators.`,
+        file_urls: [file_url],
+        response_json_schema: {
+          type: "object",
+          properties: {
+            skills: { type: "array", items: { type: "string" } },
+            interests: { type: "array", items: { type: "string" } },
+            tools_technologies: { type: "array", items: { type: "string" } },
+            keywords: { type: "array", items: { type: "string" } },
+            summary: { type: "string" }
+          }
+        }
+      });
+
+      setResumeAnalysis(analysis);
+
+      // Merge extracted data into existing arrays (deduplicate)
+      if (analysis.skills?.length) {
+        setSkills(prev => [...new Set([...prev, ...analysis.skills.slice(0, 10)])]);
+      }
+      if (analysis.interests?.length) {
+        setInterests(prev => [...new Set([...prev, ...analysis.interests.slice(0, 10)])]);
+      }
+      if (analysis.tools_technologies?.length) {
+        setTools(prev => [...new Set([...prev, ...analysis.tools_technologies.slice(0, 10)])]);
+      }
+
+      // Save resume URL and analysis keywords to user profile for better matching
+      await base44.auth.updateMe({
+        resume_url: file_url,
+        resume_keywords: [...(analysis.keywords || []), ...(analysis.skills || []), ...(analysis.tools_technologies || [])]
+      });
+
+    } catch (error) {
+      console.error("Error uploading/analyzing resume:", error);
+      toast.error("Failed to analyze resume. You can still continue.");
+    } finally {
+      setIsUploadingResume(false);
+      setIsAnalyzingResume(false);
+      if (resumeInputRef.current) resumeInputRef.current.value = '';
+    }
+  };
+
+  const handleResumeStepNext = async () => {
+    // Proceed to projects step, using resume analysis for better matching
+    const user = completedUser || await base44.auth.me();
+    setStep(5);
+    loadProjects(user, resumeAnalysis);
   };
 
   const loadProjects = async () => {
