@@ -1272,6 +1272,124 @@ Return only relevant, specific items (not generic terms). Focus on what would he
           )}
           {step === 4 && (
             <motion.div
+              key="resume-step"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="w-full max-w-lg"
+            >
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FileText className="w-8 h-8 text-white" />
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Upload Your Resume</h1>
+                <p className="text-gray-600 max-w-sm mx-auto">
+                  Optional — upload your resume so we can find the best matching collaborators and projects for you.
+                </p>
+              </div>
+
+              <Card className="cu-card mb-6">
+                <CardContent className="p-6 space-y-5">
+                  {/* Upload area */}
+                  <div
+                    onClick={() => !isUploadingResume && !isAnalyzingResume && resumeInputRef.current?.click()}
+                    className={`cursor-pointer border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+                      resumeFile
+                        ? "border-purple-400 bg-purple-50"
+                        : "border-gray-300 hover:border-purple-400 hover:bg-purple-50/30"
+                    }`}
+                  >
+                    {isUploadingResume || isAnalyzingResume ? (
+                      <div className="space-y-2">
+                        <Loader2 className="w-10 h-10 animate-spin text-purple-600 mx-auto" />
+                        <p className="text-sm font-medium text-purple-700">
+                          {isUploadingResume ? "Uploading resume..." : "Analyzing your resume with AI..."}
+                        </p>
+                        <p className="text-xs text-gray-500">This may take a moment</p>
+                      </div>
+                    ) : resumeFile ? (
+                      <div className="space-y-2">
+                        <CheckCircle className="w-10 h-10 text-purple-600 mx-auto" />
+                        <p className="text-sm font-semibold text-gray-900">{resumeFile.name}</p>
+                        <p className="text-xs text-purple-600">Resume uploaded and analyzed</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => { e.stopPropagation(); resumeInputRef.current?.click(); }}
+                          className="mt-2"
+                        >
+                          <Upload className="w-3 h-3 mr-1" /> Replace
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Upload className="w-10 h-10 text-gray-400 mx-auto" />
+                        <p className="text-sm font-medium text-gray-700">Click to upload your resume</p>
+                        <p className="text-xs text-gray-400">PDF, DOC, DOCX, or TXT — max 5MB</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Analysis results */}
+                  {resumeAnalysis && (
+                    <div className="bg-purple-50 rounded-xl p-4 space-y-3 border border-purple-200">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Sparkles className="w-4 h-4 text-purple-600" />
+                        <p className="text-sm font-semibold text-purple-800">AI Analysis Complete</p>
+                      </div>
+                      {resumeAnalysis.summary && (
+                        <p className="text-xs text-gray-600 italic">"{resumeAnalysis.summary}"</p>
+                      )}
+                      <div className="space-y-2 text-xs text-gray-700">
+                        {resumeAnalysis.skills?.length > 0 && (
+                          <div>
+                            <span className="font-medium text-gray-800">Skills added: </span>
+                            <span className="text-purple-700">{resumeAnalysis.skills.slice(0, 5).join(", ")}{resumeAnalysis.skills.length > 5 ? ` +${resumeAnalysis.skills.length - 5} more` : ""}</span>
+                          </div>
+                        )}
+                        {resumeAnalysis.tools_technologies?.length > 0 && (
+                          <div>
+                            <span className="font-medium text-gray-800">Tools added: </span>
+                            <span className="text-blue-700">{resumeAnalysis.tools_technologies.slice(0, 5).join(", ")}{resumeAnalysis.tools_technologies.length > 5 ? ` +${resumeAnalysis.tools_technologies.length - 5} more` : ""}</span>
+                          </div>
+                        )}
+                        {resumeAnalysis.interests?.length > 0 && (
+                          <div>
+                            <span className="font-medium text-gray-800">Interests added: </span>
+                            <span className="text-indigo-700">{resumeAnalysis.interests.slice(0, 5).join(", ")}{resumeAnalysis.interests.length > 5 ? ` +${resumeAnalysis.interests.length - 5} more` : ""}</span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500">Your profile has been enhanced with resume data for better matching.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleResumeStepNext}
+                  className="sm:flex-1"
+                  disabled={isUploadingResume || isAnalyzingResume}
+                >
+                  Skip for Now
+                </Button>
+                <Button
+                  className="cu-button sm:flex-1"
+                  onClick={handleResumeStepNext}
+                  disabled={isUploadingResume || isAnalyzingResume}
+                >
+                  {resumeFile ? "Continue" : "Continue Without Resume"} <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 5 && (
+            <motion.div
               key="projects-step"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
