@@ -7,9 +7,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
  * Wraps the shadcn Avatar component but with optimized image loading
  */
 
-const OptimizedAvatar = ({ 
-  src, 
-  alt, 
+const OptimizedAvatar = ({
+  src,
+  alt,
   fallback,
   className = '',
   size = 'default',
