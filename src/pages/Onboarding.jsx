@@ -20,7 +20,7 @@ import ArrayInputWithSearch from "@/components/ArrayInputWithSearch";
 
 export default function Onboarding({ currentUser }) {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1 = profile, 2 = terms, 3 = cookies, 4 = projects, 5 = collaborators
+  const [step, setStep] = useState(1); // 1 = profile, 2 = terms, 3 = cookies, 4 = resume, 5 = projects, 6 = collaborators
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [profileImage, setProfileImage] = useState("");
