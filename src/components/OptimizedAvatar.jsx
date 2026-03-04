@@ -1,32 +1,46 @@
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-function OptimizedAvatar(inputProps) {
-  var src = inputProps.src || null;
-  var alt = inputProps.alt || '';
-  var fallback = inputProps.fallback || '';
-  var className = inputProps.className || '';
-  var size = inputProps.size || 'default';
+const OptimizedAvatar = ({
+  src,
+  alt,
+  fallback,
+  className = '',
+  size = 'default',
+  ...props
+}) => {
+  const isSupabaseImage = src?.includes('.supabase.co/storage/v1/object/public/');
 
-  var sizeMap = { xs: 32, sm: 48, default: 96, lg: 128, xl: 256 };
-  var px = sizeMap[size] || 96;
-
-  var optimizedSrc = null;
-  if (src) {
-    if (src.indexOf('.supabase.co/storage/v1/object/public/') !== -1) {
-      var transformUrl = src.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
-      optimizedSrc = transformUrl + '?width=' + px + '&height=' + px + '&quality=90&format=webp';
-    } else {
-      optimizedSrc = src;
+  const getOptimizedAvatarUrl = (originalUrl) => {
+    if (!isSupabaseImage || !originalUrl) return originalUrl;
+    try {
+      const avatarSize = { 'xs': 32, 'sm': 48, 'default': 96, 'lg': 128, 'xl': 256 }[size] || 96;
+      const transformUrl = originalUrl.replace(
+        '/storage/v1/object/public/',
+        '/storage/v1/render/image/public/'
+      );
+      const params = new URLSearchParams();
+      params.append('width', avatarSize);
+      params.append('height', avatarSize);
+      params.append('quality', '90');
+      params.append('format', 'webp');
+      params.append('t', Date.now());
+      return `${transformUrl}?${params.toString()}`;
+    } catch (e) {
+      return originalUrl;
     }
-  }
+  };
+
+  const optimizedSrc = src ? getOptimizedAvatarUrl(src) : null;
 
   return (
-    <Avatar className={className}>
-      {optimizedSrc ? <AvatarImage src={optimizedSrc} alt={alt} className="object-cover" /> : null}
+    <Avatar className={className} {...props}>
+      {optimizedSrc && (
+        <AvatarImage src={optimizedSrc} alt={alt} className="object-cover" />
+      )}
       <AvatarFallback>{fallback}</AvatarFallback>
     </Avatar>
   );
-}
+};
 
 export default OptimizedAvatar;
