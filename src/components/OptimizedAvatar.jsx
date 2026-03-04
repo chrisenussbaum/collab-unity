@@ -14,7 +14,7 @@ const OptimizedAvatar = ({
   const getOptimizedAvatarUrl = (originalUrl) => {
     if (!isSupabaseImage || !originalUrl) return originalUrl;
     try {
-      const avatarSize = { 'xs': 32, 'sm': 48, 'default': 96, 'lg': 128, 'xl': 256 }[size] || 96;
+      const avatarSize = { xs: 32, sm: 48, default: 96, lg: 128, xl: 256 }[size] || 96;
       const transformUrl = originalUrl.replace(
         '/storage/v1/object/public/',
         '/storage/v1/render/image/public/'
