@@ -20,7 +20,7 @@ import ArrayInputWithSearch from "@/components/ArrayInputWithSearch";
 
 export default function Onboarding({ currentUser }) {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1 = profile, 2 = terms, 3 = cookies, 4 = resume, 5 = projects, 6 = collaborators
+  const [step, setStep] = useState(1); // 1 = profile, 2 = terms, 3 = cookies, 4 = projects, 5 = collaborators
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [profileImage, setProfileImage] = useState("");
@@ -55,16 +55,10 @@ export default function Onboarding({ currentUser }) {
   const [completedUser, setCompletedUser] = useState(null);
   const [hasScrolledPrivacy, setHasScrolledPrivacy] = useState(false);
   const [hasScrolledCookies, setHasScrolledCookies] = useState(false);
-  const [resumeFile, setResumeFile] = useState(null);
-  const [resumeUrl, setResumeUrl] = useState("");
-  const [isUploadingResume, setIsUploadingResume] = useState(false);
-  const [isAnalyzingResume, setIsAnalyzingResume] = useState(false);
-  const [resumeAnalysis, setResumeAnalysis] = useState(null); // extracted skills/interests/tools from resume
   const termsScrollRef = useRef(null);
   const privacyScrollRef = useRef(null);
   const profileImageInputRef = useRef(null);
   const coverImageInputRef = useRef(null);
-  const resumeInputRef = useRef(null);
 
   useEffect(() => {
     if (!currentUser) {
@@ -236,10 +230,11 @@ export default function Onboarding({ currentUser }) {
         cookies_accepted_at: new Date().toISOString()
       });
 
+      // Move to project discovery step (step 4)
       const freshUser = await base44.auth.me();
       setCompletedUser(freshUser);
-      // Move to resume upload step (step 4)
       setStep(4);
+      loadProjects();
     } catch (error) {
       console.error("Error completing onboarding:", error);
       toast.error("Failed to complete onboarding. Please try again.");
@@ -248,91 +243,10 @@ export default function Onboarding({ currentUser }) {
     }
   };
 
-  const handleResumeUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
-    if (!validTypes.includes(file.type)) {
-      toast.error("Please upload a PDF, DOC, DOCX, or TXT file.");
-      return;
-    }
-
-    setResumeFile(file);
-    setIsUploadingResume(true);
-    try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setResumeUrl(file_url);
-      toast.success("Resume uploaded! Analyzing your profile...");
-      
-      // Analyze resume with LLM
-      setIsAnalyzingResume(true);
-      const analysis = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analyze this resume and extract relevant information to help match this person with collaborators and projects on a collaboration platform.
-
-Resume file URL: ${file_url}
-
-Please extract and return structured data with:
-1. skills: List of technical and professional skills mentioned
-2. interests: Topics, domains, or areas of interest inferred from experience and projects
-3. tools_technologies: Specific tools, technologies, frameworks, and software mentioned
-4. keywords: Important keywords and domain terms for project/collaborator matching
-5. summary: A 1-2 sentence professional summary of this person's background
-
-Return only relevant, specific items (not generic terms). Focus on what would help match them with relevant projects and collaborators.`,
-        file_urls: [file_url],
-        response_json_schema: {
-          type: "object",
-          properties: {
-            skills: { type: "array", items: { type: "string" } },
-            interests: { type: "array", items: { type: "string" } },
-            tools_technologies: { type: "array", items: { type: "string" } },
-            keywords: { type: "array", items: { type: "string" } },
-            summary: { type: "string" }
-          }
-        }
-      });
-
-      setResumeAnalysis(analysis);
-
-      // Merge extracted data into existing arrays (deduplicate)
-      if (analysis.skills?.length) {
-        setSkills(prev => [...new Set([...prev, ...analysis.skills.slice(0, 10)])]);
-      }
-      if (analysis.interests?.length) {
-        setInterests(prev => [...new Set([...prev, ...analysis.interests.slice(0, 10)])]);
-      }
-      if (analysis.tools_technologies?.length) {
-        setTools(prev => [...new Set([...prev, ...analysis.tools_technologies.slice(0, 10)])]);
-      }
-
-      // Save resume URL and analysis keywords to user profile for better matching
-      await base44.auth.updateMe({
-        resume_url: file_url,
-        resume_keywords: [...(analysis.keywords || []), ...(analysis.skills || []), ...(analysis.tools_technologies || [])]
-      });
-
-    } catch (error) {
-      console.error("Error uploading/analyzing resume:", error);
-      toast.error("Failed to analyze resume. You can still continue.");
-    } finally {
-      setIsUploadingResume(false);
-      setIsAnalyzingResume(false);
-      if (resumeInputRef.current) resumeInputRef.current.value = '';
-    }
-  };
-
-  const handleResumeStepNext = async () => {
-    // Proceed to projects step, using resume analysis for better matching
-    const user = completedUser || await base44.auth.me();
-    setStep(5);
-    loadProjects(user, resumeAnalysis);
-  };
-
-  const loadProjects = async (resolvedUser, analysis) => {
+  const loadProjects = async () => {
     setIsLoadingProjects(true);
     try {
-      const user = resolvedUser || completedUser || await base44.auth.me();
+      const user = completedUser || await base44.auth.me();
       const [results, applications] = await Promise.all([
         base44.entities.Project.filter({ status: "seeking_collaborators", is_visible_on_feed: true }, "-created_date", 50),
         base44.entities.ProjectApplication.filter({ applicant_email: user.email })
@@ -340,30 +254,16 @@ Return only relevant, specific items (not generic terms). Focus on what would he
       const existingIds = new Set(applications.map(a => a.project_id));
       let filtered = results.filter(p => p.created_by !== user.email && !existingIds.has(p.id));
 
+      // Score projects by match with user's skills/interests
       const userSkills = user.skills || [];
       const userInterests = user.interests || [];
-      const userTools = user.tools_technologies || [];
-      // Resume keywords boost matching
-      const resumeKeywords = analysis ? [...(analysis.keywords || []), ...(analysis.skills || []), ...(analysis.tools_technologies || [])] : [];
-
       filtered = filtered.map(p => {
         let score = 0;
         if (p.skills_needed) {
           score += p.skills_needed.filter(s => userSkills.some(us => us.toLowerCase() === s.toLowerCase())).length * 3;
-          // Resume keyword boost
-          score += p.skills_needed.filter(s => resumeKeywords.some(k => k.toLowerCase() === s.toLowerCase())).length * 2;
         }
         if (p.area_of_interest) {
           score += userInterests.filter(i => p.area_of_interest.toLowerCase().includes(i.toLowerCase()) || i.toLowerCase().includes(p.area_of_interest.toLowerCase())).length * 2;
-          score += resumeKeywords.filter(k => p.area_of_interest.toLowerCase().includes(k.toLowerCase())).length;
-        }
-        if (p.tools_needed) {
-          score += p.tools_needed.filter(t => userTools.some(ut => ut.toLowerCase() === t.toLowerCase())).length * 2;
-          score += p.tools_needed.filter(t => resumeKeywords.some(k => k.toLowerCase() === t.toLowerCase())).length;
-        }
-        // Description keyword matching from resume
-        if (analysis && p.description) {
-          score += resumeKeywords.filter(k => p.description.toLowerCase().includes(k.toLowerCase())).length * 0.5;
         }
         return { ...p, _matchScore: score };
       }).sort((a, b) => b._matchScore - a._matchScore);
@@ -424,28 +324,20 @@ Return only relevant, specific items (not generic terms). Focus on what would he
       const userSkills = (user.skills || skills || []);
       const userInterests = (user.interests || interests || []);
       const userTools = (user.tools_technologies || tools || []);
-      const resumeKeywords = resumeAnalysis ? [...(resumeAnalysis.keywords || []), ...(resumeAnalysis.skills || []), ...(resumeAnalysis.tools_technologies || [])] : [];
 
       const allProfiles = Array.isArray(profiles) ? profiles : [];
       const filtered = allProfiles.filter(u => u.email !== user.email);
 
+      // Score collaborators by match — but always show some even if score is 0
       let sorted = filtered.map(u => {
         let score = 0;
-        if (u.skills) {
-          score += u.skills.filter(s => userSkills.some(us => us.toLowerCase() === s.toLowerCase())).length * 3;
-          score += u.skills.filter(s => resumeKeywords.some(k => k.toLowerCase() === s.toLowerCase())).length * 2;
-        }
-        if (u.interests) {
-          score += u.interests.filter(i => userInterests.some(ui => ui.toLowerCase() === i.toLowerCase())).length * 2;
-          score += u.interests.filter(i => resumeKeywords.some(k => k.toLowerCase() === i.toLowerCase())).length;
-        }
-        if (u.tools_technologies) {
-          score += u.tools_technologies.filter(t => userTools.some(ut => ut.toLowerCase() === t.toLowerCase())).length;
-          score += u.tools_technologies.filter(t => resumeKeywords.some(k => k.toLowerCase() === t.toLowerCase())).length;
-        }
+        if (u.skills) score += u.skills.filter(s => userSkills.some(us => us.toLowerCase() === s.toLowerCase())).length * 3;
+        if (u.interests) score += u.interests.filter(i => userInterests.some(ui => ui.toLowerCase() === i.toLowerCase())).length * 2;
+        if (u.tools_technologies) score += u.tools_technologies.filter(t => userTools.some(ut => ut.toLowerCase() === t.toLowerCase())).length;
         return { ...u, _matchScore: score };
       }).sort((a, b) => b._matchScore - a._matchScore);
 
+      // Always show up to 12, regardless of match score
       setCollaborators(sorted.slice(0, 12));
     } catch (e) {
       setCollaborators([]);
@@ -581,13 +473,6 @@ Return only relevant, specific items (not generic terms). Focus on what would he
         accept="image/png, image/jpeg, image/jpg"
         ref={coverImageInputRef}
         onChange={handleCoverUpload}
-        className="hidden"
-      />
-      <input
-        type="file"
-        accept=".pdf,.doc,.docx,.txt"
-        ref={resumeInputRef}
-        onChange={handleResumeUpload}
         className="hidden"
       />
 
@@ -1272,124 +1157,6 @@ Return only relevant, specific items (not generic terms). Focus on what would he
           )}
           {step === 4 && (
             <motion.div
-              key="resume-step"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
-              className="w-full max-w-lg"
-            >
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FileText className="w-8 h-8 text-white" />
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Upload Your Resume</h1>
-                <p className="text-gray-600 max-w-sm mx-auto">
-                  Optional — upload your resume so we can find the best matching collaborators and projects for you.
-                </p>
-              </div>
-
-              <Card className="cu-card mb-6">
-                <CardContent className="p-6 space-y-5">
-                  {/* Upload area */}
-                  <div
-                    onClick={() => !isUploadingResume && !isAnalyzingResume && resumeInputRef.current?.click()}
-                    className={`cursor-pointer border-2 border-dashed rounded-xl p-8 text-center transition-all ${
-                      resumeFile
-                        ? "border-purple-400 bg-purple-50"
-                        : "border-gray-300 hover:border-purple-400 hover:bg-purple-50/30"
-                    }`}
-                  >
-                    {isUploadingResume || isAnalyzingResume ? (
-                      <div className="space-y-2">
-                        <Loader2 className="w-10 h-10 animate-spin text-purple-600 mx-auto" />
-                        <p className="text-sm font-medium text-purple-700">
-                          {isUploadingResume ? "Uploading resume..." : "Analyzing your resume with AI..."}
-                        </p>
-                        <p className="text-xs text-gray-500">This may take a moment</p>
-                      </div>
-                    ) : resumeFile ? (
-                      <div className="space-y-2">
-                        <CheckCircle className="w-10 h-10 text-purple-600 mx-auto" />
-                        <p className="text-sm font-semibold text-gray-900">{resumeFile.name}</p>
-                        <p className="text-xs text-purple-600">Resume uploaded and analyzed</p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => { e.stopPropagation(); resumeInputRef.current?.click(); }}
-                          className="mt-2"
-                        >
-                          <Upload className="w-3 h-3 mr-1" /> Replace
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <Upload className="w-10 h-10 text-gray-400 mx-auto" />
-                        <p className="text-sm font-medium text-gray-700">Click to upload your resume</p>
-                        <p className="text-xs text-gray-400">PDF, DOC, DOCX, or TXT — max 5MB</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Analysis results */}
-                  {resumeAnalysis && (
-                    <div className="bg-purple-50 rounded-xl p-4 space-y-3 border border-purple-200">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Sparkles className="w-4 h-4 text-purple-600" />
-                        <p className="text-sm font-semibold text-purple-800">AI Analysis Complete</p>
-                      </div>
-                      {resumeAnalysis.summary && (
-                        <p className="text-xs text-gray-600 italic">"{resumeAnalysis.summary}"</p>
-                      )}
-                      <div className="space-y-2 text-xs text-gray-700">
-                        {resumeAnalysis.skills?.length > 0 && (
-                          <div>
-                            <span className="font-medium text-gray-800">Skills added: </span>
-                            <span className="text-purple-700">{resumeAnalysis.skills.slice(0, 5).join(", ")}{resumeAnalysis.skills.length > 5 ? ` +${resumeAnalysis.skills.length - 5} more` : ""}</span>
-                          </div>
-                        )}
-                        {resumeAnalysis.tools_technologies?.length > 0 && (
-                          <div>
-                            <span className="font-medium text-gray-800">Tools added: </span>
-                            <span className="text-blue-700">{resumeAnalysis.tools_technologies.slice(0, 5).join(", ")}{resumeAnalysis.tools_technologies.length > 5 ? ` +${resumeAnalysis.tools_technologies.length - 5} more` : ""}</span>
-                          </div>
-                        )}
-                        {resumeAnalysis.interests?.length > 0 && (
-                          <div>
-                            <span className="font-medium text-gray-800">Interests added: </span>
-                            <span className="text-indigo-700">{resumeAnalysis.interests.slice(0, 5).join(", ")}{resumeAnalysis.interests.length > 5 ? ` +${resumeAnalysis.interests.length - 5} more` : ""}</span>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500">Your profile has been enhanced with resume data for better matching.</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleResumeStepNext}
-                  className="sm:flex-1"
-                  disabled={isUploadingResume || isAnalyzingResume}
-                >
-                  Skip for Now
-                </Button>
-                <Button
-                  className="cu-button sm:flex-1"
-                  onClick={handleResumeStepNext}
-                  disabled={isUploadingResume || isAnalyzingResume}
-                >
-                  {resumeFile ? "Continue" : "Continue Without Resume"} <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </motion.div>
-          )}
-
-          {step === 5 && (
-            <motion.div
               key="projects-step"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1491,14 +1258,14 @@ Return only relevant, specific items (not generic terms). Focus on what would he
               )}
 
               <div className="flex justify-center pt-4 pb-8">
-                <Button onClick={() => { setStep(6); loadCollaborators(completedUser); }} className="cu-button px-10">
+                <Button onClick={() => { setStep(5); loadCollaborators(completedUser); }} className="cu-button px-10">
                   Next: Meet Collaborators <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
             </motion.div>
           )}
 
-          {step === 6 && (
+          {step === 5 && (
             <motion.div
               key="collaborators-step"
               initial={{ opacity: 0, y: 20 }}
