@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, Send, Search, Plus, Users, Trash2, Smile, MoreVertical, Settings, ArrowLeft, ArrowDown, Briefcase } from "lucide-react";
+import { MessageCircle, Send, Search, Plus, Users, Trash2, Smile, MoreVertical, Settings, ArrowLeft, ArrowDown } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -62,12 +62,6 @@ export default function Chat({ currentUser, authIsLoading }) {
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const emojiPickerRef = useRef(null);
-
-  const [showProjectMentions, setShowProjectMentions] = useState(false);
-  const [projectList, setProjectList] = useState([]);
-  const [filteredProjects, setFilteredProjects] = useState([]);
-  const [projectMentionQuery, setProjectMentionQuery] = useState('');
-  const messageInputRef = useRef(null);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -415,53 +409,8 @@ export default function Chat({ currentUser, authIsLoading }) {
   };
 
   const handleMessageChange = (e) => {
-    const value = e.target.value;
-    setNewMessage(value);
+    setNewMessage(e.target.value);
     handleTyping();
-
-    // Detect @project mention
-    const cursorPos = e.target.selectionStart;
-    const textToCursor = value.substring(0, cursorPos);
-    const atMatch = textToCursor.match(/@([^@\s]*)$/);
-
-    if (atMatch) {
-      const query = atMatch[1];
-      setProjectMentionQuery(query);
-      setShowProjectMentions(true);
-      if (projectList.length === 0) {
-        base44.entities.Project.filter({ is_visible_on_feed: true }).then(projects => {
-          setProjectList(projects || []);
-          setFilteredProjects((projects || []).filter(p =>
-            p.title.toLowerCase().includes(query.toLowerCase())
-          ).slice(0, 6));
-        }).catch(err => console.error("Error loading projects for mention:", err));
-      } else {
-        setFilteredProjects(projectList.filter(p =>
-          p.title.toLowerCase().includes(query.toLowerCase())
-        ).slice(0, 6));
-      }
-    } else {
-      setShowProjectMentions(false);
-      setProjectMentionQuery('');
-      setFilteredProjects([]);
-    }
-  };
-
-  const handleProjectMentionSelect = (project) => {
-    const projectUrl = `${window.location.origin}${createPageUrl(`ProjectDetail?id=${project.id}`)}`;
-    const mentionText = `📌 ${project.title} — ${projectUrl}`;
-    const input = messageInputRef.current;
-    const cursorPos = input ? input.selectionStart : newMessage.length;
-    const textToCursor = newMessage.substring(0, cursorPos);
-    const lastAtIndex = textToCursor.lastIndexOf('@');
-    if (lastAtIndex !== -1) {
-      const newContent = newMessage.substring(0, lastAtIndex) + mentionText + ' ' + newMessage.substring(cursorPos);
-      setNewMessage(newContent);
-    }
-    setShowProjectMentions(false);
-    setProjectMentionQuery('');
-    setFilteredProjects([]);
-    setTimeout(() => { if (input) input.focus(); }, 0);
   };
 
   const handleMediaSelect = async (file, mediaType) => {
@@ -1451,49 +1400,13 @@ export default function Chat({ currentUser, authIsLoading }) {
                         </div>
                       </div>
 
-                      <div className="flex-1 relative">
-                        {showProjectMentions && filteredProjects.length > 0 && (
-                          <div className="absolute bottom-full mb-2 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-56 overflow-y-auto">
-                            <div className="px-3 py-1.5 text-xs font-medium text-gray-500 border-b bg-gray-50 rounded-t-lg">
-                              📌 Mention a project
-                            </div>
-                            {filteredProjects.map((project) => (
-                              <button
-                                key={project.id}
-                                type="button"
-                                onMouseDown={(e) => e.preventDefault()}
-                                onClick={() => handleProjectMentionSelect(project)}
-                                className="w-full px-3 py-2 text-left hover:bg-purple-50 flex items-center space-x-3 transition-colors border-b last:border-b-0"
-                              >
-                                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                  {project.logo_url ? (
-                                    <img src={project.logo_url} alt="" className="w-full h-full object-cover" />
-                                  ) : (
-                                    <Briefcase className="w-4 h-4 text-purple-600" />
-                                  )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-gray-900 truncate">{project.title}</p>
-                                  <p className="text-xs text-gray-500 truncate">{project.status?.replace(/_/g, ' ')}</p>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        <Input
-                          ref={messageInputRef}
-                          placeholder="Type a message... (@ to mention a project)"
-                          value={newMessage}
-                          onChange={handleMessageChange}
-                          onKeyDown={(e) => {
-                            if (showProjectMentions && e.key === 'Escape') {
-                              setShowProjectMentions(false);
-                            }
-                          }}
-                          disabled={isSending || isUploadingMedia}
-                          className="w-full"
-                        />
-                      </div>
+                      <Input
+                        placeholder="Type a message..."
+                        value={newMessage}
+                        onChange={handleMessageChange}
+                        disabled={isSending || isUploadingMedia}
+                        className="flex-1"
+                      />
                       <Button 
                         type="submit" 
                         disabled={(!newMessage.trim() && !isUploadingMedia) || isSending}
