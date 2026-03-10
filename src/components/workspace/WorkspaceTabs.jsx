@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, CheckSquare, Wrench, FileStack, Activity, Lightbulb, BookOpen, Flag, LayoutGrid } from 'lucide-react';
+import { CheckSquare, Wrench, FileStack, Activity, Lightbulb, BookOpen, Flag, LayoutGrid } from 'lucide-react';
 import HorizontalScrollContainer from '@/components/HorizontalScrollContainer';
-import DiscussionBoard from './DiscussionBoard';
 import TaskBoard from './TaskBoard';
 import ToolsHub from './ToolsHub';
 import AssetsTab from './AssetsTab';
@@ -19,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, isCollaborator, isProjectOwner }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'discussion');
+  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'overview');
   const tabsContainerRef = useRef(null);
   const scrollPositionRef = useRef(0);
   const [tabPresence, setTabPresence] = useState({});
@@ -139,7 +138,6 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
     { value: "milestones", icon: Flag, label: "Milestones", title: "Major goals and key achievements" },
     { value: "tasks", icon: CheckSquare, label: "Tasks", title: "Action items and daily work" },
     { value: "planning", icon: Lightbulb, label: "Planning", title: "Plan and brainstorm project steps" },
-    { value: "discussion", icon: MessageSquare, label: "Discussion", title: "Project discussion and comments" },
     { value: "assets", icon: FileStack, label: "Assets", title: "Manage project files, assets, and links" },
     { value: "tools", icon: Wrench, label: "Tools", title: "Project tools and integrations" },
     { value: "activity", icon: Activity, label: "Activity", title: "Project activity timeline and history" },
@@ -279,21 +277,6 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
                 <IdeationHub 
                   project={project} 
                   currentUser={currentUser} 
-                  isCollaborator={isCollaborator}
-                  isProjectOwner={isProjectOwner}
-                  projectOwnerName={projectOwnerName}
-                />
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="discussion" className="mt-0" forceMount={activeTab === "discussion"}>
-            {activeTab === "discussion" && (
-              <div className="w-full max-w-none">
-                <DiscussionBoard 
-                  project={project} 
-                  currentUser={currentUser} 
-                  onProjectUpdate={onProjectUpdate} 
                   isCollaborator={isCollaborator}
                   isProjectOwner={isProjectOwner}
                   projectOwnerName={projectOwnerName}
