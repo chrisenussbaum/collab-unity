@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import {
   Code2, FileText, Video, Music, Palette, Globe, BookOpen,
   ExternalLink, Plus, ChevronDown, ChevronUp, Hammer, Layers,
-  PenTool, Film, Mic, Gamepad2, Database, Smartphone, Cpu, Eye
+  PenTool, Film, Mic, Gamepad2, Database, Smartphone, Cpu, Eye,
+  Search, RefreshCw, AlertTriangle, ArrowRight, X
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -153,6 +154,20 @@ const PROJECT_TYPES = [
   },
 ];
 
+// Platforms known to support iframe embedding
+const EMBEDDABLE_PLATFORMS = [
+  { name: "StackBlitz", url: "https://stackblitz.com/edit/react", domain: "stackblitz.com" },
+  { name: "CodeSandbox", url: "https://codesandbox.io/s/new", domain: "codesandbox.io" },
+  { name: "Replit", url: "https://replit.com", domain: "replit.com" },
+  { name: "Miro", url: "https://miro.com", domain: "miro.com" },
+  { name: "Figma", url: "https://figma.com", domain: "figma.com" },
+  { name: "Canva", url: "https://canva.com", domain: "canva.com" },
+  { name: "BandLab", url: "https://bandlab.com", domain: "bandlab.com" },
+  { name: "Jupyter", url: "https://jupyter.org/try", domain: "jupyter.org" },
+  { name: "Notion", url: "https://notion.so", domain: "notion.so" },
+  { name: "Loom", url: "https://loom.com", domain: "loom.com" },
+];
+
 export default function BuildTab({ project, currentUser, isCollaborator, isProjectOwner }) {
   const [selectedType, setSelectedType] = useState(null);
   const [buildNotes, setBuildNotes] = useState("");
@@ -161,8 +176,46 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
   const [savedLinks, setSavedLinks] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [showAddLink, setShowAddLink] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [activePreviewUrl, setActivePreviewUrl] = useState("");
+  const [previewBlocked, setPreviewBlocked] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [platformSearch, setPlatformSearch] = useState("");
+  const iframeRef = useRef(null);
+  const loadTimerRef = useRef(null);
 
   const activeType = PROJECT_TYPES.find(t => t.id === selectedType);
+
+  const handleLaunchPreview = (url) => {
+    try {
+      const parsed = new URL(url.startsWith("http") ? url : `https://${url}`);
+      const fullUrl = parsed.href;
+      setActivePreviewUrl(fullUrl);
+      setPreviewBlocked(false);
+      setPreviewLoading(true);
+      clearTimeout(loadTimerRef.current);
+      // If iframe hasn't signaled load in 6s, assume it's blocked
+      loadTimerRef.current = setTimeout(() => {
+        setPreviewBlocked(true);
+        setPreviewLoading(false);
+      }, 6000);
+    } catch {
+      toast.error("Please enter a valid URL.");
+    }
+  };
+
+  const handleIframeLoad = () => {
+    clearTimeout(loadTimerRef.current);
+    setPreviewLoading(false);
+    // Can't reliably detect X-Frame-Options block, so we keep the warning visible
+    setPreviewBlocked(false);
+  };
+
+  const filteredPlatforms = EMBEDDABLE_PLATFORMS.filter(p =>
+    p.name.toLowerCase().includes(platformSearch.toLowerCase())
+  );
+
+  useEffect(() => () => clearTimeout(loadTimerRef.current), []);
 
   const handleAddCustomLink = () => {
     if (!customLink.trim()) return;
@@ -274,32 +327,146 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
       {activeType && (
         <Card className="cu-card">
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center">
-                <Eye className="w-4 h-4 mr-2 text-purple-600" />
-                Live Preview — {activeType.previewLabel}
-              </CardTitle>
-              <a
-                href={activeType.previewUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1"
-              >
-                Open full screen <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-            <CardDescription>Work directly in your build environment — embedded live within your workspace.</CardDescription>
+            <CardTitle className="text-base flex items-center">
+              <Eye className="w-4 h-4 mr-2 text-purple-600" />
+              Live Preview — Platform Launcher
+            </CardTitle>
+            <CardDescription>
+              Search for any platform, paste a URL, or pick from the suggestions below. Sign in within the preview to start building.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="p-0 pb-0 overflow-hidden rounded-b-xl">
-            <iframe
-              key={activeType.id}
-              src={activeType.previewUrl}
-              title={`${activeType.label} Live Preview`}
-              className="w-full border-0 rounded-b-xl"
-              style={{ height: '600px' }}
-              allow="accelerometer; camera; encrypted-media; geolocation; gyroscope; microphone; midi; clipboard-read; clipboard-write"
-              allowFullScreen
-            />
+          <CardContent className="space-y-4">
+            {/* URL Input Bar */}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={previewUrl}
+                  onChange={(e) => setPreviewUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleLaunchPreview(previewUrl)}
+                  placeholder="Search a platform or paste a URL (e.g. medium.com)"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+                />
+              </div>
+              <Button
+                onClick={() => handleLaunchPreview(previewUrl)}
+                disabled={!previewUrl.trim()}
+                className="cu-button flex-shrink-0"
+                size="sm"
+              >
+                Launch <ArrowRight className="w-3 h-3 ml-1" />
+              </Button>
+              {activePreviewUrl && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setActivePreviewUrl(""); setPreviewBlocked(false); }}
+                  className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Suggested Embeddable Platforms */}
+            {!activePreviewUrl && (
+              <div>
+                <p className="text-xs font-medium text-gray-500 mb-2">Suggested platforms (embed-friendly)</p>
+                <div className="flex flex-wrap gap-2">
+                  {filteredPlatforms.map((p) => (
+                    <button
+                      key={p.name}
+                      onClick={() => { setPreviewUrl(p.url); handleLaunchPreview(p.url); }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-200 rounded-full text-sm text-gray-700 hover:text-purple-700 transition-all"
+                    >
+                      <img
+                        src={`https://www.google.com/s2/favicons?domain=${p.domain}&sz=16`}
+                        alt=""
+                        className="w-4 h-4"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                      {p.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* iframe Preview */}
+            {activePreviewUrl && (
+              <div className="relative rounded-xl overflow-hidden border border-gray-200">
+                {/* Top bar */}
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 border-b border-gray-200">
+                  <div className="flex gap-1">
+                    <span className="w-3 h-3 rounded-full bg-red-400" />
+                    <span className="w-3 h-3 rounded-full bg-yellow-400" />
+                    <span className="w-3 h-3 rounded-full bg-green-400" />
+                  </div>
+                  <div className="flex-1 bg-white rounded px-2 py-0.5 text-xs text-gray-500 truncate border border-gray-200">
+                    {activePreviewUrl}
+                  </div>
+                  <button
+                    onClick={() => handleLaunchPreview(activePreviewUrl)}
+                    className="text-gray-400 hover:text-gray-600"
+                    title="Reload"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </button>
+                  <a
+                    href={activePreviewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-400 hover:text-purple-600"
+                    title="Open in new tab"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+
+                {/* Loading indicator */}
+                {previewLoading && (
+                  <div className="absolute inset-0 top-9 bg-white/80 flex items-center justify-center z-10">
+                    <div className="text-center">
+                      <RefreshCw className="w-6 h-6 text-purple-500 animate-spin mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">Loading platform...</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Embedding blocked notice */}
+                {previewBlocked && (
+                  <div className="absolute inset-0 top-9 bg-white flex flex-col items-center justify-center z-10 p-6 text-center">
+                    <AlertTriangle className="w-10 h-10 text-amber-400 mb-3" />
+                    <h3 className="font-semibold text-gray-800 mb-1">This site blocks embedding</h3>
+                    <p className="text-sm text-gray-500 mb-4 max-w-sm">
+                      Many platforms (Medium, GitHub, YouTube, etc.) prevent being embedded for security reasons. You can still work on this platform — just open it in a new tab.
+                    </p>
+                    <a
+                      href={activePreviewUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="cu-button cu-button-sm flex items-center gap-2"
+                    >
+                      Open {new URL(activePreviewUrl).hostname.replace("www.", "")} <ExternalLink className="w-3 h-3" />
+                    </a>
+                    <p className="text-xs text-gray-400 mt-3">Share your work-in-progress link in the Team Build Links section below.</p>
+                  </div>
+                )}
+
+                <iframe
+                  ref={iframeRef}
+                  key={activePreviewUrl}
+                  src={activePreviewUrl}
+                  title="Live Preview"
+                  className="w-full border-0"
+                  style={{ height: '580px' }}
+                  onLoad={handleIframeLoad}
+                  allow="accelerometer; camera; encrypted-media; geolocation; gyroscope; microphone; midi; clipboard-read; clipboard-write"
+                  allowFullScreen
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
