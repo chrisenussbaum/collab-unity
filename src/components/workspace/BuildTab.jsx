@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import {
   Code2, FileText, Video, Music, Palette, Globe, BookOpen,
   ExternalLink, Plus, ChevronDown, ChevronUp, Hammer, Layers,
-  PenTool, Film, Mic, Gamepad2, Database, Smartphone, Cpu
+  PenTool, Film, Mic, Gamepad2, Database, Smartphone, Cpu, Eye
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -21,13 +21,15 @@ const PROJECT_TYPES = [
     color: "bg-blue-100 text-blue-700 border-blue-200",
     activeColor: "bg-blue-600 text-white border-blue-600",
     description: "Software, web apps, scripts, APIs",
+    previewUrl: "https://stackblitz.com/edit/react?embed=1&file=src/App.js",
+    previewLabel: "React Sandbox (StackBlitz)",
     tools: [
-      { name: "GitHub", url: "https://github.com", icon: "🐙" },
-      { name: "CodeSandbox", url: "https://codesandbox.io", icon: "📦" },
-      { name: "Replit", url: "https://replit.com", icon: "🔁" },
-      { name: "StackBlitz", url: "https://stackblitz.com", icon: "⚡" },
-      { name: "Vercel", url: "https://vercel.com", icon: "▲" },
-      { name: "Railway", url: "https://railway.app", icon: "🚂" },
+      { name: "GitHub", url: "https://github.com" },
+      { name: "CodeSandbox", url: "https://codesandbox.io" },
+      { name: "Replit", url: "https://replit.com" },
+      { name: "StackBlitz", url: "https://stackblitz.com" },
+      { name: "Vercel", url: "https://vercel.com" },
+      { name: "Railway", url: "https://railway.app" },
     ],
   },
   {
@@ -37,12 +39,14 @@ const PROJECT_TYPES = [
     color: "bg-amber-100 text-amber-700 border-amber-200",
     activeColor: "bg-amber-600 text-white border-amber-600",
     description: "Articles, books, scripts, blogs",
+    previewUrl: "https://hemingwayapp.com",
+    previewLabel: "Hemingway Editor",
     tools: [
-      { name: "Google Docs", url: "https://docs.google.com", icon: "📄" },
-      { name: "Notion", url: "https://notion.so", icon: "📝" },
-      { name: "Hemingway", url: "https://hemingwayapp.com", icon: "✍️" },
-      { name: "Grammarly", url: "https://grammarly.com", icon: "🔤" },
-      { name: "Scrivener", url: "https://literatureandlatte.com/scrivener", icon: "📚" },
+      { name: "Google Docs", url: "https://docs.google.com" },
+      { name: "Notion", url: "https://notion.so" },
+      { name: "Hemingway", url: "https://hemingwayapp.com" },
+      { name: "Grammarly", url: "https://grammarly.com" },
+      { name: "Scrivener", url: "https://literatureandlatte.com/scrivener" },
     ],
   },
   {
@@ -52,12 +56,14 @@ const PROJECT_TYPES = [
     color: "bg-red-100 text-red-700 border-red-200",
     activeColor: "bg-red-600 text-white border-red-600",
     description: "Films, reels, tutorials, vlogs",
+    previewUrl: "https://studio.youtube.com",
+    previewLabel: "YouTube Studio",
     tools: [
-      { name: "CapCut", url: "https://capcut.com", icon: "✂️" },
-      { name: "DaVinci Resolve", url: "https://blackmagicdesign.com/products/davinciresolve", icon: "🎬" },
-      { name: "YouTube Studio", url: "https://studio.youtube.com", icon: "▶️" },
-      { name: "Frame.io", url: "https://frame.io", icon: "🖼️" },
-      { name: "Loom", url: "https://loom.com", icon: "🎥" },
+      { name: "CapCut", url: "https://capcut.com" },
+      { name: "DaVinci Resolve", url: "https://blackmagicdesign.com/products/davinciresolve" },
+      { name: "YouTube Studio", url: "https://studio.youtube.com" },
+      { name: "Frame.io", url: "https://frame.io" },
+      { name: "Loom", url: "https://loom.com" },
     ],
   },
   {
@@ -67,12 +73,14 @@ const PROJECT_TYPES = [
     color: "bg-purple-100 text-purple-700 border-purple-200",
     activeColor: "bg-purple-600 text-white border-purple-600",
     description: "UI/UX, graphics, branding, art",
+    previewUrl: "https://www.figma.com/embed",
+    previewLabel: "Figma",
     tools: [
-      { name: "Figma", url: "https://figma.com", icon: "🎨" },
-      { name: "Canva", url: "https://canva.com", icon: "🖌️" },
-      { name: "Adobe XD", url: "https://adobe.com/products/xd.html", icon: "⬡" },
-      { name: "Dribbble", url: "https://dribbble.com", icon: "🏀" },
-      { name: "Behance", url: "https://behance.net", icon: "🅱️" },
+      { name: "Figma", url: "https://figma.com" },
+      { name: "Canva", url: "https://canva.com" },
+      { name: "Adobe XD", url: "https://adobe.com/products/xd.html" },
+      { name: "Dribbble", url: "https://dribbble.com" },
+      { name: "Behance", url: "https://behance.net" },
     ],
   },
   {
@@ -82,12 +90,14 @@ const PROJECT_TYPES = [
     color: "bg-green-100 text-green-700 border-green-200",
     activeColor: "bg-green-600 text-white border-green-600",
     description: "Tracks, podcasts, sound design",
+    previewUrl: "https://bandlab.com",
+    previewLabel: "BandLab Studio",
     tools: [
-      { name: "GarageBand", url: "https://apple.com/mac/garageband", icon: "🎸" },
-      { name: "BandLab", url: "https://bandlab.com", icon: "🎵" },
-      { name: "Anchor", url: "https://anchor.fm", icon: "🎙️" },
-      { name: "SoundCloud", url: "https://soundcloud.com", icon: "☁️" },
-      { name: "Splice", url: "https://splice.com", icon: "🎹" },
+      { name: "GarageBand", url: "https://apple.com/mac/garageband" },
+      { name: "BandLab", url: "https://bandlab.com" },
+      { name: "Anchor", url: "https://anchor.fm" },
+      { name: "SoundCloud", url: "https://soundcloud.com" },
+      { name: "Splice", url: "https://splice.com" },
     ],
   },
   {
@@ -97,12 +107,14 @@ const PROJECT_TYPES = [
     color: "bg-orange-100 text-orange-700 border-orange-200",
     activeColor: "bg-orange-600 text-white border-orange-600",
     description: "Games, simulations, interactive experiences",
+    previewUrl: "https://itch.io",
+    previewLabel: "itch.io",
     tools: [
-      { name: "Unity", url: "https://unity.com", icon: "🎮" },
-      { name: "Unreal Engine", url: "https://unrealengine.com", icon: "🔵" },
-      { name: "Godot", url: "https://godotengine.org", icon: "👾" },
-      { name: "itch.io", url: "https://itch.io", icon: "🕹️" },
-      { name: "GameMaker", url: "https://gamemaker.io", icon: "🏗️" },
+      { name: "Unity", url: "https://unity.com" },
+      { name: "Unreal Engine", url: "https://unrealengine.com" },
+      { name: "Godot", url: "https://godotengine.org" },
+      { name: "itch.io", url: "https://itch.io" },
+      { name: "GameMaker", url: "https://gamemaker.io" },
     ],
   },
   {
@@ -112,12 +124,14 @@ const PROJECT_TYPES = [
     color: "bg-teal-100 text-teal-700 border-teal-200",
     activeColor: "bg-teal-600 text-white border-teal-600",
     description: "Websites, landing pages, no-code apps",
+    previewUrl: "https://webflow.com",
+    previewLabel: "Webflow",
     tools: [
-      { name: "Webflow", url: "https://webflow.com", icon: "🌊" },
-      { name: "Wix", url: "https://wix.com", icon: "⬛" },
-      { name: "WordPress", url: "https://wordpress.com", icon: "🅆" },
-      { name: "Framer", url: "https://framer.com", icon: "🖥️" },
-      { name: "Bubble", url: "https://bubble.io", icon: "🔵" },
+      { name: "Webflow", url: "https://webflow.com" },
+      { name: "Wix", url: "https://wix.com" },
+      { name: "WordPress", url: "https://wordpress.com" },
+      { name: "Framer", url: "https://framer.com" },
+      { name: "Bubble", url: "https://bubble.io" },
     ],
   },
   {
@@ -127,12 +141,14 @@ const PROJECT_TYPES = [
     color: "bg-gray-100 text-gray-700 border-gray-200",
     activeColor: "bg-gray-700 text-white border-gray-700",
     description: "Studies, analysis, data, papers",
+    previewUrl: "https://miro.com",
+    previewLabel: "Miro Board",
     tools: [
-      { name: "Google Scholar", url: "https://scholar.google.com", icon: "🔬" },
-      { name: "Zotero", url: "https://zotero.org", icon: "📖" },
-      { name: "Jupyter", url: "https://jupyter.org", icon: "🪐" },
-      { name: "Obsidian", url: "https://obsidian.md", icon: "🔮" },
-      { name: "Miro", url: "https://miro.com", icon: "🗺️" },
+      { name: "Google Scholar", url: "https://scholar.google.com" },
+      { name: "Zotero", url: "https://zotero.org" },
+      { name: "Jupyter", url: "https://jupyter.org" },
+      { name: "Obsidian", url: "https://obsidian.md" },
+      { name: "Miro", url: "https://miro.com" },
     ],
   },
 ];
@@ -236,7 +252,12 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
                   rel="noopener noreferrer"
                   className="flex items-center space-x-3 p-3 bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-200 rounded-lg transition-all group"
                 >
-                  <span className="text-2xl">{tool.icon}</span>
+                  <img
+                    src={`https://www.google.com/s2/favicons?domain=${new URL(tool.url).hostname}&sz=32`}
+                    alt={tool.name}
+                    className="w-5 h-5 flex-shrink-0"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm text-gray-900 group-hover:text-purple-700 truncate">{tool.name}</p>
                     <p className="text-xs text-gray-400 truncate">{new URL(tool.url).hostname.replace("www.", "")}</p>
@@ -245,6 +266,40 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
                 </a>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Live Preview */}
+      {activeType && (
+        <Card className="cu-card">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center">
+                <Eye className="w-4 h-4 mr-2 text-purple-600" />
+                Live Preview — {activeType.previewLabel}
+              </CardTitle>
+              <a
+                href={activeType.previewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1"
+              >
+                Open full screen <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+            <CardDescription>Work directly in your build environment — embedded live within your workspace.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 pb-0 overflow-hidden rounded-b-xl">
+            <iframe
+              key={activeType.id}
+              src={activeType.previewUrl}
+              title={`${activeType.label} Live Preview`}
+              className="w-full border-0 rounded-b-xl"
+              style={{ height: '600px' }}
+              allow="accelerometer; camera; encrypted-media; geolocation; gyroscope; microphone; midi; clipboard-read; clipboard-write"
+              allowFullScreen
+            />
           </CardContent>
         </Card>
       )}
