@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, CheckSquare, Wrench, FileStack, Activity, Lightbulb, BookOpen, Flag, LayoutGrid } from 'lucide-react';
+import { MessageSquare, CheckSquare, Wrench, FileStack, Activity, Lightbulb, BookOpen, Flag, LayoutGrid, Hammer } from 'lucide-react';
 import HorizontalScrollContainer from '@/components/HorizontalScrollContainer';
 import DiscussionBoard from './DiscussionBoard';
 import TaskBoard from './TaskBoard';
@@ -13,6 +13,7 @@ import ActivityTab from './ActivityTab';
 import IdeationHub from './ideation/IdeationHub';
 import ThoughtsTab from './ThoughtsTab';
 import MilestonesTab from './MilestonesTab';
+import BuildTab from './BuildTab';
 import { base44 } from "@/api/base44Client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -138,6 +139,7 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
     { value: "overview", icon: LayoutGrid, label: "Overview", title: "High-level project summary and progress" },
     { value: "milestones", icon: Flag, label: "Milestones", title: "Major goals and key achievements" },
     { value: "tasks", icon: CheckSquare, label: "Tasks", title: "Action items and daily work" },
+    { value: "build", icon: Hammer, label: "Build", title: "Build workspace with tools for your project type" },
     { value: "planning", icon: Lightbulb, label: "Planning", title: "Plan and brainstorm project steps" },
     { value: "discussion", icon: MessageSquare, label: "Discussion", title: "Project discussion and comments" },
     { value: "assets", icon: FileStack, label: "Assets", title: "Manage project files, assets, and links" },
@@ -353,6 +355,19 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
                   isCollaborator={isCollaborator}
                   isProjectOwner={isProjectOwner}
                   projectOwnerName={projectOwnerName}
+                />
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="build" className="mt-0" forceMount={activeTab === "build"}>
+            {activeTab === "build" && (
+              <div className="w-full max-w-none">
+                <BuildTab
+                  project={project}
+                  currentUser={currentUser}
+                  isCollaborator={isCollaborator}
+                  isProjectOwner={isProjectOwner}
                 />
               </div>
             )}
