@@ -1,15 +1,19 @@
 const isNode = typeof window === 'undefined';
-const windowObj = isNode ? { localStorage: new Map() } : window;
-const storage = windowObj.localStorage;
+const storageFallback = {
+	getItem: () => null,
+	setItem: () => {},
+};
+const windowObj = isNode ? { localStorage: storageFallback, sessionStorage: storageFallback } : window;
 
 const toSnakeCase = (str) => {
 	return str.replace(/([A-Z])/g, '_$1').toLowerCase();
 }
 
-const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl = false } = {}) => {
+const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl = false, useSession = false } = {}) => {
 	if (isNode) {
 		return defaultValue;
 	}
+	const storage = useSession ? windowObj.sessionStorage : windowObj.localStorage;
 	const storageKey = `base44_${toSnakeCase(paramName)}`;
 	const urlParams = new URLSearchParams(window.location.search);
 	const searchParam = urlParams.get(paramName);
@@ -38,7 +42,7 @@ const getAppParams = () => {
 	return {
 		appId: getAppParamValue("app_id", { defaultValue: import.meta.env.VITE_BASE44_APP_ID }),
 		serverUrl: getAppParamValue("server_url", { defaultValue: import.meta.env.VITE_BASE44_BACKEND_URL }),
-		token: getAppParamValue("access_token", { removeFromUrl: true }),
+		token: getAppParamValue("access_token", { removeFromUrl: true, useSession: true }),
 		fromUrl: getAppParamValue("from_url", { defaultValue: window.location.href }),
 		functionsVersion: getAppParamValue("functions_version"),
 	}
