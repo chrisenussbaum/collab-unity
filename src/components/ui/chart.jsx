@@ -10,6 +10,26 @@ const THEMES = {
   dark: ".dark"
 }
 
+const safeCssValue = (value) => {
+  if (typeof value !== "string") {
+    return null
+  }
+
+  const trimmedValue = value.trim()
+
+  if (!trimmedValue) {
+    return null
+  }
+
+  const isSafeValue =
+    /^#([0-9a-fA-F]{3,8})$/.test(trimmedValue) ||
+    /^(rgb|rgba|hsl|hsla)\(\s*[-\d.%\s,]+\)$/.test(trimmedValue) ||
+    /^var\(--[a-zA-Z0-9-_]+\)$/.test(trimmedValue) ||
+    /^[a-zA-Z]+$/.test(trimmedValue)
+
+  return isSafeValue ? trimmedValue : null
+}
+
 const ChartContext = React.createContext(null)
 
 function useChart() {
@@ -65,8 +85,8 @@ ${prefix} [data-chart=${id}] {
 ${colorConfig
 .map(([key, itemConfig]) => {
 const color =
-  itemConfig.theme?.[theme] ||
-  itemConfig.color
+  safeCssValue(itemConfig.theme?.[theme]) ||
+  safeCssValue(itemConfig.color)
 return color ? `  --color-${key}: ${color};` : null
 })
 .join("\n")}

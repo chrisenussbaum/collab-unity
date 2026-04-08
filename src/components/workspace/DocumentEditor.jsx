@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,9 +12,20 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { FileText, Save, X, Trash2, Loader2, ArrowLeft } from 'lucide-react';
+import { Save, Trash2, Loader2, ArrowLeft } from 'lucide-react';
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+
+const sanitizeHtml = (html) => {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('script, iframe, object, embed').forEach(el => el.remove());
+  doc.querySelectorAll('*').forEach(el => {
+    [...el.attributes].forEach(attr => {
+      if (attr.name.startsWith('on')) el.removeAttribute(attr.name);
+    });
+  });
+  return doc.body.innerHTML;
+};
 
 const modules = {
   toolbar: [
@@ -79,7 +90,7 @@ export default function DocumentEditor({
   }, [hasUnsavedChanges, content, title]);
 
   const handleContentChange = (value) => {
-    setContent(value);
+    setContent(sanitizeHtml(value));
     setHasUnsavedChanges(true);
   };
 

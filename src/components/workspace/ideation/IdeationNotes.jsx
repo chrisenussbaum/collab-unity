@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,17 @@ import { Button } from "@/components/ui/button";
 import { StickyNote, RefreshCw, AlertTriangle, Save } from 'lucide-react';
 import { Project, ActivityLog } from '@/entities/all';
 import { toast } from "sonner";
+
+const sanitizeHtml = (html) => {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('script, iframe, object, embed').forEach(el => el.remove());
+  doc.querySelectorAll('*').forEach(el => {
+    [...el.attributes].forEach(attr => {
+      if (attr.name.startsWith('on')) el.removeAttribute(attr.name);
+    });
+  });
+  return doc.body.innerHTML;
+};
 
 const withRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -67,9 +78,10 @@ export default function IdeationNotes({ project, currentUser, isCollaborator }) 
   }, []);
 
   const handleContentChange = (value) => {
-    setContent(value);
-    contentRef.current = value;
-    setHasUnsavedChanges(value !== initialContentRef.current);
+    const sanitizedValue = sanitizeHtml(value);
+    setContent(sanitizedValue);
+    contentRef.current = sanitizedValue;
+    setHasUnsavedChanges(sanitizedValue !== initialContentRef.current);
   };
 
   const handleRefresh = async () => {

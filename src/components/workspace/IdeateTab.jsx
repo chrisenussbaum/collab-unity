@@ -1,11 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Lightbulb, RefreshCw, AlertTriangle } from 'lucide-react';
-import { Project, ActivityLog } from '@/entities/all';
+import { Project } from '@/entities/all';
 import { toast } from "sonner";
+
+const sanitizeHtml = (html) => {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('script, iframe, object, embed').forEach(el => el.remove());
+  doc.querySelectorAll('*').forEach(el => {
+    [...el.attributes].forEach(attr => {
+      if (attr.name.startsWith('on')) el.removeAttribute(attr.name);
+    });
+  });
+  return doc.body.innerHTML;
+};
 
 // Utility function to handle rate limits with exponential backoff
 const withRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
@@ -24,9 +35,8 @@ const withRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
   }
 };
 
-const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner }) => {
+const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner: _isProjectOwner }) => {
   const [content, setContent] = useState(project?.project_ideation || '');
-  const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastSavedBy, setLastSavedBy] = useState(project?.project_ideation_metadata?.last_saved_by || null);
@@ -79,9 +89,10 @@ const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner }) => 
   }, [project?.id]); // Runs on mount and when project ID changes
 
   const handleContentChange = (value) => {
-    setContent(value);
-    contentRef.current = value; // Keep ref in sync for unmount save
-    setHasUnsavedChanges(value !== initialContentRef.current);
+    const sanitizedValue = sanitizeHtml(value);
+    setContent(sanitizedValue);
+    contentRef.current = sanitizedValue; // Keep ref in sync for unmount save
+    setHasUnsavedChanges(sanitizedValue !== initialContentRef.current);
   };
 
   const handleRefresh = async () => {
@@ -121,55 +132,6 @@ const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner }) => 
       if (isMountedRef.current) {
         setIsRefreshing(false);
       }
-    }
-  };
-
-  const handleSave = async () => {
-    if (!isCollaborator) {
-      toast.error("You don't have permission to edit this project's ideation.");
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const metadata = {
-        last_saved_by: currentUser.email,
-        last_saved_by_name: currentUser.full_name || currentUser.email,
-        last_saved_at: new Date().toISOString()
-      };
-
-      await withRetry(() => Project.update(project.id, { 
-        project_ideation: content,
-        project_ideation_metadata: metadata
-      }));
-
-      await withRetry(() => ActivityLog.create({
-        project_id: project.id,
-        user_email: currentUser.email,
-        user_name: currentUser.full_name || currentUser.email,
-        action_type: 'ideation_updated',
-        action_description: 'updated the project ideation notes',
-        entity_type: 'ideation'
-      }));
-
-      initialContentRef.current = content;
-      setHasUnsavedChanges(false);
-      setLastSavedBy(currentUser.email);
-      setLastSavedAt(metadata.last_saved_at);
-      lastKnownSaveTimeRef.current = metadata.last_saved_at;
-      setIsStale(false);
-      setStaleInfo(null);
-      
-      // Dispatch event to notify other components
-      window.dispatchEvent(new CustomEvent('projectUpdated', { 
-        detail: { projectId: project.id } 
-      }));
-
-    } catch (error) {
-      console.error("Error saving ideation:", error);
-      toast.error("Failed to save ideation. Please try again.");
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -219,7 +181,7 @@ const IdeateTab = ({ project, currentUser, isCollaborator, isProjectOwner }) => 
       if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
       
       return date.toLocaleDateString();
-    } catch (e) {
+    } catch {
       return '';
     }
   };
