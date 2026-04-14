@@ -1471,6 +1471,36 @@ export default function Chat({ currentUser, authIsLoading }) {
                     </button>
                   )}
 
+                  {/* Mention/item popovers rendered above the input bar, overlaying messages */}
+                  {showProjectMention && (
+                    <div className="absolute bottom-[72px] left-4 right-4 z-20">
+                      <ProjectMentionPopover
+                        query={mentionQuery}
+                        currentUser={currentUser}
+                        onSelect={handleProjectMentionSelect}
+                        onClose={() => setShowProjectMention(false)}
+                      />
+                    </div>
+                  )}
+                  {showItemPopover && (
+                    <div className="absolute bottom-[72px] left-4 right-4 z-20">
+                      <ProjectItemPopover
+                        query={itemPopoverQuery}
+                        currentUser={currentUser}
+                        conversationParticipants={
+                          selectedConversation?.conversation_type === "group"
+                            ? (selectedConversation.participants || []).filter(e => e !== currentUser.email)
+                            : [
+                                selectedConversation?.participant_1_email,
+                                selectedConversation?.participant_2_email
+                              ].filter(e => e && e !== currentUser.email)
+                        }
+                        onSelect={handleItemSelect}
+                        onClose={() => setShowItemPopover(false)}
+                      />
+                    </div>
+                  )}
+
                   <div className="border-t p-4">
                     <form onSubmit={handleSendMessage} className="flex items-end space-x-2">
                       <div className="flex items-center space-x-1">
@@ -1504,30 +1534,6 @@ export default function Chat({ currentUser, authIsLoading }) {
                       </div>
 
                       <div className="flex-1 relative">
-                        {showProjectMention && (
-                          <ProjectMentionPopover
-                            query={mentionQuery}
-                            currentUser={currentUser}
-                            onSelect={handleProjectMentionSelect}
-                            onClose={() => setShowProjectMention(false)}
-                          />
-                        )}
-                        {showItemPopover && (
-                          <ProjectItemPopover
-                            query={itemPopoverQuery}
-                            currentUser={currentUser}
-                            conversationParticipants={
-                              selectedConversation?.conversation_type === "group"
-                                ? (selectedConversation.participants || []).filter(e => e !== currentUser.email)
-                                : [
-                                    selectedConversation?.participant_1_email,
-                                    selectedConversation?.participant_2_email
-                                  ].filter(e => e && e !== currentUser.email)
-                            }
-                            onSelect={handleItemSelect}
-                            onClose={() => setShowItemPopover(false)}
-                          />
-                        )}
                         <Input
                           ref={messageInputRef}
                           placeholder="Type a message… # project  ^ item"
