@@ -12,6 +12,7 @@ import {
   QuickLinksWidget,
   MetricsWidget,
   QuickActionsWidget,
+  BuildLaunchWidget,
 } from './DashboardWidgets';
 import AIInsightsWidget from './AIInsightsWidget';
 
@@ -25,9 +26,10 @@ const WIDGET_CATALOG = [
   { id: 'quicklinks', title: 'Quick Links', description: 'Project URLs for fast access', icon: '🔗', size: 'half' },
   { id: 'quickactions', title: 'Quick Actions', description: 'Navigate to workspace sections', icon: '⚡', size: 'half' },
   { id: 'ai_insights', title: 'AI Insights', description: 'AI-powered timeline, bottleneck & resource analysis', icon: '🤖', size: 'full' },
+  { id: 'build_launch', title: 'Build Launch Tracker', description: 'Time-to-launch countdown & milestone progress from Build tab', icon: '🚀', size: 'half' },
 ];
 
-const DEFAULT_LAYOUT = ['progress', 'milestones', 'tasks', 'activity', 'metrics', 'ai_insights'];
+const DEFAULT_LAYOUT = ['progress', 'milestones', 'tasks', 'build_launch', 'activity', 'metrics', 'ai_insights'];
 
 const STORAGE_KEY_PREFIX = 'cu_dashboard_layout_';
 
@@ -55,17 +57,18 @@ const WidgetRenderer = ({ widgetId, data, onTabChange }) => {
     case 'metrics': return <MetricsWidget {...data} />;
     case 'quickactions': return <QuickActionsWidget onTabChange={onTabChange} />;
     case 'ai_insights': return <AIInsightsWidget project={data.project} milestones={data.milestones} tasks={data.tasks} logs={data.logs} />;
+    case 'build_launch': return <BuildLaunchWidget buildWorkspaceData={data.buildWorkspaceData} onTabChange={onTabChange} />;
     default: return null;
   }
 };
 
-const CustomizableDashboard = ({ project, currentUser, projectUsers = [], milestones = [], tasks = [], logs = [], onTabChange }) => {
+const CustomizableDashboard = ({ project, currentUser, projectUsers = [], milestones = [], tasks = [], logs = [], onTabChange, buildWorkspaceData }) => {
   const projectId = project?.id;
   const [layout, setLayout] = useState(() => getStoredLayout(projectId) || DEFAULT_LAYOUT);
   const [isEditing, setIsEditing] = useState(false);
   const [showCatalog, setShowCatalog] = useState(false);
 
-  const widgetData = { project, projectUsers, milestones, tasks, logs };
+  const widgetData = { project, projectUsers, milestones, tasks, logs, buildWorkspaceData };
 
   const handleDragEnd = useCallback((result) => {
     if (!result.destination) return;

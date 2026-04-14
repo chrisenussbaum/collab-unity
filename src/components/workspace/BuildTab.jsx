@@ -12,9 +12,11 @@ import {
   Eye, Search, RefreshCw, AlertTriangle, ArrowRight, X, Sparkles,
   Rocket, Map, Link2, Trash2, CheckCircle2, Circle, ChevronRight,
   Wrench, GraduationCap, Users, Lightbulb, Zap, Target, Package,
-  Mic, Film, FlaskConical, BookMarked, BarChart3, Smartphone
+  Mic, Film, FlaskConical, BookMarked, BarChart3, Smartphone,
+  Calendar, Flag, Clock, Edit2, ChevronDown, ChevronUp
 } from "lucide-react";
 import { toast } from "sonner";
+import { differenceInDays, format, isPast, isValid, parseISO } from "date-fns";
 
 // ─── Project type definitions ──────────────────────────────────────────────
 
@@ -619,29 +621,163 @@ const EMBEDDABLE_PLATFORMS = [
 
 // ─── Roadmap component ─────────────────────────────────────────────────────
 
-const BuildRoadmap = ({ phases, checkedSteps, onToggleStep }) => {
+// ─── Time-to-launch countdown helper ──────────────────────────────────────
+
+export function getLaunchCountdown(buildMilestones) {
+  if (!buildMilestones?.length) return null;
+  const withDates = buildMilestones
+    .filter(m => m.due_date && !m.completed)
+    .map(m => ({ ...m, dateObj: parseISO(m.due_date) }))
+    .filter(m => isValid(m.dateObj))
+    .sort((a, b) => a.dateObj - b.dateObj);
+  const launchMilestone = buildMilestones.find(m => m.is_launch) || withDates[withDates.length - 1];
+  if (!launchMilestone?.due_date) return null;
+  const date = parseISO(launchMilestone.due_date);
+  if (!isValid(date)) return null;
+  const days = differenceInDays(date, new Date());
+  return { days, date, label: launchMilestone.name, overdue: days < 0 };
+}
+
+// ─── Enhanced BuildRoadmap with milestone tracker ─────────────────────────
+
+const BuildRoadmap = ({ phases, checkedSteps, onToggleStep, buildMilestones, onMilestonesChange, stepMilestoneLinks, onStepMilestoneLinkChange, canEdit }) => {
   const [activePhase, setActivePhase] = useState(0);
+  const [showMilestonePanel, setShowMilestonePanel] = useState(false);
+  const [newMilestoneName, setNewMilestoneName] = useState("");
+  const [newMilestoneDate, setNewMilestoneDate] = useState("");
+  const [newMilestoneLaunch, setNewMilestoneLaunch] = useState(false);
+  const [linkingStep, setLinkingStep] = useState(null); // key of step being linked
+
+  const totalSteps = phases.reduce((a, p) => a + p.steps.length, 0);
+  const completedSteps = Object.values(checkedSteps).filter(Boolean).length;
+  const countdown = getLaunchCountdown(buildMilestones);
+
+  const addMilestone = () => {
+    if (!newMilestoneName.trim()) return;
+    const updated = [...buildMilestones, {
+      id: Date.now().toString(),
+      name: newMilestoneName.trim(),
+      due_date: newMilestoneDate || null,
+      completed: false,
+      is_launch: newMilestoneLaunch,
+    }];
+    onMilestonesChange(updated);
+    setNewMilestoneName(""); setNewMilestoneDate(""); setNewMilestoneLaunch(false);
+  };
+
+  const toggleMilestoneComplete = (id) => {
+    onMilestonesChange(buildMilestones.map(m => m.id === id ? { ...m, completed: !m.completed } : m));
+  };
+
+  const removeMilestone = (id) => {
+    onMilestonesChange(buildMilestones.filter(m => m.id !== id));
+    // Remove any step links pointing to this milestone
+    const cleaned = { ...stepMilestoneLinks };
+    Object.keys(cleaned).forEach(k => { if (cleaned[k] === id) delete cleaned[k]; });
+    onStepMilestoneLinkChange(cleaned);
+  };
+
+  const linkStep = (stepKey, milestoneId) => {
+    const updated = { ...stepMilestoneLinks };
+    if (milestoneId === "") delete updated[stepKey];
+    else updated[stepKey] = milestoneId;
+    onStepMilestoneLinkChange(updated);
+    setLinkingStep(null);
+  };
 
   return (
-    <div className="space-y-3">
-      {/* Phase selector */}
+    <div className="space-y-4">
+      {/* ── Time to Launch Banner ── */}
+      {countdown && (
+        <div className={`flex items-center gap-3 p-3 rounded-xl border ${countdown.overdue ? 'bg-red-50 border-red-200' : 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200'}`}>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${countdown.overdue ? 'bg-red-100' : 'bg-purple-100'}`}>
+            <Rocket className={`w-5 h-5 ${countdown.overdue ? 'text-red-600' : 'text-purple-600'}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Time to Launch</p>
+            <p className={`text-lg font-bold ${countdown.overdue ? 'text-red-600' : 'text-purple-700'}`}>
+              {countdown.overdue ? `${Math.abs(countdown.days)} days overdue` : countdown.days === 0 ? '🚀 Launch Day!' : `${countdown.days} days`}
+            </p>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-xs text-gray-500 truncate max-w-[120px]">{countdown.label}</p>
+            <p className="text-xs font-medium text-gray-700">{format(countdown.date, 'MMM d, yyyy')}</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Visual Milestone Timeline ── */}
+      {buildMilestones.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5"><Flag className="w-3 h-3" /> Milestones</p>
+            {canEdit && <button onClick={() => setShowMilestonePanel(!showMilestonePanel)} className="text-xs text-purple-600 hover:text-purple-700 font-medium">{showMilestonePanel ? 'Hide' : 'Manage'}</button>}
+          </div>
+          <div className="relative">
+            {/* Connector line */}
+            <div className="absolute left-3.5 top-4 bottom-4 w-0.5 bg-gray-200 z-0" />
+            <div className="space-y-2 relative z-10">
+              {buildMilestones.map((m, i) => {
+                const date = m.due_date ? parseISO(m.due_date) : null;
+                const overdue = date && isValid(date) && isPast(date) && !m.completed;
+                const linkedStepCount = Object.values(stepMilestoneLinks).filter(v => v === m.id).length;
+                return (
+                  <div key={m.id} className={`flex items-start gap-3 p-2.5 rounded-lg border transition-all ${m.completed ? 'bg-green-50 border-green-200 opacity-70' : overdue ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}>
+                    <button
+                      onClick={() => canEdit && toggleMilestoneComplete(m.id)}
+                      className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${m.completed ? 'bg-green-500 border-green-500' : overdue ? 'border-red-400 bg-white' : 'border-gray-300 bg-white hover:border-purple-400'}`}
+                    >
+                      {m.completed && <CheckCircle2 className="w-4 h-4 text-white" />}
+                      {m.is_launch && !m.completed && <Rocket className="w-3 h-3 text-purple-500" />}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`text-sm font-medium ${m.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>{m.name}</span>
+                        {m.is_launch && <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[10px] rounded font-semibold">🚀 Launch</span>}
+                        {linkedStepCount > 0 && <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] rounded">{linkedStepCount} steps</span>}
+                      </div>
+                      {date && isValid(date) && (
+                        <p className={`text-xs mt-0.5 ${overdue ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
+                          {overdue ? '⚠ ' : ''}{format(date, 'MMM d, yyyy')} {!m.completed && `· ${Math.abs(differenceInDays(date, new Date()))} days ${differenceInDays(date, new Date()) < 0 ? 'ago' : 'away'}`}
+                        </p>
+                      )}
+                    </div>
+                    {canEdit && <button onClick={() => removeMilestone(m.id)} className="text-gray-200 hover:text-red-400 transition-colors flex-shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Add Milestone Form ── */}
+      {canEdit && (showMilestonePanel || buildMilestones.length === 0) && (
+        <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg space-y-2">
+          <p className="text-xs font-semibold text-purple-700">{buildMilestones.length === 0 ? '+ Add your first milestone' : 'Add milestone'}</p>
+          <div className="flex gap-2">
+            <Input placeholder="Milestone name (e.g. MVP Ready, Beta Launch)" value={newMilestoneName} onChange={e => setNewMilestoneName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addMilestone()} className="text-sm flex-1" />
+            <Input type="date" value={newMilestoneDate} onChange={e => setNewMilestoneDate(e.target.value)} className="text-sm w-36 flex-shrink-0" />
+          </div>
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+              <input type="checkbox" checked={newMilestoneLaunch} onChange={e => setNewMilestoneLaunch(e.target.checked)} className="accent-purple-600" />
+              Mark as launch milestone 🚀
+            </label>
+            <Button onClick={addMilestone} size="sm" className="cu-button text-xs" disabled={!newMilestoneName.trim()}>Add</Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Phase selector ── */}
       <div className="flex gap-1 flex-wrap">
         {phases.map((phase, i) => {
           const total = phase.steps.length;
           const done = phase.steps.filter((_, si) => checkedSteps[`${i}-${si}`]).length;
           const complete = done === total;
           return (
-            <button
-              key={i}
-              onClick={() => setActivePhase(i)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                activePhase === i
-                  ? 'bg-purple-600 text-white border-purple-600'
-                  : complete
-                  ? 'bg-green-100 text-green-700 border-green-200'
-                  : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
-              }`}
-            >
+            <button key={i} onClick={() => setActivePhase(i)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${activePhase === i ? 'bg-purple-600 text-white border-purple-600' : complete ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'}`}>
               {complete ? <CheckCircle2 className="w-3 h-3" /> : <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center text-[9px] font-bold">{i + 1}</span>}
               {phase.label}
               <span className={`text-[10px] ${activePhase === i ? 'text-white/70' : 'opacity-60'}`}>{done}/{total}</span>
@@ -650,39 +786,61 @@ const BuildRoadmap = ({ phases, checkedSteps, onToggleStep }) => {
         })}
       </div>
 
-      {/* Phase steps */}
-      <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-          Phase {activePhase + 1}: {phases[activePhase].label}
-        </p>
+      {/* ── Phase steps ── */}
+      <div className="bg-gray-50 rounded-lg p-4 space-y-1.5">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Phase {activePhase + 1}: {phases[activePhase].label}</p>
         {phases[activePhase].steps.map((step, si) => {
           const key = `${activePhase}-${si}`;
           const checked = !!checkedSteps[key];
+          const linkedMilestoneId = stepMilestoneLinks[key];
+          const linkedMilestone = buildMilestones.find(m => m.id === linkedMilestoneId);
           return (
-            <label key={si} className={`flex items-start gap-3 p-2 rounded-lg cursor-pointer hover:bg-white transition-colors group ${checked ? 'opacity-60' : ''}`}>
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={() => onToggleStep(key)}
-                className="mt-0.5 w-4 h-4 accent-purple-600 flex-shrink-0 cursor-pointer"
-              />
-              <span className={`text-sm text-gray-800 ${checked ? 'line-through' : ''}`}>{step}</span>
-            </label>
+            <div key={si} className={`flex items-start gap-2 p-2 rounded-lg transition-colors hover:bg-white group ${checked ? 'opacity-60' : ''}`}>
+              <input type="checkbox" checked={checked} onChange={() => onToggleStep(key)}
+                className="mt-0.5 w-4 h-4 accent-purple-600 flex-shrink-0 cursor-pointer" />
+              <div className="flex-1 min-w-0">
+                <span className={`text-sm text-gray-800 ${checked ? 'line-through' : ''}`}>{step}</span>
+                {linkedMilestone && (
+                  <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[10px] rounded font-medium">
+                    <Flag className="w-2.5 h-2.5" />{linkedMilestone.name}
+                  </span>
+                )}
+              </div>
+              {/* Link to milestone */}
+              {canEdit && buildMilestones.length > 0 && (
+                <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {linkingStep === key ? (
+                    <select
+                      autoFocus
+                      className="text-xs border border-purple-200 rounded px-1.5 py-0.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-300"
+                      value={linkedMilestoneId || ""}
+                      onChange={e => linkStep(key, e.target.value)}
+                      onBlur={() => setLinkingStep(null)}
+                    >
+                      <option value="">No milestone</option>
+                      {buildMilestones.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                    </select>
+                  ) : (
+                    <button onClick={() => setLinkingStep(key)}
+                      className="text-[10px] text-gray-300 hover:text-purple-500 flex items-center gap-0.5 font-medium">
+                      <Flag className="w-3 h-3" />{linkedMilestone ? 'Re-link' : 'Link'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
 
-      {/* Overall progress */}
+      {/* ── Overall progress ── */}
       <div>
         <div className="flex justify-between text-xs text-gray-500 mb-1">
           <span>Overall completion</span>
-          <span>{Object.values(checkedSteps).filter(Boolean).length} / {phases.reduce((a, p) => a + p.steps.length, 0)} steps</span>
+          <span>{completedSteps} / {totalSteps} steps</span>
         </div>
         <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-purple-500 rounded-full transition-all"
-            style={{ width: `${(Object.values(checkedSteps).filter(Boolean).length / phases.reduce((a, p) => a + p.steps.length, 0)) * 100}%` }}
-          />
+          <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0}%` }} />
         </div>
       </div>
     </div>
@@ -951,6 +1109,8 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [ideRecord, setIdeRecord] = useState(null);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [buildMilestones, setBuildMilestones] = useState([]);
+  const [stepMilestoneLinks, setStepMilestoneLinks] = useState({});
   const [showSuggestion, setShowSuggestion] = useState(false);
   const suggestedType = detectBuildType(project);
 
@@ -983,6 +1143,8 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
             if (parsed.checkedSteps) setCheckedSteps(parsed.checkedSteps);
             if (parsed.buildNotes) setBuildNotes(parsed.buildNotes);
             if (parsed.savedLinks) setSavedLinks(parsed.savedLinks);
+            if (parsed.buildMilestones) setBuildMilestones(parsed.buildMilestones);
+            if (parsed.stepMilestoneLinks) setStepMilestoneLinks(parsed.stepMilestoneLinks);
           }
         }
       } catch (e) {
@@ -995,6 +1157,8 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
             if (parsed.checkedSteps) setCheckedSteps(parsed.checkedSteps);
             if (parsed.buildNotes) setBuildNotes(parsed.buildNotes);
             if (parsed.savedLinks) setSavedLinks(parsed.savedLinks);
+            if (parsed.buildMilestones) setBuildMilestones(parsed.buildMilestones);
+            if (parsed.stepMilestoneLinks) setStepMilestoneLinks(parsed.stepMilestoneLinks);
           }
         } catch {}
       }
@@ -1014,7 +1178,7 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
   // ── Persist data ──
   const persist = useCallback(async (newData) => {
     if (!project?.id || !canEdit) return;
-    const payload = { selectedType, checkedSteps, buildNotes, savedLinks, ...newData };
+    const payload = { selectedType, checkedSteps, buildNotes, savedLinks, buildMilestones, stepMilestoneLinks, ...newData };
     const content = JSON.stringify(payload);
     // localStorage fallback always
     try { localStorage.setItem(storageKey, content); } catch {}
@@ -1047,6 +1211,16 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
     setSelectedType(suggestedType);
     setShowSuggestion(false);
     persist({ selectedType: suggestedType, checkedSteps: {} });
+  };
+
+  const handleMilestonesChange = (updated) => {
+    setBuildMilestones(updated);
+    persist({ buildMilestones: updated });
+  };
+
+  const handleStepMilestoneLinkChange = (updated) => {
+    setStepMilestoneLinks(updated);
+    persist({ stepMilestoneLinks: updated });
   };
 
   const handleToggleStep = (key) => {
@@ -1191,10 +1365,12 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
                   phases={activeType.phases}
                   checkedSteps={checkedSteps}
                   onToggleStep={handleToggleStep}
+                  buildMilestones={buildMilestones}
+                  onMilestonesChange={handleMilestonesChange}
+                  stepMilestoneLinks={stepMilestoneLinks}
+                  onStepMilestoneLinkChange={handleStepMilestoneLinkChange}
+                  canEdit={canEdit}
                 />
-                {!canEdit && (
-                  <p className="text-xs text-gray-400 text-center mt-3">Only collaborators can check off steps.</p>
-                )}
               </CardContent>
             </Card>
           </TabsContent>

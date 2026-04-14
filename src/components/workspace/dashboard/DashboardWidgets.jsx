@@ -2,8 +2,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Flag, Users, Clock, TrendingUp, Activity, Link, Target, AlertCircle, Star } from 'lucide-react';
-import { formatDistanceToNow, parseISO, format } from 'date-fns';
+import { CheckCircle, Flag, Users, Clock, TrendingUp, Activity, Link, Target, AlertCircle, Star, Rocket } from 'lucide-react';
+import { formatDistanceToNow, parseISO, format, differenceInDays, isPast, isValid } from 'date-fns';
+import { getLaunchCountdown } from '../BuildTab';
 
 // ---- Milestone Progress Widget ----
 export const MilestoneWidget = ({ milestones = [] }) => {
@@ -251,6 +252,90 @@ export const MetricsWidget = ({ milestones = [], tasks = [], project, logs = [] 
           <p className="text-xs text-gray-500 mt-0.5">{m.label}</p>
         </div>
       ))}
+    </div>
+  );
+};
+
+// ---- Build Launch Widget ----
+export const BuildLaunchWidget = ({ buildWorkspaceData, onTabChange }) => {
+  let parsed = null;
+  try { parsed = buildWorkspaceData ? JSON.parse(buildWorkspaceData) : null; } catch {}
+
+  const buildMilestones = parsed?.buildMilestones || [];
+  const checkedSteps = parsed?.checkedSteps || {};
+  const selectedType = parsed?.selectedType;
+  const stepMilestoneLinks = parsed?.stepMilestoneLinks || {};
+
+  const countdown = getLaunchCountdown(buildMilestones);
+  const completedSteps = Object.values(checkedSteps).filter(Boolean).length;
+  const totalLinkedSteps = Object.keys(stepMilestoneLinks).length;
+
+  const completedMilestones = buildMilestones.filter(m => m.completed).length;
+  const totalMilestones = buildMilestones.length;
+
+  if (!buildMilestones.length && !selectedType) {
+    return (
+      <div className="text-center py-4">
+        <Rocket className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+        <p className="text-sm text-gray-400">No build milestones set yet.</p>
+        <button onClick={() => onTabChange?.('build')} className="text-xs text-purple-600 hover:text-purple-700 font-medium mt-1">Go to Build Workspace →</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Countdown */}
+      {countdown && (
+        <div className={`flex items-center gap-3 p-3 rounded-lg ${countdown.overdue ? 'bg-red-50' : 'bg-purple-50'}`}>
+          <Rocket className={`w-5 h-5 flex-shrink-0 ${countdown.overdue ? 'text-red-500' : 'text-purple-600'}`} />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-gray-500">Time to Launch · {countdown.label}</p>
+            <p className={`text-xl font-bold ${countdown.overdue ? 'text-red-600' : 'text-purple-700'}`}>
+              {countdown.overdue ? `${Math.abs(countdown.days)}d overdue` : countdown.days === 0 ? '🚀 Today!' : `${countdown.days} days`}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs font-medium text-gray-600">{format(countdown.date, 'MMM d')}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Milestone progress */}
+      {totalMilestones > 0 && (
+        <div>
+          <div className="flex justify-between text-xs text-gray-500 mb-1">
+            <span className="flex items-center gap-1"><Flag className="w-3 h-3" /> Milestones</span>
+            <span>{completedMilestones}/{totalMilestones}</span>
+          </div>
+          <Progress value={totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0} className="h-1.5" />
+          <div className="mt-2 space-y-1">
+            {buildMilestones.slice(0, 3).map(m => {
+              const date = m.due_date ? parseISO(m.due_date) : null;
+              const overdue = date && isValid(date) && isPast(date) && !m.completed;
+              return (
+                <div key={m.id} className="flex items-center gap-2 text-xs">
+                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${m.completed ? 'bg-green-400' : overdue ? 'bg-red-400' : 'bg-gray-300'}`} />
+                  <span className={`truncate flex-1 ${m.completed ? 'line-through text-gray-400' : 'text-gray-700'}`}>{m.name}</span>
+                  {date && isValid(date) && <span className={`text-[10px] flex-shrink-0 ${overdue ? 'text-red-500' : 'text-gray-400'}`}>{format(date, 'MMM d')}</span>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Roadmap step progress */}
+      {completedSteps > 0 && (
+        <div className="text-xs text-gray-500">
+          <span className="font-semibold text-purple-600">{completedSteps}</span> roadmap steps completed
+          {totalLinkedSteps > 0 && <span> · {totalLinkedSteps} linked to milestones</span>}
+        </div>
+      )}
+
+      <button onClick={() => onTabChange?.('build')} className="w-full text-xs text-purple-600 hover:text-purple-700 font-medium text-left pt-1 border-t border-gray-100">
+        Open Build Workspace →
+      </button>
     </div>
   );
 };
