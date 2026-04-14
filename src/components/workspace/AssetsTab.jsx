@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { FileStack, Plus, Upload, Trash2, ExternalLink, Link as LinkIcon, Download, File, Clock, FileText, MoreVertical, Edit, User as UserIcon, User } from "lucide-react";
+import { FileStack, Plus, Upload, Trash2, ExternalLink, Link as LinkIcon, Download, File, Clock, FileText, MoreVertical, Edit, User as UserIcon, User, Eye } from "lucide-react";
+import AssetPreviewModal from "./AssetPreviewModal";
 import { AssetVersion, ActivityLog, User as UserEntity } from "@/entities/all";
 import { UploadFile } from "@/integrations/Core";
 import { toast } from "sonner";
@@ -43,6 +44,7 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
   const [isUploading, setIsUploading] = useState(false); // Re-introduced for upload modal
   const [uploadType, setUploadType] = useState('file'); // 'file' or 'link'
   const [deletingAsset, setDeletingAsset] = useState(null); // State for asset being deleted
+  const [previewAsset, setPreviewAsset] = useState(null); // State for asset preview modal
 
   const [formData, setFormData] = useState({
     asset_name: "",
@@ -581,28 +583,37 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
                               
                               {/* Actions */}
                               {isCollaborator && (
-                                <div className="flex items-center space-x-2 justify-end">
-                                  {isFile ? (
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="flex-1 sm:flex-none"
-                                        onClick={() => window.open(asset.file_url, '_blank')}
-                                    >
-                                        <Download className="w-4 h-4 mr-2" />
-                                        <span>Download</span>
-                                    </Button>
-                                  ) : (
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="flex-1 sm:flex-none"
-                                        onClick={() => window.open(asset.file_url, '_blank')}
-                                    >
-                                        <ExternalLink className="w-4 h-4 mr-2" />
-                                        <span>View</span>
-                                    </Button>
-                                  )}
+                               <div className="flex items-center space-x-2 justify-end">
+                                 <Button
+                                   variant="outline"
+                                   size="sm"
+                                   className="flex-1 sm:flex-none"
+                                   onClick={() => setPreviewAsset(asset)}
+                                 >
+                                   <Eye className="w-4 h-4 mr-2" />
+                                   <span>Preview</span>
+                                 </Button>
+                                 {isFile ? (
+                                   <Button
+                                       variant="outline"
+                                       size="sm"
+                                       className="flex-1 sm:flex-none"
+                                       onClick={() => window.open(asset.file_url, '_blank')}
+                                   >
+                                       <Download className="w-4 h-4 mr-2" />
+                                       <span>Download</span>
+                                   </Button>
+                                 ) : (
+                                   <Button
+                                       variant="outline"
+                                       size="sm"
+                                       className="flex-1 sm:flex-none"
+                                       onClick={() => window.open(asset.file_url, '_blank')}
+                                   >
+                                       <ExternalLink className="w-4 h-4 mr-2" />
+                                       <span>View</span>
+                                   </Button>
+                                 )}
                                   
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -877,6 +888,9 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Asset Preview Modal */}
+      <AssetPreviewModal asset={previewAsset} onClose={() => setPreviewAsset(null)} />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deletingAsset} onOpenChange={() => setDeletingAsset(null)}>
