@@ -1719,7 +1719,7 @@ export default function Feed({ currentUser, authIsLoading }) {
       }
 
     } catch (error) {
-      console.error("Error loading ads for page", page, ":", error);
+      console.error("Error loading ads:", error);
       // Don't throw - just log the error so ads don't block feed
     }
   }, [currentUser]);

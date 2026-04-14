@@ -227,6 +227,7 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
                   projectOwnerName={projectOwnerName}
                   projectUsers={projectUsers}
                   onProjectUpdate={onProjectUpdate}
+                  onTabChange={handleTabChange}
                 />
               </div>
             )}
