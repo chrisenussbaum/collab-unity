@@ -689,6 +689,162 @@ const BuildRoadmap = ({ phases, checkedSteps, onToggleStep }) => {
   );
 };
 
+// ─── Build a rich project context string for AI prompts ────────────────────
+
+function buildProjectContext(project) {
+  const parts = [];
+  if (project?.title) parts.push(`Project name: "${project.title}"`);
+  if (project?.description) parts.push(`Description: ${project.description}`);
+  if (project?.classification) parts.push(`Classification: ${project.classification}`);
+  if (project?.industry) parts.push(`Industry: ${project.industry}`);
+  if (project?.area_of_interest) parts.push(`Area of interest: ${project.area_of_interest}`);
+  if (project?.location) parts.push(`Location: ${project.location}`);
+  if (project?.skills_needed?.length) parts.push(`Skills needed: ${project.skills_needed.join(", ")}`);
+  if (project?.tools_needed?.length) parts.push(`Tools/technologies needed: ${project.tools_needed.join(", ")}`);
+  if (project?.project_type) parts.push(`Project type: ${project.project_type}`);
+  if (project?.status) parts.push(`Current status: ${project.status}`);
+  return parts.join("\n");
+}
+
+// ─── Auto-detect the best build type from project metadata ─────────────────
+
+function detectBuildType(project) {
+  if (!project) return null;
+  const text = [
+    project.title, project.description, project.industry,
+    project.area_of_interest, ...(project.skills_needed || []), ...(project.tools_needed || [])
+  ].join(" ").toLowerCase();
+
+  if (/\b(react|vue|angular|node|python|javascript|typescript|api|backend|frontend|app|software|code|developer|engineer|programming|database|sql|mongodb|firebase|github|deploy|aws|docker)\b/.test(text)) return "coding";
+  if (/\b(figma|design|ui|ux|brand|logo|graphic|illustrat|canva|visual|wireframe|prototype|sketch|adobe|color|typography)\b/.test(text)) return "design";
+  if (/\b(video|film|youtube|reel|edit|cinemat|vlog|documentary|short film|capcut|davinci|premiere|director)\b/.test(text)) return "video";
+  if (/\b(music|song|track|album|podcast|audio|beat|produce|record|soundcloud|spotify|daw|garageband|fl studio|ableton)\b/.test(text)) return "music";
+  if (/\b(blog|book|write|article|newsletter|essay|content|story|script|substack|medium|copy|author|publish)\b/.test(text)) return "writing";
+  if (/\b(game|unity|unreal|godot|gamemaker|pixel|level|rpg|shooter|puzzle|simulation|player|mechanic|itch\.io)\b/.test(text)) return "game";
+  if (/\b(website|landing page|webflow|wix|squarespace|wordpress|no.code|nocode|framer|bubble|saas|e-commerce)\b/.test(text)) return "web";
+  if (/\b(research|study|analysis|data|experiment|survey|academic|paper|hypothesis|thesis|journal|methodology|scientist)\b/.test(text)) return "research";
+  if (/\b(startup|business|product|market|revenue|customer|pitch|investor|b2b|b2c|saas|enterprise|entrepreneur|founder)\b/.test(text)) return "business";
+  if (/\b(course|teach|lesson|curriculum|education|learn|student|workshop|tutorial|training|instructional|cohort)\b/.test(text)) return "education";
+  if (/\b(nonprofit|charity|community|volunteer|cause|advocacy|social impact|foundation|donate|mission|ngo)\b/.test(text)) return "nonprofit";
+
+  // Fallback by classification
+  const cls = project.classification;
+  if (cls === "startup") return "business";
+  if (cls === "educational") return "education";
+  if (cls === "nonprofit") return "nonprofit";
+  if (cls === "hobby") return "coding"; // reasonable default
+  return null;
+}
+
+// ─── Project context banner shown at top ───────────────────────────────────
+
+const ProjectContextBanner = ({ project, suggestedTypeId, onAccept, onDismiss }) => {
+  const suggestedType = PROJECT_TYPES.find(t => t.id === suggestedTypeId);
+  if (!suggestedType) return null;
+  const Icon = suggestedType.icon;
+  const skills = project?.skills_needed?.slice(0, 4) || [];
+  const tools = project?.tools_needed?.slice(0, 4) || [];
+
+  return (
+    <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-4 h-4 text-purple-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-900">We detected your project type</p>
+            <p className="text-xs text-gray-500 mt-0.5">Based on your project description, skills, and tools — we think this fits best:</p>
+          </div>
+        </div>
+        <button onClick={onDismiss} className="text-gray-300 hover:text-gray-500 flex-shrink-0"><X className="w-4 h-4" /></button>
+      </div>
+
+      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-100">
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${suggestedType.color}`}>
+          <Icon className="w-4 h-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900">{suggestedType.label}</p>
+          <p className="text-xs text-gray-400">{suggestedType.description}</p>
+        </div>
+        <Button onClick={onAccept} size="sm" className="cu-button flex-shrink-0 text-xs">
+          Use This <ArrowRight className="w-3 h-3 ml-1" />
+        </Button>
+      </div>
+
+      {(skills.length > 0 || tools.length > 0) && (
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {skills.map(s => <span key={s} className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[11px] rounded-full font-medium">{s}</span>)}
+          {tools.map(t => <span key={t} className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[11px] rounded-full font-medium">{t}</span>)}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Project tools from skills_needed / tools_needed ──────────────────────
+
+const ProjectSkillsTools = ({ project }) => {
+  const skills = project?.skills_needed || [];
+  const tools = project?.tools_needed || [];
+  if (!skills.length && !tools.length) return null;
+
+  return (
+    <Card className="cu-card border-purple-100">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Target className="w-4 h-4 text-purple-600" />
+          This Project's Skills & Tools
+        </CardTitle>
+        <CardDescription>Pulled directly from the project setup — search for these to get started.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {skills.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Skills Needed</p>
+            <div className="flex flex-wrap gap-2">
+              {skills.map(skill => (
+                <a
+                  key={skill}
+                  href={`https://www.google.com/search?q=${encodeURIComponent(skill + " tutorial for beginners")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-full text-xs text-purple-700 font-medium transition-all"
+                >
+                  <GraduationCap className="w-3 h-3" />
+                  {skill}
+                  <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+        {tools.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Tools & Technologies</p>
+            <div className="flex flex-wrap gap-2">
+              {tools.map(tool => (
+                <a
+                  key={tool}
+                  href={`https://www.google.com/search?q=${encodeURIComponent(tool + " getting started")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-full text-xs text-indigo-700 font-medium transition-all"
+                >
+                  <Wrench className="w-3 h-3" />
+                  {tool}
+                  <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
 // ─── AI Kickstarter component ──────────────────────────────────────────────
 
 const AIKickstarter = ({ project, selectedType }) => {
@@ -699,9 +855,17 @@ const AIKickstarter = ({ project, selectedType }) => {
     if (!selectedType) return;
     setLoading(true);
     setOutput(null);
-    const prompt = selectedType.aiKickstarter
+    // Build a rich, project-specific prompt using ALL available project context
+    const context = buildProjectContext(project);
+    const basePrompt = selectedType.aiKickstarter
       .replace("{title}", project?.title || "Untitled Project")
       .replace("{description}", project?.description || "No description provided.");
+    const prompt = `${basePrompt}
+
+Here is the full project context to inform your advice:
+${context}
+
+Use this context to give highly specific, actionable advice tailored to THIS exact project. Reference the actual project name, skills, tools, and goals where relevant. Do not give generic advice.`;
     try {
       const result = await base44.integrations.Core.InvokeLLM({ prompt });
       setOutput(result);
@@ -714,15 +878,29 @@ const AIKickstarter = ({ project, selectedType }) => {
 
   return (
     <div className="space-y-3">
+      {/* Project context preview */}
       {!output && !loading && (
-        <div className="flex flex-col items-center justify-center py-8 text-center gap-3">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-2">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Your project context (used by AI)</p>
+          <div className="flex flex-wrap gap-1.5">
+            {project?.title && <span className="px-2 py-0.5 bg-white border border-gray-200 rounded text-xs text-gray-600 font-medium">📌 {project.title}</span>}
+            {project?.classification && <span className="px-2 py-0.5 bg-white border border-gray-200 rounded text-xs text-gray-600">{project.classification}</span>}
+            {project?.industry && <span className="px-2 py-0.5 bg-white border border-gray-200 rounded text-xs text-gray-600">{project.industry}</span>}
+            {project?.skills_needed?.slice(0, 3).map(s => <span key={s} className="px-2 py-0.5 bg-purple-50 border border-purple-100 rounded text-xs text-purple-600">{s}</span>)}
+            {project?.tools_needed?.slice(0, 3).map(t => <span key={t} className="px-2 py-0.5 bg-indigo-50 border border-indigo-100 rounded text-xs text-indigo-600">{t}</span>)}
+          </div>
+        </div>
+      )}
+
+      {!output && !loading && (
+        <div className="flex flex-col items-center justify-center py-6 text-center gap-3">
           <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
             <Sparkles className="w-6 h-6 text-purple-600" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-800">AI Build Kickstarter</p>
+            <p className="text-sm font-semibold text-gray-800">Generate your personalized build plan</p>
             <p className="text-xs text-gray-500 mt-1 max-w-xs">
-              Get a personalized starting plan, tech stack recommendation, and first actions tailored to your project.
+              AI will analyze your project's description, skills, tools, and goals to create a plan specific to <strong>{project?.title || "your project"}</strong>.
             </p>
           </div>
           <Button onClick={run} className="cu-button gap-2" size="sm">
@@ -734,7 +912,7 @@ const AIKickstarter = ({ project, selectedType }) => {
       {loading && (
         <div className="flex flex-col items-center justify-center py-10 gap-3 text-purple-600">
           <RefreshCw className="w-6 h-6 animate-spin" />
-          <p className="text-sm font-medium">Crafting your personalized build plan...</p>
+          <p className="text-sm font-medium">Analyzing your project and crafting a tailored plan...</p>
         </div>
       )}
 
@@ -773,6 +951,8 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [ideRecord, setIdeRecord] = useState(null);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [showSuggestion, setShowSuggestion] = useState(false);
+  const suggestedType = detectBuildType(project);
 
   // Platform launcher state
   const [previewUrl, setPreviewUrl] = useState("");
@@ -824,6 +1004,13 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
     return () => clearTimeout(loadTimerRef.current);
   }, [project?.id]);
 
+  // Show suggestion banner once data is loaded and no type selected yet
+  useEffect(() => {
+    if (dataLoaded && !selectedType && suggestedType) {
+      setShowSuggestion(true);
+    }
+  }, [dataLoaded, selectedType, suggestedType]);
+
   // ── Persist data ──
   const persist = useCallback(async (newData) => {
     if (!project?.id || !canEdit) return;
@@ -851,8 +1038,15 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
   const handleSelectType = (typeId) => {
     const newType = selectedType === typeId ? null : typeId;
     setSelectedType(newType);
+    setShowSuggestion(false);
     persist({ selectedType: newType, checkedSteps: {} });
     setCheckedSteps({});
+  };
+
+  const handleAcceptSuggestion = () => {
+    setSelectedType(suggestedType);
+    setShowSuggestion(false);
+    persist({ selectedType: suggestedType, checkedSteps: {} });
   };
 
   const handleToggleStep = (key) => {
@@ -908,7 +1102,9 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
           </div>
           <div>
             <h2 className="text-xl font-bold text-gray-900">Build Workspace</h2>
-            <p className="text-sm text-gray-500">From idea to tangible product — everything you need to build.</p>
+            <p className="text-sm text-gray-500">
+              {project?.title ? `Building "${project.title}" — from idea to tangible product.` : "From idea to tangible product — everything you need to build."}
+            </p>
           </div>
         </div>
         {activeType && totalSteps > 0 && (
@@ -927,6 +1123,16 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
           </div>
         )}
       </div>
+
+      {/* ── Auto-detected suggestion banner ── */}
+      {showSuggestion && suggestedType && (
+        <ProjectContextBanner
+          project={project}
+          suggestedTypeId={suggestedType}
+          onAccept={handleAcceptSuggestion}
+          onDismiss={() => setShowSuggestion(false)}
+        />
+      )}
 
       {/* ── Project Type Selector ── */}
       <Card className="cu-card">
@@ -995,6 +1201,7 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
 
           {/* ── Tools Tab ── */}
           <TabsContent value="tools" className="mt-0 space-y-4">
+            <ProjectSkillsTools project={project} />
             {activeType.toolCategories.map((cat) => {
               const CatIcon = cat.icon;
               return (
