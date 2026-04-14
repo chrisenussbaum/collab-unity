@@ -1210,7 +1210,7 @@ export default function Chat({ currentUser, authIsLoading }) {
                                   textOverflow: 'ellipsis'
                                 }}
                               >
-                                {conv.last_message || "Start a conversation"}
+                                {(conv.last_message || "Start a conversation").replace(/##[a-zA-Z0-9_-]+:([^#]*)/g, '#$1')}
                               </p>
                               {conv.last_message_time && (
                                 <p className="text-xs text-gray-400 mt-1">
