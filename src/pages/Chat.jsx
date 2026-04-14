@@ -62,6 +62,8 @@ export default function Chat({ currentUser, authIsLoading }) {
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [showProjectMention, setShowProjectMention] = useState(false);
   const [mentionQuery, setMentionQuery] = useState("");
+  // rawMessage stores ##id:title tokens; inputDisplay shows #Title to the user
+  const [inputDisplay, setInputDisplay] = useState("");
   const messageInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -414,13 +416,14 @@ export default function Chat({ currentUser, authIsLoading }) {
 
   const handleMessageChange = (e) => {
     const val = e.target.value;
+    setInputDisplay(val);
     setNewMessage(val);
     handleTyping();
 
-    // Detect "#" trigger for project mention
+    // Detect single "#" trigger (not "##")
     const cursorPos = e.target.selectionStart;
     const textUpToCursor = val.slice(0, cursorPos);
-    const hashMatch = textUpToCursor.match(/#(\w*)$/);
+    const hashMatch = textUpToCursor.match(/(?<![#])#(\w*)$/);
     if (hashMatch) {
       setMentionQuery(hashMatch[1]);
       setShowProjectMention(true);
@@ -430,22 +433,23 @@ export default function Chat({ currentUser, authIsLoading }) {
   };
 
   const handleProjectMentionSelect = (project) => {
-    // Replace the trailing "#query" with the token and a space
     const input = messageInputRef.current;
-    const cursorPos = input ? input.selectionStart : newMessage.length;
-    const textUpToCursor = newMessage.slice(0, cursorPos);
-    const hashIndex = textUpToCursor.lastIndexOf("#");
-    const before = newMessage.slice(0, hashIndex);
-    const after = newMessage.slice(cursorPos);
-    const token = `##${project.id}:${project.title}`;
-    const updated = `${before}${token} ${after}`;
-    setNewMessage(updated);
+    const cursorPos = input ? input.selectionStart : inputDisplay.length;
+    const textUpToCursor = inputDisplay.slice(0, cursorPos);
+    const hashIndex = textUpToCursor.search(/(?<![#])#\w*$/);
+    const before = inputDisplay.slice(0, hashIndex);
+    const after = inputDisplay.slice(cursorPos);
+
+    const displayToken = `#${project.title}`;
+    const storeToken = `##${project.id}:${project.title}`;
+
+    setInputDisplay(`${before}${displayToken} ${after}`);
+    setNewMessage(`${before}${storeToken} ${after}`);
     setShowProjectMention(false);
     setMentionQuery("");
-    // Refocus input
     setTimeout(() => {
       if (messageInputRef.current) {
-        const pos = before.length + token.length + 1;
+        const pos = before.length + displayToken.length + 1;
         messageInputRef.current.focus();
         messageInputRef.current.setSelectionRange(pos, pos);
       }
@@ -593,7 +597,7 @@ export default function Chat({ currentUser, authIsLoading }) {
 
     setIsSending(true);
     const messageContent = newMessage.trim();
-    if (!mediaData) setNewMessage("");
+    if (!mediaData) { setNewMessage(""); setInputDisplay(""); }
 
     try {
       const messageData = {
@@ -719,7 +723,7 @@ export default function Chat({ currentUser, authIsLoading }) {
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
-      if (!mediaData) setNewMessage(messageContent);
+      if (!mediaData) { setNewMessage(messageContent); setInputDisplay(messageContent); }
       setMessages(prev => prev.slice(0, -1));
     } finally {
       setIsSending(false);
@@ -1451,7 +1455,7 @@ export default function Chat({ currentUser, authIsLoading }) {
                         <Input
                           ref={messageInputRef}
                           placeholder="Type a message… use # to mention a project"
-                          value={newMessage}
+                          value={inputDisplay}
                           onChange={handleMessageChange}
                           onKeyDown={(e) => {
                             if (e.key === "Escape") setShowProjectMention(false);

@@ -74,7 +74,7 @@ export default function MessageBubble({
         const projectId = match[1];
         const projectTitle = match[2];
         textParts.push(
-          <span key={`pt-${i}`} className={`font-semibold ${isOwn ? 'text-purple-200' : 'text-purple-700'}`}>
+          <span key={`pt-${i}`} className="font-bold text-amber-400 cursor-pointer hover:text-amber-300 transition-colors">
             #{projectTitle || projectId}
           </span>
         );
