@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Trash2, Download, Check, CheckCheck, Image as ImageIcon, Video, FileText, ExternalLink } from "lucide-react";
+import { Trash2, Download, Check, CheckCheck, Video, FileText, ExternalLink, Pencil, X, Send } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import ClickableImage from "../ClickableImage";
@@ -13,11 +13,15 @@ export default function MessageBubble({
   isOwn, 
   senderProfile, 
   onDelete,
+  onEdit,
   showAvatar = true,
   isGroupChat = false,
   isRead = false,
   currentUser = null
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState("");
+  const editInputRef = useRef(null);
   // Check if this is a video call message
   const isVideoCallMessage = message.metadata?.video_call;
 
@@ -128,6 +132,27 @@ export default function MessageBubble({
     );
   };
 
+  const startEdit = () => {
+    // Show the display content (strip ##id: tokens to readable form)
+    const display = (message.content || "").replace(/##([a-zA-Z0-9_-]+):([^#^]*)/g, '#$2').replace(/\^\^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+:[^:]+:[^|]+\|([^\s^#]*)/g, '^$1');
+    setEditValue(display);
+    setIsEditing(true);
+    setTimeout(() => {
+      if (editInputRef.current) {
+        editInputRef.current.focus();
+        editInputRef.current.selectionStart = editInputRef.current.value.length;
+      }
+    }, 0);
+  };
+
+  const submitEdit = () => {
+    const trimmed = editValue.trim();
+    if (trimmed && trimmed !== message.content && onEdit) {
+      onEdit(message, trimmed);
+    }
+    setIsEditing(false);
+  };
+
   const renderMediaContent = () => {
     if (!message.media_url) return null;
 
@@ -207,9 +232,25 @@ export default function MessageBubble({
               ? 'bg-purple-600 text-white' 
               : 'bg-gray-100 text-gray-900'
           }`}>
-            {isVideoCallMessage ? renderVideoCallInvite() : (
+            {isEditing ? (
+              <div className="flex items-center gap-2 min-w-[200px]">
+                <input
+                  ref={editInputRef}
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") { e.preventDefault(); submitEdit(); }
+                    if (e.key === "Escape") setIsEditing(false);
+                  }}
+                  className="flex-1 bg-white/20 text-white placeholder-white/60 rounded px-2 py-1 text-sm outline-none border border-white/30 focus:border-white/60"
+                />
+                <button onClick={submitEdit} className="text-white/80 hover:text-white"><Send className="w-3.5 h-3.5" /></button>
+                <button onClick={() => setIsEditing(false)} className="text-white/80 hover:text-white"><X className="w-3.5 h-3.5" /></button>
+              </div>
+            ) : isVideoCallMessage ? renderVideoCallInvite() : (
               <>
                 {message.content && renderMessageContent(message.content)}
+                {message.is_edited && <span className="text-xs opacity-50 ml-1">(edited)</span>}
                 {renderMediaContent()}
               </>
             )}
@@ -221,7 +262,6 @@ export default function MessageBubble({
                   try {
                     const messageDate = new Date(message.created_date);
                     const now = new Date();
-                    // Only format if the date is valid and not in the future
                     if (messageDate <= now) {
                       return formatDistanceToNow(messageDate, { addSuffix: true });
                     }
@@ -243,15 +283,17 @@ export default function MessageBubble({
                 </div>
               )}
             </div>
-            {isOwn && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDelete(message)}
-                className="h-6 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Trash2 className="w-3 h-3 text-red-500" />
-              </Button>
+            {isOwn && !isVideoCallMessage && (
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {!message.media_url && (
+                  <Button variant="ghost" size="sm" onClick={startEdit} className="h-6 px-2">
+                    <Pencil className="w-3 h-3 text-gray-400" />
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={() => onDelete(message)} className="h-6 px-2">
+                  <Trash2 className="w-3 h-3 text-red-500" />
+                </Button>
+              </div>
             )}
           </div>
         </div>

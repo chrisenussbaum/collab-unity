@@ -423,22 +423,23 @@ export default function Chat({ currentUser, authIsLoading }) {
     setNewMessage(val);
     handleTyping();
 
-    // Detect single "#" trigger (not "##")
+    // Detect single "#" trigger (not "##") — allow trailing punctuation like ?, .
     const cursorPos = e.target.selectionStart;
     const textUpToCursor = val.slice(0, cursorPos);
-    const hashMatch = textUpToCursor.match(/(?<![#])#(\w*)$/);
+    // Match #word optionally followed by punctuation at end
+    const hashMatch = textUpToCursor.match(/(?<![#])#(\w+)[?.!,;:]*$/) || textUpToCursor.match(/(?<![#])#()$/);
     if (hashMatch) {
-      setMentionQuery(hashMatch[1]);
+      setMentionQuery(hashMatch[1] || "");
       setShowProjectMention(true);
       setShowItemPopover(false);
     } else {
       setShowProjectMention(false);
     }
 
-    // Detect "^" trigger
-    const caretMatch = textUpToCursor.match(/\^(\w*)$/);
+    // Detect "^" trigger — allow trailing punctuation like ?, .
+    const caretMatch = textUpToCursor.match(/\^(\w+)[?.!,;:]*$/) || textUpToCursor.match(/\^()$/);
     if (caretMatch) {
-      setItemPopoverQuery(caretMatch[1]);
+      setItemPopoverQuery(caretMatch[1] || "");
       setShowItemPopover(true);
       setShowProjectMention(false);
     } else {
@@ -774,6 +775,20 @@ export default function Chat({ currentUser, authIsLoading }) {
       e.stopPropagation();
     }
     await sendMessage();
+  };
+
+  // Handle message editing
+  const handleEditMessage = async (message, newContent) => {
+    try {
+      const updated = await base44.entities.Message.update(message.id, {
+        content: newContent,
+        is_edited: true
+      });
+      setMessages(prev => prev.map(m => m.id === message.id ? { ...m, content: newContent, is_edited: true } : m));
+    } catch (error) {
+      console.error("Error editing message:", error);
+      toast.error("Failed to edit message");
+    }
   };
 
   // Handle message deletion
@@ -1420,6 +1435,7 @@ export default function Chat({ currentUser, authIsLoading }) {
                                 setMessageToDelete(msg);
                                 setShowDeleteDialog(true);
                               }}
+                              onEdit={handleEditMessage}
                               showAvatar={showAvatar}
                               isGroupChat={selectedInfo.isGroup}
                               isRead={isRead}
