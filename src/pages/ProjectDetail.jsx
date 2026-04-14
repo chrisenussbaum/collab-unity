@@ -426,6 +426,19 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
     return () => { isMounted.current = false; };
   }, [projectId, initializeProjectPage]);
 
+  // Auto-scroll to workspace tabs on load for collaborators
+  useEffect(() => {
+    if (!isLoading && project && currentUser) {
+      const isContributor = canContribute(project, currentUser, userApplication);
+      if (isContributor) {
+        setTimeout(() => {
+          const el = document.getElementById('workspace-tabs');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+      }
+    }
+  }, [isLoading, project?.id, currentUser?.email]);
+
   // Prevent scroll restoration when tab changes
   useEffect(() => {
     // Disable scroll restoration for this page
@@ -1557,7 +1570,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
 
         {/* Workspace Tabs */}
         {(userCanContribute) && (
-          <div className="mt-6 sm:mt-8">
+          <div className="mt-6 sm:mt-8" id="workspace-tabs">
             <WorkspaceTabs 
               project={project} 
               currentUser={currentUser}
