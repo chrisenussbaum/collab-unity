@@ -7,8 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { FileStack, Plus, Upload, Trash2, ExternalLink, Link as LinkIcon, Download, File, Clock, FileText, MoreVertical, Edit, User as UserIcon, User, Eye } from "lucide-react";
+import { FileStack, Plus, Upload, Trash2, ExternalLink, Link as LinkIcon, Download, File, Clock, FileText, MoreVertical, Edit, User as UserIcon, User, Eye, CheckSquare, Square, Tag, X } from "lucide-react";
 import AssetPreviewModal from "./AssetPreviewModal";
+import TagInput from "./TagInput";
+import BulkEditAssetsDialog from "./BulkEditAssetsDialog";
 import { AssetVersion, ActivityLog, User as UserEntity } from "@/entities/all";
 import { UploadFile } from "@/integrations/Core";
 import { toast } from "sonner";
@@ -44,7 +46,10 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
   const [isUploading, setIsUploading] = useState(false); // Re-introduced for upload modal
   const [uploadType, setUploadType] = useState('file'); // 'file' or 'link'
   const [deletingAsset, setDeletingAsset] = useState(null); // State for asset being deleted
-  const [previewAsset, setPreviewAsset] = useState(null); // State for asset preview modal
+  const [previewAsset, setPreviewAsset] = useState(null);
+  const [selectedAssetIds, setSelectedAssetIds] = useState(new Set());
+  const [showBulkEdit, setShowBulkEdit] = useState(false);
+  const [selectedTags, setSelectedTags] = useState([]); // multi-tag filter
 
   const [formData, setFormData] = useState({
     asset_name: "",
@@ -143,20 +148,57 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
 
   const handleAddTag = useCallback(() => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()]
-      }));
+      setFormData(prev => ({ ...prev, tags: [...prev.tags, newTag.trim()] }));
       setNewTag("");
     }
   }, [newTag, formData.tags]);
 
   const handleRemoveTag = useCallback((tagToRemove) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(t => t !== tagToRemove)
-    }));
+    setFormData(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tagToRemove) }));
   }, []);
+
+  // All unique tags across assets for suggestions
+  const allExistingTags = [...new Set(assets.flatMap(a => a.tags || []))];
+
+  const toggleSelectAsset = (id) => {
+    setSelectedAssetIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = (visibleIds) => {
+    if (visibleIds.every(id => selectedAssetIds.has(id))) {
+      setSelectedAssetIds(prev => { const next = new Set(prev); visibleIds.forEach(id => next.delete(id)); return next; });
+    } else {
+      setSelectedAssetIds(prev => { const next = new Set(prev); visibleIds.forEach(id => next.add(id)); return next; });
+    }
+  };
+
+  const handleBulkSave = async ({ category, tags, tagMode }) => {
+    const toUpdate = assets.filter(a => selectedAssetIds.has(a.id));
+    await Promise.all(toUpdate.map(a => AssetVersion.update(a.id, {
+      ...(category ? { category } : {}),
+      tags: tagMode === "replace" ? tags : [...new Set([...(a.tags || []), ...tags])]
+    })));
+    await ActivityLog.create({
+      project_id: project.id,
+      user_email: currentUser.email,
+      user_name: currentUser.full_name || currentUser.email,
+      action_type: 'asset_updated',
+      action_description: `bulk updated ${toUpdate.length} assets`,
+      entity_type: 'asset',
+      metadata: { count: toUpdate.length, category, tags }
+    });
+    setSelectedAssetIds(new Set());
+    fetchAssets();
+    toast.success(`Updated ${toUpdate.length} asset${toUpdate.length !== 1 ? "s" : ""}`);
+  };
+
+  const toggleTagFilter = (tag) => {
+    setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+  };
 
   const handleUploadAsset = async (e) => {
     e.preventDefault();
@@ -325,9 +367,11 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
 
   const categories = [...new Set(assets.map(asset => asset.category || "Uncategorized"))].filter(Boolean).sort();
 
-  const filteredAssets = assets.filter(asset =>
-    selectedCategory === "all" || (asset.category || "Uncategorized") === selectedCategory
-  );
+  const filteredAssets = assets.filter(asset => {
+    const catMatch = selectedCategory === "all" || (asset.category || "Uncategorized") === selectedCategory;
+    const tagMatch = selectedTags.length === 0 || selectedTags.every(t => (asset.tags || []).includes(t));
+    return catMatch && tagMatch;
+  });
 
   if (!project) {
     return (
@@ -462,7 +506,7 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
         </CardHeader>
         <CardContent>
           {/* Category Filter */}
-          <div className="mb-6">
+          <div className="mb-3">
             <HorizontalScrollContainer>
               <div className="flex space-x-2">
                 <Button
@@ -491,6 +535,71 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
             </HorizontalScrollContainer>
           </div>
 
+          {/* Tag Filter */}
+          {allExistingTags.length > 0 && (
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Tag className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-xs text-gray-500 font-medium">Filter by tags</span>
+                {selectedTags.length > 0 && (
+                  <button onClick={() => setSelectedTags([])} className="text-xs text-purple-600 hover:underline ml-auto">Clear tags</button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {allExistingTags.map(tag => (
+                  <button
+                    key={tag}
+                    onClick={() => toggleTagFilter(tag)}
+                    className={`text-xs px-2.5 py-0.5 rounded-full border transition-colors ${
+                      selectedTags.includes(tag)
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Bulk Action Bar */}
+          {isCollaborator && filteredAssets.length > 0 && (
+            <div className="flex items-center gap-3 mb-4 py-2 px-3 bg-gray-50 rounded-lg border border-gray-200">
+              <button
+                type="button"
+                onClick={() => toggleSelectAll(filteredAssets.map(a => a.id))}
+                className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-purple-600 transition-colors"
+              >
+                {filteredAssets.every(a => selectedAssetIds.has(a.id)) && filteredAssets.length > 0
+                  ? <CheckSquare className="w-4 h-4 text-purple-600" />
+                  : <Square className="w-4 h-4" />}
+                Select all
+              </button>
+              {selectedAssetIds.size > 0 && (
+                <>
+                  <span className="text-xs text-gray-500">{selectedAssetIds.size} selected</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowBulkEdit(true)}
+                    className="ml-auto text-xs"
+                  >
+                    <Edit className="w-3.5 h-3.5 mr-1.5" />
+                    Bulk Edit
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedAssetIds(new Set())}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Assets List */}
           {filteredAssets.length === 0 ? (
             <div className="text-center py-12">
@@ -513,11 +622,22 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
                     >
-                      <Card className="cu-card hover:shadow-md transition-shadow">
+                      <Card className={`cu-card hover:shadow-md transition-shadow ${selectedAssetIds.has(asset.id) ? "ring-2 ring-purple-400" : ""}`}>
                         <CardContent className="p-3 sm:p-4">
                           <div className="flex flex-col space-y-3">
                             {/* Header Row - Icon and Title */}
                             <div className="flex items-start space-x-3">
+                              {isCollaborator && (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleSelectAsset(asset.id)}
+                                  className="mt-1 flex-shrink-0 text-gray-400 hover:text-purple-600 transition-colors"
+                                >
+                                  {selectedAssetIds.has(asset.id)
+                                    ? <CheckSquare className="w-4 h-4 text-purple-600" />
+                                    : <Square className="w-4 h-4" />}
+                                </button>
+                              )}
                               <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                                 <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
                               </div>
@@ -748,38 +868,11 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
 
             <div>
               <label className="block text-sm font-medium mb-1">Tags</label>
-              {formData.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {formData.tags.map((tag, idx) => (
-                    <Badge key={idx} variant="secondary" className="flex items-center">
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTag(tag)}
-                        className="ml-2 hover:text-red-500"
-                      >
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-              <div className="flex gap-2">
-                <Input
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddTag();
-                    }
-                  }}
-                  placeholder="Add a tag"
-                />
-                <Button type="button" variant="outline" onClick={handleAddTag}>
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
+              <TagInput
+                tags={formData.tags}
+                onChange={(tags) => setFormData(prev => ({ ...prev, tags }))}
+                allExistingTags={allExistingTags}
+              />
             </div>
 
             <DialogFooter>
@@ -843,38 +936,11 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
 
             <div>
               <label className="block text-sm font-medium mb-1">Tags</label>
-              {formData.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {formData.tags.map((tag, idx) => (
-                    <Badge key={idx} variant="secondary" className="flex items-center">
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTag(tag)}
-                        className="ml-2 hover:text-red-500"
-                      >
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-              <div className="flex gap-2">
-                <Input
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddTag();
-                    }
-                  }}
-                  placeholder="Add a tag"
-                />
-                <Button type="button" variant="outline" onClick={handleAddTag}>
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
+              <TagInput
+                tags={formData.tags}
+                onChange={(tags) => setFormData(prev => ({ ...prev, tags }))}
+                allExistingTags={allExistingTags}
+              />
             </div>
 
             <DialogFooter>
@@ -891,6 +957,15 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
 
       {/* Asset Preview Modal */}
       <AssetPreviewModal asset={previewAsset} onClose={() => setPreviewAsset(null)} />
+
+      {/* Bulk Edit Dialog */}
+      <BulkEditAssetsDialog
+        isOpen={showBulkEdit}
+        onClose={() => setShowBulkEdit(false)}
+        selectedAssets={assets.filter(a => selectedAssetIds.has(a.id))}
+        allExistingTags={allExistingTags}
+        onSave={handleBulkSave}
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deletingAsset} onOpenChange={() => setDeletingAsset(null)}>
