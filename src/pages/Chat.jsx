@@ -38,6 +38,7 @@ import PresenceIndicator from "@/components/chat/PresenceIndicator";
 import EmojiPicker from "emoji-picker-react";
 import ConversationSkeleton from "@/components/skeletons/ConversationSkeleton";
 import ProjectMentionPopover from "@/components/chat/ProjectMentionPopover";
+import ProjectItemPopover from "@/components/chat/ProjectItemPopover";
 
 export default function Chat({ currentUser, authIsLoading }) {
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -62,6 +63,8 @@ export default function Chat({ currentUser, authIsLoading }) {
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [showProjectMention, setShowProjectMention] = useState(false);
   const [mentionQuery, setMentionQuery] = useState("");
+  const [showItemPopover, setShowItemPopover] = useState(false);
+  const [itemPopoverQuery, setItemPopoverQuery] = useState("");
   // rawMessage stores ##id:title tokens; inputDisplay shows #Title to the user
   const [inputDisplay, setInputDisplay] = useState("");
   const messageInputRef = useRef(null);
@@ -427,9 +430,44 @@ export default function Chat({ currentUser, authIsLoading }) {
     if (hashMatch) {
       setMentionQuery(hashMatch[1]);
       setShowProjectMention(true);
+      setShowItemPopover(false);
     } else {
       setShowProjectMention(false);
     }
+
+    // Detect "^" trigger
+    const caretMatch = textUpToCursor.match(/\^(\w*)$/);
+    if (caretMatch) {
+      setItemPopoverQuery(caretMatch[1]);
+      setShowItemPopover(true);
+      setShowProjectMention(false);
+    } else {
+      setShowItemPopover(false);
+    }
+  };
+
+  const handleItemSelect = ({ type, projectId, projectTitle, itemId, itemTitle }) => {
+    const input = messageInputRef.current;
+    const cursorPos = input ? input.selectionStart : inputDisplay.length;
+    const textUpToCursor = inputDisplay.slice(0, cursorPos);
+    const caretIndex = textUpToCursor.search(/\^\w*$/);
+    const before = inputDisplay.slice(0, caretIndex);
+    const after = inputDisplay.slice(cursorPos);
+
+    const displayToken = `^${itemTitle}`;
+    const storeToken = `^^${type}:${projectId}:${itemId}:${projectTitle}|${itemTitle}`;
+
+    setInputDisplay(`${before}${displayToken} ${after}`);
+    setNewMessage(`${before}${storeToken} ${after}`);
+    setShowItemPopover(false);
+    setItemPopoverQuery("");
+    setTimeout(() => {
+      if (messageInputRef.current) {
+        const pos = before.length + displayToken.length + 1;
+        messageInputRef.current.focus();
+        messageInputRef.current.setSelectionRange(pos, pos);
+      }
+    }, 0);
   };
 
   const handleProjectMentionSelect = (project) => {
@@ -1452,13 +1490,21 @@ export default function Chat({ currentUser, authIsLoading }) {
                             onClose={() => setShowProjectMention(false)}
                           />
                         )}
+                        {showItemPopover && (
+                          <ProjectItemPopover
+                            query={itemPopoverQuery}
+                            currentUser={currentUser}
+                            onSelect={handleItemSelect}
+                            onClose={() => setShowItemPopover(false)}
+                          />
+                        )}
                         <Input
                           ref={messageInputRef}
-                          placeholder="Type a message… use # to mention a project"
+                          placeholder="Type a message… # project  ^ item"
                           value={inputDisplay}
                           onChange={handleMessageChange}
                           onKeyDown={(e) => {
-                            if (e.key === "Escape") setShowProjectMention(false);
+                            if (e.key === "Escape") { setShowProjectMention(false); setShowItemPopover(false); }
                           }}
                           disabled={isSending || isUploadingMedia}
                           className="w-full"

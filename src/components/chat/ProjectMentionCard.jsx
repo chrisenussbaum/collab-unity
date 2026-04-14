@@ -50,15 +50,11 @@ export default function ProjectMentionCard({ projectId, isOwn }) {
 
   return (
     <div
-      className={`mt-2 rounded-xl overflow-hidden min-w-[240px] max-w-[300px] cursor-pointer transition-all hover:shadow-md ${
-        isOwn
-          ? 'border border-purple-400 bg-purple-700 hover:bg-purple-600'
-          : 'border border-purple-200 bg-white hover:border-purple-400'
-      }`}
+      className="mt-2 rounded-xl overflow-hidden min-w-[240px] max-w-[300px] cursor-pointer transition-all hover:shadow-md border border-gray-200 bg-white hover:border-purple-300"
       onClick={() => navigate(createPageUrl(`ProjectDetail`) + `?id=${project.id}`)}
     >
       {/* Header stripe */}
-      <div className="h-1.5 w-full bg-gradient-to-r from-purple-300 to-indigo-400" />
+      <div className="h-1.5 w-full bg-gradient-to-r from-purple-400 to-indigo-400" />
 
       <div className="p-3">
         <div className="flex items-start gap-2.5">
@@ -69,7 +65,7 @@ export default function ProjectMentionCard({ projectId, isOwn }) {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className={`text-sm font-semibold truncate leading-tight ${isOwn ? 'text-white' : 'text-gray-900'}`}>{project.title}</p>
+            <p className="text-sm font-semibold truncate leading-tight text-gray-900">{project.title}</p>
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
               {project.project_type && (
                 <Badge variant="secondary" className="text-[10px] py-0 px-1.5 bg-purple-100 text-purple-700 border-0">
@@ -86,15 +82,15 @@ export default function ProjectMentionCard({ projectId, isOwn }) {
         </div>
 
         {project.description && (
-          <p className={`text-xs mt-2 leading-relaxed line-clamp-2 ${isOwn ? 'text-purple-200' : 'text-gray-500'}`}>{project.description}</p>
+          <p className="text-xs mt-2 leading-relaxed line-clamp-2 text-gray-500">{project.description}</p>
         )}
 
-        <div className={`flex items-center justify-between mt-2.5 pt-2.5 border-t ${isOwn ? 'border-purple-500' : 'border-gray-100'}`}>
-          <div className={`flex items-center gap-1 ${isOwn ? 'text-purple-300' : 'text-gray-400'}`}>
+        <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-gray-100">
+          <div className="flex items-center gap-1 text-gray-400">
             <Users className="w-3 h-3" />
             <span className="text-[10px]">{project.current_collaborators_count || 1} collaborator{project.current_collaborators_count !== 1 ? "s" : ""}</span>
           </div>
-          <span className={`text-[10px] font-semibold flex items-center gap-0.5 ${isOwn ? 'text-amber-300' : 'text-purple-600'}`}>
+          <span className="text-[10px] font-semibold flex items-center gap-0.5 text-purple-600">
             View project <ArrowRight className="w-3 h-3" />
           </span>
         </div>

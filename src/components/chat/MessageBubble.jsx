@@ -6,6 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import ClickableImage from "../ClickableImage";
 import ProjectMentionCard from "./ProjectMentionCard";
+import ProjectItemReferenceCard from "./ProjectItemReferenceCard";
 
 export default function MessageBubble({ 
   message, 
@@ -56,14 +57,14 @@ export default function MessageBubble({
     );
   };
 
-  // Render message content with clickable links and project mention cards
-  // Token format stored in DB: ##<id>:<title with spaces>
+  // Render message content with clickable links, project mention cards, and item reference cards
   const renderMessageContent = (content) => {
     if (!content) return null;
 
-    const projectCards = [];
+    const cards = [];
     const textParts = [];
-    const tokenRegex = /##([a-zA-Z0-9_-]+):([^#]*)/g;
+    // Match ##projectId:title tokens and ^^type:projectId:itemId:projectTitle|itemTitle tokens
+    const tokenRegex = /(##([a-zA-Z0-9_-]+):([^#\^]*))|(\^\^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+:[^:]+:[^|]+\|[^\s^#]*)/g;
     let lastIndex = 0;
     let match;
     let idx = 0;
@@ -87,14 +88,30 @@ export default function MessageBubble({
       const before = content.slice(lastIndex, match.index);
       if (before) pushTextWithLinks(before, `pre-${idx}`);
 
-      const projectId = match[1];
-      const projectTitle = match[2].trim();
-      textParts.push(
-        <span key={`pt-${idx}`} className="font-bold text-amber-400">
-          #{projectTitle || projectId}
-        </span>
-      );
-      projectCards.push(<ProjectMentionCard key={`pc-${idx}`} projectId={projectId} isOwn={isOwn} />);
+      if (match[1]) {
+        // ##projectId:title token
+        const projectId = match[2];
+        const projectTitle = match[3].trim();
+        textParts.push(
+          <span key={`pt-${idx}`} className="font-bold text-amber-400">
+            #{projectTitle || projectId}
+          </span>
+        );
+        cards.push(<ProjectMentionCard key={`pc-${idx}`} projectId={projectId} isOwn={isOwn} />);
+      } else if (match[4]) {
+        // ^^type:... item reference token
+        const token = match[4];
+        // Extract display title from token for inline text
+        const pipeIdx = token.lastIndexOf("|");
+        const displayTitle = pipeIdx !== -1 ? token.slice(pipeIdx + 1) : token;
+        textParts.push(
+          <span key={`it-${idx}`} className="font-bold text-emerald-400">
+            ^{displayTitle}
+          </span>
+        );
+        cards.push(<ProjectItemReferenceCard key={`irc-${idx}`} token={token} />);
+      }
+
       lastIndex = match.index + match[0].length;
       idx++;
     }
@@ -105,7 +122,7 @@ export default function MessageBubble({
     return (
       <div>
         <p className="text-sm whitespace-pre-wrap break-words">{textParts}</p>
-        {projectCards}
+        {cards}
       </div>
     );
   };
