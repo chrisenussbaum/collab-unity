@@ -37,6 +37,7 @@ import VideoCallButton from "@/components/chat/VideoCallButton";
 import PresenceIndicator from "@/components/chat/PresenceIndicator";
 import EmojiPicker from "emoji-picker-react";
 import ConversationSkeleton from "@/components/skeletons/ConversationSkeleton";
+import ProjectMentionPopover from "@/components/chat/ProjectMentionPopover";
 
 export default function Chat({ currentUser, authIsLoading }) {
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -59,6 +60,9 @@ export default function Chat({ currentUser, authIsLoading }) {
   const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState([]);
   const [showGroupSettings, setShowGroupSettings] = useState(false);
+  const [showProjectMention, setShowProjectMention] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const messageInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const emojiPickerRef = useRef(null);
@@ -409,8 +413,43 @@ export default function Chat({ currentUser, authIsLoading }) {
   };
 
   const handleMessageChange = (e) => {
-    setNewMessage(e.target.value);
+    const val = e.target.value;
+    setNewMessage(val);
     handleTyping();
+
+    // Detect "#" trigger for project mention
+    const cursorPos = e.target.selectionStart;
+    const textUpToCursor = val.slice(0, cursorPos);
+    const hashMatch = textUpToCursor.match(/#(\w*)$/);
+    if (hashMatch) {
+      setMentionQuery(hashMatch[1]);
+      setShowProjectMention(true);
+    } else {
+      setShowProjectMention(false);
+    }
+  };
+
+  const handleProjectMentionSelect = (project) => {
+    // Replace the trailing "#query" with the token and a space
+    const input = messageInputRef.current;
+    const cursorPos = input ? input.selectionStart : newMessage.length;
+    const textUpToCursor = newMessage.slice(0, cursorPos);
+    const hashIndex = textUpToCursor.lastIndexOf("#");
+    const before = newMessage.slice(0, hashIndex);
+    const after = newMessage.slice(cursorPos);
+    const token = `##${project.id}:${project.title}`;
+    const updated = `${before}${token} ${after}`;
+    setNewMessage(updated);
+    setShowProjectMention(false);
+    setMentionQuery("");
+    // Refocus input
+    setTimeout(() => {
+      if (messageInputRef.current) {
+        const pos = before.length + token.length + 1;
+        messageInputRef.current.focus();
+        messageInputRef.current.setSelectionRange(pos, pos);
+      }
+    }, 0);
   };
 
   const handleMediaSelect = async (file, mediaType) => {
@@ -1400,13 +1439,27 @@ export default function Chat({ currentUser, authIsLoading }) {
                         </div>
                       </div>
 
-                      <Input
-                        placeholder="Type a message..."
-                        value={newMessage}
-                        onChange={handleMessageChange}
-                        disabled={isSending || isUploadingMedia}
-                        className="flex-1"
-                      />
+                      <div className="flex-1 relative">
+                        {showProjectMention && (
+                          <ProjectMentionPopover
+                            query={mentionQuery}
+                            currentUser={currentUser}
+                            onSelect={handleProjectMentionSelect}
+                            onClose={() => setShowProjectMention(false)}
+                          />
+                        )}
+                        <Input
+                          ref={messageInputRef}
+                          placeholder="Type a message… use # to mention a project"
+                          value={newMessage}
+                          onChange={handleMessageChange}
+                          onKeyDown={(e) => {
+                            if (e.key === "Escape") setShowProjectMention(false);
+                          }}
+                          disabled={isSending || isUploadingMedia}
+                          className="w-full"
+                        />
+                      </div>
                       <Button 
                         type="submit" 
                         disabled={(!newMessage.trim() && !isUploadingMedia) || isSending}

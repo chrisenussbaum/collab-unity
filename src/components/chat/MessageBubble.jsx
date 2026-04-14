@@ -5,6 +5,7 @@ import { Trash2, Download, Check, CheckCheck, Image as ImageIcon, Video, FileTex
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import ClickableImage from "../ClickableImage";
+import ProjectMentionCard from "./ProjectMentionCard";
 
 export default function MessageBubble({ 
   message, 
@@ -55,21 +56,38 @@ export default function MessageBubble({
     );
   };
 
-  // Render message content with clickable links
+  // Render message content with clickable links and project mention cards
   const renderMessageContent = (content) => {
     if (!content) return null;
 
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = content.split(urlRegex);
+    // Split on ##projectId tokens (stored as ##<id>) and URLs
+    // Token format: ##<projectId> (e.g. ##abc123) — title shown as #ProjectTitle at send time
+    const tokenRegex = /(##[a-zA-Z0-9_-]+(?::[^#\s]+)?)/g;
+    const segments = content.split(tokenRegex);
 
-    return (
-      <p className="text-sm whitespace-pre-wrap break-words">
-        {parts.map((part, index) => {
-          if (index % 2 === 1) {
-            // This is a URL
-            return (
+    const projectCards = [];
+    const textParts = [];
+
+    segments.forEach((seg, i) => {
+      const match = seg.match(/^##([a-zA-Z0-9_-]+)(?::(.+))?$/);
+      if (match) {
+        const projectId = match[1];
+        const projectTitle = match[2];
+        textParts.push(
+          <span key={`pt-${i}`} className={`font-semibold ${isOwn ? 'text-purple-200' : 'text-purple-700'}`}>
+            #{projectTitle || projectId}
+          </span>
+        );
+        projectCards.push(<ProjectMentionCard key={`pc-${i}`} projectId={projectId} isOwn={isOwn} />);
+      } else {
+        // Handle URLs within plain text segments
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const urlParts = seg.split(urlRegex);
+        urlParts.forEach((part, j) => {
+          if (j % 2 === 1) {
+            textParts.push(
               <a
-                key={index}
+                key={`url-${i}-${j}`}
                 href={part}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -79,10 +97,18 @@ export default function MessageBubble({
                 {part}
               </a>
             );
+          } else {
+            textParts.push(<span key={`txt-${i}-${j}`}>{part}</span>);
           }
-          return <span key={index}>{part}</span>;
-        })}
-      </p>
+        });
+      }
+    });
+
+    return (
+      <div>
+        <p className="text-sm whitespace-pre-wrap break-words">{textParts}</p>
+        {projectCards}
+      </div>
     );
   };
 
