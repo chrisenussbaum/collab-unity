@@ -40,7 +40,9 @@ const formatFileSize = (bytes) => {
 export default function AssetsTab({ project, currentUser, isCollaborator, isProjectOwner, projectOwnerName }) {
   const [assets, setAssets] = useState([]); // All versions fetched from DB
   const [isLoading, setIsLoading] = useState(true);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const dragCounterRef = useRef(0);
   const [showEditModal, setShowEditModal] = useState(false); // New state for edit modal
   const [editingAsset, setEditingAsset] = useState(null); // New state for asset being edited
   const [isUploading, setIsUploading] = useState(false); // Re-introduced for upload modal
@@ -199,6 +201,37 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
   const toggleTagFilter = (tag) => {
     setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
   };
+
+  // Drag-and-drop handlers for the whole tab
+  const handleDragEnter = useCallback((e) => {
+    if (!isCollaborator) return;
+    e.preventDefault();
+    dragCounterRef.current += 1;
+    if (e.dataTransfer.types.includes('Files')) setIsDragOver(true);
+  }, [isCollaborator]);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    dragCounterRef.current -= 1;
+    if (dragCounterRef.current === 0) setIsDragOver(false);
+  }, []);
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+  }, []);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    dragCounterRef.current = 0;
+    setIsDragOver(false);
+    if (!isCollaborator) return;
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    resetForm();
+    setFormData(prev => ({ ...prev, file, asset_name: file.name }));
+    setUploadType('file');
+    setShowUploadModal(true);
+  }, [isCollaborator, resetForm]);
 
   const handleUploadAsset = async (e) => {
     e.preventDefault();
@@ -490,7 +523,23 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div
+      className="space-y-4 sm:space-y-6 relative"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Drag-and-drop overlay */}
+      {isDragOver && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center rounded-xl bg-purple-50/90 border-2 border-dashed border-purple-400 pointer-events-none">
+          <div className="text-center">
+            <Upload className="w-12 h-12 mx-auto text-purple-500 mb-3" />
+            <p className="text-purple-700 font-semibold text-lg">Drop to upload asset</p>
+            <p className="text-purple-500 text-sm mt-1">Release to add the file as a new asset</p>
+          </div>
+        </div>
+      )}
       <Card className="cu-card">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 pb-4">
           <CardTitle className="flex items-center text-lg sm:text-xl">
@@ -802,16 +851,41 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
             {uploadType === 'file' ? (
               <div>
                 <label className="block text-sm font-medium mb-1">Select File *</label>
-                <Input
-                  ref={fileInputRef}
-                  type="file"
-                  onChange={handleFileSelect}
-                  required
-                  className="file:cu-button"
-                />
-                {formData.file && (
-                  <p className="text-xs text-gray-500 mt-1">Selected: {formData.file.name}</p>
-                )}
+                <div
+                  className={`relative border-2 border-dashed rounded-lg p-5 text-center transition-colors cursor-pointer ${
+                    formData.file
+                      ? "border-green-300 bg-green-50"
+                      : "border-gray-300 hover:border-purple-400 hover:bg-purple-50"
+                  }`}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) setFormData(prev => ({ ...prev, file, asset_name: prev.asset_name || file.name }));
+                  }}
+                >
+                  <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
+                  {formData.file ? (
+                    <div className="flex items-center justify-center gap-2 text-green-700">
+                      <File className="w-5 h-5" />
+                      <span className="text-sm font-medium truncate max-w-xs">{formData.file.name}</span>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setFormData(prev => ({ ...prev, file: null })); }}
+                        className="ml-1 text-gray-400 hover:text-red-500"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-600">Drag & drop a file here, or <span className="text-purple-600 font-medium">click to browse</span></p>
+                    </>
+                  )}
+                </div>
               </div>
             ) : (
               <div>
