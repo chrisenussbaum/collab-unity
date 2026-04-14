@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import ClickableImage from "../ClickableImage";
 import ProjectMentionCard from "./ProjectMentionCard";
 import ProjectItemReferenceCard from "./ProjectItemReferenceCard";
+import ProjectMentionPopover from "./ProjectMentionPopover";
+import ProjectItemPopover from "./ProjectItemPopover";
 
 export default function MessageBubble({ 
   message, 
@@ -17,11 +19,16 @@ export default function MessageBubble({
   showAvatar = true,
   isGroupChat = false,
   isRead = false,
-  currentUser = null
+  currentUser = null,
+  conversationParticipants = []
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
   const editInputRef = useRef(null);
+  const [showEditMentionPopover, setShowEditMentionPopover] = useState(false);
+  const [editMentionQuery, setEditMentionQuery] = useState("");
+  const [showEditItemPopover, setShowEditItemPopover] = useState(false);
+  const [editItemQuery, setEditItemQuery] = useState("");
   // Check if this is a video call message
   const isVideoCallMessage = message.metadata?.video_call;
 
@@ -233,19 +240,81 @@ export default function MessageBubble({
               : 'bg-gray-100 text-gray-900'
           }`}>
             {isEditing ? (
-              <div className="flex items-center gap-2 min-w-[200px]">
-                <input
-                  ref={editInputRef}
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") { e.preventDefault(); submitEdit(); }
-                    if (e.key === "Escape") setIsEditing(false);
-                  }}
-                  className="flex-1 bg-white/20 text-white placeholder-white/60 rounded px-2 py-1 text-sm outline-none border border-white/30 focus:border-white/60"
-                />
-                <button onClick={submitEdit} className="text-white/80 hover:text-white"><Send className="w-3.5 h-3.5" /></button>
-                <button onClick={() => setIsEditing(false)} className="text-white/80 hover:text-white"><X className="w-3.5 h-3.5" /></button>
+              <div className="relative min-w-[200px]">
+                {showEditMentionPopover && (
+                  <div className="absolute bottom-full mb-1 left-0 z-50">
+                    <ProjectMentionPopover
+                      query={editMentionQuery}
+                      currentUser={currentUser}
+                      onSelect={(project) => {
+                        const input = editInputRef.current;
+                        const cursor = input ? input.selectionStart : editValue.length;
+                        const upTo = editValue.slice(0, cursor);
+                        const hashIdx = upTo.search(/(?<![#])#\w*[?.!,;:]*$/);
+                        const before = editValue.slice(0, hashIdx);
+                        const after = editValue.slice(cursor).replace(/^[?.!,;:]*/, '');
+                        setEditValue(`${before}#${project.title} ${after}`);
+                        setShowEditMentionPopover(false);
+                      }}
+                      onClose={() => setShowEditMentionPopover(false)}
+                    />
+                  </div>
+                )}
+                {showEditItemPopover && (
+                  <div className="absolute bottom-full mb-1 left-0 z-50">
+                    <ProjectItemPopover
+                      query={editItemQuery}
+                      currentUser={currentUser}
+                      conversationParticipants={conversationParticipants}
+                      onSelect={({ itemTitle }) => {
+                        const input = editInputRef.current;
+                        const cursor = input ? input.selectionStart : editValue.length;
+                        const upTo = editValue.slice(0, cursor);
+                        const caretIdx = upTo.search(/\^\w*[?.!,;:]*$/);
+                        const before = editValue.slice(0, caretIdx);
+                        const after = editValue.slice(cursor).replace(/^[?.!,;:]*/, '');
+                        setEditValue(`${before}^${itemTitle} ${after}`);
+                        setShowEditItemPopover(false);
+                      }}
+                      onClose={() => setShowEditItemPopover(false)}
+                    />
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={editInputRef}
+                    value={editValue}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEditValue(val);
+                      const cursor = e.target.selectionStart;
+                      const upTo = val.slice(0, cursor);
+                      const hashMatch = upTo.match(/(?<![#])#(\w*)[?.!,;:]*$/);
+                      if (hashMatch) {
+                        setEditMentionQuery(hashMatch[1] || "");
+                        setShowEditMentionPopover(true);
+                        setShowEditItemPopover(false);
+                      } else {
+                        setShowEditMentionPopover(false);
+                      }
+                      const caretMatch = upTo.match(/\^(\w*)[?.!,;:]*$/);
+                      if (caretMatch) {
+                        setEditItemQuery(caretMatch[1] || "");
+                        setShowEditItemPopover(true);
+                        setShowEditMentionPopover(false);
+                      } else {
+                        setShowEditItemPopover(false);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") { e.preventDefault(); submitEdit(); }
+                      if (e.key === "Escape") { setIsEditing(false); setShowEditMentionPopover(false); setShowEditItemPopover(false); }
+                    }}
+                    className="flex-1 bg-white/20 text-white placeholder-white/60 rounded px-2 py-1 text-sm outline-none border border-white/30 focus:border-white/60"
+                  />
+                  <button onClick={submitEdit} className="text-white/80 hover:text-white"><Send className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => setIsEditing(false)} className="text-white/80 hover:text-white"><X className="w-3.5 h-3.5" /></button>
+                </div>
               </div>
             ) : isVideoCallMessage ? renderVideoCallInvite() : (
               <>

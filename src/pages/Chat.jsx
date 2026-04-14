@@ -426,8 +426,8 @@ export default function Chat({ currentUser, authIsLoading }) {
     // Detect single "#" trigger (not "##") — allow trailing punctuation like ?, .
     const cursorPos = e.target.selectionStart;
     const textUpToCursor = val.slice(0, cursorPos);
-    // Match #word optionally followed by punctuation at end
-    const hashMatch = textUpToCursor.match(/(?<![#])#(\w+)[?.!,;:]*$/) || textUpToCursor.match(/(?<![#])#()$/);
+    // Strip trailing punctuation to get the word query, but still trigger
+    const hashMatch = textUpToCursor.match(/(?<![#])#(\w*)[?.!,;:]*$/);
     if (hashMatch) {
       setMentionQuery(hashMatch[1] || "");
       setShowProjectMention(true);
@@ -437,7 +437,7 @@ export default function Chat({ currentUser, authIsLoading }) {
     }
 
     // Detect "^" trigger — allow trailing punctuation like ?, .
-    const caretMatch = textUpToCursor.match(/\^(\w+)[?.!,;:]*$/) || textUpToCursor.match(/\^()$/);
+    const caretMatch = textUpToCursor.match(/\^(\w*)[?.!,;:]*$/);
     if (caretMatch) {
       setItemPopoverQuery(caretMatch[1] || "");
       setShowItemPopover(true);
@@ -1440,6 +1440,11 @@ export default function Chat({ currentUser, authIsLoading }) {
                               isGroupChat={selectedInfo.isGroup}
                               isRead={isRead}
                               currentUser={currentUser}
+                              conversationParticipants={
+                                selectedConversation?.conversation_type === "group"
+                                  ? (selectedConversation.participants || []).filter(e => e !== currentUser.email)
+                                  : [selectedConversation?.participant_1_email, selectedConversation?.participant_2_email].filter(e => e && e !== currentUser.email)
+                              }
                             />
                           );
                         })}
