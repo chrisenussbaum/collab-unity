@@ -3,11 +3,26 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Download, ExternalLink, X } from "lucide-react";
 
-// Determine preview type from file_type or file_name extension
+// Determine preview type from file_type, file_name extension, or URL
 const getPreviewType = (asset) => {
   const mime = (asset.file_type || "").toLowerCase();
-  const name = (asset.file_name || asset.asset_name || "").toLowerCase();
-  const ext = name.split(".").pop();
+  // Check file name, asset name, AND the actual URL for extension clues
+  const sources = [
+    asset.file_name || "",
+    asset.asset_name || "",
+    asset.file_url || ""
+  ];
+  
+  // Extract extension from any of the sources (before query params)
+  let ext = "";
+  for (const src of sources) {
+    const clean = src.split("?")[0].toLowerCase();
+    const parts = clean.split(".");
+    if (parts.length > 1) {
+      const candidate = parts.pop();
+      if (candidate.length <= 5) { ext = candidate; break; }
+    }
+  }
 
   if (mime.startsWith("image/") || ["jpg","jpeg","png","gif","webp","svg","bmp"].includes(ext)) return "image";
   if (mime === "application/pdf" || ext === "pdf") return "pdf";
@@ -20,7 +35,12 @@ const getPreviewType = (asset) => {
 export default function AssetPreviewModal({ asset, onClose }) {
   if (!asset) return null;
 
-  const previewType = asset.resource_type === "link" ? "link" : getPreviewType(asset);
+  // Always try to detect the actual file type from URL/name, even for "link" resource types
+  const previewType = getPreviewType(asset) !== "unsupported"
+    ? getPreviewType(asset)
+    : asset.resource_type === "link"
+    ? "link"
+    : "unsupported";
 
   const renderPreview = () => {
     switch (previewType) {
