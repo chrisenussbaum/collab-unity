@@ -13,6 +13,7 @@ import {
   MetricsWidget,
   QuickActionsWidget,
 } from './DashboardWidgets';
+import AIInsightsWidget from './AIInsightsWidget';
 
 const WIDGET_CATALOG = [
   { id: 'progress', title: 'Overall Progress', description: 'Completion bars for milestones & tasks', icon: '📊', size: 'full' },
@@ -23,9 +24,10 @@ const WIDGET_CATALOG = [
   { id: 'metrics', title: 'Key Metrics', description: 'Urgent tasks, overdue, weekly activity', icon: '📈', size: 'half' },
   { id: 'quicklinks', title: 'Quick Links', description: 'Project URLs for fast access', icon: '🔗', size: 'half' },
   { id: 'quickactions', title: 'Quick Actions', description: 'Navigate to workspace sections', icon: '⚡', size: 'half' },
+  { id: 'ai_insights', title: 'AI Insights', description: 'AI-powered timeline, bottleneck & resource analysis', icon: '🤖', size: 'full' },
 ];
 
-const DEFAULT_LAYOUT = ['progress', 'milestones', 'tasks', 'activity', 'metrics'];
+const DEFAULT_LAYOUT = ['progress', 'milestones', 'tasks', 'activity', 'metrics', 'ai_insights'];
 
 const STORAGE_KEY_PREFIX = 'cu_dashboard_layout_';
 
@@ -52,6 +54,7 @@ const WidgetRenderer = ({ widgetId, data, onTabChange }) => {
     case 'quicklinks': return <QuickLinksWidget project={data.project} />;
     case 'metrics': return <MetricsWidget {...data} />;
     case 'quickactions': return <QuickActionsWidget onTabChange={onTabChange} />;
+    case 'ai_insights': return <AIInsightsWidget project={data.project} milestones={data.milestones} tasks={data.tasks} logs={data.logs} />;
     default: return null;
   }
 };
