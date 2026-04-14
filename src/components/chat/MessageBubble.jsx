@@ -15,7 +15,8 @@ export default function MessageBubble({
   onDelete,
   showAvatar = true,
   isGroupChat = false,
-  isRead = false
+  isRead = false,
+  currentUser = null
 }) {
   // Check if this is a video call message
   const isVideoCallMessage = message.metadata?.video_call;
@@ -109,7 +110,7 @@ export default function MessageBubble({
             ^{displayTitle}
           </span>
         );
-        cards.push(<ProjectItemReferenceCard key={`irc-${idx}`} token={token} />);
+        cards.push(<ProjectItemReferenceCard key={`irc-${idx}`} token={token} currentUser={currentUser} />);
       }
 
       lastIndex = match.index + match[0].length;

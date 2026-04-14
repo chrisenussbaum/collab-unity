@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { CheckSquare, Flag, FileText, Paperclip, Wrench, Lightbulb, Search, ChevronRight } from "lucide-react";
+import { CheckSquare, Flag, Paperclip, Wrench, Lightbulb, Search, ChevronRight, Lock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const CATEGORIES = [
@@ -13,11 +13,11 @@ const CATEGORIES = [
 
 /**
  * Shows a popover when the user types "^" in chat.
- * Flow: first pick a project → then pick a category → then pick an item.
- * onSelect({ type, projectId, projectTitle, itemId, itemTitle, label })
+ * Only shows projects that ALL conversation participants are collaborators on.
+ * Flow: pick project → pick category → pick item
  */
-export default function ProjectItemPopover({ query, currentUser, onSelect, onClose }) {
-  const [step, setStep] = useState("projects"); // "projects" | "category" | "items"
+export default function ProjectItemPopover({ query, currentUser, conversationParticipants = [], onSelect, onClose }) {
+  const [step, setStep] = useState("projects");
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -26,10 +26,14 @@ export default function ProjectItemPopover({ query, currentUser, onSelect, onClo
   const [search, setSearch] = useState(query || "");
   const ref = useRef(null);
 
-  // Load user projects
+  // Load projects shared by ALL conversation participants
   useEffect(() => {
     if (!currentUser) return;
     setIsLoading(true);
+
+    // Get all participants including current user
+    const allParticipants = Array.from(new Set([currentUser.email, ...conversationParticipants]));
+
     Promise.all([
       base44.entities.Project.filter({ created_by: currentUser.email }),
       base44.entities.Project.filter({})
@@ -37,14 +41,22 @@ export default function ProjectItemPopover({ query, currentUser, onSelect, onClo
     ]).then(([owned, collab]) => {
       const merged = [...owned];
       collab.forEach(p => { if (!merged.find(m => m.id === p.id)) merged.push(p); });
-      setProjects(merged);
-    }).catch(console.error).finally(() => setIsLoading(false));
-  }, [currentUser]);
 
-  // Update search when query prop changes
+      // Only keep projects where EVERY participant is a collaborator or creator
+      const shared = merged.filter(p => {
+        const memberEmails = new Set([
+          p.created_by,
+          ...(p.collaborator_emails || [])
+        ]);
+        return allParticipants.every(email => memberEmails.has(email));
+      });
+
+      setProjects(shared);
+    }).catch(console.error).finally(() => setIsLoading(false));
+  }, [currentUser, conversationParticipants.join(",")]);
+
   useEffect(() => { setSearch(query || ""); }, [query]);
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
     document.addEventListener("mousedown", handler);
@@ -57,19 +69,18 @@ export default function ProjectItemPopover({ query, currentUser, onSelect, onClo
     try {
       let results = [];
       if (category.key === "tasks") {
-        results = await base44.entities.Task.filter({ project_id: project.id });
-        results = results.map(t => ({ id: t.id, title: t.title, subtitle: t.status?.replace(/_/g, " ") }));
+        const data = await base44.entities.Task.filter({ project_id: project.id });
+        results = data.map(t => ({ id: t.id, title: t.title, subtitle: t.status?.replace(/_/g, " ") }));
       } else if (category.key === "milestones") {
-        results = await base44.entities.ProjectMilestone.filter({ project_id: project.id });
-        results = results.map(m => ({ id: m.id, title: m.title, subtitle: m.status?.replace(/_/g, " ") }));
+        const data = await base44.entities.ProjectMilestone.filter({ project_id: project.id });
+        results = data.map(m => ({ id: m.id, title: m.title, subtitle: m.status?.replace(/_/g, " ") }));
       } else if (category.key === "thoughts") {
-        results = await base44.entities.Thought.filter({ project_id: project.id });
-        results = results.map(t => ({ id: t.id, title: t.title, subtitle: t.category || "" }));
+        const data = await base44.entities.Thought.filter({ project_id: project.id });
+        results = data.map(t => ({ id: t.id, title: t.title, subtitle: t.category || "" }));
       } else if (category.key === "assets") {
-        results = await base44.entities.AssetVersion.filter({ project_id: project.id, is_current: true });
-        results = results.map(a => ({ id: a.id, title: a.asset_name, subtitle: a.file_name || "" }));
+        const data = await base44.entities.AssetVersion.filter({ project_id: project.id, is_current: true });
+        results = data.map(a => ({ id: a.id, title: a.asset_name, subtitle: a.file_name || "" }));
       } else if (category.key === "tools") {
-        // Tools are embedded in project.project_tools array
         const proj = await base44.entities.Project.filter({ id: project.id }, "", 1);
         results = (proj[0]?.project_tools || []).map((t, i) => ({ id: `tool-${i}`, title: t.name, subtitle: t.url || "" }));
       }
@@ -125,7 +136,7 @@ export default function ProjectItemPopover({ query, currentUser, onSelect, onClo
         <button onClick={onClose} className="ml-auto text-gray-400 hover:text-gray-600 text-base leading-none">×</button>
       </div>
 
-      {/* Search (projects & items steps) */}
+      {/* Search */}
       {step !== "category" && (
         <div className="px-3 py-2 border-b border-gray-100">
           <div className="flex items-center gap-2">
@@ -134,7 +145,7 @@ export default function ProjectItemPopover({ query, currentUser, onSelect, onClo
               autoFocus
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder={step === "projects" ? "Search projects…" : "Search items…"}
+              placeholder={step === "projects" ? "Search shared projects…" : "Search items…"}
               className="flex-1 text-sm outline-none bg-transparent"
             />
           </div>
@@ -146,7 +157,11 @@ export default function ProjectItemPopover({ query, currentUser, onSelect, onClo
           <div className="p-4 text-center text-sm text-gray-400">Loading…</div>
         ) : step === "projects" ? (
           filteredProjects.length === 0 ? (
-            <div className="p-4 text-center text-sm text-gray-400">No projects found</div>
+            <div className="p-4 text-center">
+              <Lock className="w-5 h-5 mx-auto text-gray-300 mb-1" />
+              <p className="text-sm text-gray-400">No shared projects found</p>
+              <p className="text-xs text-gray-300 mt-1">All participants must be collaborators</p>
+            </div>
           ) : filteredProjects.map(p => (
             <button
               key={p.id}

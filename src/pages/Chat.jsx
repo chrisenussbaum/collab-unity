@@ -1423,6 +1423,7 @@ export default function Chat({ currentUser, authIsLoading }) {
                               showAvatar={showAvatar}
                               isGroupChat={selectedInfo.isGroup}
                               isRead={isRead}
+                              currentUser={currentUser}
                             />
                           );
                         })}
@@ -1494,6 +1495,14 @@ export default function Chat({ currentUser, authIsLoading }) {
                           <ProjectItemPopover
                             query={itemPopoverQuery}
                             currentUser={currentUser}
+                            conversationParticipants={
+                              selectedConversation?.conversation_type === "group"
+                                ? (selectedConversation.participants || []).filter(e => e !== currentUser.email)
+                                : [
+                                    selectedConversation?.participant_1_email,
+                                    selectedConversation?.participant_2_email
+                                  ].filter(e => e && e !== currentUser.email)
+                            }
                             onSelect={handleItemSelect}
                             onClose={() => setShowItemPopover(false)}
                           />
