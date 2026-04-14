@@ -57,52 +57,50 @@ export default function MessageBubble({
   };
 
   // Render message content with clickable links and project mention cards
+  // Token format stored in DB: ##<id>:<title with spaces>
   const renderMessageContent = (content) => {
     if (!content) return null;
 
-    // Split on ##projectId tokens (stored as ##<id>) and URLs
-    // Token format: ##<projectId> (e.g. ##abc123) — title shown as #ProjectTitle at send time
-    const tokenRegex = /(##[a-zA-Z0-9_-]+(?::[^#\s]+)?)/g;
-    const segments = content.split(tokenRegex);
-
     const projectCards = [];
     const textParts = [];
+    const tokenRegex = /##([a-zA-Z0-9_-]+):([^#]*)/g;
+    let lastIndex = 0;
+    let match;
+    let idx = 0;
 
-    segments.forEach((seg, i) => {
-      const match = seg.match(/^##([a-zA-Z0-9_-]+)(?::(.+))?$/);
-      if (match) {
-        const projectId = match[1];
-        const projectTitle = match[2];
-        textParts.push(
-          <span key={`pt-${i}`} className="font-bold text-amber-400 cursor-pointer hover:text-amber-300 transition-colors">
-            #{projectTitle || projectId}
-          </span>
-        );
-        projectCards.push(<ProjectMentionCard key={`pc-${i}`} projectId={projectId} isOwn={isOwn} />);
-      } else {
-        // Handle URLs within plain text segments
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-        const urlParts = seg.split(urlRegex);
-        urlParts.forEach((part, j) => {
-          if (j % 2 === 1) {
-            textParts.push(
-              <a
-                key={`url-${i}-${j}`}
-                href={part}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`hover:underline ${isOwn ? 'text-white underline' : 'text-blue-600'}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {part}
-              </a>
-            );
-          } else {
-            textParts.push(<span key={`txt-${i}-${j}`}>{part}</span>);
-          }
-        });
-      }
-    });
+    const pushTextWithLinks = (text, keyPrefix) => {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      text.split(urlRegex).forEach((part, j) => {
+        if (j % 2 === 1) {
+          textParts.push(
+            <a key={`${keyPrefix}-url-${j}`} href={part} target="_blank" rel="noopener noreferrer"
+              className={`hover:underline ${isOwn ? 'text-white underline' : 'text-blue-600'}`}
+              onClick={(e) => e.stopPropagation()}>{part}</a>
+          );
+        } else if (part) {
+          textParts.push(<span key={`${keyPrefix}-txt-${j}`}>{part}</span>);
+        }
+      });
+    };
+
+    while ((match = tokenRegex.exec(content)) !== null) {
+      const before = content.slice(lastIndex, match.index);
+      if (before) pushTextWithLinks(before, `pre-${idx}`);
+
+      const projectId = match[1];
+      const projectTitle = match[2].trim();
+      textParts.push(
+        <span key={`pt-${idx}`} className="font-bold text-amber-400">
+          #{projectTitle || projectId}
+        </span>
+      );
+      projectCards.push(<ProjectMentionCard key={`pc-${idx}`} projectId={projectId} isOwn={isOwn} />);
+      lastIndex = match.index + match[0].length;
+      idx++;
+    }
+
+    const remaining = content.slice(lastIndex);
+    if (remaining) pushTextWithLinks(remaining, `rem-${idx}`);
 
     return (
       <div>
