@@ -20,7 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, isCollaborator, isProjectOwner }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'discussion');
+  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'overview');
   const tabsContainerRef = useRef(null);
   const scrollPositionRef = useRef(0);
   const [tabPresence, setTabPresence] = useState({});
