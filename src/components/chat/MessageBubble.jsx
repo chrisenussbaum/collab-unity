@@ -75,8 +75,11 @@ export default function MessageBubble({
 
     const cards = [];
     const textParts = [];
-    // Match ##projectId:title tokens and ^^type:projectId:itemId:projectTitle|itemTitle tokens
-    const tokenRegex = /(##([a-zA-Z0-9_-]+):([^#\^]*))|(\^\^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+:[^:]+:[^|]+\|[^\s^#]*)/g;
+
+    // Tokenize: ##id:title, ^^type:pid:iid:ptitle|ititle (item tokens, pipe separates project|item title), plain #Word
+    // Note: item tokens use | to separate project title from item title, and the item title may contain spaces up to the next ## or ^^ token
+    const tokenRegex = /(##([a-zA-Z0-9_-]+):([^#^]*))|(\^\^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+:[^|]+\|[^#^]*)/g;
+
     let lastIndex = 0;
     let match;
     let idx = 0;
@@ -91,7 +94,20 @@ export default function MessageBubble({
               onClick={(e) => e.stopPropagation()}>{part}</a>
           );
         } else if (part) {
-          textParts.push(<span key={`${keyPrefix}-txt-${j}`}>{part}</span>);
+          // Also highlight plain #Mention (single word, no double ##)
+          const subParts = part.split(/((?<![#])#\S+)/g);
+          subParts.forEach((sub, k) => {
+            if (/^#\S+$/.test(sub) && !sub.startsWith('##')) {
+              // plain #mention — highlight but no card
+              textParts.push(
+                <span key={`${keyPrefix}-m-${k}`} className="font-bold" style={{ color: isOwn ? '#c4b5fd' : '#5B47DB' }}>
+                  {sub.slice(1)}
+                </span>
+              );
+            } else if (sub) {
+              textParts.push(<span key={`${keyPrefix}-txt-${k}`}>{sub}</span>);
+            }
+          });
         }
       });
     };
@@ -105,7 +121,7 @@ export default function MessageBubble({
         const projectId = match[2];
         const projectTitle = match[3].trim();
         textParts.push(
-          <span key={`pt-${idx}`} className="font-bold" style={{ color: '#5B47DB' }}>
+          <span key={`pt-${idx}`} className="font-bold" style={{ color: isOwn ? '#c4b5fd' : '#5B47DB' }}>
             {projectTitle || projectId}
           </span>
         );
@@ -113,11 +129,10 @@ export default function MessageBubble({
       } else if (match[4]) {
         // ^^type:... item reference token
         const token = match[4];
-        // Extract display title from token for inline text
-        const pipeIdx = token.lastIndexOf("|");
-        const displayTitle = pipeIdx !== -1 ? token.slice(pipeIdx + 1) : token;
+        const pipeIdx = token.indexOf("|");
+        const displayTitle = pipeIdx !== -1 ? token.slice(pipeIdx + 1).trim() : token;
         textParts.push(
-          <span key={`it-${idx}`} className="font-bold" style={{ color: '#5B47DB' }}>
+          <span key={`it-${idx}`} className="font-bold" style={{ color: isOwn ? '#c4b5fd' : '#5B47DB' }}>
             {displayTitle}
           </span>
         );
