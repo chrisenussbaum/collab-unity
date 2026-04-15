@@ -105,8 +105,8 @@ export default function MessageBubble({
         const projectId = match[2];
         const projectTitle = match[3].trim();
         textParts.push(
-          <span key={`pt-${idx}`} className="font-bold text-amber-400">
-            #{projectTitle || projectId}
+          <span key={`pt-${idx}`} className="font-bold" style={{ color: '#5B47DB' }}>
+            {projectTitle || projectId}
           </span>
         );
         cards.push(<ProjectMentionCard key={`pc-${idx}`} projectId={projectId} isOwn={isOwn} />);
@@ -117,8 +117,8 @@ export default function MessageBubble({
         const pipeIdx = token.lastIndexOf("|");
         const displayTitle = pipeIdx !== -1 ? token.slice(pipeIdx + 1) : token;
         textParts.push(
-          <span key={`it-${idx}`} className="font-bold text-emerald-400">
-            ^{displayTitle}
+          <span key={`it-${idx}`} className="font-bold" style={{ color: '#5B47DB' }}>
+            {displayTitle}
           </span>
         );
         cards.push(<ProjectItemReferenceCard key={`irc-${idx}`} token={token} currentUser={currentUser} />);

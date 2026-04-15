@@ -1534,6 +1534,25 @@ export default function Chat({ currentUser, authIsLoading }) {
                       </div>
 
                       <div className="flex-1 relative">
+                        {/* Styled overlay for token highlighting — mirrors the input visually */}
+                        <div
+                          aria-hidden="true"
+                          className="absolute inset-0 pointer-events-none px-3 py-[7px] text-sm overflow-hidden whitespace-pre-wrap break-words"
+                          style={{ fontFamily: 'inherit', lineHeight: '1.5' }}
+                        >
+                          {(() => {
+                            const parts = [];
+                            const tokenRegex = /((?<![#])#\S+|\^\S+)/g;
+                            let last = 0, m, k = 0;
+                            while ((m = tokenRegex.exec(inputDisplay)) !== null) {
+                              if (m.index > last) parts.push(<span key={k++} className="text-transparent">{inputDisplay.slice(last, m.index)}</span>);
+                              parts.push(<span key={k++} className="font-bold text-transparent" style={{ color: '#5B47DB' }}>{m[0]}</span>);
+                              last = m.index + m[0].length;
+                            }
+                            if (last < inputDisplay.length) parts.push(<span key={k++} className="text-transparent">{inputDisplay.slice(last)}</span>);
+                            return parts;
+                          })()}
+                        </div>
                         <Input
                           ref={messageInputRef}
                           placeholder="Type a message… # project  ^ item"
@@ -1543,7 +1562,8 @@ export default function Chat({ currentUser, authIsLoading }) {
                             if (e.key === "Escape") { setShowProjectMention(false); setShowItemPopover(false); }
                           }}
                           disabled={isSending || isUploadingMedia}
-                          className="w-full"
+                          className="w-full bg-transparent relative z-10 caret-gray-900"
+                          style={{ color: 'transparent', caretColor: '#111827' }}
                         />
                       </div>
                       <Button 
