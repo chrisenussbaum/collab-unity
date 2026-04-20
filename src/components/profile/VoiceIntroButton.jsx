@@ -27,6 +27,15 @@ export default function VoiceIntroButton({ voiceIntroUrl, isOwner, onUpdate }) {
   const previewAudioRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  // Reset audio ref when voiceIntroUrl changes so the saved version always plays
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setIsPlaying(false);
+  }, [voiceIntroUrl]);
+
   useEffect(() => {
     return () => {
       clearInterval(timerRef.current);

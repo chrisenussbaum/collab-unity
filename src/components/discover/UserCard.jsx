@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 
-import { MessageCircle, Sparkles, Wrench } from 'lucide-react';
+import { MessageCircle, Sparkles, Wrench, Volume2, Square } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -22,7 +22,28 @@ import { toast } from 'sonner';
 const UserCard = ({ user, currentUser, index }) => {
   const [showConnectDialog, setShowConnectDialog] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isPlayingVoice, setIsPlayingVoice] = useState(false);
+  const voiceAudioRef = useRef(null);
   const navigate = useNavigate();
+
+  const handleVoicePlay = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user.voice_intro_url) return;
+
+    if (!voiceAudioRef.current) {
+      voiceAudioRef.current = new Audio(user.voice_intro_url);
+      voiceAudioRef.current.onended = () => setIsPlayingVoice(false);
+    }
+
+    if (isPlayingVoice) {
+      voiceAudioRef.current.pause();
+      setIsPlayingVoice(false);
+    } else {
+      voiceAudioRef.current.play();
+      setIsPlayingVoice(true);
+    }
+  };
 
   const profileUrl = user.username 
     ? createPageUrl(`UserProfile?username=${user.username}`)
@@ -63,6 +84,19 @@ const UserCard = ({ user, currentUser, index }) => {
             </Link>
             {isActive && (
               <div className="w-2.5 h-2.5 bg-green-500 rounded-full mb-1" title="Active now" />
+            )}
+            {user.voice_intro_url && (
+              <button
+                onClick={handleVoicePlay}
+                title="Play voice intro"
+                className={`mb-1 w-6 h-6 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
+                  isPlayingVoice
+                    ? 'bg-purple-700 text-white animate-pulse'
+                    : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+                }`}
+              >
+                {isPlayingVoice ? <Square className="w-2.5 h-2.5" /> : <Volume2 className="w-2.5 h-2.5" />}
+              </button>
             )}
           </div>
           
