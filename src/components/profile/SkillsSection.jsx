@@ -2,7 +2,7 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Plus, X } from "lucide-react";
+import { Wrench, Plus, X, Edit } from "lucide-react";
 
 export default function SkillsSection({
   skills, skillEndorsements, isOwner, propCurrentUser, profileUser,
@@ -16,7 +16,7 @@ export default function SkillsSection({
     return (
       <Card className="cu-card border-dashed border-2 border-purple-200 bg-purple-50/30">
         <CardContent className="p-6 text-center">
-          <Sparkles className="w-8 h-8 mx-auto mb-3 text-purple-400" />
+          <Wrench className="w-8 h-8 mx-auto mb-3 text-purple-400" />
           <p className="text-sm text-gray-600 mb-3">Showcase your skills to potential collaborators</p>
           <Button variant="outline" size="sm" onClick={onEdit} className="border-purple-300 text-purple-600 hover:bg-purple-50 w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-1" />Add Skills
@@ -31,11 +31,11 @@ export default function SkillsSection({
       <CardHeader className="pb-3 sm:pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center text-base sm:text-lg">
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-600" />Skills
+            <Wrench className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-600" />Skills
           </CardTitle>
           {isOwner && (
             <Button variant="ghost" size="icon" onClick={onEdit} className="text-gray-500 hover:text-purple-600">
-              <Sparkles className="w-4 h-4" />
+              <Edit className="w-4 h-4" />
             </Button>
           )}
         </div>
