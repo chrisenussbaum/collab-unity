@@ -662,32 +662,25 @@ export default function Feed({ currentUser, authIsLoading }) {
         </div>
 
         {/* Desktop layout */}
-        <div className="hidden md:flex gap-6 pt-6">
-          {/* Left sidebar */}
-          <div className="w-64 lg:w-72 flex-shrink-0 space-y-4">
-            {currentUser && (
-              <>
-                <Button onClick={() => setShowCreatePostDialog(true)} className="cu-button w-full cu-gradient"><Plus className="w-5 h-5 mr-2" />Post Update</Button>
-                <Link to={createPageUrl("CreateProject")} className="block">
-                  <div className="cu-gradient rounded-xl p-4 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0"><h3 className="font-bold text-sm mb-1">Got an idea?</h3><p className="text-purple-100 text-xs">Create a project & find collaborators</p></div>
-                      <div className="flex-shrink-0 ml-2"><div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center"><Plus className="w-5 h-5" /></div></div>
-                    </div>
+        <div className="hidden md:block pt-6 max-w-2xl mx-auto">
+          {currentUser && (
+            <>
+              <Button onClick={() => setShowCreatePostDialog(true)} className="cu-button w-full cu-gradient mb-4"><Plus className="w-5 h-5 mr-2" />Post</Button>
+              <Link to={createPageUrl("CreateProject")} className="block mb-4">
+                <div className="cu-gradient rounded-xl p-4 sm:p-5 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0"><h3 className="font-bold text-base sm:text-lg mb-1">Got an idea?</h3><p className="text-purple-100 text-xs sm:text-sm">Create a project and find collaborators</p></div>
+                    <div className="flex-shrink-0 ml-3"><div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center"><Plus className="w-5 h-5 sm:w-6 sm:h-6" /></div></div>
                   </div>
-                </Link>
-              </>
-            )}
+                </div>
+              </Link>
+            </>
+          )}
+          <div className="relative mb-6">
+            <Input type="text" placeholder="Search posts and projects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-white" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           </div>
-
-          {/* Main feed */}
-          <div className="flex-1 min-w-0">
-            <div className="relative mb-6">
-              <Input type="text" placeholder="Search posts and projects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-white" />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            </div>
-            <FeedList {...feedListProps} />
-          </div>
+          <FeedList {...feedListProps} />
         </div>
       </div>
     </>
