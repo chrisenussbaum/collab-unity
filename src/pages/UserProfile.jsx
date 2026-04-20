@@ -1531,58 +1531,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                     </Card>
                   )}
 
-                  {/* Portfolio Section */}
-                  {((profileUser.portfolio_items && profileUser.portfolio_items.length > 0) || isOwner) && (
-                    <Card className="cu-card">
-                      <CardHeader className="pb-3 sm:pb-4">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="flex items-center text-base sm:text-lg">
-                            <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-600"/>
-                            Portfolio & Case Studies
-                          </CardTitle>
-                          {isOwner && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setIsEditPortfolioOpen(true)}
-                              className="text-gray-500 hover:text-purple-600"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        {profileUser.portfolio_items && profileUser.portfolio_items.length > 0 ? (
-                          <div className="space-y-6">
-                            {profileUser.portfolio_items.map((item, index) => (
-                              <PortfolioItem 
-                                key={index} 
-                                item={item} 
-                                profileUser={profileUser}
-                              />
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8">
-                            <Briefcase className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                            <p className="text-sm text-gray-500 mb-3">
-                              Showcase your best work
-                            </p>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setIsEditPortfolioOpen(true)}
-                              className="cu-button"
-                            >
-                              <Plus className="w-4 h-4 mr-2" />
-                              Add Portfolio Item
-                            </Button>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
+
 
                   {/* Collaborator Reviews Section */}
                   {(collaboratorReviews.length > 0 || (!isOwner && propCurrentUser && sharedProjects.length > 0)) && (
