@@ -67,6 +67,7 @@ Deno.serve(async (req) => {
             resume_url: u.resume_url || '',
             portfolio_items: u.portfolio_items || [],
             followed_projects: u.followed_projects || [],
+            voice_intro_url: u.voice_intro_url || '',
         }));
 
         return new Response(

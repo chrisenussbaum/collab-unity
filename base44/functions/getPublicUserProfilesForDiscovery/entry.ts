@@ -42,6 +42,7 @@ Deno.serve(async (req) => {
             website_url: u.website_url || '',
             linkedin_url: u.linkedin_url || '',
             last_activity_at: u.last_activity_at || null,
+            voice_intro_url: u.voice_intro_url || '',
         }));
 
         return new Response(
