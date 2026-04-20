@@ -1,0 +1,281 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string",
+      "description": "Unique username for the user's profile URL"
+    },
+    "bio": {
+      "type": "string",
+      "description": "Short biography"
+    },
+    "location": {
+      "type": "string",
+      "description": "User's location"
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of user's skills"
+    },
+    "interests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of user's interests"
+    },
+    "tools_technologies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tools and technologies the user knows"
+    },
+    "profile_image": {
+      "type": "string",
+      "description": "URL to user's profile image"
+    },
+    "cover_image": {
+      "type": "string",
+      "description": "URL to user's cover image"
+    },
+    "has_completed_onboarding": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the user has completed onboarding"
+    },
+    "accepted_terms": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the user accepted the Terms of Service and Privacy Policy"
+    },
+    "terms_accepted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user accepted the Terms of Service and Privacy Policy"
+    },
+    "accepted_cookies": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the user accepted cookies"
+    },
+    "cookies_accepted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user accepted or declined cookies"
+    },
+    "interested_projects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of project IDs the user is interested in"
+    },
+    "followed_projects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of project IDs the user is following for updates"
+    },
+    "education": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "institution": {
+            "type": "string"
+          },
+          "degree": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "start_year": {
+            "type": "string"
+          },
+          "end_year": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "User's education history"
+    },
+    "awards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "year": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "User's awards and achievements"
+    },
+    "web_links": {
+      "type": "object",
+      "properties": {
+        "linkedin": {
+          "type": "string"
+        },
+        "twitter": {
+          "type": "string"
+        },
+        "github": {
+          "type": "string"
+        },
+        "portfolio": {
+          "type": "string"
+        },
+        "website": {
+          "type": "string"
+        }
+      },
+      "description": "User's social and web links"
+    },
+    "portfolio_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "image_url": {
+            "type": "string"
+          },
+          "link": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "description": "User's portfolio items"
+    },
+    "resume_url": {
+      "type": "string",
+      "description": "URL to user's resume/CV"
+    },
+    "voice_intro_url": {
+      "type": "string",
+      "description": "URL to user's voice intro audio file"
+    },
+    "profile_views": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of times this profile has been viewed"
+    },
+    "project_views": {
+      "type": "number",
+      "default": 0,
+      "description": "Total views across all user's projects"
+    },
+    "last_active_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time the user was active on the platform"
+    },
+    "notification_preferences": {
+      "type": "object",
+      "properties": {
+        "messages": {
+          "type": "boolean",
+          "default": true
+        },
+        "booking_requests": {
+          "type": "boolean",
+          "default": true
+        },
+        "booking_updates": {
+          "type": "boolean",
+          "default": true
+        },
+        "project_updates": {
+          "type": "boolean",
+          "default": true
+        },
+        "reviews": {
+          "type": "boolean",
+          "default": true
+        },
+        "endorsements": {
+          "type": "boolean",
+          "default": true
+        },
+        "project_applications": {
+          "type": "boolean",
+          "default": true
+        },
+        "feed_interactions": {
+          "type": "boolean",
+          "default": true
+        },
+        "task_assignments": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "default": {
+        "messages": true,
+        "booking_requests": true,
+        "booking_updates": true,
+        "project_updates": true,
+        "reviews": true,
+        "endorsements": true,
+        "project_applications": true,
+        "feed_interactions": true,
+        "task_assignments": true
+      },
+      "description": "User's notification preferences"
+    }
+  },
+  "required": [
+    "username",
+    "bio",
+    "location",
+    "skills",
+    "interests",
+    "tools_technologies",
+    "profile_image",
+    "cover_image",
+    "terms_accepted_at",
+    "cookies_accepted_at",
+    "interested_projects",
+    "followed_projects",
+    "education",
+    "awards",
+    "web_links",
+    "portfolio_items",
+    "resume_url",
+    "last_active_at"
+  ]
+}

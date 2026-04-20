@@ -9,34 +9,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Edit, Briefcase, Star, Heart, Link as LinkIcon, Linkedin, Globe, FileText, LogOut,
-  Plus, ZoomIn, MapPin, Clock, Tag, Award, GraduationCap, HardHat, Mail, Phone, Cake, Info,
-  Share2, X, Eye, Download, Sparkles, Wrench, MessageSquare, FileText as FileTextIcon,
-  Bookmark, Camera, Loader2, Upload, MessageCircle, Play, ExternalLink, Calendar, Bell
-} from "lucide-react";
-import { motion } from "framer-motion";
-import MediaDisplay from "../components/MediaDisplay";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Edit, Briefcase, Star, Heart, Link as LinkIcon, Linkedin, Globe, FileText, LogOut, Plus, ZoomIn, MapPin, Clock, Tag, Award, GraduationCap, HardHat, Mail, Phone, Cake, Info, Share2, X, Eye, Download, Sparkles, Wrench, MessageSquare, Bookmark, Camera, Loader2, Upload, MessageCircle, Play, ExternalLink, Calendar, Bell } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import ProfileCompletionBanner from "../components/ProfileCompletionBanner";
+import VoiceIntroButton from "../components/profile/VoiceIntroButton";
+import ProfileViewStats from "../components/profile/ProfileViewStats";
+import FollowingProjectsList from "../components/profile/FollowingProjectsList";
+import CollaboratorReviewDialog from "../components/profile/CollaboratorReviewDialog";
+import EditPortfolioModal from "../components/profile/EditPortfolioModal";
 import ClickableImage from "../components/ClickableImage";
 import ImageModal from "../components/ImageModal";
 import { getPublicUserProfiles } from '@/functions/getPublicUserProfiles';
@@ -46,584 +30,19 @@ import { base44 } from "@/api/base44Client";
 import ArrayInputWithSearch from "../components/ArrayInputWithSearch";
 import RecommendedCollaborators from "../components/RecommendedCollaborators";
 import PortfolioItem from "../components/portfolio/PortfolioItem";
-import EditPortfolioItemDialog from "../components/portfolio/EditPortfolioItemDialog";
 import GenerateResumeDialog from "../components/GenerateResumeDialog";
 import BadgeDisplay, { LevelBadge } from "../components/gamification/BadgeDisplay";
 import ServiceListingManager from "../components/ServiceListingManager";
+import SkillsSection from "../components/profile/SkillsSection";
+import { EditBioModal, EditEducationModal, EditAwardsModal, EditWebLinksModal } from "../components/profile/EditModals";
 
-const EditBioModal = ({ isOpen, onClose, bio, onSave }) => {
-  const [editedBio, setEditedBio] = useState(bio || "");
-  const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    setEditedBio(bio || "");
-  }, [bio]);
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      await onSave(editedBio);
-      onClose();
-    } catch (error) {
-      console.error("Error saving bio:", error);
-      toast.error("Failed to save bio.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Edit Biography</DialogTitle>
-          <DialogDescription>
-            Share your story, background, and what drives you.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="py-4">
-          <Textarea
-            value={editedBio}
-            onChange={(e) => setEditedBio(e.target.value)}
-            rows={6}
-            placeholder="Tell everyone about yourself..."
-            className="resize-none"
-          />
-        </div>
-        <div className="flex justify-end space-x-3">
-          <Button variant="outline" onClick={onClose} disabled={isSaving}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving} className="cu-button">
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
 
-const EditEducationModal = ({ isOpen, onClose, education, onSave }) => {
-  const [editedEducation, setEditedEducation] = useState(education || []);
-  const [isSaving, setIsSaving] = useState(false);
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [currentEducation, setCurrentEducation] = useState({
-    university_name: '',
-    degree: '',
-    major: '',
-    graduation_date: ''
-  });
-  const [isAddEditOpen, setIsAddEditOpen] = useState(false);
 
-  useEffect(() => {
-    setEditedEducation(education || []);
-  }, [education]);
 
-  const handleOpenAddEdit = (index = null) => {
-    if (index !== null) {
-      setEditingIndex(index);
-      setCurrentEducation(editedEducation[index]);
-    } else {
-      setEditingIndex(null);
-      setCurrentEducation({
-        university_name: '',
-        degree: '',
-        major: '',
-        graduation_date: ''
-      });
-    }
-    setIsAddEditOpen(true);
-  };
 
-  const handleSaveEducation = () => {
-    if (!currentEducation.university_name || !currentEducation.degree ||
-        !currentEducation.major || !currentEducation.graduation_date) {
-      toast.error("Please fill all education fields.");
-      return;
-    }
-    let newEducation = [...editedEducation];
-    if (editingIndex !== null) {
-      newEducation[editingIndex] = currentEducation;
-    } else {
-      newEducation.push(currentEducation);
-    }
-    setEditedEducation(newEducation);
-    setIsAddEditOpen(false);
-  };
-
-  const handleRemove = (index) => {
-    setEditedEducation(editedEducation.filter((_, i) => i !== index));
-  };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      await onSave(editedEducation);
-      onClose();
-    } catch (error) {
-      console.error("Error saving education:", error);
-      toast.error("Failed to save education.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Education</DialogTitle>
-            <DialogDescription>
-              Add or update your educational background.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <Button
-              variant="outline"
-              onClick={() => handleOpenAddEdit()}
-              className="w-full"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Education
-            </Button>
-            {editedEducation.map((edu, index) => (
-              <div key={index} className="p-4 border rounded-lg flex justify-between items-start bg-gray-50">
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-900">{edu.university_name}</p>
-                  <p className="text-sm text-gray-600">{edu.degree} in {edu.major}</p>
-                  <p className="text-sm text-gray-500">{edu.graduation_date}</p>
-                </div>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleOpenAddEdit(index)}
-                  >
-                    <Edit className="w-4 h-4 text-gray-500" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemove(index)}
-                  >
-                    <X className="w-4 h-4 text-red-500" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-end space-x-3">
-            <Button variant="outline" onClick={onClose} disabled={isSaving}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={isSaving} className="cu-button">
-              {isSaving ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isAddEditOpen} onOpenChange={setIsAddEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingIndex !== null ? 'Edit' : 'Add'} Education</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <Input
-              placeholder="University Name"
-              value={currentEducation.university_name}
-              onChange={(e) => setCurrentEducation(prev => ({ ...prev, university_name: e.target.value }))}
-            />
-            <Input
-              placeholder="Degree (e.g., B.A., M.Sc.)"
-              value={currentEducation.degree}
-              onChange={(e) => setCurrentEducation(prev => ({ ...prev, degree: e.target.value }))}
-            />
-            <Input
-              placeholder="Major (e.g., Computer Science)"
-              value={currentEducation.major}
-              onChange={(e) => setCurrentEducation(prev => ({ ...prev, major: e.target.value }))}
-            />
-            <Input
-              placeholder="Graduation Date (e.g., May 2025)"
-              value={currentEducation.graduation_date}
-              onChange={(e) => setCurrentEducation(prev => ({ ...prev, graduation_date: e.target.value }))}
-            />
-          </div>
-          <Button onClick={handleSaveEducation} className="w-full cu-button">
-            {editingIndex !== null ? 'Update' : 'Add'}
-          </Button>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-};
-
-const EditAwardsModal = ({ isOpen, onClose, awards, onSave }) => {
-  const [editedAwards, setEditedAwards] = useState(awards || []);
-  const [isSaving, setIsSaving] = useState(false);
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [currentAward, setCurrentAward] = useState({
-    name: '',
-    issuing_organization: '',
-    date_received: '',
-    credential_url: ''
-  });
-  const [isAddEditOpen, setIsAddEditOpen] = useState(false);
-
-  useEffect(() => {
-    setEditedAwards(awards || []);
-  }, [awards]);
-
-  const handleOpenAddEdit = (index = null) => {
-    if (index !== null) {
-      setEditingIndex(index);
-      setCurrentAward(editedAwards[index]);
-    } else {
-      setEditingIndex(null);
-      setCurrentAward({
-        name: '',
-        issuing_organization: '',
-        date_received: '',
-        credential_url: ''
-      });
-    }
-    setIsAddEditOpen(true);
-  };
-
-  const handleSaveAward = () => {
-    if (!currentAward.name || !currentAward.issuing_organization || !currentAward.date_received) {
-      toast.error("Please fill all required award fields.");
-      return;
-    }
-    let newAwards = [...editedAwards];
-    if (editingIndex !== null) {
-      newAwards[editingIndex] = currentAward;
-    } else {
-      newAwards.push(currentAward);
-    }
-    setEditedAwards(newAwards);
-    setIsAddEditOpen(false);
-  };
-
-  const handleRemove = (index) => {
-    setEditedAwards(editedAwards.filter((_, i) => i !== index));
-  };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      await onSave(editedAwards);
-      onClose();
-    } catch (error) {
-      console.error("Error saving awards:", error);
-      toast.error("Failed to save awards.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Awards & Certifications</DialogTitle>
-            <DialogDescription>
-              Add or update your awards, honors, and certifications.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <Button
-              variant="outline"
-              onClick={() => handleOpenAddEdit()}
-              className="w-full"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Award/Certification
-            </Button>
-            {editedAwards.map((award, index) => (
-              <div key={index} className="p-4 border rounded-lg flex justify-between items-start bg-gray-50">
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-900">{award.name}</p>
-                  <p className="text-sm text-gray-600">
-                    {award.issuing_organization} • {award.date_received}
-                  </p>
-                  {award.credential_url && (
-                    <a
-                      href={award.credential_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-purple-600 hover:underline"
-                    >
-                      View Credential
-                    </a>
-                  )}
-                </div>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleOpenAddEdit(index)}
-                  >
-                    <Edit className="w-4 h-4 text-gray-500" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemove(index)}
-                  >
-                    <X className="w-4 h-4 text-red-500" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-end space-x-3">
-            <Button variant="outline" onClick={onClose} disabled={isSaving}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={isSaving} className="cu-button">
-              {isSaving ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isAddEditOpen} onOpenChange={setIsAddEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingIndex !== null ? 'Edit' : 'Add'} Award/Certification</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <Input
-              placeholder="Award/Certification Name"
-              value={currentAward.name}
-              onChange={(e) => setCurrentAward(prev => ({ ...prev, name: e.target.value }))}
-            />
-            <Input
-              placeholder="Issuing Organization"
-              value={currentAward.issuing_organization}
-              onChange={(e) => setCurrentAward(prev => ({ ...prev, issuing_organization: e.target.value }))}
-            />
-            <Input
-              placeholder="Date Received (e.g., Jan 2023)"
-              value={currentAward.date_received}
-              onChange={(e) => setCurrentAward(prev => ({ ...prev, date_received: e.target.value }))}
-            />
-            <Input
-              placeholder="Credential URL (Optional)"
-              value={currentAward.credential_url}
-              onChange={(e) => setCurrentAward(prev => ({ ...prev, credential_url: e.target.value }))}
-            />
-          </div>
-          <Button onClick={handleSaveAward} className="w-full cu-button">
-            {editingIndex !== null ? 'Update' : 'Add'}
-          </Button>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-};
-
-const EditWebLinksModal = ({ isOpen, onClose, linkedinUrl, websiteUrl, onSave }) => {
-  const [editedLinkedin, setEditedLinkedin] = useState(linkedinUrl || "");
-  const [editedWebsite, setEditedWebsite] = useState(websiteUrl || "");
-  const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    setEditedLinkedin(linkedinUrl || "");
-    setEditedWebsite(websiteUrl || "");
-  }, [linkedinUrl, websiteUrl]);
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      await onSave(editedLinkedin, editedWebsite);
-      onClose();
-    } catch (error) {
-      console.error("Error saving web links:", error);
-      toast.error("Failed to save web links.");
-      throw error;
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Edit Web Links</DialogTitle>
-          <DialogDescription>
-            Update your LinkedIn and personal website URLs.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div>
-            <Label htmlFor="linkedin_edit" className="text-sm font-medium mb-2 block">
-              LinkedIn URL
-            </Label>
-            <Input
-              id="linkedin_edit"
-              placeholder="https://linkedin.com/in/your-profile"
-              value={editedLinkedin}
-              onChange={(e) => setEditedLinkedin(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="website_edit" className="text-sm font-medium mb-2 block">
-              Personal Website
-            </Label>
-            <Input
-              id="website_edit"
-              placeholder="https://your-website.com"
-              value={editedWebsite}
-              onChange={(e) => setEditedWebsite(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="flex justify-end space-x-3">
-          <Button variant="outline" onClick={onClose} disabled={isSaving}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving} className="cu-button">
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-const EditPortfolioModal = ({ isOpen, onClose, portfolioItems, onSave }) => {
-  const [editedPortfolio, setEditedPortfolio] = useState(portfolioItems || []);
-  const [isSaving, setIsSaving] = useState(false);
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
-
-  useEffect(() => {
-    setEditedPortfolio(portfolioItems || []);
-  }, [portfolioItems]);
-
-  const handleOpenAddEdit = (index = null) => {
-    setEditingIndex(index);
-    setIsItemDialogOpen(true);
-  };
-
-  const handleSaveItem = (itemData) => {
-    let newPortfolio = [...editedPortfolio];
-    if (editingIndex !== null) {
-      newPortfolio[editingIndex] = itemData;
-    } else {
-      newPortfolio.push(itemData);
-    }
-    setEditedPortfolio(newPortfolio);
-    setIsItemDialogOpen(false);
-    setEditingIndex(null);
-  };
-
-  const handleRemove = (index) => {
-    setEditedPortfolio(editedPortfolio.filter((_, i) => i !== index));
-  };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      await onSave(editedPortfolio);
-      onClose();
-    } catch (error) {
-      console.error("Error saving portfolio:", error);
-      toast.error("Failed to save portfolio.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Portfolio</DialogTitle>
-            <DialogDescription>
-              Showcase your best work and completed projects
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <Button
-              variant="outline"
-              onClick={() => handleOpenAddEdit(null)}
-              className="w-full"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Portfolio Item
-            </Button>
-            {editedPortfolio.map((item, index) => (
-              <div key={index} className="p-4 border rounded-lg bg-gray-50">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">{item.title}</h4>
-                    {item.role && <p className="text-sm text-gray-600">{item.role}</p>}
-                    {item.completion_date && (
-                      <p className="text-xs text-gray-500 mt-1">{item.completion_date}</p>
-                    )}
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleOpenAddEdit(index)}
-                    >
-                      <Edit className="w-4 h-4 text-gray-500" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemove(index)}
-                    >
-                      <X className="w-4 h-4 text-red-500" />
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-700 line-clamp-2">{item.description}</p>
-                {item.technologies && item.technologies.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {item.technologies.slice(0, 5).map((tech, idx) => (
-                      <Badge key={idx} variant="secondary" className="text-xs">{tech}</Badge>
-                    ))}
-                    {item.technologies.length > 5 && (
-                      <Badge variant="outline" className="text-xs">+{item.technologies.length - 5}</Badge>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={onClose} disabled={isSaving}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={isSaving} className="cu-button">
-              {isSaving ? "Saving..." : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <EditPortfolioItemDialog
-        isOpen={isItemDialogOpen}
-        onClose={() => {
-          setIsItemDialogOpen(false);
-          setEditingIndex(null);
-        }}
-        item={editingIndex !== null ? editedPortfolio[editingIndex] : null}
-        onSave={handleSaveItem}
-      />
-    </>
-  );
-};
 
 export default function UserProfile({ currentUser: propCurrentUser, authIsLoading: propAuthIsLoading, setCurrentUser }) {
   const [searchParams] = useSearchParams();
@@ -1579,58 +998,8 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-          {/* Cover and avatar skeleton */}
-          <Card className="cu-card mb-4 sm:mb-6 md:mb-8 overflow-hidden animate-pulse">
-            <CardContent className="p-0">
-              <div className="h-32 sm:h-40 md:h-48 lg:h-64 bg-gray-200" />
-              <div className="relative px-3 sm:px-4 md:px-6 py-6 sm:py-8">
-                <div className="flex flex-col md:flex-row md:items-start md:space-x-6">
-                  <div className="flex justify-center md:justify-start -mt-16 sm:-mt-20 md:-mt-24 mb-4 md:mb-0">
-                    <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-gray-300 border-4 border-white" />
-                  </div>
-                  <div className="flex-1 space-y-3">
-                    <div className="h-8 bg-gray-200 rounded w-48 mx-auto md:mx-0" />
-                    <div className="h-4 bg-gray-200 rounded w-32 mx-auto md:mx-0" />
-                    <div className="h-4 bg-gray-200 rounded w-40 mx-auto md:mx-0" />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Grid skeleton */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 md:gap-8">
-            <div className="lg:col-span-8 space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <Card key={i} className="cu-card animate-pulse">
-                  <CardHeader className="space-y-3">
-                    <div className="h-5 bg-gray-200 rounded w-32" />
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-full" />
-                    <div className="h-4 bg-gray-200 rounded w-5/6" />
-                    <div className="h-4 bg-gray-200 rounded w-4/6" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            <div className="lg:col-span-4 space-y-4">
-              {[...Array(4)].map((_, i) => (
-                <Card key={i} className="cu-card animate-pulse">
-                  <CardHeader>
-                    <div className="h-5 bg-gray-200 rounded w-24" />
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-full" />
-                    <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin" />
       </div>
     );
   }
@@ -1830,158 +1199,24 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
       </Dialog>
 
       {/* Review Dialog */}
-      <Dialog open={showReviewDialog} onOpenChange={(open) => {
-        if (!open) {
+      <CollaboratorReviewDialog
+        isOpen={showReviewDialog}
+        onClose={() => {
           setShowReviewDialog(false);
           setSelectedProjectForReview(null);
-          setReviewFormData({ // Reset form data when closing
-            overall_rating: 5,
-            collaboration_quality: 5,
-            communication: 5,
-            reliability: 5,
-            skill_level: 5,
-            review_text: '',
-            would_collaborate_again: true,
-            is_public: true
-          });
-        }
-      }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Review Collaborator</DialogTitle>
-            <DialogDescription>
-              Share your experience working with {profileUser?.full_name || 'this user'} on "{selectedProjectForReview?.title}"
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            <div>
-              <Label className="mb-2 block">Overall Rating *</Label>
-              <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map(rating => (
-                  <button
-                    key={rating}
-                    type="button"
-                    onClick={() => setReviewFormData(prev => ({ ...prev, overall_rating: rating }))}
-                    className="focus:outline-none transition-transform hover:scale-110"
-                  >
-                    <Star
-                      className={`w-8 h-8 ${rating <= reviewFormData.overall_rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label className="mb-1 block text-sm">Collaboration Quality (1-5)</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="5"
-                  value={reviewFormData.collaboration_quality}
-                  onChange={(e) => {
-                    const val = Math.max(1, Math.min(5, parseInt(e.target.value) || 1));
-                    setReviewFormData(prev => ({ ...prev, collaboration_quality: val }));
-                  }}
-                />
-              </div>
-              <div>
-                <Label className="mb-1 block text-sm">Communication (1-5)</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="5"
-                  value={reviewFormData.communication}
-                  onChange={(e) => {
-                    const val = Math.max(1, Math.min(5, parseInt(e.target.value) || 1));
-                    setReviewFormData(prev => ({ ...prev, communication: val }));
-                  }}
-                />
-              </div>
-              <div>
-                <Label className="mb-1 block text-sm">Reliability (1-5)</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="5"
-                  value={reviewFormData.reliability}
-                  onChange={(e) => {
-                    const val = Math.max(1, Math.min(5, parseInt(e.target.value) || 1));
-                    setReviewFormData(prev => ({ ...prev, reliability: val }));
-                  }}
-                />
-              </div>
-              <div>
-                <Label className="mb-1 block text-sm">Skill Level (1-5)</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="5"
-                  value={reviewFormData.skill_level}
-                  onChange={(e) => {
-                    const val = Math.max(1, Math.min(5, parseInt(e.target.value) || 1));
-                    setReviewFormData(prev => ({ ...prev, skill_level: val }));
-                  }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="review-text" className="mb-2 block">Review *</Label>
-              <Textarea
-                id="review-text"
-                value={reviewFormData.review_text}
-                onChange={(e) => setReviewFormData(prev => ({ ...prev, review_text: e.target.value }))}
-                rows={6}
-                placeholder="Share your experience working with this collaborator..."
-                className="resize-none"
-              />
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="would-collaborate"
-                checked={reviewFormData.would_collaborate_again}
-                onChange={(e) => setReviewFormData(prev => ({ ...prev, would_collaborate_again: e.target.checked }))}
-                className="rounded text-purple-600 focus:ring-purple-500"
-              />
-              <Label htmlFor="would-collaborate" className="cursor-pointer text-sm font-medium">
-                I would collaborate with this person again
-              </Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="is-public"
-                checked={reviewFormData.is_public}
-                onChange={(e) => setReviewFormData(prev => ({ ...prev, is_public: e.target.checked }))}
-                className="rounded text-purple-600 focus:ring-purple-500"
-              />
-              <Label htmlFor="is-public" className="cursor-pointer text-sm font-medium">
-                Make this review public on their profile
-              </Label>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setShowReviewDialog(false);
-              setSelectedProjectForReview(null);
-            }} disabled={isSubmittingReview}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmitReview} disabled={isSubmittingReview || !reviewFormData.review_text.trim()} className="cu-button">
-              {isSubmittingReview ? "Submitting..." : "Submit Review"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          setReviewFormData({ overall_rating: 5, collaboration_quality: 5, communication: 5, reliability: 5, skill_level: 5, review_text: '', would_collaborate_again: true, is_public: true });
+        }}
+        profileUser={profileUser}
+        selectedProjectForReview={selectedProjectForReview}
+        reviewFormData={reviewFormData}
+        setReviewFormData={setReviewFormData}
+        onSubmit={handleSubmitReview}
+        isSubmitting={isSubmittingReview}
+      />
 
       <div className="min-h-screen bg-gray-50">
         <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div>
             {isOwner && propCurrentUser && (
               <div className="mb-4 sm:mb-6">
                 <ProfileCompletionBanner user={propCurrentUser} />
@@ -2727,158 +1962,18 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                     </CardContent>
                   </Card>
 
-                  {/* NEW: Following Section */}
-                  {(followedProjects.length > 0 || isOwner || isLoadingFollowedProjects) && (
-                    <Card className="cu-card">
-                      <CardHeader className="pb-3 sm:pb-4">
-                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                          <div className="flex items-center">
-                            <Bookmark className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-600" />
-                            <span>Following ({followedProjects.length})</span>
-                          </div>
-                          {!isOwner && followedProjects.length > 0 && (
-                            <Badge variant="outline" className="text-xs">
-                              Public Projects
-                            </Badge>
-                          )}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-0 space-y-4 sm:space-y-6">
-                        {isLoadingFollowedProjects ? (
-                          <div className="text-center py-8 sm:py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                            <p className="text-sm text-gray-500">Loading followed projects...</p>
-                          </div>
-                        ) : followedProjects.length > 0 ? (
-                          <>
-                            {displayedFollowed.map(project => {
-                              const isPublicProject = project.is_visible_on_feed;
-
-                              return (
-                                <Link key={project.id} to={createPageUrl(`ProjectDetail?id=${project.id}`)} className="block group">
-                                  <div className="p-3 sm:p-4 md:p-6 border rounded-lg hover:bg-gray-50 transition-colors">
-                                    <div className="flex items-start justify-between mb-3 sm:mb-4">
-                                      <div className="flex items-start space-x-3 sm:space-x-4 flex-1">
-                                        {project.logo_url && (
-                                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                                            <ClickableImage
-                                              src={project.logo_url}
-                                              alt="Project logo"
-                                              caption={`${project.title} - Project Logo`}
-                                              className="w-full h-full object-cover"
-                                            />
-                                          </div>
-                                        )}
-                                        <div className="flex-1 min-w-0">
-                                          <h4 className="font-bold text-base sm:text-lg text-gray-800 group-hover:text-purple-600 transition-colors mb-1">
-                                            {project.title}
-                                          </h4>
-                                          <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 leading-relaxed">
-                                            {project.description}
-                                          </p>
-                                        </div>
-                                      </div>
-                                      <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-2 flex-shrink-0 ml-2 sm:ml-4">
-                                        <Badge
-                                          variant={project.project_type === 'Personal' ? 'default' : 'secondary'}
-                                          className="text-xs"
-                                        >
-                                          {project.project_type}
-                                        </Badge>
-                                        {!isPublicProject && (
-                                          <Badge variant="outline" className="text-xs border-orange-300 text-orange-600">
-                                            Private
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                      <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500">
-                                        <Badge
-                                          variant="outline"
-                                          className={`text-xs ${
-                                            project.status === 'completed' ? 'border-green-500 text-green-700' :
-                                            project.status === 'in_progress' ? 'border-blue-500 text-blue-700' :
-                                            'border-orange-500 text-orange-700'
-                                          }`}
-                                        >
-                                          {project.status?.replace(/_/g, ' ')}
-                                        </Badge>
-                                        {project.area_of_interest && (
-                                          <span className="flex items-center">
-                                            <Tag className="w-3 h-3 mr-1" />
-                                            <span className="truncate max-w-20 sm:max-w-none">{project.area_of_interest}</span>
-                                          </span>
-                                        )}
-                                        {project.location && (
-                                          <span className="flex items-center">
-                                            <MapPin className="w-3 h-3 mr-1" />
-                                            <span className="truncate max-w-20 sm:max-w-none">{project.location}</span>
-                                          </span>
-                                        )}
-                                      </div>
-                                      <div className="flex items-center text-xs text-gray-400">
-                                        <Clock className="w-3 h-3 mr-1" />
-                                        {project.created_date ? formatDistanceToNow(new Date(project.created_date)) : 'N/A'} ago
-                                      </div>
-                                    </div>
-
-                                    {project.skills_needed && project.skills_needed.length > 0 && (
-                                      <div className="flex flex-wrap gap-2 mt-3 sm:mt-4 pt-3 border-t border-gray-100">
-                                        {project.skills_needed.slice(0, 4).map(skill => (
-                                          <Badge key={skill} variant="secondary" className="text-xs">
-                                            {skill}
-                                          </Badge>
-                                        ))}
-                                        {project.skills_needed.length > 4 && (
-                                          <Badge variant="outline" className="text-xs">
-                                            +{project.skills_needed.length - 4} more
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                </Link>
-                              );
-                            })}
-
-                            {followedProjects.length > 3 && (
-                              <div className="text-center pt-4 sm:pt-6 border-t">
-                                {displayedFollowedCount < followedProjects.length ? (
-                                  <Button variant="outline" className="w-full" onClick={loadMoreFollowed}>
-                                    Load More ({followedProjects.length - displayedFollowedCount} remaining)
-                                  </Button>
-                                ) : (
-                                  <Button variant="outline" className="w-full" onClick={showLessFollowed}>
-                                    Show Less
-                                  </Button>
-                                )}
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <div className="text-center py-8 sm:py-12">
-                            <Bookmark className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-gray-300 mb-4" />
-                            <p className="text-sm text-gray-500 mb-4">
-                              {isOwner
-                                ? "You're not following any projects yet."
-                                : `${profileUser?.full_name || 'This user'} isn't following any public projects yet.`
-                              }
-                            </p>
-                            {isOwner && (
-                              <Link to={createPageUrl("Discover")}>
-                                <Button className="cu-button w-full sm:w-auto">
-                                  <Plus className="w-4 h-4 mr-2" />
-                                  Discover Projects
-                                </Button>
-                              </Link>
-                            )}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
+                  {/* Following Section */}
+                  <FollowingProjectsList
+                    followedProjects={followedProjects}
+                    isLoadingFollowedProjects={isLoadingFollowedProjects}
+                    isOwner={isOwner}
+                    profileUser={profileUser}
+                    propCurrentUser={propCurrentUser}
+                    displayedFollowed={displayedFollowed}
+                    displayedFollowedCount={displayedFollowedCount}
+                    loadMoreFollowed={loadMoreFollowed}
+                    showLessFollowed={showLessFollowed}
+                  />
                 </div>
 
                 <div className="lg:col-span-4 space-y-4 sm:space-y-6 md:space-y-8">
@@ -2990,124 +2085,17 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                       </Card>
                   )}
 
-                  {profileUser.skills && profileUser.skills.length > 0 ? (
-                    <Card className="cu-card">
-                      <CardHeader className="pb-3 sm:pb-4">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="flex items-center text-base sm:text-lg">
-                            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-600"/>
-                            Skills
-                          </CardTitle>
-                          {isOwner && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleOpenEditModal('skills')}
-                              className="text-gray-500 hover:text-purple-600"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        {isLoadingEndorsements ? (
-                            <div className="flex items-center justify-center py-4">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                                <span className="ml-3 text-sm text-gray-500">Loading skills...</span>
-                            </div>
-                        ) : (
-                            <div className="flex flex-wrap gap-2">
-                            {profileUser.skills.map(skill => {
-                                const endorsementCount = getEndorsementCount(skill);
-                                const isEndorsed = hasEndorsedSkill(skill);
-                                const hasEndorsements = endorsementCount > 0;
-                                
-                                return (
-                                <div key={skill} className="relative group">
-                                    <Badge 
-                                    className={`pr-8 cursor-pointer transition-all duration-200 ${
-                                      hasEndorsements 
-                                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-0 shadow-md hover:shadow-lg ring-2 ring-purple-200' 
-                                        : isEndorsed 
-                                          ? 'bg-purple-600 text-white' 
-                                          : 'bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 border border-purple-200 hover:shadow-md'
-                                    }`}
-                                    onClick={() => {
-                                        if (!isOwner && propCurrentUser) {
-                                        setSelectedSkillToEndorse(skill);
-                                        setShowEndorseDialog(true);
-                                        }
-                                    }}
-                                    >
-                                    <div className="flex items-center gap-1.5">
-                                      {skill}
-                                      {endorsementCount > 0 && (
-                                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${
-                                          hasEndorsements 
-                                            ? 'bg-white/30 text-white backdrop-blur-sm' 
-                                            : 'bg-purple-200 text-purple-800'
-                                        }`}>
-                                          {endorsementCount}
-                                        </span>
-                                      )}
-                                    </div>
-                                    </Badge>
-                                    {!isOwner && propCurrentUser && (
-                                    <button
-                                        onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedSkillToEndorse(skill);
-                                        setShowEndorseDialog(true);
-                                        }}
-                                        className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs transition-all duration-200 ease-in-out ${
-                                            isEndorsed 
-                                            ? 'bg-red-500 text-white hover:bg-red-600' 
-                                            : 'bg-white border-2 border-purple-300 text-purple-600 opacity-0 group-hover:opacity-100 hover:bg-purple-50'
-                                        }`}
-                                        title={isEndorsed ? 'Remove endorsement' : 'Endorse this skill'}
-                                    >
-                                        {isEndorsed ? <X size={12} /> : <Plus size={12} />}
-                                    </button>
-                                    )}
-                                </div>
-                                );
-                            })}
-                            </div>
-                        )}
-
-                        {!isOwner && propCurrentUser && (profileUser.skills && profileUser.skills.length > 0) && (
-                          <p className="text-xs text-gray-500 mt-3 text-center">
-                            Click on a skill or the <Plus className="inline w-3 h-3" /> icon to endorse {profileUser.full_name || 'them'}
-                          </p>
-                        )}
-                        
-                        {skillEndorsements.length > 0 && (
-                          <div className="mt-4 pt-4 border-t">
-                            <p className="text-xs text-gray-500 text-center">
-                              ✨ Skills with a glow have been endorsed by the community
-                            </p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ) : isOwner && (
-                      <Card className="cu-card border-dashed border-2 border-purple-200 bg-purple-50/30">
-                        <CardContent className="p-6 text-center">
-                          <Sparkles className="w-8 h-8 mx-auto mb-3 text-purple-400" />
-                          <p className="text-sm text-gray-600 mb-3">Showcase your skills to potential collaborators</p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleOpenEditModal('skills')}
-                            className="border-purple-300 text-purple-600 hover:bg-purple-50 w-full sm:w-auto"
-                          >
-                            <Plus className="w-4 h-4 mr-1" />
-                            Add Skills
-                          </Button>
-                        </CardContent>
-                      </Card>
-                  )}
+                  <SkillsSection
+                    skills={profileUser.skills}
+                    skillEndorsements={skillEndorsements}
+                    isOwner={isOwner}
+                    propCurrentUser={propCurrentUser}
+                    profileUser={profileUser}
+                    isLoadingEndorsements={isLoadingEndorsements}
+                    onEdit={() => handleOpenEditModal('skills')}
+                    setSelectedSkillToEndorse={setSelectedSkillToEndorse}
+                    setShowEndorseDialog={setShowEndorseDialog}
+                  />
 
                   {profileUser.tools_technologies && profileUser.tools_technologies.length > 0 ? (
                     <Card className="cu-card">
@@ -3260,7 +2248,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                 </div>
               </div>
             </>
-          </motion.div>
+          </div>
         </div>
       </div>
 
