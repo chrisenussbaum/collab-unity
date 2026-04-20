@@ -155,10 +155,11 @@ export default function VoiceIntroButton({ voiceIntroUrl, isOwner, onUpdate }) {
 
   return (
     <>
+      {/* Play button — always visible on avatar for all users */}
       <button
         onClick={handleIconClick}
         title={isOwner ? "Manage voice intro" : "Play voice intro"}
-        className={`absolute bottom-0 left-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg border-2 border-white transition-all ${
+        className={`absolute bottom-0 left-0 w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg border-2 border-white transition-all z-10 ${
           voiceIntroUrl
             ? isPlaying
               ? "bg-purple-700 text-white animate-pulse"
@@ -166,7 +167,7 @@ export default function VoiceIntroButton({ voiceIntroUrl, isOwner, onUpdate }) {
             : "bg-gray-200 text-gray-500 hover:bg-gray-300"
         }`}
       >
-        {isPlaying ? <Square className="w-3 h-3 sm:w-4 sm:h-4" /> : <Volume2 className="w-3 h-3 sm:w-4 sm:h-4" />}
+        {isPlaying ? <Square className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
       </button>
 
       {isOwner && (

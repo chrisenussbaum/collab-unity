@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Briefcase, Star, Heart, Link as LinkIcon, Linkedin, Globe, FileText, LogOut, Plus, ZoomIn, MapPin, Clock, Tag, Award, GraduationCap, HardHat, Mail, Phone, Cake, Info, Share2, X, Eye, Download, Sparkles, Wrench, MessageSquare, Bookmark, Camera, Loader2, Upload, MessageCircle, Play, ExternalLink, Calendar, Bell } from "lucide-react";
+import { Edit, Briefcase, Star, Heart, Link as LinkIcon, Linkedin, Globe, FileText, LogOut, Plus, ZoomIn, MapPin, Clock, Tag, Award, GraduationCap, HardHat, Mail, Phone, Cake, Info, Share2, X, Eye, Download, Sparkles, Wrench, MessageSquare, Bookmark, Camera, Loader2, Upload, MessageCircle, Play, ExternalLink, Calendar, Bell, Volume2, Square } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ProfileCompletionBanner from "../components/ProfileCompletionBanner";
 import VoiceIntroButton from "../components/profile/VoiceIntroButton";
+import VoicePlayButton from "../components/profile/VoicePlayButton";
 import ProfileViewStats from "../components/profile/ProfileViewStats";
 import UserProfileSkeleton from "../components/skeletons/UserProfileSkeleton";
 import UserProjectsList from "../components/profile/UserProjectsList";
@@ -1314,7 +1315,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                           projectViews={profileUser?.project_views || 0}
                         />
                         {!isOwner && propCurrentUser && (
-                          <div className="flex justify-center md:justify-start mt-3">
+                          <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-3">
                             <Button
                               onClick={() => setShowSyncDialog(true)}
                               className="cu-button text-sm"
@@ -1322,6 +1323,14 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                               <MessageCircle className="w-4 h-4 mr-2" />
                               Chat
                             </Button>
+                            {profileUser?.voice_intro_url && (
+                              <VoicePlayButton voiceIntroUrl={profileUser.voice_intro_url} />
+                            )}
+                          </div>
+                        )}
+                        {!isOwner && !propCurrentUser && profileUser?.voice_intro_url && (
+                          <div className="flex justify-center md:justify-start mt-3">
+                            <VoicePlayButton voiceIntroUrl={profileUser.voice_intro_url} />
                           </div>
                         )}
                       </div>
