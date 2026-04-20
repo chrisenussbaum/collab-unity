@@ -148,6 +148,11 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
     setIsLoadingFollowedProjects(false);
   }, []); // Empty dependency array - function is stable
 
+  const trackProfileView = useCallback(async (targetEmail) => {
+    // Fire-and-forget, don't block profile load
+    base44.functions.invoke('trackView', { type: 'profile', target_email: targetEmail }).catch(() => {});
+  }, []);
+
   const loadProfileData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -227,6 +232,11 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
       }
 
       const isOwnerCheck = propCurrentUser && propCurrentUser.email === normalizedUser.email;
+
+      // Track profile view (non-owner only)
+      if (!isOwnerCheck) {
+        trackProfileView(normalizedUser.email);
+      }
 
         try {
           const createdProjects = await base44.entities.Project.filter({ created_by: normalizedUser.email });

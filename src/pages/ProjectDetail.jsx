@@ -326,6 +326,15 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
 
       setProject(projectData);
 
+      // Track project view (non-owner only), fire-and-forget
+      if (!isOwner) {
+        base44.functions.invoke('trackView', {
+          type: 'project',
+          project_id: projectId,
+          owner_email: projectData.created_by
+        }).catch(() => {});
+      }
+
       // Another small delay before next batch of requests
       await new Promise(resolve => setTimeout(resolve, 300));
 

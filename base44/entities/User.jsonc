@@ -85,99 +85,25 @@
     "education": {
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "institution": {
-            "type": "string"
-          },
-          "degree": {
-            "type": "string"
-          },
-          "field": {
-            "type": "string"
-          },
-          "start_year": {
-            "type": "string"
-          },
-          "end_year": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        }
+        "type": "object"
       },
       "description": "User's education history"
     },
     "awards": {
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string"
-          },
-          "issuer": {
-            "type": "string"
-          },
-          "year": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        }
+        "type": "object"
       },
       "description": "User's awards and achievements"
     },
     "web_links": {
       "type": "object",
-      "properties": {
-        "linkedin": {
-          "type": "string"
-        },
-        "twitter": {
-          "type": "string"
-        },
-        "github": {
-          "type": "string"
-        },
-        "portfolio": {
-          "type": "string"
-        },
-        "website": {
-          "type": "string"
-        }
-      },
       "description": "User's social and web links"
     },
     "portfolio_items": {
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "image_url": {
-            "type": "string"
-          },
-          "link": {
-            "type": "string"
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
+        "type": "object"
       },
       "description": "User's portfolio items"
     },
@@ -199,6 +125,20 @@
       "default": 0,
       "description": "Total views across all user's projects"
     },
+    "recent_profile_viewers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Rolling list of dedup keys for profile view tracking (viewer:date)"
+    },
+    "recent_project_viewers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Rolling list of dedup keys for project view tracking (viewer:projectId:date)"
+    },
     "last_active_at": {
       "type": "string",
       "format": "date-time",
@@ -206,76 +146,47 @@
     },
     "notification_preferences": {
       "type": "object",
-      "properties": {
-        "messages": {
-          "type": "boolean",
-          "default": true
-        },
-        "booking_requests": {
-          "type": "boolean",
-          "default": true
-        },
-        "booking_updates": {
-          "type": "boolean",
-          "default": true
-        },
-        "project_updates": {
-          "type": "boolean",
-          "default": true
-        },
-        "reviews": {
-          "type": "boolean",
-          "default": true
-        },
-        "endorsements": {
-          "type": "boolean",
-          "default": true
-        },
-        "project_applications": {
-          "type": "boolean",
-          "default": true
-        },
-        "feed_interactions": {
-          "type": "boolean",
-          "default": true
-        },
-        "task_assignments": {
-          "type": "boolean",
-          "default": true
-        }
-      },
-      "default": {
-        "messages": true,
-        "booking_requests": true,
-        "booking_updates": true,
-        "project_updates": true,
-        "reviews": true,
-        "endorsements": true,
-        "project_applications": true,
-        "feed_interactions": true,
-        "task_assignments": true
-      },
       "description": "User's notification preferences"
+    },
+    "linkedin_url": {
+      "type": "string",
+      "description": "LinkedIn profile URL"
+    },
+    "website_url": {
+      "type": "string",
+      "description": "Personal website URL"
+    },
+    "phone_number": {
+      "type": "string",
+      "description": "User's phone number"
+    },
+    "birthday": {
+      "type": "string",
+      "description": "User's birthday"
+    },
+    "awards_certifications": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Awards and certifications"
+    },
+    "social_links": {
+      "type": "object",
+      "description": "Social media links"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user"
+      ],
+      "default": "user"
+    },
+    "profile_completion_score": {
+      "type": "number",
+      "default": 0
     }
   },
-  "required": [
-    "username",
-    "bio",
-    "location",
-    "skills",
-    "interests",
-    "tools_technologies",
-    "profile_image",
-    "cover_image",
-    "terms_accepted_at",
-    "cookies_accepted_at",
-    "interested_projects",
-    "followed_projects",
-    "education",
-    "awards",
-    "web_links",
-    "portfolio_items",
-    "resume_url",
-    "last_active_at"
-  ]
+  "required": []
 }
