@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Project, Advertisement, ProjectApplaud, Notification, FeedPost, FeedPostApplaud, Comment, User, ServiceListing } from "@/entities/all";
+import { Project, ProjectApplaud, Notification, FeedPost, FeedPostApplaud, Comment, User } from "@/entities/all";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -62,12 +62,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import MediaDisplay from "../components/MediaDisplay";
-import AdvertisementCard from "../components/AdvertisementCard";
 import FeedComments from "../components/FeedComments";
 import CreatePostDialog from "../components/CreatePostDialog";
 import ConfirmationDialog from "../components/ConfirmationDialog";
 import { getPublicUserProfiles } from '@/functions/getPublicUserProfiles';
-import { injectAds } from '@/functions/injectAds';
 import { toast } from "sonner";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import ProjectLinkPreviewDialog from "@/components/ProjectLinkPreviewDialog";
@@ -76,12 +74,9 @@ import ProjectActivityIndicator, { isProjectActive } from "../components/Project
 import ProjectActivityFeed from "@/components/feed/ProjectActivityFeed";
 import OptimizedImage from "@/components/OptimizedImage";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
-import ServiceFeedCard from "@/components/feed/ServiceFeedCard";
-import MarketplaceFeedCard from "@/components/feed/MarketplaceFeedCard";
 import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
 import FeedPostSkeleton from "@/components/skeletons/FeedPostSkeleton";
-import ServiceCardSkeleton from "@/components/skeletons/ServiceCardSkeleton";
-import MarketplaceCardSkeleton from "@/components/skeletons/MarketplaceCardSkeleton";
+
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -1654,19 +1649,10 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
 export default function Feed({ currentUser, authIsLoading }) {
   const [projects, setProjects] = useState([]);
   const [feedPosts, setFeedPosts] = useState([]);
-  const [serviceListings, setServiceListings] = useState([]);
-  const [marketplaceListings, setMarketplaceListings] = useState([]);
   const [projectApplauds, setProjectApplauds] = useState([]);
   const [feedPostApplauds, setFeedPostApplauds] = useState([]);
-  const [advertisements, setAdvertisements] = useState({
-    desktop: { left: [], right: [] },
-    mobile: { inline: [] },
-    tablet: { inline: [] },
-    all: []
-  });
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [inlineAds, setInlineAds] = useState([]);
   const [allCollaboratorProfiles, setAllCollaboratorProfiles] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [displayedItemsCount, setDisplayedItemsCount] = useState(10);
@@ -1683,46 +1669,6 @@ export default function Feed({ currentUser, authIsLoading }) {
 
   const [showCreatePostDialog, setShowCreatePostDialog] = useState(false);
   const ITEMS_PER_PAGE = 10;
-
-  // Load ads in background without blocking feed
-  const loadAdsForPage = useCallback(async (items) => {
-    try {
-      const getDeviceType = () => {
-        const width = window.innerWidth;
-        if (width < 768) return 'mobile';
-        if (width < 1280) return 'tablet';
-        return 'desktop';
-      };
-
-      const deviceType = getDeviceType();
-
-      const adsResponse = await injectAds({
-        user_email: currentUser?.email || null,
-        organic_posts: items.slice(0, 20),
-        device_type: deviceType,
-        insertion_interval: 3,
-        current_page: 1,
-        posts_per_page: ITEMS_PER_PAGE
-      });
-
-      const { data: adsData } = adsResponse;
-      if (adsData) {
-        setAdvertisements(adsData);
-        
-        let newInlineAds = [];
-        if (deviceType === 'mobile') {
-          newInlineAds = adsData.mobile?.inline || [];
-        } else if (deviceType === 'tablet') {
-          newInlineAds = adsData.tablet?.inline || [];
-        }
-        setInlineAds(newInlineAds);
-      }
-
-    } catch (error) {
-      console.error("Error loading ads:", error);
-      // Don't throw - just log the error so ads don't block feed
-    }
-  }, [currentUser]);
 
   const loadApplauds = useCallback(async (projectIds) => {
     if (!projectIds || projectIds.length === 0) {
@@ -1764,57 +1710,26 @@ export default function Feed({ currentUser, authIsLoading }) {
   const { data: cachedFeedData, isLoading: isQueryLoading } = useQuery({
     queryKey: ['feed-projects', currentUser?.email],
     queryFn: async () => {
-      // Fetch ALL public projects, initial feed posts, service listings, and marketplace listings
-      // Fetch ALL data - no limits, use client-side pagination for display
-      const [visibleProjectsData, initialFeedPostsData, serviceListingsData, marketplaceListingsData] = await Promise.all([
+      const [visibleProjectsData, initialFeedPostsData] = await Promise.all([
         withRetry(() =>
           Project.filter({ is_visible_on_feed: true }, "-created_date")
         ),
         withRetry(() =>
           FeedPost.filter({ is_visible: true }, "-created_date")
-        ),
-        withRetry(() =>
-          ServiceListing.list("-created_date")
-        ),
-        withRetry(() =>
-          base44.entities.MarketplaceListing.filter({ is_available: true }, "-created_date")
         )
       ]);
 
-      // Separate projects, feed posts, services, and marketplace listings
       const initialProjects = visibleProjectsData;
       const initialFeedPosts = initialFeedPostsData;
-      const initialServiceListings = serviceListingsData;
-      const initialMarketplaceListings = marketplaceListingsData;
 
-      // Fetch marketplace projects
-      const marketplaceProjectIds = initialMarketplaceListings.map(ml => ml.project_id);
-      let marketplaceProjectsData = [];
-      if (marketplaceProjectIds.length > 0) {
-        for (const projectId of marketplaceProjectIds) {
-          try {
-            const projects = await base44.entities.Project.filter({ id: projectId });
-            if (projects.length > 0) {
-              marketplaceProjectsData.push(projects[0]);
-            }
-          } catch (error) {
-            console.error("Error fetching marketplace project:", error);
-          }
-        }
-      }
-
-      // Get unique owner/provider emails from all items
       const allOwnerEmails = [...new Set([
         ...initialProjects.map(p => p.created_by),
-        ...initialFeedPosts.map(fp => fp.created_by),
-        ...initialServiceListings.map(sl => sl.provider_email),
-        ...marketplaceProjectsData.map(mp => mp.created_by)
+        ...initialFeedPosts.map(fp => fp.created_by)
       ])];
       
       const projectIds = initialProjects.map(p => p.id);
       const feedPostIds = initialFeedPosts.map(fp => fp.id);
       
-      // Parallel load all data
       const [profilesResponse, fetchedProjectApplauds, fetchedFeedPostApplauds] = await Promise.all([
         allOwnerEmails.length > 0 ? withRetry(() => getPublicUserProfiles({ emails: allOwnerEmails }), 2, 2000) : Promise.resolve({ data: [] }),
         projectIds.length > 0 ? withRetry(() => ProjectApplaud.filter({ project_id: { $in: projectIds } })) : Promise.resolve([]),
@@ -1826,7 +1741,6 @@ export default function Feed({ currentUser, authIsLoading }) {
         return acc;
       }, {});
 
-      // Populate projects, posts, and services with full data
       const fullyPopulatedProjects = initialProjects.map(project => ({
         ...project,
         owner: profilesMap[project.created_by] || {
@@ -1846,30 +1760,6 @@ export default function Feed({ currentUser, authIsLoading }) {
           profile_image: null,
         }
       }));
-
-      const fullyPopulatedServiceListings = initialServiceListings.map(listing => ({
-        ...listing,
-        provider: profilesMap[listing.provider_email] || {
-          email: listing.provider_email,
-          full_name: listing.provider_email.split('@')[0],
-          username: null,
-          profile_image: null,
-        }
-      }));
-
-      const fullyPopulatedMarketplaceListings = initialMarketplaceListings.map(listing => {
-        const project = marketplaceProjectsData.find(p => p.id === listing.project_id);
-        return {
-          ...listing,
-          project: project || null,
-          seller: profilesMap[listing.seller_email] || {
-            email: listing.seller_email,
-            full_name: listing.seller_email.split('@')[0],
-            username: null,
-            profile_image: null,
-          }
-        };
-      }).filter(ml => ml.project !== null); // Only include listings with valid projects
 
       // Fetch collaborator profiles for activity indicators
       const allCollaboratorEmails = new Set();
@@ -1896,8 +1786,6 @@ export default function Feed({ currentUser, authIsLoading }) {
       return {
         projects: fullyPopulatedProjects,
         feedPosts: fullyPopulatedFeedPosts,
-        serviceListings: fullyPopulatedServiceListings,
-        marketplaceListings: fullyPopulatedMarketplaceListings,
         projectApplauds: fetchedProjectApplauds,
         feedPostApplauds: fetchedFeedPostApplauds,
         collaboratorProfiles: collabProfilesMap
@@ -1917,25 +1805,12 @@ export default function Feed({ currentUser, authIsLoading }) {
     if (cachedFeedData && !isQueryLoading) {
       setProjects(cachedFeedData.projects);
       setFeedPosts(cachedFeedData.feedPosts);
-      setServiceListings(cachedFeedData.serviceListings);
-      setMarketplaceListings(cachedFeedData.marketplaceListings || []);
       setProjectApplauds(cachedFeedData.projectApplauds);
       setFeedPostApplauds(cachedFeedData.feedPostApplauds);
       setAllCollaboratorProfiles(cachedFeedData.collaboratorProfiles);
       setDisplayedItemsCount(ITEMS_PER_PAGE);
-      
-      // Load ads in background
-      if (cachedFeedData.projects.length > 0 || cachedFeedData.feedPosts.length > 0 || cachedFeedData.serviceListings.length > 0 || (cachedFeedData.marketplaceListings && cachedFeedData.marketplaceListings.length > 0)) {
-        const items = [
-          ...cachedFeedData.projects.map(p => ({ ...p, itemType: 'project' })),
-          ...cachedFeedData.feedPosts.map(fp => ({ ...fp, itemType: 'feedPost' })),
-          ...cachedFeedData.serviceListings.map(sl => ({ ...sl, itemType: 'service' })),
-          ...(cachedFeedData.marketplaceListings || []).map(ml => ({ ...ml, itemType: 'marketplace' }))
-        ].slice(0, ITEMS_PER_PAGE);
-        loadAdsForPage(items).catch(err => console.error("Background ad loading failed:", err));
-      }
     }
-  }, [cachedFeedData, isQueryLoading, loadAdsForPage]);
+  }, [cachedFeedData, isQueryLoading]);
 
   // Manual refresh function for post creation/deletion
   const loadFeedData = useCallback(() => {
@@ -1947,17 +1822,13 @@ export default function Feed({ currentUser, authIsLoading }) {
     setIsLoading(isQueryLoading);
   }, [isQueryLoading]);
 
-  // Combine and sort all feed items by creation date - MOVED UP to fix initialization order
   const allFeedItems = React.useMemo(() => {
     const combined = [
       ...projects.map(p => ({ ...p, itemType: 'project', sortDate: new Date(p.created_date) })),
-      ...feedPosts.map(fp => ({ ...fp, itemType: 'feedPost', sortDate: new Date(fp.created_date) })),
-      ...serviceListings.map(sl => ({ ...sl, itemType: 'service', sortDate: new Date(sl.created_date) })),
-      ...marketplaceListings.map(ml => ({ ...ml, itemType: 'marketplace', sortDate: new Date(ml.created_date) }))
+      ...feedPosts.map(fp => ({ ...fp, itemType: 'feedPost', sortDate: new Date(fp.created_date) }))
     ];
-    
     return combined.sort((a, b) => b.sortDate - a.sortDate);
-  }, [projects, feedPosts, serviceListings, marketplaceListings]);
+  }, [projects, feedPosts]);
 
   const loadMoreItems = useCallback(() => {
     if (isLoadingMore) return;
@@ -2074,21 +1945,12 @@ export default function Feed({ currentUser, authIsLoading }) {
                item.industry?.toLowerCase().includes(query) ||
                item.area_of_interest?.toLowerCase().includes(query) ||
                item.skills_needed?.some(skill => skill.toLowerCase().includes(query));
-      } else if (item.itemType === 'service') {
-        return item.title?.toLowerCase().includes(query) ||
-               item.description?.toLowerCase().includes(query) ||
-               item.skills_offered?.some(skill => skill.toLowerCase().includes(query));
-      } else if (item.itemType === 'marketplace') {
-        return item.project?.title?.toLowerCase().includes(query) ||
-               item.project?.description?.toLowerCase().includes(query) ||
-               item.project?.area_of_interest?.toLowerCase().includes(query);
       } else {
-        // FeedPost
         return item.title?.toLowerCase().includes(query) ||
                item.content?.toLowerCase().includes(query) ||
                item.tags?.some(tag => tag.toLowerCase().includes(query));
-               }
-               });
+      }
+    });
                }
 
                // Return only the items that should be displayed (client-side pagination)
@@ -2133,27 +1995,7 @@ export default function Feed({ currentUser, authIsLoading }) {
     localStorage.setItem(`first_project_prompt_seen_${currentUser.email}`, 'true');
   };
   
-  const leftAds = advertisements?.desktop?.left || [];
-  const rightAds = advertisements?.desktop?.right || [];
 
-  const createInfiniteScrollFeedWithAds = (posts, ads) => {
-    if (ads.length === 0) return posts.map(post => ({ type: 'post', content: post }));
-    
-    const feedItems = [];
-    let adIndex = 0;
-    const adInterval = 3;
-    
-    posts.forEach((post, index) => {
-      feedItems.push({ type: 'post', content: post });
-      
-      if ((index + 1) % adInterval === 0 && adIndex < ads.length && index < posts.length - 1) {
-        feedItems.push({ type: 'ad', content: ads[adIndex] });
-        adIndex++;
-      }
-    });
-    
-    return feedItems;
-  };
 
   if (authIsLoading) {
     return (
@@ -2280,7 +2122,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                 <>
                   {[...Array(4)].map((_, i) => (
                     <React.Fragment key={i}>
-                      {i % 3 === 0 ? <ProjectCardSkeleton /> : i % 3 === 1 ? <FeedPostSkeleton /> : <ServiceCardSkeleton />}
+                      {i % 2 === 0 ? <ProjectCardSkeleton /> : <FeedPostSkeleton />}
                     </React.Fragment>
                   ))}
                 </>
@@ -2307,49 +2149,28 @@ export default function Feed({ currentUser, authIsLoading }) {
               ) : (
                 <>
                   <AnimatePresence>
-                    {createInfiniteScrollFeedWithAds(displayedItems, inlineAds).map((item, index) => (
-                      item.type === 'post' ? (
-                        item.content.itemType === 'project' ? (
-                          <ProjectPost
-                            key={`project-${item.content.id}`}
-                            project={item.content}
-                            owner={item.content.owner}
-                            currentUser={currentUser}
-                            projectApplauds={projectApplauds}
-                            onProjectUpdate={loadFeedData}
-                            onApplaudUpdate={handleApplaudUpdate}
-                            collaboratorProfilesMap={allCollaboratorProfiles}
-                          />
-                        ) : item.content.itemType === 'service' ? (
-                          <ServiceFeedCard
-                            key={`service-${item.content.id}`}
-                            listing={item.content}
-                            provider={item.content.provider}
-                            currentUser={currentUser}
-                          />
-                        ) : item.content.itemType === 'marketplace' ? (
-                          <MarketplaceFeedCard
-                            key={`marketplace-${item.content.id}`}
-                            project={item.content.project}
-                            marketplaceListing={item.content}
-                            seller={item.content.seller}
-                            currentUser={currentUser}
-                          />
-                        ) : (
-                          <FeedPostItem
-                            key={`feedpost-${item.content.id}`}
-                            post={item.content}
-                            owner={item.content.owner}
-                            currentUser={currentUser}
-                            feedPostApplauds={feedPostApplauds}
-                            onPostDeleted={loadFeedData}
-                            onApplaudUpdate={handleApplaudUpdate}
-                          />
-                        )
+                    {displayedItems.map((item) => (
+                      item.itemType === 'project' ? (
+                        <ProjectPost
+                          key={`project-${item.id}`}
+                          project={item}
+                          owner={item.owner}
+                          currentUser={currentUser}
+                          projectApplauds={projectApplauds}
+                          onProjectUpdate={loadFeedData}
+                          onApplaudUpdate={handleApplaudUpdate}
+                          collaboratorProfilesMap={allCollaboratorProfiles}
+                        />
                       ) : (
-                        <div key={`ad-${item.content.id}-${index}`} className="w-full">
-                          <AdvertisementCard ad={item.content} />
-                        </div>
+                        <FeedPostItem
+                          key={`feedpost-${item.id}`}
+                          post={item}
+                          owner={item.owner}
+                          currentUser={currentUser}
+                          feedPostApplauds={feedPostApplauds}
+                          onPostDeleted={loadFeedData}
+                          onApplaudUpdate={handleApplaudUpdate}
+                        />
                       )
                     ))}
                   </AnimatePresence>
@@ -2359,329 +2180,6 @@ export default function Feed({ currentUser, authIsLoading }) {
                       <div className="inline-flex items-center">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mr-3"></div>
                         <span className="cu-text-responsive-sm text-gray-600">Loading more...</span>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="hidden md:hidden xl:grid xl:grid-cols-12 xl:gap-8">
-          <aside className="xl:col-span-3">
-            <div className="sticky top-20 cu-content-grid h-fit">
-              {leftAds.map(ad => <AdvertisementCard key={ad.id} ad={ad} />)}
-            </div>
-          </aside>
-
-          <main className="xl:col-span-6 cu-content-grid">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-between"
-            >
-            </motion.div>
-
-            {currentUser && (
-              <>
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Button
-                    onClick={() => setShowCreatePostDialog(true)}
-                    className="cu-button w-full cu-gradient"
-                  >
-                    <Plus className="w-5 h-5 mr-2" />
-                    Post
-                  </Button>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.05 }}
-                >
-                  <Link to={createPageUrl("CreateProject")} className="block">
-                    <div className="cu-gradient rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 group">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-xl mb-1.5">Got an idea?</h3>
-                          <p className="text-purple-100 text-sm">Create a project and find talented collaborators to bring it to life</p>
-                        </div>
-                        <div className="flex-shrink-0 ml-4">
-                          <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center group-hover:bg-white/30 transition-colors group-hover:scale-110 transform duration-200">
-                            <Plus className="w-7 h-7" strokeWidth={2.5} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-
-                {/* Search Bar - Below "Got an Idea?" */}
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
-                  className="relative"
-                >
-                  <Input
-                    type="text"
-                    placeholder="Search posts and projects..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-white"
-                  />
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                </motion.div>
-              </>
-            )}
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="cu-content-grid min-h-[800px]"
-            >
-              {isLoading ? (
-                <>
-                  {[...Array(4)].map((_, i) => (
-                    <React.Fragment key={i}>
-                      {i % 3 === 0 ? <ProjectCardSkeleton /> : i % 3 === 1 ? <FeedPostSkeleton /> : <ServiceCardSkeleton />}
-                    </React.Fragment>
-                  ))}
-                </>
-              ) : displayedItems.length === 0 ? (
-                <div className="text-center py-16">
-                  <h3 className="cu-text-responsive-lg font-semibold">No posts found</h3>
-                  <p className="text-gray-600 mt-2 cu-text-responsive-sm">
-                    Be the first to create a post!
-                  </p>
-                  {currentUser && (
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
-                      <Button 
-                        onClick={() => setShowCreatePostDialog(true)}
-                        className="cu-button"
-                      >
-                        Post
-                      </Button>
-                      <Link to={createPageUrl("CreateProject")}>
-                        <Button className="cu-button">Create Project</Button>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <>
-                  <AnimatePresence>
-                    {createInfiniteScrollFeedWithAds(displayedItems, inlineAds).map((item, index) => (
-                      item.type === 'post' ? (
-                        item.content.itemType === 'project' ? (
-                          <ProjectPost
-                            key={`project-${item.content.id}`}
-                            project={item.content}
-                            owner={item.content.owner}
-                            currentUser={currentUser}
-                            projectApplauds={projectApplauds}
-                            onProjectUpdate={loadFeedData}
-                            onApplaudUpdate={handleApplaudUpdate}
-                            collaboratorProfilesMap={allCollaboratorProfiles}
-                          />
-                        ) : item.content.itemType === 'service' ? (
-                          <ServiceFeedCard
-                            key={`service-${item.content.id}`}
-                            listing={item.content}
-                            provider={item.content.provider}
-                            currentUser={currentUser}
-                          />
-                        ) : item.content.itemType === 'marketplace' ? (
-                          <MarketplaceFeedCard
-                            key={`marketplace-${item.content.id}`}
-                            project={item.content.project}
-                            marketplaceListing={item.content}
-                            seller={item.content.seller}
-                            currentUser={currentUser}
-                          />
-                        ) : (
-                          <FeedPostItem
-                            key={`feedpost-${item.content.id}`}
-                            post={item.content}
-                            owner={item.content.owner}
-                            currentUser={currentUser}
-                            feedPostApplauds={feedPostApplauds}
-                            onPostDeleted={loadFeedData}
-                            onApplaudUpdate={handleApplaudUpdate}
-                          />
-                        )
-                      ) : (
-                        <div key={`ad-${item.content.id}-${index}`} className="w-full">
-                          <AdvertisementCard ad={item.content} />
-                        </div>
-                      )
-                    ))}
-                  </AnimatePresence>
-                  
-                  {isLoadingMore && (
-                    <div className="text-center py-8">
-                      <div className="inline-flex items-center">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mr-3"></div>
-                        <span className="cu-text-responsive-sm text-gray-600">Loading more posts...</span>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </motion.div>
-          </main>
-
-          <aside className="xl:col-span-3">
-            <div className="sticky top-20 cu-content-grid h-fit">
-              {rightAds.map(ad => <AdvertisementCard key={ad.id} ad={ad} />)}
-            </div>
-          </aside>
-        </div>
-
-        <div className="hidden md:block xl:hidden">
-          <div className="cu-content-grid pt-6">
-            {currentUser && (
-              <>
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Button
-                    onClick={() => setShowCreatePostDialog(true)}
-                    className="cu-button w-full cu-gradient"
-                  >
-                    <Plus className="w-5 h-5 mr-2" />
-                    Post
-                  </Button>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.05 }}
-                >
-                  <Link to={createPageUrl("CreateProject")} className="block">
-                    <div className="cu-gradient rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-xl mb-1.5">Got an idea?</h3>
-                          <p className="text-purple-100 text-sm">Create a project and collaborate with others to bring it to life</p>
-                        </div>
-                        <div className="flex-shrink-0 ml-4">
-                          <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                            <Plus className="w-7 h-7" strokeWidth={2.5} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-
-                {/* Search Bar - Below "Got an Idea?" */}
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
-                  className="relative"
-                >
-                  <Input
-                    type="text"
-                    placeholder="Search posts and projects..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-white"
-                  />
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                </motion.div>
-              </>
-            )}
-
-            <div className="cu-content-grid min-h-[800px]">
-              {isLoading ? (
-                <div className="text-center py-16">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                  <p className="cu-text-responsive-sm text-gray-600">Loading feed...</p>
-                </div>
-              ) : displayedItems.length === 0 ? (
-                <div className="text-center py-16">
-                  <h3 className="cu-text-responsive-lg font-semibold">No posts found</h3>
-                  <p className="text-gray-600 mt-2 cu-text-responsive-sm">
-                    Be the first to create a post!
-                  </p>
-                  {currentUser && (
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
-                      <Button 
-                        onClick={() => setShowCreatePostDialog(true)}
-                        className="cu-button"
-                      >
-                        Post
-                      </Button>
-                      <Link to={createPageUrl("CreateProject")}>
-                        <Button className="cu-button">Create Project</Button>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <>
-                  <AnimatePresence>
-                    {createInfiniteScrollFeedWithAds(displayedItems, inlineAds).map((item, index) => (
-                      item.type === 'post' ? (
-                        item.content.itemType === 'project' ? (
-                          <ProjectPost
-                            key={`project-${item.content.id}`}
-                            project={item.content}
-                            owner={item.content.owner}
-                            currentUser={currentUser}
-                            projectApplauds={projectApplauds}
-                            onProjectUpdate={loadFeedData}
-                            onApplaudUpdate={handleApplaudUpdate}
-                            collaboratorProfilesMap={allCollaboratorProfiles}
-                          />
-                        ) : item.content.itemType === 'service' ? (
-                          <ServiceFeedCard
-                            key={`service-${item.content.id}`}
-                            listing={item.content}
-                            provider={item.content.provider}
-                            currentUser={currentUser}
-                          />
-                        ) : item.content.itemType === 'marketplace' ? (
-                          <MarketplaceFeedCard
-                            key={`marketplace-${item.content.id}`}
-                            project={item.content.project}
-                            marketplaceListing={item.content}
-                            seller={item.content.seller}
-                            currentUser={currentUser}
-                          />
-                        ) : (
-                          <FeedPostItem
-                            key={`feedpost-${item.content.id}`}
-                            post={item.content}
-                            owner={item.content.owner}
-                            currentUser={currentUser}
-                            feedPostApplauds={feedPostApplauds}
-                            onPostDeleted={loadFeedData}
-                            onApplaudUpdate={handleApplaudUpdate}
-                          />
-                        )
-                      ) : (
-                        <div key={`ad-${item.content.id}-${index}`} className="w-full">
-                          <AdvertisementCard ad={item.content} />
-                        </div>
-                      )
-                    ))}
-                  </AnimatePresence>
-                  
-                  {isLoadingMore && (
-                    <div className="text-center py-8">
-                      <div className="inline-flex items-center">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mr-3"></div>
-                        <span className="cu-text-responsive-sm text-gray-600">Loading more posts...</span>
                       </div>
                     </div>
                   )}

@@ -29,10 +29,8 @@ import SocialsPanel from '../components/SocialsPanel';
 import { base44 } from "@/api/base44Client";
 import ArrayInputWithSearch from "../components/ArrayInputWithSearch";
 import RecommendedCollaborators from "../components/RecommendedCollaborators";
-import PortfolioItem from "../components/portfolio/PortfolioItem";
 import GenerateResumeDialog from "../components/GenerateResumeDialog";
 import BadgeDisplay, { LevelBadge } from "../components/gamification/BadgeDisplay";
-import ServiceListingManager from "../components/ServiceListingManager";
 import SkillsSection from "../components/profile/SkillsSection";
 import { EditBioModal, EditEducationModal, EditAwardsModal, EditWebLinksModal } from "../components/profile/EditModals";
 
@@ -1321,13 +1319,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                               <Edit className="w-4 h-4 mr-2" />
                               Edit Profile
                             </Button>
-                            <Button
-                              variant="outline"
-                              onClick={() => navigate(createPageUrl("MyBookings"))}
-                            >
-                              <Calendar className="w-4 h-4 mr-2" />
-                              My Bookings
-                            </Button>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="outline">
@@ -1625,16 +1616,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                     </Card>
                   )}
 
-                  {/* Service Offerings - Moved from sidebar */}
-                  {isOwner && propCurrentUser && (
-                   <div className="overflow-x-auto">
-                     <ServiceListingManager 
-                       currentUser={propCurrentUser}
-                       isOwner={isOwner}
-                       enableHorizontalScroll={true}
-                     />
-                   </div>
-                  )}
+
 
                   <Card className="cu-card">
                    <CardHeader className="pb-3 sm:pb-4">

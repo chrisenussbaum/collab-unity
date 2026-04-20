@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Clock, CheckCircle, MapPin, Building2, Tag, Eye, Plus, Briefcase, Megaphone, Lightbulb, Sparkles, Filter, X, Bell, BellOff, Bookmark, BookmarkCheck, HandHeart, Camera, Play, ExternalLink } from "lucide-react";
+import { Users, Clock, CheckCircle, MapPin, Building2, Tag, Eye, Plus, Briefcase, Lightbulb, Sparkles, Filter, X, Bookmark, BookmarkCheck, HandHeart, Camera, Play, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -931,18 +931,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
               and bring your vision to life.
             </p>
             
-            <div className="hidden sm:flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-8 px-4">
-              <Link to={createPageUrl("Marketplace")}>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 cu-button-mobile-full"
-                >
-                  <Building2 className="w-5 h-5 mr-2" />
-                  Marketplace
-                </Button>
-              </Link>
-              
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-8 px-4">
               <Link to={createPageUrl("CreateProject")}>
                 <Button
                   size="lg"
@@ -951,52 +940,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   Create Project
-                </Button>
-              </Link>
-
-              <Link to={createPageUrl("Advertise")}>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 cu-button-mobile-full"
-                >
-                  <Megaphone className="w-5 h-5 mr-2" />
-                  Promote
-                </Button>
-              </Link>
-            </div>
-
-            <div className="flex sm:hidden flex-col items-center justify-center gap-3 mb-6 px-4">
-              <Link to={createPageUrl("Marketplace")} className="w-full">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 w-full"
-                >
-                  <Building2 className="w-5 h-5 mr-2" />
-                  Marketplace
-                </Button>
-              </Link>
-
-              <Link to={createPageUrl("CreateProject")} className="w-full">
-                <Button
-                  size="lg"
-                  style={{ background: 'var(--cu-primary)' }}
-                  className="text-white font-semibold shadow-lg hover:opacity-90 transition-opacity w-full"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Create Project
-                </Button>
-              </Link>
-
-              <Link to={createPageUrl("Advertise")} className="w-full">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 w-full"
-                >
-                  <Megaphone className="w-5 h-5 mr-2" />
-                  Promote
                 </Button>
               </Link>
             </div>
