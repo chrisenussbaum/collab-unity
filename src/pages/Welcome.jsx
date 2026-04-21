@@ -1255,14 +1255,6 @@ export default function Welcome() {
             </nav>
 
             <div className="flex items-center space-x-3">
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 text-gray-700 hover:text-purple-600"
-              >
-                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-
               {/* Language Switcher */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -1300,17 +1292,6 @@ export default function Welcome() {
           </div>
         </div>
       </header>
-
-      {/* Mobile Navigation Menu */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
-          <div className="fixed top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-lg">
-            <nav className="py-4 px-4 space-y-2">
-            </nav>
-          </div>
-        </div>
-      )}
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-white">
