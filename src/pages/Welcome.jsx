@@ -1122,9 +1122,9 @@ export default function Welcome() {
   };
 
   const stats = [
-    { icon: Users, label: t.stats.collaborators, value: "10+" },
-    { icon: Rocket, label: t.stats.projects, value: "20+" },
-    { icon: Globe, label: t.stats.countries, value: "1+" }
+    { icon: Users, label: t.stats.collaborators, value: "30+" },
+    { icon: Rocket, label: t.stats.projects, value: "50+" },
+    { icon: Globe, label: t.stats.countries, value: "5+" }
   ];
 
   const values = [
