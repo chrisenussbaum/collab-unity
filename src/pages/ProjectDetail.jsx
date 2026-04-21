@@ -46,7 +46,6 @@ import { toast } from "sonner";
 import WorkspaceTabs from "@/components/workspace/WorkspaceTabs";
 import ProjectHighlights from "../components/project/ProjectHighlights";
 import ProjectAnalyticsDashboard from "../components/project/ProjectAnalyticsDashboard";
-import ProjectOwnerAssistant from "../components/project/ProjectOwnerAssistant";
 import ClickableImage from "../components/ClickableImage";
 import ContextualSearchAssistant from "../components/workspace/ContextualSearchAssistant";
 
@@ -1457,14 +1456,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
 
 
 
-              {/* Project Owner Assistant */}
-              <ProjectOwnerAssistant
-                project={project}
-                currentUser={currentUser}
-                isOwner={isOwner}
-                onProjectUpdate={handleProjectUpdate}
-              />
-
               {/* Team Communications Panel */}
               <CommunicationsPanel 
                 project={project}
@@ -1524,12 +1515,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                   onProjectUpdate={handleProjectUpdate}
                 />
                 <ContextualSearchAssistant project={project} />
-                <ProjectOwnerAssistant
-                  project={project}
-                  currentUser={currentUser}
-                  isOwner={isOwner}
-                  onProjectUpdate={handleProjectUpdate}
-                />
                 <CommunicationsPanel 
                   project={project}
                   isCollaborator={userCanContribute}
