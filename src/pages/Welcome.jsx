@@ -563,42 +563,114 @@ const ChatMockup = () => {
 };
 
 const WorkspaceMockup = () => {
-  const [activeTab, setActiveTab] = React.useState("tools");
+  const [activeTab, setActiveTab] = React.useState("overview");
   
   const tabs = [
-    { id: "discussion", icon: MessageSquare, label: "Discussion" },
+    { id: "overview", icon: LayoutGrid, label: "Overview" },
+    { id: "milestones", icon: CheckCircle, label: "Milestones" },
+    { id: "build", icon: Rocket, label: "Build" },
     { id: "ideate", icon: Lightbulb, label: "Ideate" },
-    { id: "tasks", icon: CheckSquare, label: "Tasks" },
-    { id: "tools", icon: Settings, label: "Tools" },
-    { id: "assets", icon: Folder, label: "Assets" }
+    { id: "tools", icon: Settings, label: "Tools" }
   ];
 
   const tabContent = {
-    discussion: (
+    overview: (
       <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Team Discussions</h3>
-        <p className="text-sm text-gray-600 mb-4">Collaborate and communicate with your team</p>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">Project Overview</h3>
+        <p className="text-sm text-gray-600 mb-4">Activity, members, and project health at a glance</p>
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="p-3 bg-purple-50 rounded-lg border border-purple-100">
+            <p className="text-xs text-purple-600 font-medium mb-1">Tasks Done</p>
+            <p className="text-2xl font-bold text-purple-700">8/12</p>
+          </div>
+          <div className="p-3 bg-green-50 rounded-lg border border-green-100">
+            <p className="text-xs text-green-600 font-medium mb-1">Members</p>
+            <p className="text-2xl font-bold text-green-700">4</p>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces" alt="Alex" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+            <div>
+              <p className="text-xs font-medium text-gray-800">Alex completed a task</p>
+              <p className="text-xs text-gray-500">2 hours ago</p>
+            </div>
+          </div>
+          <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces" alt="Sarah" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+            <div>
+              <p className="text-xs font-medium text-gray-800">Sarah uploaded a new asset</p>
+              <p className="text-xs text-gray-500">5 hours ago</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+    milestones: (
+      <div>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">Milestones</h3>
+        <p className="text-sm text-gray-600 mb-4">Track key goals and project phases</p>
         <div className="space-y-3">
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-start space-x-3">
-              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces" alt="Alex" className="w-8 h-8 rounded-full object-cover" />
-              <div className="flex-1">
-                <p className="font-medium text-sm">Alex started a discussion</p>
-                <p className="text-sm text-gray-600 mt-1">What's everyone's availability for this week?</p>
-                <p className="text-xs text-gray-400 mt-2">2 hours ago</p>
-              </div>
+          <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-gray-900">Design Phase</p>
+              <p className="text-xs text-gray-500">Completed · Apr 10</p>
+            </div>
+            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Done</span>
+          </div>
+          <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg flex items-center gap-3">
+            <Rocket className="w-5 h-5 text-purple-600 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-gray-900">Beta Launch</p>
+              <p className="text-xs text-gray-500">In Progress · Due Apr 30</p>
+            </div>
+            <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">Active</span>
+          </div>
+          <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3">
+            <Target className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-gray-700">Public Release</p>
+              <p className="text-xs text-gray-400">Upcoming · May 15</p>
+            </div>
+            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">Todo</span>
+          </div>
+        </div>
+      </div>
+    ),
+    build: (
+      <div>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">Build</h3>
+        <p className="text-sm text-gray-600 mb-4">Tasks and assets to get it done</p>
+        <div className="space-y-2 mb-3">
+          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <input type="checkbox" className="w-4 h-4 rounded" readOnly />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Design landing page</p>
+              <p className="text-xs text-gray-500">Due: Tomorrow</p>
+            </div>
+            <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Urgent</span>
+          </div>
+          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <input type="checkbox" className="w-4 h-4 rounded" readOnly />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Review pull requests</p>
+              <p className="text-xs text-gray-500">Due: Friday</p>
+            </div>
+            <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">Medium</span>
+          </div>
+          <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg opacity-60">
+            <input type="checkbox" checked readOnly className="w-4 h-4 rounded" />
+            <div className="flex-1">
+              <p className="text-sm font-medium line-through">Setup repository</p>
+              <p className="text-xs text-gray-500">Completed</p>
             </div>
           </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-start space-x-3">
-              <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces" alt="Sarah" className="w-8 h-8 rounded-full object-cover" />
-              <div className="flex-1">
-                <p className="font-medium text-sm">Sarah posted an update</p>
-                <p className="text-sm text-gray-600 mt-1">Design review is scheduled for Friday</p>
-                <p className="text-xs text-gray-400 mt-2">5 hours ago</p>
-              </div>
-            </div>
-          </div>
+        </div>
+        <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border border-dashed border-gray-300 cursor-pointer hover:bg-gray-100">
+          <FileText className="w-4 h-4 text-blue-500" />
+          <p className="text-xs text-gray-700">design-mockups.fig</p>
+          <span className="ml-auto text-xs text-gray-400">Asset</span>
         </div>
       </div>
     ),
@@ -1094,28 +1166,15 @@ export default function Welcome() {
     {
       title: "Discover - Find Your Team",
       icon: Compass,
-      description: "Browse projects looking for collaborators and connect with talented creators",
+      description: "Explore projects seeking collaborators, apply to join, and connect with talented creators who share your interests",
       color: "blue",
       demoElements: [
-        { icon: Search, label: "Browse Projects", desc: "Click cards to view" },
-        { icon: Users, label: "Find Collaborators", desc: "Connect with creators" },
-        { icon: Settings, label: "Smart Filters", desc: "Match by skills & interests" },
-        { icon: Briefcase, label: "Quick Apply", desc: "Send custom message" }
+        { icon: Search, label: "Browse Projects", desc: "Filter by skills & industry" },
+        { icon: Users, label: "Find Collaborators", desc: "Discover people by expertise" },
+        { icon: Sparkles, label: "AI Recommendations", desc: "Matched to your profile" },
+        { icon: Briefcase, label: "Apply to Join", desc: "Send a custom message" }
       ],
       mockup: <DiscoverProjectsMockup />
-    },
-    {
-      title: "Marketplace - Buy & Sell",
-      icon: DollarSign,
-      description: "Monetize your projects and find professional services from the community",
-      color: "green",
-      demoElements: [
-        { icon: Briefcase, label: "Project Sales", desc: "Sell completed projects" },
-        { icon: Users, label: "Service Listings", desc: "Offer your expertise" },
-        { icon: MessageCircle, label: "Consultations", desc: "Paid consultations" },
-        { icon: CheckCircle, label: "Booking System", desc: "Manage appointments" }
-      ],
-      mockup: <MarketplaceMockup />
     },
     {
       title: "Chat - Message In Real-Time",
@@ -1136,11 +1195,11 @@ export default function Welcome() {
       description: "Everything you need to build together in one integrated workspace",
       color: "indigo",
       demoElements: [
-        { icon: MessageSquare, label: "Discussion", desc: "Team communication" },
+        { icon: LayoutGrid, label: "Overview", desc: "Project activity & stats" },
+        { icon: CheckSquare, label: "Milestones", desc: "Track key goals" },
+        { icon: Rocket, label: "Build", desc: "Tasks & asset management" },
         { icon: Lightbulb, label: "Ideate", desc: "Rich text planning" },
-        { icon: CheckSquare, label: "Tasks", desc: "Track progress" },
-        { icon: Settings, label: "Tools", desc: "Integrated links" },
-        { icon: Folder, label: "Assets", desc: "Manage files" }
+        { icon: Settings, label: "Tools", desc: "Integrated links" }
       ],
       mockup: <WorkspaceMockup />
     },
@@ -1193,21 +1252,6 @@ export default function Welcome() {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-1">
-              <Link to={createPageUrl("Testimonials")}>
-                <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
-                  {t.nav.testimonials}
-                </Button>
-              </Link>
-              <Link to={createPageUrl("Support")}>
-                <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
-                  {t.nav.support}
-                </Button>
-              </Link>
-              <Link to={createPageUrl("FeatureRequest")}>
-                <Button variant="ghost" className="text-gray-700 hover:text-purple-600">
-                  {t.nav.featureRequest}
-                </Button>
-              </Link>
             </nav>
 
             <div className="flex items-center space-x-3">
@@ -1263,21 +1307,6 @@ export default function Welcome() {
           <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
           <div className="fixed top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-lg">
             <nav className="py-4 px-4 space-y-2">
-              <Link to={createPageUrl("Testimonials")} onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-purple-600">
-                  {t.nav.testimonials}
-                </Button>
-              </Link>
-              <Link to={createPageUrl("Support")} onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-purple-600">
-                  {t.nav.support}
-                </Button>
-              </Link>
-              <Link to={createPageUrl("FeatureRequest")} onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start text-gray-700 hover:text-purple-600">
-                  {t.nav.featureRequest}
-                </Button>
-              </Link>
             </nav>
           </div>
         </div>
