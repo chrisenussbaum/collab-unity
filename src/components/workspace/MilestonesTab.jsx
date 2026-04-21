@@ -6,8 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Flag, Plus, Edit, Trash2, CheckCircle, Circle, Clock, Calendar as CalendarIcon, Target } from "lucide-react";
 import { toast } from "sonner";
@@ -324,22 +322,11 @@ export default function MilestonesTab({ project, currentUser, isCollaborator, is
 
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Target Date</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.target_date ? format(formData.target_date, "MMM d, yyyy") : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={formData.target_date}
-                      onSelect={(date) => setFormData({ ...formData, target_date: date })}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Input
+                  type="date"
+                  value={formData.target_date ? format(formData.target_date, "yyyy-MM-dd") : ""}
+                  onChange={(e) => setFormData({ ...formData, target_date: e.target.value ? new Date(e.target.value) : null })}
+                />
               </div>
             </div>
 
