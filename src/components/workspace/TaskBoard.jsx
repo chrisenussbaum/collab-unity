@@ -32,6 +32,25 @@ const withRetry = async (apiCall, maxRetries = 3, baseDelay = 1000) => {
   }
 };
 
+const PRIORITY_ORDER = { urgent: 0, high: 1, medium: 2, low: 3 };
+const STATUS_ORDER = { todo: 0, in_progress: 1, done: 2 };
+
+const PRIORITY_CONFIG = {
+  urgent: { label: "Urgent", color: "bg-red-100 text-red-700" },
+  high:   { label: "High",   color: "bg-orange-100 text-orange-700" },
+  medium: { label: "Medium", color: "bg-yellow-100 text-yellow-700" },
+  low:    { label: "Low",    color: "bg-blue-100 text-blue-700" },
+};
+
+const PriorityBadge = ({ priority }) => {
+  const cfg = PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.medium;
+  return (
+    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${cfg.color}`}>
+      {cfg.label}
+    </span>
+  );
+};
+
 const statusColumns = [
   { id: "todo", label: "To Do", color: "bg-gray-100" },
   { id: "in_progress", label: "In Progress", color: "bg-blue-100" },
@@ -60,6 +79,7 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
 
   const [milestones, setMilestones] = useState([]);
   const [groupByMilestone, setGroupByMilestone] = useState(false);
+  const [sortBy, setSortBy] = useState("default"); // default | priority | status
 
   const [newLinkName, setNewLinkName] = useState("");
   const [newLinkUrl, setNewLinkUrl] = useState("");
@@ -385,6 +405,12 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
     }
   };
 
+  const sortedTasks = [...tasks].sort((a, b) => {
+    if (sortBy === "priority") return (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2);
+    if (sortBy === "status")   return (STATUS_ORDER[a.status] ?? 0) - (STATUS_ORDER[b.status] ?? 0);
+    return 0;
+  });
+
   if (!project) {
     return (
       <Card className="cu-card">
@@ -495,7 +521,17 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
             <CheckSquare className="w-5 h-5 mr-2 text-purple-600" />
             Task Board
           </CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-36 h-8 text-xs">
+                <SelectValue placeholder="Sort by..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Default</SelectItem>
+                <SelectItem value="priority">Sort by Priority</SelectItem>
+                <SelectItem value="status">Sort by Status</SelectItem>
+              </SelectContent>
+            </Select>
             {milestones.length > 0 && (
               <Button
                 variant={groupByMilestone ? "default" : "outline"}
@@ -523,7 +559,7 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
       ) : groupByMilestone && milestones.length > 0 ? (
         <div className="space-y-8">
           {/* Tasks with no milestone */}
-          {tasks.filter(t => !t.milestone_id).length > 0 && (
+          {sortedTasks.filter(t => !t.milestone_id).length > 0 && (
             <div>
               <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-700">
                 <Circle className="w-5 h-5 mr-2" />
@@ -531,7 +567,7 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {statusColumns.map((column) => {
-                  const columnTasks = tasks.filter(t => t.status === column.id && !t.milestone_id);
+                  const columnTasks = sortedTasks.filter(t => t.status === column.id && !t.milestone_id);
                   
                   return (
                     <Card key={column.id} className="cu-card">
@@ -563,18 +599,12 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                                   <CardContent className="p-3">
                                     <div className="flex items-center justify-between mb-2">
                                       <h4 className="font-medium text-sm flex-1">{task.title}</h4>
-                                      {task.priority && task.priority !== 'medium' && (
-                                        <Flag className={`w-3 h-3 ml-2 ${
-                                          task.priority === 'urgent' ? 'text-red-500' : 
-                                          task.priority === 'high' ? 'text-orange-500' : 
-                                          'text-blue-500'
-                                        }`} />
-                                      )}
-                                    </div>
-                                    {task.description && (
+                                      <PriorityBadge priority={task.priority || 'medium'} />
+                                      </div>
+                                      {task.description && (
                                       <p className="text-xs text-gray-600 mb-2 line-clamp-2">{task.description}</p>
-                                    )}
-                                    <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+                                      )}
+                                      <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
                                       {task.due_date && (
                                         <span className="flex items-center">
                                           <Calendar className="w-3 h-3 mr-1" />
@@ -587,8 +617,8 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                                           {assignedUser.full_name || assignedUser.email.split('@')[0]}
                                         </span>
                                       )}
-                                    </div>
-                                    <div className="flex items-center justify-between mt-2">
+                                      </div>
+                                      <div className="flex items-center justify-between mt-2">
                                       <Select
                                         value={task.status}
                                         onValueChange={(value) => handleStatusChange(task, value)}
@@ -631,29 +661,29 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                                           <Trash2 className="w-3 h-3" />
                                         </Button>
                                       </div>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              </motion.div>
-                            );
-                          })}
-                        </AnimatePresence>
-                        {columnTasks.length === 0 && (
-                          <div className="text-center py-8 text-gray-400">
-                            <p className="text-sm">No tasks</p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+                                      </div>
+                                      </CardContent>
+                                      </Card>
+                                      </motion.div>
+                                      );
+                                      })}
+                                      </AnimatePresence>
+                                      {columnTasks.length === 0 && (
+                                      <div className="text-center py-8 text-gray-400">
+                                      <p className="text-sm">No tasks</p>
+                                      </div>
+                                      )}
+                                      </CardContent>
+                                      </Card>
+                                      );
+                                      })}
+                                      </div>
+                                      </div>
+                                      )}
 
-          {/* Tasks grouped by milestone */}
+                                      {/* Tasks grouped by milestone */}
           {milestones.map((milestone) => {
-            const milestoneTasks = tasks.filter(t => t.milestone_id === milestone.id);
+            const milestoneTasks = sortedTasks.filter(t => t.milestone_id === milestone.id);
             if (milestoneTasks.length === 0) return null;
 
             return (
@@ -664,7 +694,7 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {statusColumns.map((column) => {
-                    const columnTasks = milestoneTasks.filter(t => t.status === column.id);
+                    const columnTasks = sortedTasks.filter(t => t.status === column.id && t.milestone_id === milestone.id);
                     
                     return (
                       <Card key={column.id} className="cu-card">
@@ -696,13 +726,7 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                                     <CardContent className="p-3">
                                       <div className="flex items-center justify-between mb-2">
                                         <h4 className="font-medium text-sm flex-1">{task.title}</h4>
-                                        {task.priority && task.priority !== 'medium' && (
-                                          <Flag className={`w-3 h-3 ml-2 ${
-                                            task.priority === 'urgent' ? 'text-red-500' : 
-                                            task.priority === 'high' ? 'text-orange-500' : 
-                                            'text-blue-500'
-                                          }`} />
-                                        )}
+                                        <PriorityBadge priority={task.priority || 'medium'} />
                                       </div>
                                       {task.description && (
                                         <p className="text-xs text-gray-600 mb-2 line-clamp-2">{task.description}</p>
@@ -788,7 +812,7 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {statusColumns.map((column) => {
-            const columnTasks = tasks.filter(t => t.status === column.id);
+            const columnTasks = sortedTasks.filter(t => t.status === column.id);
             
             return (
               <Card key={column.id} className="cu-card">
@@ -820,13 +844,7 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                             <CardContent className="p-3">
                               <div className="flex items-center justify-between mb-2">
                                 <h4 className="font-medium text-sm flex-1">{task.title}</h4>
-                                {task.priority && task.priority !== 'medium' && (
-                                  <Flag className={`w-3 h-3 ml-2 ${
-                                    task.priority === 'urgent' ? 'text-red-500' : 
-                                    task.priority === 'high' ? 'text-orange-500' : 
-                                    'text-blue-500'
-                                  }`} />
-                                )}
+                                <PriorityBadge priority={task.priority || 'medium'} />
                               </div>
                               {task.description && (
                                 <p className="text-xs text-gray-600 mb-2 line-clamp-2">{task.description}</p>
