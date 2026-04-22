@@ -980,7 +980,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Mobile/Tablet Header (visible on screens < 1024px) */}
       <nav className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 safe-area-inset-top">
-        <div className="flex items-center justify-between px-4 md:px-8 h-16 md:h-18 gap-3">
+        <div className="flex items-center justify-between px-4 md:px-8 h-16 gap-3">
           <Link 
             to={createPageUrl("Feed")}
             className="flex-shrink-0"
@@ -1172,14 +1172,14 @@ export default function Layout({ children, currentPageName }) {
         </div>
       </nav>
 
-      <main className="pt-16 md:pt-18 pb-20 md:pb-24 lg:pt-16 lg:pb-8">
+      <main className="pt-16 pb-24 lg:pt-16 lg:pb-8">
         {React.cloneElement(children, { currentUser, authIsLoading: isLoading })}
       </main>
 
       {/* Mobile/Tablet Bottom Navigation (visible on screens < 1024px) */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden z-50 safe-area-inset-bottom">
         <div className="relative">
-          <div className={`grid h-20 md:h-24 ${currentUser ? 'grid-cols-5' : 'grid-cols-3'}`}>
+          <div className={`grid h-20 ${currentUser ? 'grid-cols-5' : 'grid-cols-3'}`}>
             {mobileNavItems.map((item, index) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
