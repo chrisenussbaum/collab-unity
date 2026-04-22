@@ -1172,7 +1172,7 @@ export default function Layout({ children, currentPageName }) {
         </div>
       </nav>
 
-      <main className="pt-[30px] pb-[100px] lg:pt-16 lg:pb-8">
+      <main className="pt-0 pb-[100px] lg:pt-16 lg:pb-8">
         {React.cloneElement(children, { currentUser, authIsLoading: isLoading })}
       </main>
 
