@@ -1192,7 +1192,7 @@ export default function Layout({ children, currentPageName }) {
                     to={item.path}
                     className="flex flex-col items-center justify-center relative"
                   >
-                    <div className="absolute -top-4 w-14 h-14 cu-gradient rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110">
+                    <div className="absolute -top-2 w-14 h-14 cu-gradient rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110">
                       <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
                     </div>
                     <span className="cu-text-responsive-xs mt-5 font-medium text-purple-600">
