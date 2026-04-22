@@ -1173,61 +1173,58 @@ export default function Layout({ children, currentPageName }) {
       </nav>
 
       <main className="pt-[30px] pb-[60px] lg:pt-16 lg:pb-8">
-
         {React.cloneElement(children, { currentUser, authIsLoading: isLoading })}
       </main>
 
       {/* Mobile/Tablet Bottom Navigation (visible on screens < 1024px) */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden z-50 safe-area-inset-bottom">
-        <div className="relative">
-          <div className={`grid h-[60px] ${currentUser ? 'grid-cols-5' : 'grid-cols-3'}`}>
-            {mobileNavItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
+        <div className={`grid h-[60px] ${currentUser ? 'grid-cols-5' : 'grid-cols-3'}`}>
+          {mobileNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
 
-              if (item.isCreateButton) {
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.path}
-                    className="flex flex-col items-center justify-center relative"
-                  >
-                    <div className="absolute -top-3 w-14 h-14 cu-gradient rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110">
-                      <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
-                    </div>
-                    <span className="cu-text-responsive-xs mt-5 font-medium text-purple-600">
-                      {item.name}
-                    </span>
-                  </Link>
-                );
-              }
-
+            if (item.isCreateButton) {
               return (
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`flex flex-col items-center justify-center transition-colors ${
-                    isActive ? 'text-purple-600' : 'text-gray-500 hover:text-purple-600'
-                  }`}
+                  className="flex flex-col items-center justify-center transition-colors text-gray-500 hover:text-purple-600"
                 >
-                  <Icon className="cu-icon-sm" />
+                  <div className="w-8 h-8 cu-gradient rounded-lg flex items-center justify-center">
+                    <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
+                  </div>
                   <span className="cu-text-responsive-xs mt-1 font-medium">
-                    {item.name === "My Projects" ? "Projects" : item.name}
+                    {item.name}
                   </span>
                 </Link>
               );
-            })}
+            }
 
-            {!currentUser && (
-              <button
-                onClick={() => User.login()}
-                className="flex flex-col items-center justify-center transition-colors text-gray-500 hover:text-purple-600"
+            return (
+              <Link
+                key={item.name}
+                to={item.path}
+                className={`flex flex-col items-center justify-center transition-colors ${
+                  isActive ? 'text-purple-600' : 'text-gray-500 hover:text-purple-600'
+                }`}
               >
-                <UserIcon className="cu-icon-sm" />
-                <span className="cu-text-responsive-xs mt-1 font-medium">Sign In</span>
-              </button>
-            )}
-          </div>
+                <Icon className="cu-icon-sm" />
+                <span className="cu-text-responsive-xs mt-1 font-medium">
+                  {item.name === "My Projects" ? "Projects" : item.name}
+                </span>
+              </Link>
+            );
+          })}
+
+          {!currentUser && (
+            <button
+              onClick={() => User.login()}
+              className="flex flex-col items-center justify-center transition-colors text-gray-500 hover:text-purple-600"
+            >
+              <UserIcon className="cu-icon-sm" />
+              <span className="cu-text-responsive-xs mt-1 font-medium">Sign In</span>
+            </button>
+          )}
         </div>
       </nav>
     </div>
