@@ -931,18 +931,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
               and bring your vision to life.
             </p>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-8 px-4">
-              <Link to={createPageUrl("CreateProject")}>
-                <Button
-                  size="lg"
-                  style={{ background: 'var(--cu-primary)' }}
-                  className="text-white font-semibold shadow-lg hover:opacity-90 transition-opacity cu-button-mobile-full"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Create Project
-                </Button>
-              </Link>
-            </div>
+
 
           </motion.div>
         </div>
