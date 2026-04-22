@@ -12,6 +12,12 @@ function getSlides(project) {
   );
   const hasCollaborators = (project.collaborator_emails?.length || 0) > 1;
   const isStale = daysSinceUpdate > 7;
+  const topSkills = (project.skills_needed || []).slice(0, 2);
+  const skillsText = topSkills.length > 0 ? topSkills.join(" & ") : "your core skills";
+  const industry = project.industry || project.classification || null;
+  const projectName = project.title || "this project";
+  const hasShowcaseLinks = (project.project_urls || []).length > 0;
+  const hasMilestones = false; // milestone data not on project obj; we use this as a prompt
 
   return [
     {
@@ -22,14 +28,16 @@ function getSlides(project) {
       border: "border-blue-200",
       textColor: "text-blue-700",
       title: "Build a clear roadmap",
-      description: "Break your project into milestones with deadlines to keep everyone aligned.",
+      description: `Break "${projectName}" into milestones with deadlines so every collaborator knows what's next.`,
       actions: [
-        "Add 2–3 milestones with target dates",
-        "Define the core deliverable per phase",
+        `Add 2–3 milestones for ${projectName}`,
+        topSkills.length > 0
+          ? `Define deliverables that highlight ${skillsText}`
+          : "Define the core deliverable per phase",
         "Set a realistic launch date",
       ],
       cta: "Open Milestones",
-      ctaPath: `ProjectDetail?id=${project.id}`,
+      ctaPath: `ProjectDetail?id=${project.id}&tab=milestones`,
     },
     {
       phase: "Build",
@@ -38,17 +46,19 @@ function getSlides(project) {
       bg: "bg-orange-50",
       border: "border-orange-200",
       textColor: "text-orange-700",
-      title: isStale ? `${daysSinceUpdate}d since last update` : "Make progress today",
+      title: isStale ? `${daysSinceUpdate}d since last update on "${projectName}"` : `Keep "${projectName}" moving`,
       description: isStale
-        ? "Even a small step keeps momentum alive. Pick one task and do it now."
-        : "Keep the build phase strong with focused, daily tasks.",
+        ? `It's been a while. Pick one small task for ${projectName} and build momentum again.`
+        : `Stay focused on delivering ${projectName}${industry ? ` in the ${industry} space` : ""}.`,
       actions: [
-        "Create or update a task in the board",
-        "Upload a work-in-progress asset",
-        "Write a short planning note",
+        `Create or update a task in ${projectName}'s board`,
+        topSkills.length > 0
+          ? `Upload a work-in-progress asset showcasing ${topSkills[0]}`
+          : "Upload a work-in-progress asset",
+        `Write a planning note about ${projectName}'s next step`,
       ],
       cta: "Go to Task Board",
-      ctaPath: `ProjectDetail?id=${project.id}`,
+      ctaPath: `ProjectDetail?id=${project.id}&tab=tasks`,
     },
     {
       phase: "Collaborate",
@@ -57,19 +67,23 @@ function getSlides(project) {
       bg: "bg-purple-50",
       border: "border-purple-200",
       textColor: "text-purple-700",
-      title: hasCollaborators ? "Keep your team engaged" : "Invite collaborators",
+      title: hasCollaborators ? `Keep your "${projectName}" team engaged` : `Find collaborators for "${projectName}"`,
       description: hasCollaborators
-        ? "Assign tasks, share updates, and celebrate wins with your team."
-        : "The right collaborators can multiply your project's impact.",
+        ? `Assign tasks, share updates, and celebrate wins with your ${projectName} team.`
+        : topSkills.length > 0
+          ? `Looking for ${skillsText} contributors? The right collaborators will multiply ${projectName}'s impact.`
+          : `The right collaborators can multiply ${projectName}'s impact.`,
       actions: hasCollaborators
         ? [
-            "Assign an open task to a team member",
+            `Assign an open task to a ${projectName} team member`,
             "Post a status update in team chat",
-            "Review a collaborator's recent work",
+            "Review a collaborator's recent contribution",
           ]
         : [
-            "Post to the Feed to attract collaborators",
-            "Add skills needed to your project",
+            topSkills.length > 0
+              ? `Add "${skillsText}" to your skills needed so the right people find you`
+              : "Add skills needed to attract the right collaborators",
+            `Post a Feed update about ${projectName} to attract interest`,
             "Share your project link with your network",
           ],
       cta: hasCollaborators ? "Open Team Chat" : "View on Feed",
@@ -82,12 +96,14 @@ function getSlides(project) {
       bg: "bg-green-50",
       border: "border-green-200",
       textColor: "text-green-700",
-      title: "Push toward the finish line",
-      description: "Define what 'done' looks like and celebrate when you get there.",
+      title: `Ship "${projectName}"`,
+      description: `Define what done looks like for ${projectName} and celebrate when you get there.`,
       actions: [
-        "Add a showcase link (demo, GitHub, video)",
+        hasShowcaseLinks
+          ? `Update ${projectName}'s showcase link with the latest version`
+          : `Add a showcase link for ${projectName} (demo, GitHub, video)`,
         "Mark completed milestones as done",
-        "Update project status to 'Completed'",
+        `Update ${projectName}'s status to "Completed"`,
       ],
       cta: "Edit Project",
       ctaPath: `EditProject?id=${project.id}`,
