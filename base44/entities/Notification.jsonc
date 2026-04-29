@@ -1,0 +1,83 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of user receiving notification"
+    },
+    "title": {
+      "type": "string",
+      "description": "Notification title"
+    },
+    "message": {
+      "type": "string",
+      "description": "Notification message"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional additional description or detail for the notification"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "project_application",
+        "project_update",
+        "collaboration_request",
+        "general",
+        "feed_applaud",
+        "feed_comment",
+        "feed_share",
+        "discussion_comment",
+        "feed_comment_mention",
+        "discussion_comment_mention",
+        "project_task_assigned",
+        "project_task_completed",
+        "project_asset_upload",
+        "project_thought_created",
+        "project_ideation_updated",
+        "advertisement_approved",
+        "advertisement_rejected",
+        "advertisement_expired",
+        "project_member_left",
+        "project_member_removed",
+        "project_member_added",
+        "project_status_changed",
+        "direct_message"
+      ],
+      "description": "Type of notification"
+    },
+    "related_project_id": {
+      "type": "string",
+      "description": "Related project ID if applicable"
+    },
+    "related_entity_id": {
+      "type": "string",
+      "description": "ID of the related entity (e.g., ProjectApplication, Comment, Conversation, etc.)"
+    },
+    "actor_email": {
+      "type": "string",
+      "description": "Email of the user who performed the action"
+    },
+    "actor_name": {
+      "type": "string",
+      "description": "Name of the user who performed the action"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional context data for the notification"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether notification has been read"
+    }
+  },
+  "required": [
+    "user_email",
+    "title",
+    "message",
+    "type"
+  ]
+}

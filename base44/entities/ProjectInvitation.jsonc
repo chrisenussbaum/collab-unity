@@ -1,0 +1,47 @@
+{
+  "name": "ProjectInvitation",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project"
+    },
+    "inviter_email": {
+      "type": "string",
+      "description": "Email of the project owner who sent the invitation"
+    },
+    "invitee_email": {
+      "type": "string",
+      "description": "Email of the person being invited"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined"
+      ],
+      "default": "pending",
+      "description": "Status of the invitation"
+    },
+    "message": {
+      "type": "string",
+      "description": "Optional personal message from the inviter"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional additional description or context for the invitation"
+    },
+    "responded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the invitation was accepted or declined"
+    }
+  },
+  "required": [
+    "project_id",
+    "inviter_email",
+    "invitee_email"
+  ]
+}

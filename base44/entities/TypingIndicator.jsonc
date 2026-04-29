@@ -1,0 +1,32 @@
+{
+  "name": "TypingIndicator",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string",
+      "description": "ID of the conversation"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of user who is typing"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Name of user who is typing"
+    },
+    "last_typing_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time user was typing"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description or context for the typing session"
+    }
+  },
+  "required": [
+    "conversation_id",
+    "user_email"
+  ]
+}

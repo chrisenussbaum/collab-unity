@@ -1,0 +1,27 @@
+{
+  "name": "ProjectApplaud",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project being applauded"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who applauded"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Name of the user who applauded"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description or note left with the applaud"
+    }
+  },
+  "required": [
+    "project_id",
+    "user_email"
+  ]
+}

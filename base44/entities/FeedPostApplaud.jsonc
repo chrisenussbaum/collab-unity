@@ -1,0 +1,27 @@
+{
+  "name": "FeedPostApplaud",
+  "type": "object",
+  "properties": {
+    "feed_post_id": {
+      "type": "string",
+      "description": "ID of the feed post being applauded"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who applauded"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Name of the user who applauded"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description or note left with the applaud"
+    }
+  },
+  "required": [
+    "feed_post_id",
+    "user_email"
+  ]
+}

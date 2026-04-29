@@ -1,0 +1,84 @@
+{
+  "name": "UserGameStats",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user"
+    },
+    "total_points": {
+      "type": "number",
+      "default": 0,
+      "description": "Total points earned"
+    },
+    "level": {
+      "type": "number",
+      "default": 1,
+      "description": "User level based on points"
+    },
+    "badges": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of badge IDs earned by the user"
+    },
+    "achievements": {
+      "type": "object",
+      "description": "Achievement tracking with completion status and dates"
+    },
+    "activity_streak": {
+      "type": "number",
+      "default": 0,
+      "description": "Current consecutive days of activity"
+    },
+    "last_activity_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Last date user was active"
+    },
+    "projects_created": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of projects created"
+    },
+    "projects_collaborated": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of projects collaborated on"
+    },
+    "endorsements_given": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of endorsements given to others"
+    },
+    "endorsements_received": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of endorsements received"
+    },
+    "reviews_given": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of reviews given"
+    },
+    "reviews_received": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of reviews received"
+    },
+    "users_invited": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of users invited to platform"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description or notes about the user's game stats"
+    }
+  },
+  "required": [
+    "user_email"
+  ]
+}

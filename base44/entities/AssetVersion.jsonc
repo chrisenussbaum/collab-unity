@@ -1,0 +1,79 @@
+{
+  "name": "AssetVersion",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project this asset belongs to"
+    },
+    "asset_name": {
+      "type": "string",
+      "description": "Name/identifier of the asset"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL of the uploaded file or external link"
+    },
+    "file_name": {
+      "type": "string",
+      "description": "Original filename or link display name"
+    },
+    "file_type": {
+      "type": "string",
+      "description": "MIME type or file extension (optional for links)"
+    },
+    "file_size": {
+      "type": "number",
+      "description": "File size in bytes (optional for links)"
+    },
+    "version_number": {
+      "type": "number",
+      "description": "Version number (auto-incremented)"
+    },
+    "version_notes": {
+      "type": "string",
+      "description": "Notes about this version/what changed"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of the asset"
+    },
+    "uploaded_by": {
+      "type": "string",
+      "description": "Email of user who uploaded this version"
+    },
+    "is_current": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this is the current/active version"
+    },
+    "category": {
+      "type": "string",
+      "description": "Category or folder for organization"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for easier searching and categorization"
+    },
+    "resource_type": {
+      "type": "string",
+      "enum": [
+        "file",
+        "link"
+      ],
+      "default": "file",
+      "description": "Type of resource: an uploaded file or an external link"
+    }
+  },
+  "required": [
+    "project_id",
+    "asset_name",
+    "file_url",
+    "version_number",
+    "uploaded_by"
+  ]
+}

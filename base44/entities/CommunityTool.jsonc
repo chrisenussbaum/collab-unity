@@ -1,0 +1,46 @@
+{
+  "name": "CommunityTool",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Tool name"
+    },
+    "url": {
+      "type": "string",
+      "description": "Tool URL"
+    },
+    "category": {
+      "type": "string",
+      "description": "Tool category (Design, Development, Communication, Project Management, etc.)"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of the tool and its use"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Emoji icon for the tool"
+    },
+    "added_by": {
+      "type": "string",
+      "description": "Email of user who first added this tool"
+    },
+    "usage_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of times this tool has been added to projects"
+    },
+    "is_approved": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this tool is approved for platform-wide use"
+    }
+  },
+  "required": [
+    "name",
+    "url",
+    "category"
+  ]
+}

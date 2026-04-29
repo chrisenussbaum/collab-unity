@@ -1,0 +1,36 @@
+{
+  "name": "SkillEndorsement",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user being endorsed"
+    },
+    "skill": {
+      "type": "string",
+      "description": "The skill being endorsed"
+    },
+    "endorser_email": {
+      "type": "string",
+      "description": "Email of the user giving the endorsement"
+    },
+    "endorser_name": {
+      "type": "string",
+      "description": "Name of the endorser"
+    },
+    "endorser_profile_image": {
+      "type": "string",
+      "description": "Profile image of the endorser"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description or note about the endorsement"
+    }
+  },
+  "required": [
+    "user_email",
+    "skill",
+    "endorser_email"
+  ]
+}

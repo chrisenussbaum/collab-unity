@@ -1,0 +1,77 @@
+{
+  "name": "ActivityLog",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project this activity belongs to"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who performed the action"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Display name of the user"
+    },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "asset_uploaded",
+        "asset_updated",
+        "asset_deleted",
+        "task_created",
+        "task_updated",
+        "task_completed",
+        "task_deleted",
+        "task_assigned",
+        "thought_created",
+        "thought_updated",
+        "thought_deleted",
+        "ideation_updated",
+        "comment_posted",
+        "member_added",
+        "member_left",
+        "member_removed",
+        "status_changed",
+        "milestone_created",
+        "milestone_updated",
+        "milestone_completed",
+        "milestone_deleted",
+        "tool_added",
+        "tool_removed",
+        "project_updated",
+        "link_added",
+        "link_removed"
+      ],
+      "description": "Type of action performed"
+    },
+    "action_description": {
+      "type": "string",
+      "description": "Human-readable description of what happened"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional additional description or context for the activity"
+    },
+    "entity_type": {
+      "type": "string",
+      "description": "Type of entity affected (asset, task, thought, ideation, etc.)"
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "ID of the affected entity"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional context data about the action"
+    }
+  },
+  "required": [
+    "project_id",
+    "user_email",
+    "action_type",
+    "action_description"
+  ]
+}

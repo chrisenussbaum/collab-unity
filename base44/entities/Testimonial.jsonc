@@ -1,0 +1,44 @@
+{
+  "name": "Testimonial",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the person giving testimonial"
+    },
+    "role": {
+      "type": "string",
+      "description": "Role or title (optional)"
+    },
+    "photo_url": {
+      "type": "string",
+      "description": "URL of the person's photo (optional)"
+    },
+    "rating": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "default": 5,
+      "description": "Rating from 1-5 stars"
+    },
+    "testimonial": {
+      "type": "string",
+      "description": "The testimonial text"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional additional description or context for the testimonial"
+    },
+    "is_approved": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the testimonial has been approved for display"
+    }
+  },
+  "required": [
+    "name",
+    "testimonial",
+    "rating"
+  ]
+}

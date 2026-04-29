@@ -1,0 +1,74 @@
+{
+  "name": "Conversation",
+  "type": "object",
+  "properties": {
+    "conversation_type": {
+      "type": "string",
+      "enum": [
+        "direct",
+        "group"
+      ],
+      "default": "direct",
+      "description": "Type of conversation - direct (1-on-1) or group"
+    },
+    "participant_1_email": {
+      "type": "string",
+      "description": "Email of the first participant (for direct chats)"
+    },
+    "participant_2_email": {
+      "type": "string",
+      "description": "Email of the second participant (for direct chats)"
+    },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of participant emails (for group chats)"
+    },
+    "group_name": {
+      "type": "string",
+      "description": "Name of the group (for group chats)"
+    },
+    "group_image": {
+      "type": "string",
+      "description": "Group chat image URL"
+    },
+    "admin_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of admin emails who can manage the group"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description for the conversation or group"
+    },
+    "last_message": {
+      "type": "string",
+      "description": "Preview of the last message sent"
+    },
+    "last_message_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the last message was sent"
+    },
+    "participant_1_unread_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of unread messages for participant 1"
+    },
+    "participant_2_unread_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of unread messages for participant 2"
+    },
+    "unread_counts": {
+      "type": "object",
+      "description": "Map of user emails to unread counts for group chats"
+    }
+  },
+  "required": []
+}

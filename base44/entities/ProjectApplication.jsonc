@@ -1,0 +1,37 @@
+{
+  "name": "ProjectApplication",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project being applied to"
+    },
+    "applicant_email": {
+      "type": "string",
+      "description": "Email of the user applying"
+    },
+    "message": {
+      "type": "string",
+      "description": "Application message"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional additional description or context for the application"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Application status"
+    }
+  },
+  "required": [
+    "project_id",
+    "applicant_email"
+  ]
+}

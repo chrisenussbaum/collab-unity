@@ -1,0 +1,53 @@
+{
+  "name": "ProjectPresence",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project being viewed"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user currently present"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Display name of the user"
+    },
+    "user_avatar": {
+      "type": "string",
+      "description": "Avatar URL of the user"
+    },
+    "cursor_x": {
+      "type": "number",
+      "description": "X coordinate of cursor as percentage of viewport width (0-100)"
+    },
+    "cursor_y": {
+      "type": "number",
+      "description": "Y coordinate of cursor as percentage of viewport height (0-100)"
+    },
+    "viewing_section": {
+      "type": "string",
+      "description": "Current section being viewed (e.g., 'overview', 'workspace', 'discussions')"
+    },
+    "last_active": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last activity timestamp"
+    },
+    "color": {
+      "type": "string",
+      "description": "Assigned color for this user's cursor/presence"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description or status message for the presence session"
+    }
+  },
+  "required": [
+    "project_id",
+    "user_email",
+    "user_name"
+  ]
+}
