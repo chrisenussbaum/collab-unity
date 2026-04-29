@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, ShieldCheck, User as UserIcon, Lightbulb, Settings, Compass, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar } from "lucide-react";
+import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, User as UserIcon, Lightbulb, Settings, Compass, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import GlobalSearchBar from "./components/GlobalSearchBar";
 
@@ -1018,16 +1018,6 @@ export default function Layout({ children, currentPageName }) {
                       <Eye className="cu-icon-sm mr-2" /> View Profile
                     </Link>
                   </DropdownMenuItem>
-                  {currentUser?.role === 'admin' && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link to={createPageUrl("AdminVerificationPanel")} className="flex items-center cursor-pointer">
-                          <ShieldCheck className="cu-icon-sm mr-2" /> Ad Review Panel
-                        </Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to={createPageUrl("Leaderboard")} className="flex items-center cursor-pointer">
@@ -1126,16 +1116,6 @@ export default function Layout({ children, currentPageName }) {
                           <Eye className="cu-icon-sm mr-2" /> View Profile
                         </Link>
                       </DropdownMenuItem>
-                      {currentUser?.role === 'admin' && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem asChild>
-                            <Link to={createPageUrl("AdminVerificationPanel")} className="flex items-center cursor-pointer">
-                              <ShieldCheck className="cu-icon-sm mr-2" /> Ad Review Panel
-                            </Link>
-                          </DropdownMenuItem>
-                        </>
-                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl("Leaderboard")} className="flex items-center cursor-pointer">
