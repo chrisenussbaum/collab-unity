@@ -1737,6 +1737,93 @@ export default function Welcome() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-xl text-gray-600">
+              Everything you need to know about Collab Unity
+            </p>
+          </motion.div>
+
+          <div className="space-y-4">
+            {[
+              {
+                q: "What is Collab Unity?",
+                a: "Collab Unity is a project-based collaboration platform that connects creators, learners, and innovators. You can create or join projects, find collaborators with matching skills, manage your work with built-in tools, and share your progress with the community — all in one place."
+              },
+              {
+                q: "Is Collab Unity free to use?",
+                a: "Yes! Core features on Collab Unity are completely free. You can create projects, join collaborations, use the workspace tools, message teammates, and build your profile at no cost."
+              },
+              {
+                q: "Who is Collab Unity for?",
+                a: "Collab Unity is for anyone who wants to build something with others — students working on school projects, developers building apps, artists creating content, entrepreneurs launching startups, or hobbyists pursuing a passion. If you have an idea and want a team, Collab Unity is for you."
+              },
+              {
+                q: "How do I find collaborators for my project?",
+                a: "Once you create a project and list the skills you need, your project appears on the Discover page where other users can apply to join. You can also browse the Collaborators tab to find people by skill set and reach out directly. Our AI-powered matching also recommends relevant projects and people based on your profile."
+              },
+              {
+                q: "How do I join an existing project?",
+                a: "Head to the Discover page, browse projects, and click 'Apply' on any project that interests you. You'll send a short message to the project owner, and if they accept, you'll be added as a collaborator with full access to the project workspace."
+              },
+              {
+                q: "What tools are available in the project workspace?",
+                a: "Each project workspace includes an overview dashboard, milestone tracking, a task board, asset and file management, a rich-text ideation editor, an integrated tools hub, a team discussion board, and an activity log — everything your team needs to collaborate effectively."
+              },
+              {
+                q: "Can I keep my project private?",
+                a: "Yes. When creating or editing a project, you can set it to private so it won't appear on the public Feed or Discover pages. Only invited collaborators will have access."
+              },
+              {
+                q: "How does the AI project generation work?",
+                a: "On the Create Project page, you can describe your idea in plain language. Our AI will automatically suggest a project title, description, relevant skills, tools, industry classification, and more — giving you a head start so you can focus on building rather than filling out forms."
+              },
+              {
+                q: "Can I showcase my work on my profile?",
+                a: "Absolutely. Your profile includes sections for your projects, skills (with peer endorsements), a portfolio, collaborator reviews, and even an AI-generated resume you can download as a PDF. It's designed to be a living portfolio that grows as you collaborate."
+              },
+              {
+                q: "How do I get started?",
+                a: "Sign up for a free account, complete your profile with your skills and interests, and then either create your first project or explore the Discover page to find one to join. The whole process takes just a few minutes."
+              }
+            ].map((faq, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                viewport={{ once: true }}
+              >
+                <details className="group border border-gray-200 rounded-xl overflow-hidden">
+                  <summary className="flex items-center justify-between p-6 cursor-pointer list-none bg-white hover:bg-gray-50 transition-colors">
+                    <h3 className="text-lg font-semibold text-gray-900 pr-4">{faq.q}</h3>
+                    <span className="flex-shrink-0 w-6 h-6 text-purple-600 transition-transform group-open:rotate-45">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                    </span>
+                  </summary>
+                  <div className="px-6 pb-6 bg-gray-50">
+                    <p className="text-gray-600 leading-relaxed">{faq.a}</p>
+                  </div>
+                </details>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-300 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
