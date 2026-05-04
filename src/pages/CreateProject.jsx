@@ -692,7 +692,7 @@ export default function CreateProject() {
 
           {/* Templates Dialog */}
           <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
-            <DialogContent className="w-[calc(100vw-2rem)] max-w-4xl p-4 sm:p-6">
+            <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl max-h-[80vh] overflow-hidden p-4 sm:p-5 flex flex-col">
               <ProjectTemplatesSelector
                 onSelectTemplate={handleSelectTemplate}
                 onClose={() => setShowTemplates(false)}
