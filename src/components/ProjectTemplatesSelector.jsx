@@ -193,36 +193,36 @@ export default function ProjectTemplatesSelector({ onSelectTemplate, onClose }) 
   });
 
   return (
-    <div className="flex flex-col h-full max-h-[80vh]">
+    <div className="flex flex-col" style={{ maxHeight: "75vh" }}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 flex-shrink-0">
+      <div className="flex items-center justify-between mb-3 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <LayoutTemplate className="w-5 h-5 text-purple-600" />
-          <h2 className="text-xl font-bold text-gray-900">Choose a Template</h2>
+          <LayoutTemplate className="w-4 h-4 text-purple-600" />
+          <h2 className="text-lg font-bold text-gray-900">Choose a Template</h2>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </Button>
       </div>
 
       {/* Search */}
-      <div className="relative mb-3 flex-shrink-0">
+      <div className="relative mb-2 flex-shrink-0">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <Input
           placeholder="Search templates..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="pl-9"
+          className="pl-9 h-8 text-sm"
         />
       </div>
 
       {/* Category Pills */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide flex-shrink-0">
+      <div className="flex gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-hide flex-shrink-0">
         {CATEGORIES.map(cat => (
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
               activeCategory === cat
                 ? "bg-purple-600 text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -234,14 +234,14 @@ export default function ProjectTemplatesSelector({ onSelectTemplate, onClose }) 
       </div>
 
       {/* Templates Grid */}
-      <div className="overflow-y-auto flex-1">
+      <div className="overflow-y-auto flex-1 min-h-0">
         {filtered.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <LayoutTemplate className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-            <p>No templates match your search.</p>
+          <div className="text-center py-8 text-gray-500">
+            <LayoutTemplate className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+            <p className="text-sm">No templates match your search.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pb-2 pr-1">
             <AnimatePresence mode="popLayout">
               {filtered.map(template => (
                 <motion.button
@@ -254,21 +254,21 @@ export default function ProjectTemplatesSelector({ onSelectTemplate, onClose }) 
                   onClick={() => onSelectTemplate(template)}
                   onMouseEnter={() => setHoveredId(template.id)}
                   onMouseLeave={() => setHoveredId(null)}
-                  className={`text-left p-4 rounded-xl border-2 transition-all duration-150 ${
+                  className={`text-left p-3 rounded-lg border-2 transition-all duration-150 ${
                     hoveredId === template.id
                       ? "border-purple-400 bg-purple-50 shadow-md"
                       : "border-gray-200 bg-white hover:border-purple-300"
                   }`}
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <span className="text-2xl">{template.emoji}</span>
-                    <ChevronRight className={`w-4 h-4 mt-1 transition-colors ${hoveredId === template.id ? "text-purple-600" : "text-gray-300"}`} />
+                  <div className="flex items-start justify-between mb-1">
+                    <span className="text-lg">{template.emoji}</span>
+                    <ChevronRight className={`w-3.5 h-3.5 mt-0.5 transition-colors ${hoveredId === template.id ? "text-purple-600" : "text-gray-300"}`} />
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-1">{template.name}</h3>
-                  <p className="text-xs text-gray-500 mb-3 line-clamp-2">{template.tagline}</p>
+                  <h3 className="font-semibold text-sm text-gray-900 mb-0.5">{template.name}</h3>
+                  <p className="text-xs text-gray-500 mb-2 line-clamp-1">{template.tagline}</p>
                   <div className="flex flex-wrap gap-1">
-                    <Badge className="text-xs bg-purple-100 text-purple-700 border-0">{template.category}</Badge>
-                    <Badge variant="outline" className="text-xs text-gray-500">{template.skills_needed.length} skills</Badge>
+                    <Badge className="text-xs bg-purple-100 text-purple-700 border-0 px-1.5 py-0">{template.category}</Badge>
+                    <Badge variant="outline" className="text-xs text-gray-500 px-1.5 py-0">{template.skills_needed.length} skills</Badge>
                   </div>
                 </motion.button>
               ))}
