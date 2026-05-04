@@ -195,14 +195,9 @@ export default function ProjectTemplatesSelector({ onSelectTemplate, onClose }) 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <LayoutTemplate className="w-4 h-4 text-purple-600" />
-          <h2 className="text-lg font-bold text-gray-900">Choose a Template</h2>
-        </div>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="w-4 h-4" />
-        </Button>
+      <div className="flex items-center gap-2 mb-3 flex-shrink-0">
+        <LayoutTemplate className="w-4 h-4 text-purple-600" />
+        <h2 className="text-lg font-bold text-gray-900">Choose a Template</h2>
       </div>
 
       {/* Search */}
