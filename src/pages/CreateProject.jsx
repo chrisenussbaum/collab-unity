@@ -616,7 +616,7 @@ export default function CreateProject() {
         className="hidden"
       />
 
-      <div className={`bg-gray-50 ${currentStep === 0 || currentStep === 'new' || currentStep === 'import' ? 'min-h-[calc(100vh-4rem)] flex items-center justify-center py-8' : 'min-h-screen py-4'}`}>
+      <div className={`bg-gray-50 ${currentStep === 0 || currentStep === 'new' || currentStep === 'import' ? 'h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] flex items-center justify-center overflow-hidden' : 'min-h-screen py-4'}`}>
         <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Initial Choice Screen */}
@@ -626,13 +626,11 @@ export default function CreateProject() {
               animate={{ opacity: 1, y: 0 }}
             >
               <div className="text-center mb-8">
-                <img 
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/98181e664_collab-unity-lightbulb-assistant.png"
-                  alt="Project Assistant"
-                  className="w-16 h-16 mx-auto mb-4"
-                />
-                <h1 className="text-2xl font-bold text-gray-900">Where are you with your project?</h1>
-                <p className="text-gray-500 mt-2 max-w-md mx-auto">We'll meet you where you are and help you move forward.</p>
+                <div className="w-16 h-16 rounded-2xl bg-purple-100 flex items-center justify-center mx-auto mb-5">
+                  <Lightbulb className="w-9 h-9 text-purple-600" />
+                </div>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">Where are you with your project?</h1>
+                <p className="text-gray-500 mt-3 max-w-lg mx-auto text-base sm:text-lg">We'll meet you where you are and help you move forward.</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full mt-4">
