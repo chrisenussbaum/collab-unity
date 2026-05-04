@@ -616,8 +616,8 @@ export default function CreateProject() {
         className="hidden"
       />
 
-      <div className={`min-h-screen bg-gray-50 ${currentStep === 0 || currentStep === 'new' || currentStep === 'import' ? 'flex items-center justify-center py-8' : 'py-4'}`}>
-        <div className={`w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 ${currentStep === 0 ? '' : ''}`}>
+      <div className={`bg-gray-50 ${currentStep === 0 || currentStep === 'new' || currentStep === 'import' ? 'min-h-[calc(100vh-4rem)] flex items-center justify-center py-8' : 'min-h-screen py-4'}`}>
+        <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Initial Choice Screen */}
           {currentStep === 0 && (
@@ -635,18 +635,18 @@ export default function CreateProject() {
                 <p className="text-gray-500 mt-2 max-w-md mx-auto">We'll meet you where you are and help you move forward.</p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full mt-4">
                 {/* Path 1: Starting fresh */}
                 <Card className="cu-card border-2 border-transparent hover:border-purple-400 transition-all cursor-pointer group" onClick={() => setCurrentStep('new')}>
-                  <CardContent className="p-6 text-center space-y-4">
-                    <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mx-auto group-hover:bg-purple-200 transition-colors">
-                      <Rocket className="w-7 h-7 text-purple-600" />
+                  <CardContent className="p-8 sm:p-10 text-center space-y-6">
+                    <div className="w-20 h-20 rounded-2xl bg-purple-100 flex items-center justify-center mx-auto group-hover:bg-purple-200 transition-colors">
+                      <Rocket className="w-10 h-10 text-purple-600" />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-900">I'm starting a new project</h3>
-                      <p className="text-sm text-gray-500 mt-1">Describe your idea and we'll help build it out. You can also import files to add structure.</p>
+                    <div className="space-y-2">
+                      <h3 className="font-bold text-xl text-gray-900">I'm starting a new project</h3>
+                      <p className="text-gray-500 leading-relaxed">Describe your idea and we'll help build it out with AI. You can also import files to populate structure automatically.</p>
                     </div>
-                    <Button className="w-full cu-button" onClick={(e) => { e.stopPropagation(); setCurrentStep('new'); }}>
+                    <Button className="w-full cu-button py-5 text-base" onClick={(e) => { e.stopPropagation(); setCurrentStep('new'); }}>
                       Get Started
                     </Button>
                   </CardContent>
@@ -654,15 +654,15 @@ export default function CreateProject() {
 
                 {/* Path 2: Need direction */}
                 <Card className="cu-card border-2 border-transparent hover:border-green-400 transition-all cursor-pointer group" onClick={() => setShowTemplates(true)}>
-                  <CardContent className="p-6 text-center space-y-4">
-                    <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto group-hover:bg-green-200 transition-colors">
-                      <Compass className="w-7 h-7 text-green-600" />
+                  <CardContent className="p-8 sm:p-10 text-center space-y-6">
+                    <div className="w-20 h-20 rounded-2xl bg-green-100 flex items-center justify-center mx-auto group-hover:bg-green-200 transition-colors">
+                      <Compass className="w-10 h-10 text-green-600" />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-900">I need direction</h3>
-                      <p className="text-sm text-gray-500 mt-1">Browse templates and best practices to find the right structure for your project.</p>
+                    <div className="space-y-2">
+                      <h3 className="font-bold text-xl text-gray-900">I need direction</h3>
+                      <p className="text-gray-500 leading-relaxed">Browse curated templates and best practices to find the right structure and kickstart your project confidently.</p>
                     </div>
-                    <Button variant="outline" className="w-full border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400" onClick={(e) => { e.stopPropagation(); setShowTemplates(true); }}>
+                    <Button variant="outline" className="w-full py-5 text-base border-2 border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400" onClick={(e) => { e.stopPropagation(); setShowTemplates(true); }}>
                       Browse Templates
                     </Button>
                   </CardContent>
