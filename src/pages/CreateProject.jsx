@@ -635,7 +635,7 @@ export default function CreateProject() {
                 <p className="text-gray-500 mt-2 max-w-md mx-auto">We'll meet you where you are and help you move forward.</p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto w-full">
                 {/* Path 1: Starting fresh */}
                 <Card className="cu-card border-2 border-transparent hover:border-purple-400 transition-all cursor-pointer group" onClick={() => setCurrentStep('new')}>
                   <CardContent className="p-6 text-center space-y-4">
@@ -644,7 +644,7 @@ export default function CreateProject() {
                     </div>
                     <div>
                       <h3 className="font-bold text-lg text-gray-900">I'm starting a new project</h3>
-                      <p className="text-sm text-gray-500 mt-1">Describe your idea and we'll help you build it out, or start from a template.</p>
+                      <p className="text-sm text-gray-500 mt-1">Describe your idea and we'll help build it out. You can also import files to add structure.</p>
                     </div>
                     <Button className="w-full cu-button" onClick={(e) => { e.stopPropagation(); setCurrentStep('new'); }}>
                       Get Started
@@ -652,23 +652,7 @@ export default function CreateProject() {
                   </CardContent>
                 </Card>
 
-                {/* Path 2: Already working on one */}
-                <Card className="cu-card border-2 border-transparent hover:border-blue-400 transition-all cursor-pointer group" onClick={handleStartFromScratch}>
-                  <CardContent className="p-6 text-center space-y-4">
-                    <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mx-auto group-hover:bg-blue-200 transition-colors">
-                      <FolderOpen className="w-7 h-7 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-900">I already have a project</h3>
-                      <p className="text-sm text-gray-500 mt-1">Import what you have. Fill in the details yourself and we'll set it up.</p>
-                    </div>
-                    <Button variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400" onClick={(e) => { e.stopPropagation(); handleStartFromScratch(); }}>
-                      Import My Project
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Path 3: Need direction */}
+                {/* Path 2: Need direction */}
                 <Card className="cu-card border-2 border-transparent hover:border-green-400 transition-all cursor-pointer group" onClick={() => setShowTemplates(true)}>
                   <CardContent className="p-6 text-center space-y-4">
                     <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto group-hover:bg-green-200 transition-colors">
@@ -680,21 +664,6 @@ export default function CreateProject() {
                     </div>
                     <Button variant="outline" className="w-full border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400" onClick={(e) => { e.stopPropagation(); setShowTemplates(true); }}>
                       Browse Templates
-                    </Button>
-                  </CardContent>
-                </Card>
-                {/* Path 4: Import from files */}
-                <Card className="cu-card border-2 border-transparent hover:border-orange-400 transition-all cursor-pointer group" onClick={() => setCurrentStep('import')}>
-                  <CardContent className="p-6 text-center space-y-4">
-                    <div className="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center mx-auto group-hover:bg-orange-200 transition-colors">
-                      <FileUp className="w-7 h-7 text-orange-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-900">Import from files</h3>
-                      <p className="text-sm text-gray-500 mt-1">Upload docs, briefs, or a folder and we'll auto-populate your project structure.</p>
-                    </div>
-                    <Button variant="outline" className="w-full border-orange-300 text-orange-700 hover:bg-orange-50 hover:border-orange-400" onClick={(e) => { e.stopPropagation(); setCurrentStep('import'); }}>
-                      Upload Files
                     </Button>
                   </CardContent>
                 </Card>
@@ -736,9 +705,14 @@ export default function CreateProject() {
                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
                     <div className="relative flex justify-center text-sm"><span className="px-4 bg-white text-gray-500">or</span></div>
                   </div>
-                  <Button variant="outline" onClick={handleStartFromScratch} className="w-full py-4 border-2 hover:border-purple-300 hover:bg-purple-50">
-                    <PenLine className="w-4 h-4 mr-2" /> Fill it in myself
-                  </Button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button variant="outline" onClick={handleStartFromScratch} className="py-4 border-2 hover:border-purple-300 hover:bg-purple-50">
+                      <PenLine className="w-4 h-4 mr-2" /> Fill it in myself
+                    </Button>
+                    <Button variant="outline" onClick={() => setCurrentStep('import')} className="py-4 border-2 hover:border-orange-300 hover:bg-orange-50 text-orange-700 border-orange-200">
+                      <FileUp className="w-4 h-4 mr-2" /> Import from files
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
