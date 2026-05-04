@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Loader2, PenLine, Image, Video, Wrench, DollarSign, LayoutTemplate, Rocket, FolderOpen, Compass } from "lucide-react";
+import { Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Loader2, PenLine, Image, Video, Wrench, DollarSign, LayoutTemplate, Rocket, FolderOpen, Compass, FileUp } from "lucide-react";
+import ProjectFileImport from "@/components/ProjectFileImport";
 import { motion, AnimatePresence } from "framer-motion";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import ProjectTemplatesSelector from "@/components/ProjectTemplatesSelector";
@@ -179,6 +180,22 @@ export default function CreateProject() {
     }));
     setIsAIAssisted(true);
     setShowTemplates(false);
+    setCurrentStep(1);
+  };
+
+  const handleImportComplete = (importedData) => {
+    setFormData(prev => ({
+      ...prev,
+      title: importedData.title || prev.title,
+      description: importedData.description || prev.description,
+      project_type: importedData.project_type || prev.project_type,
+      classification: importedData.classification || prev.classification,
+      industry: importedData.industry || prev.industry,
+      area_of_interest: importedData.area_of_interest || prev.area_of_interest,
+      skills_needed: importedData.skills_needed?.length ? importedData.skills_needed : prev.skills_needed,
+      tools_needed: importedData.tools_needed?.length ? importedData.tools_needed : prev.tools_needed,
+    }));
+    setIsAIAssisted(true);
     setCurrentStep(1);
   };
 
@@ -599,7 +616,7 @@ export default function CreateProject() {
         className="hidden"
       />
 
-      <div className={`min-h-screen bg-gray-50 ${currentStep === 0 || currentStep === 'new' ? 'flex items-center justify-center py-8' : 'py-4'}`}>
+      <div className={`min-h-screen bg-gray-50 ${currentStep === 0 || currentStep === 'new' || currentStep === 'import' ? 'flex items-center justify-center py-8' : 'py-4'}`}>
         <div className={`w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 ${currentStep === 0 ? '' : ''}`}>
 
           {/* Initial Choice Screen */}
@@ -618,7 +635,7 @@ export default function CreateProject() {
                 <p className="text-gray-500 mt-2 max-w-md mx-auto">We'll meet you where you are and help you move forward.</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Path 1: Starting fresh */}
                 <Card className="cu-card border-2 border-transparent hover:border-purple-400 transition-all cursor-pointer group" onClick={() => setCurrentStep('new')}>
                   <CardContent className="p-6 text-center space-y-4">
@@ -666,6 +683,21 @@ export default function CreateProject() {
                     </Button>
                   </CardContent>
                 </Card>
+                {/* Path 4: Import from files */}
+                <Card className="cu-card border-2 border-transparent hover:border-orange-400 transition-all cursor-pointer group" onClick={() => setCurrentStep('import')}>
+                  <CardContent className="p-6 text-center space-y-4">
+                    <div className="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center mx-auto group-hover:bg-orange-200 transition-colors">
+                      <FileUp className="w-7 h-7 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900">Import from files</h3>
+                      <p className="text-sm text-gray-500 mt-1">Upload docs, briefs, or a folder and we'll auto-populate your project structure.</p>
+                    </div>
+                    <Button variant="outline" className="w-full border-orange-300 text-orange-700 hover:bg-orange-50 hover:border-orange-400" onClick={(e) => { e.stopPropagation(); setCurrentStep('import'); }}>
+                      Upload Files
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
             </motion.div>
           )}
@@ -709,6 +741,16 @@ export default function CreateProject() {
                   </Button>
                 </CardContent>
               </Card>
+            </motion.div>
+          )}
+
+          {/* Import from Files Sub-screen */}
+          {currentStep === 'import' && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <ProjectFileImport
+                onImportComplete={handleImportComplete}
+                onBack={() => setCurrentStep(0)}
+              />
             </motion.div>
           )}
 
