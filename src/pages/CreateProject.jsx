@@ -673,15 +673,15 @@ export default function CreateProject() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 lg:gap-8 w-full max-w-5xl mx-auto">
                 {/* Path 1: Starting fresh */}
                 <Card className="cu-card border-2 border-transparent hover:border-purple-400 transition-all cursor-pointer group" onClick={() => setCurrentStep('new')}>
-                  <CardContent className="p-8 lg:p-14 text-center flex flex-col items-center gap-5 lg:gap-8">
-                    <div className="w-20 h-20 lg:w-28 lg:h-28 rounded-2xl bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                      <Rocket className="w-10 h-10 lg:w-14 lg:h-14 text-purple-600" />
+                  <CardContent className="p-8 lg:p-12 text-center flex flex-col items-center gap-5 lg:gap-7">
+                    <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                      <Rocket className="w-10 h-10 lg:w-12 lg:h-12 text-purple-600" />
                     </div>
                     <div className="space-y-2">
                       <h3 className="font-bold text-xl lg:text-2xl text-gray-900">I'm starting a new project</h3>
                       <p className="text-gray-500 leading-relaxed lg:text-lg">Describe your idea and we'll help build it out with AI. You can also import files to populate structure automatically.</p>
                     </div>
-                    <Button className="w-full cu-button py-5 lg:py-7 text-base lg:text-lg" onClick={(e) => { e.stopPropagation(); setCurrentStep('new'); }}>
+                    <Button className="w-full cu-button py-5 lg:py-6 text-base lg:text-lg" onClick={(e) => { e.stopPropagation(); setCurrentStep('new'); }}>
                       Get Started
                     </Button>
                   </CardContent>
@@ -689,15 +689,15 @@ export default function CreateProject() {
 
                 {/* Path 2: Need direction */}
                 <Card className="cu-card border-2 border-transparent hover:border-green-400 transition-all cursor-pointer group" onClick={() => setShowTemplates(true)}>
-                  <CardContent className="p-8 lg:p-14 text-center flex flex-col items-center gap-5 lg:gap-8">
-                    <div className="w-20 h-20 lg:w-28 lg:h-28 rounded-2xl bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                      <Compass className="w-10 h-10 lg:w-14 lg:h-14 text-green-600" />
+                  <CardContent className="p-8 lg:p-12 text-center flex flex-col items-center gap-5 lg:gap-7">
+                    <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                      <Compass className="w-10 h-10 lg:w-12 lg:h-12 text-green-600" />
                     </div>
                     <div className="space-y-2">
                       <h3 className="font-bold text-xl lg:text-2xl text-gray-900">I need direction</h3>
                       <p className="text-gray-500 leading-relaxed lg:text-lg">Browse curated templates and best practices to find the right structure and kickstart your project confidently.</p>
                     </div>
-                    <Button variant="outline" className="w-full py-5 lg:py-7 text-base lg:text-lg border-2 border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400" onClick={(e) => { e.stopPropagation(); setShowTemplates(true); }}>
+                    <Button variant="outline" className="w-full py-5 lg:py-6 text-base lg:text-lg border-2 border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400" onClick={(e) => { e.stopPropagation(); setShowTemplates(true); }}>
                       Browse Templates
                     </Button>
                   </CardContent>
@@ -708,7 +708,7 @@ export default function CreateProject() {
 
           {/* New Project Sub-screen (AI assisted) */}
           {currentStep === 'new' && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:max-w-2xl lg:mx-auto xl:max-w-3xl">
               <Card className="cu-card">
                 <CardHeader className="pb-2">
                   <button onClick={() => setCurrentStep(0)} className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 mb-2">
