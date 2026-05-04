@@ -708,7 +708,7 @@ export default function CreateProject() {
 
           {/* New Project Sub-screen (AI assisted) */}
           {currentStep === 'new' && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:max-w-2xl lg:mx-auto xl:max-w-3xl">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <Card className="cu-card">
                 <CardHeader className="pb-2">
                   <button onClick={() => setCurrentStep(0)} className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 mb-2">
