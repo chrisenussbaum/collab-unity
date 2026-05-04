@@ -12,9 +12,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Loader2, PenLine, Image, Video, Wrench, DollarSign } from "lucide-react";
-import { motion } from "framer-motion";
+import { Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Loader2, PenLine, Image, Video, Wrench, DollarSign, LayoutTemplate } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
+import ProjectTemplatesSelector from "@/components/ProjectTemplatesSelector";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ArrayInputWithSearch from "@/components/ArrayInputWithSearch";
 import { generateProjectSuggestions } from "@/functions/generateProjectSuggestions";
 import { base44 } from "@/api/base44Client";
@@ -52,6 +54,7 @@ export default function CreateProject() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [projectIdea, setProjectIdea] = useState("");
   const [isAIAssisted, setIsAIAssisted] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -158,6 +161,24 @@ export default function CreateProject() {
       venmo_link: "",
       cashapp_link: "",
     });
+    setCurrentStep(1);
+  };
+
+  const handleSelectTemplate = (template) => {
+    setFormData(prev => ({
+      ...prev,
+      title: template.name,
+      description: template.description,
+      project_type: template.project_type,
+      classification: template.classification,
+      industry: template.industry,
+      area_of_interest: template.area_of_interest,
+      skills_needed: template.skills_needed,
+      tools_needed: template.tools_needed,
+      template_id: template.id,
+    }));
+    setIsAIAssisted(true);
+    setShowTemplates(false);
     setCurrentStep(1);
   };
 
@@ -645,10 +666,39 @@ export default function CreateProject() {
                     <PenLine className="w-5 h-5 mr-2" />
                     Start from Scratch
                   </Button>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-4 bg-white text-gray-500">or</span>
+                    </div>
+                  </div>
+
+                  {/* Browse Templates Option */}
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowTemplates(true)}
+                    className="w-full py-6 text-lg border-2 border-purple-200 text-purple-700 hover:border-purple-400 hover:bg-purple-50"
+                  >
+                    <LayoutTemplate className="w-5 h-5 mr-2" />
+                    Browse Templates
+                  </Button>
                 </CardContent>
               </Card>
             </motion.div>
           )}
+
+          {/* Templates Dialog */}
+          <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
+            <DialogContent className="max-w-4xl w-full p-6">
+              <ProjectTemplatesSelector
+                onSelectTemplate={handleSelectTemplate}
+                onClose={() => setShowTemplates(false)}
+              />
+            </DialogContent>
+          </Dialog>
 
           {/* Browse Templates button removed - feature being reworked */}
 
