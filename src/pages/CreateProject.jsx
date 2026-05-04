@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Project, User } from "@/entities/all";
+import { Project, User, AssetVersion } from "@/entities/all";
 import { UploadFile } from "@/integrations/Core";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle }
@@ -77,6 +77,7 @@ export default function CreateProject() {
     paypal_link: "",
     venmo_link: "",
     cashapp_link: "",
+    importedFileUrls: [], // files uploaded during import flow
   });
 
   const [newLink, setNewLink] = useState("");
@@ -195,6 +196,7 @@ export default function CreateProject() {
       location: importedData.location || prev.location,
       skills_needed: importedData.skills_needed?.length ? importedData.skills_needed : prev.skills_needed,
       tools_needed: importedData.tools_needed?.length ? importedData.tools_needed : prev.tools_needed,
+      importedFileUrls: importedData.importedFileUrls || [],
     }));
     setIsAIAssisted(true);
     setCurrentStep(1);
@@ -559,11 +561,45 @@ export default function CreateProject() {
         current_collaborators_count: 1
       };
 
-      // Only include template_id and project_instructions if they exist
+      // Strip fields not belonging to the Project entity
+      delete projectData.importedFileUrls;
       if (!projectData.template_id) delete projectData.template_id;
       if (!projectData.project_instructions) delete projectData.project_instructions;
 
       const newProject = await Project.create(projectData);
+
+      // Save imported files as assets in the project's Assets tab
+      if (formData.importedFileUrls?.length > 0) {
+        try {
+          await Promise.all(
+            formData.importedFileUrls.map((file, index) => {
+              const ext = file.name.split('.').pop()?.toLowerCase() || '';
+              const category = ['png','jpg','jpeg','gif','webp','svg'].includes(ext) ? 'Media'
+                : ['pdf','doc','docx','txt','md'].includes(ext) ? 'Documentation'
+                : ['xls','xlsx','csv'].includes(ext) ? 'Documentation'
+                : ['js','ts','py','json','html','css'].includes(ext) ? 'Code'
+                : 'Documentation';
+              return AssetVersion.create({
+                project_id: newProject.id,
+                asset_name: file.name,
+                file_url: file.url,
+                file_name: file.name,
+                file_type: '',
+                file_size: 0,
+                version_number: 1,
+                version_notes: 'Imported during project setup',
+                uploaded_by: currentUser.email,
+                is_current: true,
+                category,
+                tags: ['imported'],
+                resource_type: 'file',
+              });
+            })
+          );
+        } catch (err) {
+          console.error("Error saving imported files as assets:", err);
+        }
+      }
       
       // Award points for creating project
       try {
