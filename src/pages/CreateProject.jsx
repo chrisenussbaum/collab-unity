@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Loader2, PenLine, Image, Video, Wrench, DollarSign, LayoutTemplate } from "lucide-react";
+import { Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Loader2, PenLine, Image, Video, Wrench, DollarSign, LayoutTemplate, Rocket, FolderOpen, Compass } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import ProjectTemplatesSelector from "@/components/ProjectTemplatesSelector";
@@ -573,10 +573,10 @@ export default function CreateProject() {
   };
 
   const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    } else if (currentStep === 1) {
+    if (currentStep === 1) {
       setCurrentStep(0);
+    } else if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
     }
     setErrors({});
   };
@@ -599,7 +599,7 @@ export default function CreateProject() {
         className="hidden"
       />
 
-      <div className={`min-h-screen bg-gray-50 ${currentStep === 0 ? 'flex items-center justify-center py-4' : 'py-4'}`}>
+      <div className={`min-h-screen bg-gray-50 ${currentStep === 0 || currentStep === 'new' ? 'flex items-center justify-center py-8' : 'py-4'}`}>
         <div className={`w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 ${currentStep === 0 ? '' : ''}`}>
 
           {/* Initial Choice Screen */}
@@ -608,82 +608,104 @@ export default function CreateProject() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <Card className="cu-card">
-                <CardHeader className="text-center pb-2">
-                  <img 
-                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/98181e664_collab-unity-lightbulb-assistant.png"
-                    alt="Project Assistant"
-                    className="w-20 h-20 mx-auto mb-4"
-                  />
-                  <CardTitle className="text-2xl">How would you like to start?</CardTitle>
-                  <p className="text-gray-600 mt-2">
-                    Describe your project idea and let us help you get started, or start your project from scratch.
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-6 pt-4">
-                  {/* Assisted Option */}
-                  <div className="space-y-4">
-                    <Textarea
-                      placeholder="Tell us about your project idea... For example: 'I want to create a mobile app that helps people track their daily water intake and reminds them to stay hydrated' or 'A community platform for local musicians to collaborate on songs'"
-                      value={projectIdea}
-                      onChange={(e) => setProjectIdea(e.target.value)}
-                      rows={5}
-                      className="resize-none text-base"
-                    />
-                    <Button
-                      onClick={handleGenerateProject}
-                      disabled={isGenerating || !projectIdea.trim()}
-                      className="w-full cu-button py-6 text-lg"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          Generating Project Details...
-                        </>
-                      ) : (
-                        <>
-                          Generate Project Details
-                        </>
-                      )}
+              <div className="text-center mb-8">
+                <img 
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/98181e664_collab-unity-lightbulb-assistant.png"
+                  alt="Project Assistant"
+                  className="w-16 h-16 mx-auto mb-4"
+                />
+                <h1 className="text-2xl font-bold text-gray-900">Where are you with your project?</h1>
+                <p className="text-gray-500 mt-2 max-w-md mx-auto">We'll meet you where you are and help you move forward.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Path 1: Starting fresh */}
+                <Card className="cu-card border-2 border-transparent hover:border-purple-400 transition-all cursor-pointer group" onClick={() => setCurrentStep('new')}>
+                  <CardContent className="p-6 text-center space-y-4">
+                    <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mx-auto group-hover:bg-purple-200 transition-colors">
+                      <Rocket className="w-7 h-7 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900">I'm starting a new project</h3>
+                      <p className="text-sm text-gray-500 mt-1">Describe your idea and we'll help you build it out, or start from a template.</p>
+                    </div>
+                    <Button className="w-full cu-button" onClick={(e) => { e.stopPropagation(); setCurrentStep('new'); }}>
+                      Get Started
                     </Button>
-                  </div>
+                  </CardContent>
+                </Card>
 
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-200"></div>
+                {/* Path 2: Already working on one */}
+                <Card className="cu-card border-2 border-transparent hover:border-blue-400 transition-all cursor-pointer group" onClick={handleStartFromScratch}>
+                  <CardContent className="p-6 text-center space-y-4">
+                    <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mx-auto group-hover:bg-blue-200 transition-colors">
+                      <FolderOpen className="w-7 h-7 text-blue-600" />
                     </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-4 bg-white text-gray-500">or</span>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900">I already have a project</h3>
+                      <p className="text-sm text-gray-500 mt-1">Import what you have. Fill in the details yourself and we'll set it up.</p>
                     </div>
-                  </div>
+                    <Button variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400" onClick={(e) => { e.stopPropagation(); handleStartFromScratch(); }}>
+                      Import My Project
+                    </Button>
+                  </CardContent>
+                </Card>
 
-                  {/* Start from Scratch Option */}
+                {/* Path 3: Need direction */}
+                <Card className="cu-card border-2 border-transparent hover:border-green-400 transition-all cursor-pointer group" onClick={() => setShowTemplates(true)}>
+                  <CardContent className="p-6 text-center space-y-4">
+                    <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto group-hover:bg-green-200 transition-colors">
+                      <Compass className="w-7 h-7 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900">I need direction</h3>
+                      <p className="text-sm text-gray-500 mt-1">Browse templates and best practices to find the right structure for your project.</p>
+                    </div>
+                    <Button variant="outline" className="w-full border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400" onClick={(e) => { e.stopPropagation(); setShowTemplates(true); }}>
+                      Browse Templates
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </motion.div>
+          )}
+
+          {/* New Project Sub-screen (AI assisted) */}
+          {currentStep === 'new' && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <Card className="cu-card">
+                <CardHeader className="pb-2">
+                  <button onClick={() => setCurrentStep(0)} className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 mb-2">
+                    ← Back
+                  </button>
+                  <CardTitle className="text-xl">Tell us about your project idea</CardTitle>
+                  <p className="text-gray-500 text-sm mt-1">Describe it in your own words and we'll generate all the details for you.</p>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-4">
+                  <Textarea
+                    placeholder="For example: 'I want to create a mobile app that helps people track their daily water intake' or 'A community platform for local musicians to collaborate on songs'"
+                    value={projectIdea}
+                    onChange={(e) => setProjectIdea(e.target.value)}
+                    rows={5}
+                    className="resize-none text-base"
+                  />
                   <Button
-                    variant="outline"
-                    onClick={handleStartFromScratch}
-                    className="w-full py-6 text-lg border-2 hover:border-purple-300 hover:bg-purple-50"
+                    onClick={handleGenerateProject}
+                    disabled={isGenerating || !projectIdea.trim()}
+                    className="w-full cu-button py-5 text-base"
                   >
-                    <PenLine className="w-5 h-5 mr-2" />
-                    Start from Scratch
+                    {isGenerating ? (
+                      <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Generating Project Details...</>
+                    ) : (
+                      "Generate Project Details"
+                    )}
                   </Button>
-
                   <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-200"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-4 bg-white text-gray-500">or</span>
-                    </div>
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
+                    <div className="relative flex justify-center text-sm"><span className="px-4 bg-white text-gray-500">or</span></div>
                   </div>
-
-                  {/* Browse Templates Option */}
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowTemplates(true)}
-                    className="w-full py-6 text-lg border-2 border-purple-200 text-purple-700 hover:border-purple-400 hover:bg-purple-50"
-                  >
-                    <LayoutTemplate className="w-5 h-5 mr-2" />
-                    Browse Templates
+                  <Button variant="outline" onClick={handleStartFromScratch} className="w-full py-4 border-2 hover:border-purple-300 hover:bg-purple-50">
+                    <PenLine className="w-4 h-4 mr-2" /> Fill it in myself
                   </Button>
                 </CardContent>
               </Card>
