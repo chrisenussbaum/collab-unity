@@ -154,9 +154,7 @@ Be specific and detailed — don't give generic answers. Base everything on the 
 
         <div>
           <h2 className="text-xl font-bold text-gray-900">Import from files</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Upload any project files — docs, briefs, images, spreadsheets, notes — AI will read all of them and intelligently fill in your project details.
-          </p>
+
         </div>
 
         {/* Drop zone */}
