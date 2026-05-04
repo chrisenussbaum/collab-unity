@@ -616,7 +616,8 @@ export default function CreateProject() {
         className="hidden"
       />
 
-      <div className={`bg-gray-50 ${currentStep === 0 || currentStep === 'new' || currentStep === 'import' ? 'h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] flex items-center justify-center overflow-hidden' : 'min-h-screen py-4'}`}>
+      <div className={`bg-gray-50 ${currentStep === 0 || currentStep === 'new' || currentStep === 'import' ? 'flex items-center justify-center py-6' : 'min-h-screen py-4'}`}
+        style={(currentStep === 0 || currentStep === 'new' || currentStep === 'import') ? { minHeight: 'calc(100svh - 4rem)' } : {}}>
         <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Initial Choice Screen */}
@@ -625,26 +626,26 @@ export default function CreateProject() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 rounded-2xl bg-purple-100 flex items-center justify-center mx-auto mb-5">
-                  <Lightbulb className="w-9 h-9 text-purple-600" />
+              <div className="text-center mb-6 lg:mb-8">
+                <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-purple-100 flex items-center justify-center mx-auto mb-4 lg:mb-5">
+                  <Lightbulb className="w-8 h-8 lg:w-9 lg:h-9 text-purple-600" />
                 </div>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">Where are you with your project?</h1>
                 <p className="text-gray-500 mt-3 max-w-lg mx-auto text-base sm:text-lg">We'll meet you where you are and help you move forward.</p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 lg:gap-8 w-full">
                 {/* Path 1: Starting fresh */}
                 <Card className="cu-card border-2 border-transparent hover:border-purple-400 transition-all cursor-pointer group" onClick={() => setCurrentStep('new')}>
-                  <CardContent className="p-8 sm:p-10 text-center space-y-6">
-                    <div className="w-20 h-20 rounded-2xl bg-purple-100 flex items-center justify-center mx-auto group-hover:bg-purple-200 transition-colors">
-                      <Rocket className="w-10 h-10 text-purple-600" />
+                  <CardContent className="p-8 lg:p-12 text-center flex flex-col items-center gap-5 lg:gap-7">
+                    <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                      <Rocket className="w-10 h-10 lg:w-12 lg:h-12 text-purple-600" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="font-bold text-xl text-gray-900">I'm starting a new project</h3>
-                      <p className="text-gray-500 leading-relaxed">Describe your idea and we'll help build it out with AI. You can also import files to populate structure automatically.</p>
+                      <h3 className="font-bold text-xl lg:text-2xl text-gray-900">I'm starting a new project</h3>
+                      <p className="text-gray-500 leading-relaxed lg:text-lg">Describe your idea and we'll help build it out with AI. You can also import files to populate structure automatically.</p>
                     </div>
-                    <Button className="w-full cu-button py-5 text-base" onClick={(e) => { e.stopPropagation(); setCurrentStep('new'); }}>
+                    <Button className="w-full cu-button py-5 lg:py-6 text-base lg:text-lg" onClick={(e) => { e.stopPropagation(); setCurrentStep('new'); }}>
                       Get Started
                     </Button>
                   </CardContent>
@@ -652,15 +653,15 @@ export default function CreateProject() {
 
                 {/* Path 2: Need direction */}
                 <Card className="cu-card border-2 border-transparent hover:border-green-400 transition-all cursor-pointer group" onClick={() => setShowTemplates(true)}>
-                  <CardContent className="p-8 sm:p-10 text-center space-y-6">
-                    <div className="w-20 h-20 rounded-2xl bg-green-100 flex items-center justify-center mx-auto group-hover:bg-green-200 transition-colors">
-                      <Compass className="w-10 h-10 text-green-600" />
+                  <CardContent className="p-8 lg:p-12 text-center flex flex-col items-center gap-5 lg:gap-7">
+                    <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                      <Compass className="w-10 h-10 lg:w-12 lg:h-12 text-green-600" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="font-bold text-xl text-gray-900">I need direction</h3>
-                      <p className="text-gray-500 leading-relaxed">Browse curated templates and best practices to find the right structure and kickstart your project confidently.</p>
+                      <h3 className="font-bold text-xl lg:text-2xl text-gray-900">I need direction</h3>
+                      <p className="text-gray-500 leading-relaxed lg:text-lg">Browse curated templates and best practices to find the right structure and kickstart your project confidently.</p>
                     </div>
-                    <Button variant="outline" className="w-full py-5 text-base border-2 border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400" onClick={(e) => { e.stopPropagation(); setShowTemplates(true); }}>
+                    <Button variant="outline" className="w-full py-5 lg:py-6 text-base lg:text-lg border-2 border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400" onClick={(e) => { e.stopPropagation(); setShowTemplates(true); }}>
                       Browse Templates
                     </Button>
                   </CardContent>
