@@ -1211,8 +1211,7 @@ export default function Welcome() {
       demoElements: [
         { icon: FolderOpen, label: "Projects Portfolio", desc: "Display your work" },
         { icon: Users, label: "Skills & Endorsements", desc: "Build credibility" },
-        { icon: FileText, label: "Generate Resume", desc: "AI-powered PDF resume" },
-        { icon: DollarSign, label: "Service Offerings", desc: "List your services" }
+        { icon: FileText, label: "Generate Resume", desc: "AI-powered PDF resume" }
       ],
       mockup: <ProfileMockup />
     }
