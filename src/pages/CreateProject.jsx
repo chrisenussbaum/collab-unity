@@ -616,8 +616,7 @@ export default function CreateProject() {
         className="hidden"
       />
 
-      <div className={`bg-gray-50 ${currentStep === 0 || currentStep === 'new' || currentStep === 'import' ? 'flex items-center justify-center py-6' : 'min-h-screen py-4'}`}
-        style={(currentStep === 0 || currentStep === 'new' || currentStep === 'import') ? { minHeight: 'calc(100svh - 4rem)' } : {}}>
+      <div className={`bg-gray-50 ${currentStep === 0 || currentStep === 'new' || currentStep === 'import' ? 'flex items-center justify-center py-4 h-[calc(100svh-4rem-83px)] lg:h-[calc(100svh-4rem)]' : 'min-h-screen py-4'}`}>
         <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Initial Choice Screen */}
