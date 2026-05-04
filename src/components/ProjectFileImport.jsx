@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText, X, Loader2, FolderUp, File as FileIcon, CheckCircle } from "lucide-react";
-import { UploadFile, ExtractDataFromUploadedFile } from "@/integrations/Core";
+import { UploadFile, InvokeLLM } from "@/integrations/Core";
 import { toast } from "sonner";
 
 const ACCEPTED_TYPES = [
@@ -24,14 +24,15 @@ const ACCEPTED_TYPES = [
 const EXTRACT_SCHEMA = {
   type: "object",
   properties: {
-    title: { type: "string", description: "Project title extracted from the file(s)" },
-    description: { type: "string", description: "Project description (max 500 chars)" },
-    project_type: { type: "string", enum: ["Personal", "Collaborative"] },
+    title: { type: "string", description: "A clear, specific project title extracted or inferred from the file(s)" },
+    description: { type: "string", description: "A detailed project description summarizing goals, purpose, and scope. Max 500 characters." },
+    project_type: { type: "string", enum: ["Personal", "Collaborative"], description: "Whether this is a solo or team project" },
     classification: { type: "string", enum: ["educational", "career_development", "hobby", "business", "nonprofit", "startup"] },
     industry: { type: "string", enum: ["technology", "healthcare", "finance", "education", "e_commerce_retail", "entertainment_media", "art_design", "science_research", "social_good", "other"] },
-    area_of_interest: { type: "string", description: "Short area tag, max 20 chars" },
-    skills_needed: { type: "array", items: { type: "string" } },
-    tools_needed: { type: "array", items: { type: "string" } },
+    area_of_interest: { type: "string", description: "Short area/field tag, max 20 characters (e.g. 'Web Dev', 'Marketing', 'AI/ML')" },
+    location: { type: "string", description: "Project location if mentioned, e.g. 'Remote' or 'New York, NY'" },
+    skills_needed: { type: "array", items: { type: "string" }, description: "Specific skills needed or demonstrated in this project (e.g. React, Figma, Python, Copywriting)" },
+    tools_needed: { type: "array", items: { type: "string" }, description: "Tools, platforms, or software used or needed (e.g. GitHub, Notion, Figma, Slack)" },
   }
 };
 
@@ -86,22 +87,39 @@ export default function ProjectFileImport({ onImportComplete, onBack }) {
     }
     setIsProcessing(true);
     try {
-      // Upload all files and extract from the first processable one
-      const uploadedUrls = [];
-      for (const file of files) {
-        const { file_url } = await UploadFile({ file });
-        uploadedUrls.push({ name: file.name, url: file_url });
-      }
+      // Upload all files in parallel
+      const uploadResults = await Promise.all(
+        files.map(async (file) => {
+          const { file_url } = await UploadFile({ file });
+          return { name: file.name, url: file_url };
+        })
+      );
 
-      // Use the first uploaded file for extraction
-      const primaryUrl = uploadedUrls[0].url;
-      const result = await ExtractDataFromUploadedFile({
-        file_url: primaryUrl,
-        json_schema: EXTRACT_SCHEMA,
+      const fileUrls = uploadResults.map(f => f.url);
+
+      // Use InvokeLLM with all file URLs so AI can read full content of every file
+      const data = await InvokeLLM({
+        prompt: `You are analyzing uploaded project files to help a user structure their project on a collaboration platform.
+
+Carefully read ALL the provided files — these may include project briefs, documents, images, spreadsheets, notes, or design files.
+
+Based on the full content of all files, extract and infer the following project details as accurately and specifically as possible:
+- A clear project title
+- A rich, detailed description of the project (goals, purpose, scope) — max 500 characters
+- Whether it's a Personal or Collaborative project
+- The most fitting classification (educational, career_development, hobby, business, nonprofit, startup)
+- The industry it belongs to
+- A short area-of-interest tag (max 20 chars)
+- Location if mentioned (or "Remote" if distributed/online)
+- A comprehensive list of specific skills needed or demonstrated
+- A comprehensive list of tools, platforms, and software used or needed
+
+Be specific and detailed — don't give generic answers. Base everything on the actual file content.`,
+        file_urls: fileUrls,
+        response_json_schema: EXTRACT_SCHEMA,
       });
 
-      if (result.status === "success" && result.output) {
-        const data = Array.isArray(result.output) ? result.output[0] : result.output;
+      if (data) {
         onImportComplete({
           title: data.title || "",
           description: (data.description || "").substring(0, 500),
@@ -109,14 +127,15 @@ export default function ProjectFileImport({ onImportComplete, onBack }) {
           classification: data.classification || "",
           industry: data.industry || "",
           area_of_interest: (data.area_of_interest || "").substring(0, 20),
+          location: data.location || "",
           skills_needed: data.skills_needed || [],
           tools_needed: data.tools_needed || [],
-          importedFileUrls: uploadedUrls,
+          importedFileUrls: uploadResults,
         });
         toast.success("Project details extracted successfully!");
       } else {
         toast.error("Couldn't extract project details. Try a different file or fill in manually.");
-        onImportComplete({ importedFileUrls: uploadedUrls });
+        onImportComplete({ importedFileUrls: uploadResults });
       }
     } catch (error) {
       console.error("Import error:", error);
@@ -136,7 +155,7 @@ export default function ProjectFileImport({ onImportComplete, onBack }) {
         <div>
           <h2 className="text-xl font-bold text-gray-900">Import from files</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Upload project docs, briefs, spreadsheets, or images — we'll read them and auto-populate your project details.
+            Upload any project files — docs, briefs, images, spreadsheets, notes — AI will read all of them and intelligently fill in your project details.
           </p>
         </div>
 

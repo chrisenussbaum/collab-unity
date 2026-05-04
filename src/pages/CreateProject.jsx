@@ -192,6 +192,7 @@ export default function CreateProject() {
       classification: importedData.classification || prev.classification,
       industry: importedData.industry || prev.industry,
       area_of_interest: importedData.area_of_interest || prev.area_of_interest,
+      location: importedData.location || prev.location,
       skills_needed: importedData.skills_needed?.length ? importedData.skills_needed : prev.skills_needed,
       tools_needed: importedData.tools_needed?.length ? importedData.tools_needed : prev.tools_needed,
     }));
