@@ -10,17 +10,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Lightbulb, Loader2, Upload, Camera, CheckCircle, XCircle, FileText, Shield, ArrowLeft, Cookie, Image, Users, Briefcase, Compass, X, MapPin, Building2, Tag, MessageCircle, Sparkles, Wrench, ArrowRight, Plus } from "lucide-react";
+import { Lightbulb, Loader2, Upload, Camera, CheckCircle, XCircle, FileText, Shield, ArrowLeft, Cookie, Image } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
-import { getAllPublicUserProfiles } from "@/functions/getAllPublicUserProfiles";
 import ArrayInputWithSearch from "@/components/ArrayInputWithSearch";
 
 export default function Onboarding({ currentUser }) {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1 = profile, 2 = terms, 3 = cookies, 4 = projects, 5 = collaborators
+  const [step, setStep] = useState(1); // 1 = profile, 2 = terms, 3 = cookies
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [profileImage, setProfileImage] = useState("");
@@ -34,25 +31,7 @@ export default function Onboarding({ currentUser }) {
   const [skills, setSkills] = useState([]);
   const [interests, setInterests] = useState([]);
   const [tools, setTools] = useState([]);
-  const [skillInput, setSkillInput] = useState("");
-  const [interestInput, setInterestInput] = useState("");
-  const [toolInput, setToolInput] = useState("");
   const [hasScrolledTerms, setHasScrolledTerms] = useState(false);
-
-  // Step 4: Project discovery state
-  const [projects, setProjects] = useState([]);
-  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
-  const [appliedIds, setAppliedIds] = useState(new Set());
-  const [skippedIds, setSkippedIds] = useState(new Set());
-  const [applyingId, setApplyingId] = useState(null);
-  const [applyDialogProject, setApplyDialogProject] = useState(null);
-  const [applyMessage, setApplyMessage] = useState("");
-
-  // Step 5: Collaborators state
-  const [collaborators, setCollaborators] = useState([]);
-  const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(false);
-  const [startingChatWith, setStartingChatWith] = useState(null);
-  const [completedUser, setCompletedUser] = useState(null);
   const [hasScrolledPrivacy, setHasScrolledPrivacy] = useState(false);
   const [hasScrolledCookies, setHasScrolledCookies] = useState(false);
   const termsScrollRef = useRef(null);
@@ -213,7 +192,6 @@ export default function Onboarding({ currentUser }) {
     setIsSubmitting(true);
 
     try {
-      // Update user profile with all data, terms acceptance, and cookie choice
       await base44.auth.updateMe({
         username: username.toLowerCase().trim(),
         full_name: fullName.trim(),
@@ -230,150 +208,12 @@ export default function Onboarding({ currentUser }) {
         cookies_accepted_at: new Date().toISOString()
       });
 
-      // Move to project discovery step (step 4)
-      const freshUser = await base44.auth.me();
-      setCompletedUser(freshUser);
-      setStep(4);
-      loadProjects();
+      handleFinish();
     } catch (error) {
       console.error("Error completing onboarding:", error);
       toast.error("Failed to complete onboarding. Please try again.");
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const loadProjects = async () => {
-    setIsLoadingProjects(true);
-    try {
-      const user = completedUser || await base44.auth.me();
-      const [results, applications] = await Promise.all([
-        base44.entities.Project.filter({ status: "seeking_collaborators", is_visible_on_feed: true }, "-created_date", 50),
-        base44.entities.ProjectApplication.filter({ applicant_email: user.email })
-      ]);
-      const existingIds = new Set(applications.map(a => a.project_id));
-      let filtered = results.filter(p => p.created_by !== user.email && !existingIds.has(p.id));
-
-      // Score projects by match with user's skills/interests
-      const userSkills = user.skills || [];
-      const userInterests = user.interests || [];
-      filtered = filtered.map(p => {
-        let score = 0;
-        if (p.skills_needed) {
-          score += p.skills_needed.filter(s => userSkills.some(us => us.toLowerCase() === s.toLowerCase())).length * 3;
-        }
-        if (p.area_of_interest) {
-          score += userInterests.filter(i => p.area_of_interest.toLowerCase().includes(i.toLowerCase()) || i.toLowerCase().includes(p.area_of_interest.toLowerCase())).length * 2;
-        }
-        return { ...p, _matchScore: score };
-      }).sort((a, b) => b._matchScore - a._matchScore);
-
-      setProjects(filtered.slice(0, 9));
-    } catch (e) {
-      setProjects([]);
-    } finally {
-      setIsLoadingProjects(false);
-    }
-  };
-
-  const openApplyDialog = (project) => {
-    setApplyDialogProject(project);
-    setApplyMessage("");
-  };
-
-  const handleApply = async () => {
-    if (!applyDialogProject || !applyMessage.trim()) return;
-    const project = applyDialogProject;
-    const user = completedUser;
-    setApplyingId(project.id);
-    try {
-      await base44.entities.ProjectApplication.create({
-        project_id: project.id,
-        applicant_email: user.email,
-        message: applyMessage.trim(),
-        status: "pending"
-      });
-      await base44.entities.Notification.create({
-        user_email: project.created_by,
-        title: "New Collaboration Request",
-        message: `${user.full_name || user.email} wants to join "${project.title}"`,
-        type: "project_application",
-        related_project_id: project.id,
-        actor_email: user.email,
-        actor_name: user.full_name || user.email,
-        read: false,
-        metadata: { applicant_profile_image: user.profile_image }
-      });
-      const newAppliedIds = new Set([...appliedIds, project.id]);
-      setAppliedIds(newAppliedIds);
-      setApplyDialogProject(null);
-      toast.success(`Applied to "${project.title}"!`);
-    } catch (e) {
-      toast.error("Failed to apply. Please try again.");
-    } finally {
-      setApplyingId(null);
-    }
-  };
-
-  const loadCollaborators = async (resolvedUser) => {
-    setIsLoadingCollaborators(true);
-    try {
-      const user = resolvedUser || completedUser || await base44.auth.me();
-      const result = await getAllPublicUserProfiles();
-      const profiles = result?.data || result || [];
-      const userSkills = (user.skills || skills || []);
-      const userInterests = (user.interests || interests || []);
-      const userTools = (user.tools_technologies || tools || []);
-
-      const allProfiles = Array.isArray(profiles) ? profiles : [];
-      const filtered = allProfiles.filter(u => u.email !== user.email);
-
-      // Score collaborators by match — but always show some even if score is 0
-      let sorted = filtered.map(u => {
-        let score = 0;
-        if (u.skills) score += u.skills.filter(s => userSkills.some(us => us.toLowerCase() === s.toLowerCase())).length * 3;
-        if (u.interests) score += u.interests.filter(i => userInterests.some(ui => ui.toLowerCase() === i.toLowerCase())).length * 2;
-        if (u.tools_technologies) score += u.tools_technologies.filter(t => userTools.some(ut => ut.toLowerCase() === t.toLowerCase())).length;
-        return { ...u, _matchScore: score };
-      }).sort((a, b) => b._matchScore - a._matchScore);
-
-      // Always show up to 12, regardless of match score
-      setCollaborators(sorted.slice(0, 12));
-    } catch (e) {
-      setCollaborators([]);
-    } finally {
-      setIsLoadingCollaborators(false);
-    }
-  };
-
-  const handleStartChat = async (user) => {
-    if (startingChatWith) return;
-    setStartingChatWith(user.email);
-    try {
-      const me = completedUser;
-      const [conv1, conv2] = await Promise.all([
-        base44.entities.Conversation.filter({ participant_1_email: me.email, participant_2_email: user.email }),
-        base44.entities.Conversation.filter({ participant_1_email: user.email, participant_2_email: me.email })
-      ]);
-      let conversation;
-      if (conv1.length > 0) conversation = conv1[0];
-      else if (conv2.length > 0) conversation = conv2[0];
-      else {
-        conversation = await base44.entities.Conversation.create({
-          conversation_type: "direct",
-          participant_1_email: me.email,
-          participant_2_email: user.email,
-          last_message: "",
-          last_message_time: new Date().toISOString(),
-          participant_1_unread_count: 0,
-          participant_2_unread_count: 0
-        });
-      }
-      window.location.href = `${createPageUrl("Chat")}?conversation=${conversation.id}`;
-    } catch (e) {
-      toast.error("Failed to start conversation.");
-    } finally {
-      setStartingChatWith(null);
     }
   };
 
@@ -435,32 +275,6 @@ export default function Onboarding({ currentUser }) {
 
   return (
     <>
-      {/* Apply Dialog */}
-      <Dialog open={!!applyDialogProject} onOpenChange={(open) => !open && setApplyDialogProject(null)}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Apply to join "{applyDialogProject?.title}"</DialogTitle>
-            <DialogDescription>Send a message to the project owner explaining why you'd be a great collaborator.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Your Message <span className="text-red-500">*</span></label>
-            <Textarea
-              placeholder="Introduce yourself, mention relevant skills, and express your interest..."
-              value={applyMessage}
-              onChange={e => setApplyMessage(e.target.value)}
-              className="h-32 resize-none"
-            />
-            <p className="text-xs text-gray-400">{applyMessage.length} characters</p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setApplyDialogProject(null)} disabled={!!applyingId}>Cancel</Button>
-            <Button className="cu-button" onClick={handleApply} disabled={!applyMessage.trim() || !!applyingId}>
-              {applyingId ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Application"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <input
         type="file"
         accept="image/png, image/jpeg, image/jpg"
@@ -1155,198 +969,7 @@ export default function Onboarding({ currentUser }) {
               )}
             </motion.div>
           )}
-          {step === 4 && (
-            <motion.div
-              key="projects-step"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
-              className="w-full max-w-5xl"
-            >
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Compass className="w-8 h-8 text-white" />
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Projects Looking for You</h1>
-                <p className="text-gray-600 max-w-md mx-auto">Apply to projects you're interested in, or skip to explore later.</p>
-              </div>
 
-              {isLoadingProjects ? (
-                <div className="flex justify-center py-16"><Loader2 className="w-10 h-10 animate-spin text-purple-600" /></div>
-              ) : projects.length === 0 ? (
-                <div className="text-center py-12">
-                  <Compass className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                  <p className="text-gray-600 mb-6">No open projects right now — check back soon!</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-                  <AnimatePresence>
-                    {projects.filter(p => !skippedIds.has(p.id)).map((project, index) => {
-                      const isApplied = appliedIds.has(project.id);
-                      const isApplying = applyingId === project.id;
-                      const skillsToShow = project.skills_needed?.slice(0, 3) || [];
-                      const extraSkills = (project.skills_needed?.length || 0) - 3;
-                      return (
-                        <motion.div
-                          key={project.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.9 }}
-                          transition={{ delay: index * 0.05 }}
-                          className={`bg-white rounded-2xl border-2 shadow-sm flex flex-col transition-all ${isApplied ? "border-purple-400" : "border-gray-100 hover:border-purple-200 hover:shadow-md"}`}
-                        >
-                          <div className="p-4 flex-1 space-y-3">
-                            <div className="flex items-start gap-3">
-                              {project.logo_url ? (
-                                <img src={project.logo_url} alt={project.title} className="w-12 h-12 rounded-xl object-cover flex-shrink-0 border border-gray-100" />
-                              ) : (
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center flex-shrink-0">
-                                  <span className="text-lg font-bold text-purple-600">{project.title?.[0] || "P"}</span>
-                                </div>
-                              )}
-                              <h3 className="font-semibold text-gray-900 leading-snug line-clamp-2">{project.title}</h3>
-                            </div>
-                            <div className="flex flex-wrap gap-1.5">
-                              <Badge variant="outline" className="text-xs border-orange-400 text-orange-600 flex items-center gap-1">
-                                <Users className="w-3 h-3" /> Seeking Collaborators
-                              </Badge>
-                              {project.classification && (
-                                <Badge variant="outline" className="text-xs text-purple-600 border-purple-300">
-                                  {project.classification.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-600 line-clamp-3">{project.description}</p>
-                            <div className="space-y-1">
-                              {project.location && <div className="flex items-center gap-1.5 text-xs text-gray-500"><MapPin className="w-3.5 h-3.5 text-purple-400" /><span>{project.location}</span></div>}
-                              {project.industry && <div className="flex items-center gap-1.5 text-xs text-gray-500"><Building2 className="w-3.5 h-3.5 text-purple-400" /><span>{project.industry}</span></div>}
-                              {project.area_of_interest && <div className="flex items-center gap-1.5 text-xs text-gray-500"><Tag className="w-3.5 h-3.5 text-purple-400" /><span>{project.area_of_interest}</span></div>}
-                            </div>
-                            {skillsToShow.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5">
-                                {skillsToShow.map(skill => (
-                                  <Badge key={skill} className="text-xs bg-purple-50 text-purple-700 border border-purple-200 font-medium">{skill}</Badge>
-                                ))}
-                                {extraSkills > 0 && <Badge variant="outline" className="text-xs text-gray-500">+{extraSkills}</Badge>}
-                              </div>
-                            )}
-                          </div>
-                          <div className="border-t border-gray-100 px-4 py-3 flex items-center gap-2">
-                            <div className="flex items-center text-xs text-gray-400 mr-auto gap-1">
-                              <Users className="w-3.5 h-3.5" /><span>{project.current_collaborators_count || 1}</span>
-                            </div>
-                            {!isApplied && (
-                              <button onClick={() => setSkippedIds(prev => new Set([...prev, project.id]))} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Skip">
-                                <X className="w-4 h-4" />
-                              </button>
-                            )}
-                            <Button
-                              className={isApplied ? "bg-purple-100 text-purple-700 hover:bg-purple-100 cursor-default border border-purple-200" : "cu-button"}
-                              size="sm"
-                              onClick={() => !isApplied && openApplyDialog(project)}
-                              disabled={isApplying || isApplied}
-                            >
-                              {isApplying ? <Loader2 className="w-4 h-4 animate-spin" /> : isApplied ? <><CheckCircle className="w-4 h-4 mr-1" />Applied</> : <><Briefcase className="w-4 h-4 mr-1" />Apply</>}
-                            </Button>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </AnimatePresence>
-                </div>
-              )}
-
-              <div className="flex justify-center pt-4 pb-8">
-                <Button onClick={() => { setStep(5); loadCollaborators(completedUser); }} className="cu-button px-10">
-                  Next: Meet Collaborators <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </motion.div>
-          )}
-
-          {step === 5 && (
-            <motion.div
-              key="collaborators-step"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
-              className="w-full max-w-5xl"
-            >
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-8 h-8 text-white" />
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Meet Your Community</h1>
-                <p className="text-gray-600 max-w-md mx-auto">Connect with talented people on Collab Unity and start building together.</p>
-              </div>
-
-              {isLoadingCollaborators ? (
-                <div className="flex justify-center py-16"><Loader2 className="w-10 h-10 animate-spin text-purple-600" /></div>
-              ) : collaborators.length === 0 ? (
-                <div className="text-center py-12">
-                  <Users className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                  <p className="text-gray-600">No other users yet — you're one of the first!</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-                  {collaborators.map((user, i) => (
-                    <motion.div key={user.email} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-all">
-                        <div className="h-20 bg-gradient-to-r from-purple-500 to-indigo-500 relative">
-                          {user.cover_image && <img src={user.cover_image} alt="" className="w-full h-full object-cover" />}
-                        </div>
-                        <div className="px-5 pb-5 flex flex-col items-center text-center -mt-10">
-                          <Avatar className="w-16 h-16 border-4 border-white shadow-md mb-2">
-                            <AvatarImage src={user.profile_image} />
-                            <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white font-bold text-lg">{user.full_name?.[0] || 'U'}</AvatarFallback>
-                          </Avatar>
-                          <p className="font-bold text-gray-900">{user.full_name || 'Anonymous'}</p>
-                          {user.username && <p className="text-sm text-gray-500 mb-2">@{user.username}</p>}
-                          {user.bio && <p className="text-xs text-gray-500 line-clamp-2 mb-3">{user.bio}</p>}
-                          <div className="w-full space-y-1.5 mb-4">
-                            {user.skills?.length > 0 && (
-                              <div className="flex flex-wrap gap-1 justify-center">
-                                {user.skills.slice(0, 3).map((s, idx) => <Badge key={idx} className="text-xs bg-purple-50 border-purple-200 text-purple-700">{s}</Badge>)}
-                                {user.skills.length > 3 && <Badge variant="outline" className="text-xs text-gray-500">+{user.skills.length - 3}</Badge>}
-                              </div>
-                            )}
-                            {user.interests?.length > 0 && (
-                              <div className="flex flex-wrap gap-1 justify-center">
-                                {user.interests.slice(0, 3).map((s, idx) => <Badge key={idx} className="text-xs bg-indigo-50 border-indigo-200 text-indigo-700 flex items-center"><Sparkles className="w-3 h-3 mr-1" />{s}</Badge>)}
-                                {user.interests.length > 3 && <Badge variant="outline" className="text-xs text-gray-500">+{user.interests.length - 3}</Badge>}
-                              </div>
-                            )}
-                            {user.tools_technologies?.length > 0 && (
-                              <div className="flex flex-wrap gap-1 justify-center">
-                                {user.tools_technologies.slice(0, 3).map((s, idx) => <Badge key={idx} className="text-xs bg-blue-50 border-blue-200 text-blue-700 flex items-center"><Wrench className="w-3 h-3 mr-1" />{s}</Badge>)}
-                                {user.tools_technologies.length > 3 && <Badge variant="outline" className="text-xs text-gray-500">+{user.tools_technologies.length - 3}</Badge>}
-                              </div>
-                            )}
-                          </div>
-                          <Button
-                            className="w-full cu-button"
-                            size="sm"
-                            onClick={() => handleStartChat(user)}
-                            disabled={startingChatWith === user.email}
-                          >
-                            {startingChatWith === user.email ? <Loader2 className="w-4 h-4 animate-spin" /> : <><MessageCircle className="w-4 h-4 mr-2" />Start Chat</>}
-                          </Button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex justify-center pt-4 pb-8">
-                <Button onClick={handleFinish} className="cu-button px-10">
-                  Finish <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </motion.div>
-          )}
         </AnimatePresence>
       </div>
     </>
