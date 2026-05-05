@@ -12,12 +12,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Loader2, PenLine, Image, Video, Wrench, DollarSign, LayoutTemplate, Rocket, FolderOpen, Compass, FileUp } from "lucide-react";
+import { Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Loader2, PenLine, Image, Video, Wrench, DollarSign, FileUp, ArrowRight, Sparkles } from "lucide-react";
 import ProjectFileImport from "@/components/ProjectFileImport";
 import { motion, AnimatePresence } from "framer-motion";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
-import ProjectTemplatesSelector from "@/components/ProjectTemplatesSelector";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ArrayInputWithSearch from "@/components/ArrayInputWithSearch";
 import { generateProjectSuggestions } from "@/functions/generateProjectSuggestions";
 import { base44 } from "@/api/base44Client";
@@ -49,13 +47,12 @@ export default function CreateProject() {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentUser, setCurrentUser] = useState(null);
-  const [currentStep, setCurrentStep] = useState(0); // 0 = initial choice, 1 = step 1, 2 = step 2, 3 = step 3
+  const [currentStep, setCurrentStep] = useState(0); // 0 = landing, 'import' = import flow, 1/2/3 = form steps
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [projectIdea, setProjectIdea] = useState("");
   const [isAIAssisted, setIsAIAssisted] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -163,24 +160,6 @@ export default function CreateProject() {
       venmo_link: "",
       cashapp_link: "",
     });
-    setCurrentStep(1);
-  };
-
-  const handleSelectTemplate = (template) => {
-    setFormData(prev => ({
-      ...prev,
-      title: template.name,
-      description: template.description,
-      project_type: template.project_type,
-      classification: template.classification,
-      industry: template.industry,
-      area_of_interest: template.area_of_interest,
-      skills_needed: template.skills_needed,
-      tools_needed: template.tools_needed,
-      template_id: template.id,
-    }));
-    setIsAIAssisted(true);
-    setShowTemplates(false);
     setCurrentStep(1);
   };
 
@@ -629,6 +608,7 @@ export default function CreateProject() {
   const prevStep = () => {
     if (currentStep === 1) {
       setCurrentStep(0);
+      setIsAIAssisted(false);
     } else if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
@@ -653,103 +633,66 @@ export default function CreateProject() {
         className="hidden"
       />
 
-      <div className={`bg-gray-50 w-full ${currentStep === 0 || currentStep === 'new' || currentStep === 'import' ? 'flex items-center justify-center py-8 min-h-[calc(100svh-4rem-83px)] lg:min-h-[calc(100svh-4rem)] lg:h-[calc(100svh-4rem)] overflow-y-auto' : 'min-h-screen py-4'}`}>
+      <div className={`bg-gray-50 w-full ${currentStep === 0 || currentStep === 'import' ? 'flex items-center justify-center py-8 min-h-[calc(100svh-4rem-83px)] lg:min-h-[calc(100svh-4rem)] lg:h-[calc(100svh-4rem)] overflow-y-auto' : 'min-h-screen py-4'}`}>
         <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          {/* Initial Choice Screen */}
+          {/* Landing / Idea Input Screen */}
           {currentStep === 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              className="w-full"
             >
-              <div className="text-center mb-6 lg:mb-10">
-                <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-purple-100 flex items-center justify-center mx-auto mb-4 lg:mb-5">
-                  <Lightbulb className="w-8 h-8 lg:w-9 lg:h-9 text-purple-600" />
-                </div>
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">Where are you with your project?</h1>
-                <p className="text-gray-500 mt-3 max-w-lg mx-auto text-base sm:text-lg">We'll meet you where you are and help you move forward.</p>
+              <div className="text-center mb-8">
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">What are you working on?</h1>
+                <p className="text-gray-500 mt-2 text-base sm:text-lg">Describe your idea and we'll help you bring it to life.</p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 lg:gap-8 w-full max-w-5xl mx-auto">
-                {/* Path 1: Starting fresh */}
-                <Card className="cu-card border-2 border-transparent hover:border-purple-400 transition-all cursor-pointer group" onClick={() => setCurrentStep('new')}>
-                  <CardContent className="p-8 lg:p-12 text-center flex flex-col items-center gap-5 lg:gap-7">
-                    <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                      <Rocket className="w-10 h-10 lg:w-12 lg:h-12 text-purple-600" />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="font-bold text-xl lg:text-2xl text-gray-900">I'm starting a new project</h3>
-                      <p className="text-gray-500 leading-relaxed lg:text-lg">Describe your idea and we'll help build it out with AI. You can also import files to populate structure automatically.</p>
-                    </div>
-                    <Button className="w-full cu-button py-5 lg:py-6 text-base lg:text-lg" onClick={(e) => { e.stopPropagation(); setCurrentStep('new'); }}>
-                      Get Started
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Path 2: Need direction */}
-                <Card className="cu-card border-2 border-transparent hover:border-green-400 transition-all cursor-pointer group" onClick={() => setShowTemplates(true)}>
-                  <CardContent className="p-8 lg:p-12 text-center flex flex-col items-center gap-5 lg:gap-7">
-                    <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                      <Compass className="w-10 h-10 lg:w-12 lg:h-12 text-green-600" />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="font-bold text-xl lg:text-2xl text-gray-900">I need direction</h3>
-                      <p className="text-gray-500 leading-relaxed lg:text-lg">Browse curated templates and best practices to find the right structure and kickstart your project confidently.</p>
-                    </div>
-                    <Button variant="outline" className="w-full py-5 lg:py-6 text-base lg:text-lg border-2 border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400" onClick={(e) => { e.stopPropagation(); setShowTemplates(true); }}>
-                      Browse Templates
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </motion.div>
-          )}
-
-          {/* New Project Sub-screen (AI assisted) */}
-          {currentStep === 'new' && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <Card className="cu-card">
-                <CardHeader className="pb-2">
-                  <button onClick={() => setCurrentStep(0)} className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 mb-2">
-                    ← Back
-                  </button>
-                  <CardTitle className="text-xl">Tell us about your project idea</CardTitle>
-                  <p className="text-gray-500 text-sm mt-1">Describe it in your own words and we'll generate all the details for you.</p>
-                </CardHeader>
-                <CardContent className="space-y-4 pt-4">
-                  <Textarea
-                    placeholder="For example: 'I want to create a mobile app that helps people track their daily water intake' or 'A community platform for local musicians to collaborate on songs'"
-                    value={projectIdea}
-                    onChange={(e) => setProjectIdea(e.target.value)}
-                    rows={5}
-                    className="resize-none text-base"
-                  />
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <Textarea
+                  placeholder="Describe your project idea... e.g. 'A mobile app that helps people track their daily water intake' or 'A community platform for local musicians to collaborate on songs'"
+                  value={projectIdea}
+                  onChange={(e) => setProjectIdea(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && projectIdea.trim()) {
+                      handleGenerateProject();
+                    }
+                  }}
+                  rows={6}
+                  className="resize-none text-base border-0 rounded-none focus-visible:ring-0 shadow-none p-5 pb-2 bg-transparent"
+                />
+                <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentStep('import')}
+                      className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-purple-600 transition-colors px-3 py-1.5 rounded-lg hover:bg-purple-50"
+                    >
+                      <FileUp className="w-4 h-4" />
+                      <span>Import files</span>
+                    </button>
+                    <button
+                      onClick={handleStartFromScratch}
+                      className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-100"
+                    >
+                      <PenLine className="w-4 h-4" />
+                      <span>Fill in manually</span>
+                    </button>
+                  </div>
                   <Button
                     onClick={handleGenerateProject}
                     disabled={isGenerating || !projectIdea.trim()}
-                    className="w-full cu-button py-5 text-base"
+                    className="cu-button rounded-xl px-5"
                   >
                     {isGenerating ? (
-                      <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Generating Project Details...</>
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating...</>
                     ) : (
-                      "Generate Project Details"
+                      <><Sparkles className="w-4 h-4 mr-2" />Generate</>
                     )}
                   </Button>
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
-                    <div className="relative flex justify-center text-sm"><span className="px-4 bg-white text-gray-500">or</span></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button variant="outline" onClick={handleStartFromScratch} className="py-4 border-2 hover:border-purple-300 hover:bg-purple-50 h-auto min-h-[2.75rem] whitespace-normal text-center">
-                      <PenLine className="w-4 h-4 mr-1 flex-shrink-0" /> <span>Fill it in myself</span>
-                    </Button>
-                    <Button variant="outline" onClick={() => setCurrentStep('import')} className="py-4 border-2 hover:border-orange-300 hover:bg-orange-50 text-orange-700 border-orange-200 h-auto min-h-[2.75rem] whitespace-normal text-center">
-                      <FileUp className="w-4 h-4 mr-1 flex-shrink-0" /> <span>Import files</span>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
+
+              <p className="text-center text-xs text-gray-400 mt-3">Press ⌘↵ to generate · or use the options above</p>
             </motion.div>
           )}
 
@@ -763,20 +706,8 @@ export default function CreateProject() {
             </motion.div>
           )}
 
-          {/* Templates Dialog */}
-          <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
-            <DialogContent className="w-[calc(100vw-2rem)] max-w-2xl max-h-[80vh] overflow-hidden p-4 sm:p-5 flex flex-col">
-              <ProjectTemplatesSelector
-                onSelectTemplate={handleSelectTemplate}
-                onClose={() => setShowTemplates(false)}
-              />
-            </DialogContent>
-          </Dialog>
-
-          {/* Browse Templates button removed - feature being reworked */}
-
           {/* Assisted Banner */}
-          {isAIAssisted && currentStep > 0 && (
+          {isAIAssisted && currentStep > 0 && typeof currentStep === 'number' && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -805,7 +736,7 @@ export default function CreateProject() {
             </motion.div>
           )}
 
-          {currentStep > 0 && (
+          {typeof currentStep === 'number' && currentStep > 0 && (
           <Card className="cu-card">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
