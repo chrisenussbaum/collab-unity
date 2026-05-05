@@ -661,34 +661,34 @@ export default function CreateProject() {
                   rows={6}
                   className="resize-none text-base border-0 rounded-none focus-visible:ring-0 shadow-none p-5 pb-2 bg-transparent"
                 />
-                <div className="flex items-center justify-between px-3 sm:px-5 py-3 border-t border-gray-100 gap-2">
-                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => setCurrentStep('import')}
-                    className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-gray-500 hover:text-purple-600 transition-colors px-2 sm:px-3 py-1.5 rounded-lg hover:bg-purple-50 whitespace-nowrap"
+                <div className="flex items-center justify-between px-3 sm:px-5 py-3 border-t border-gray-100 gap-1.5 min-w-0">
+                  <div className="flex items-center gap-0.5 sm:gap-2 flex-shrink min-w-0">
+                    <button
+                      onClick={() => setCurrentStep('import')}
+                      className="flex items-center gap-1 text-gray-500 hover:text-purple-600 transition-colors px-1.5 sm:px-3 py-1.5 rounded-lg hover:bg-purple-50 whitespace-nowrap text-xs sm:text-sm"
+                    >
+                      <FileUp className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span>Import</span>
+                    </button>
+                    <button
+                      onClick={handleStartFromScratch}
+                      className="flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors px-1.5 sm:px-3 py-1.5 rounded-lg hover:bg-gray-100 whitespace-nowrap text-xs sm:text-sm"
+                    >
+                      <PenLine className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span>Manual</span>
+                    </button>
+                  </div>
+                  <Button
+                    onClick={handleGenerateProject}
+                    disabled={isGenerating || !projectIdea.trim()}
+                    className="cu-button rounded-xl px-3 sm:px-5 text-xs sm:text-sm flex-shrink-0"
                   >
-                    <FileUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span>Import files</span>
-                  </button>
-                  <button
-                    onClick={handleStartFromScratch}
-                    className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-gray-500 hover:text-gray-700 transition-colors px-2 sm:px-3 py-1.5 rounded-lg hover:bg-gray-100 whitespace-nowrap"
-                  >
-                    <PenLine className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span>Fill in manually</span>
-                  </button>
-                </div>
-                <Button
-                  onClick={handleGenerateProject}
-                  disabled={isGenerating || !projectIdea.trim()}
-                  className="cu-button rounded-xl px-3 sm:px-5 text-sm flex-shrink-0"
-                >
-                  {isGenerating ? (
-                    <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" />Generating...</>
-                  ) : (
-                    <><Lightbulb className="w-4 h-4 mr-1.5" />Generate</>
-                  )}
-                </Button>
+                    {isGenerating ? (
+                      <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /><span>Generating...</span></>
+                    ) : (
+                      <><Lightbulb className="w-3.5 h-3.5 mr-1" /><span>Generate</span></>
+                    )}
+                  </Button>
                 </div>
               </div>
 
