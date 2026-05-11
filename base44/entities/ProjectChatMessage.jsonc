@@ -1,0 +1,40 @@
+{
+  "name": "ProjectChatMessage",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project this message belongs to"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "user",
+        "assistant"
+      ],
+      "description": "Who sent the message"
+    },
+    "content": {
+      "type": "string",
+      "description": "Message content"
+    },
+    "sender_email": {
+      "type": "string",
+      "description": "Email of the user who sent the message (for user messages)"
+    },
+    "sender_name": {
+      "type": "string",
+      "description": "Display name of the sender"
+    },
+    "is_error": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this was an error response"
+    }
+  },
+  "required": [
+    "project_id",
+    "role",
+    "content"
+  ]
+}

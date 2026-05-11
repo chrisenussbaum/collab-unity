@@ -117,13 +117,15 @@ function buildSystemPrompt(project, tasks, milestones, assets) {
 
 // ─── AI Chat component ─────────────────────────────────────────────────────
 
+const WELCOME_MESSAGE = (title) => ({
+  role: "assistant",
+  content: `Hey! I'm your project assistant for **${title || "this project"}**. I can help you plan tasks, brainstorm ideas, suggest tools, write briefs, debug blockers, and more. You can also **drag & drop files** here to save them to Assets.\n\nType **/** to see available slash commands. What do you want to work on?`,
+  isWelcome: true,
+});
+
 function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers }) {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content: `Hey! I'm your project assistant for **${project?.title || "this project"}**. I can help you plan tasks, brainstorm ideas, suggest tools, write briefs, debug blockers, and more. You can also **drag & drop files** here to save them to Assets.\n\nType **/** to see available slash commands. What do you want to work on?`,
-    },
-  ]);
+  const [messages, setMessages] = useState([WELCOME_MESSAGE(project?.title)]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -134,6 +136,40 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const dragCounterRef = useRef(0);
+
+  // Load persisted chat history
+  useEffect(() => {
+    if (!project?.id) return;
+    base44.entities.ProjectChatMessage.filter({ project_id: project.id }, "created_date", 100)
+      .then(records => {
+        if (records?.length > 0) {
+          const loaded = records.map(r => ({
+            id: r.id,
+            role: r.role,
+            content: r.content,
+            isError: r.is_error,
+            sender_name: r.sender_name,
+            sender_email: r.sender_email,
+          }));
+          setMessages([WELCOME_MESSAGE(project?.title), ...loaded]);
+        }
+        setHistoryLoaded(true);
+      })
+      .catch(() => setHistoryLoaded(true));
+  }, [project?.id]);
+
+  // Helper to persist a message
+  const persistMessage = useCallback(async (msg) => {
+    if (!project?.id) return;
+    await base44.entities.ProjectChatMessage.create({
+      project_id: project.id,
+      role: msg.role,
+      content: msg.content,
+      sender_email: msg.role === "user" ? currentUser?.email : undefined,
+      sender_name: msg.role === "user" ? currentUser?.full_name : undefined,
+      is_error: msg.isError || false,
+    });
+  }, [project?.id, currentUser]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -210,40 +246,45 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
     }
   };
 
+  const addAndPersist = useCallback(async (msg) => {
+    setMessages(prev => [...prev, msg]);
+    await persistMessage(msg);
+  }, [persistMessage]);
+
   // Build a task via /task command
   const handleSlashTask = async (taskTitle) => {
     if (!project?.id || !currentUser || !canEdit) {
-      setMessages(prev => [...prev, { role: "assistant", content: "⚠️ You need edit access to create tasks." }]);
+      await addAndPersist({ role: "assistant", content: "⚠️ You need edit access to create tasks." });
       return;
     }
     const title = taskTitle.trim() || "New Task";
     await base44.entities.Task.create({ project_id: project.id, title, status: "todo", priority: "medium" });
     toast.success(`Task "${title}" created!`);
-    setMessages(prev => [...prev, { role: "assistant", content: `✅ Task **"${title}"** has been added to your project board.` }]);
+    await addAndPersist({ role: "assistant", content: `✅ Task **"${title}"** has been added to your project board.` });
   };
 
   // Build a milestone via /milestone command
   const handleSlashMilestone = async (milestoneName) => {
     if (!project?.id || !currentUser || !canEdit) {
-      setMessages(prev => [...prev, { role: "assistant", content: "⚠️ You need edit access to create milestones." }]);
+      await addAndPersist({ role: "assistant", content: "⚠️ You need edit access to create milestones." });
       return;
     }
     const name = milestoneName.trim() || "New Milestone";
     await base44.entities.ProjectMilestone.create({ project_id: project.id, title: name, status: "not_started" });
     toast.success(`Milestone "${name}" created!`);
-    setMessages(prev => [...prev, { role: "assistant", content: `🏁 Milestone **"${name}"** has been added to your project milestones.` }]);
+    await addAndPersist({ role: "assistant", content: `🏁 Milestone **"${name}"** has been added to your project milestones.` });
   };
 
   // Save a note via /note command
   const handleSlashNote = async (noteContent) => {
     if (!project?.id || !currentUser || !canEdit) {
-      setMessages(prev => [...prev, { role: "assistant", content: "⚠️ You need edit access to save notes." }]);
+      await addAndPersist({ role: "assistant", content: "⚠️ You need edit access to save notes." });
       return;
     }
     const content = noteContent.trim() || "Quick note";
     await base44.entities.Thought.create({ project_id: project.id, title: content.slice(0, 60), content });
     toast.success("Note saved!");
-    setMessages(prev => [...prev, { role: "assistant", content: `📝 Note saved to **Thoughts & Notes**: "${content.slice(0, 80)}${content.length > 80 ? "…" : ""}"` }]);
+    await addAndPersist({ role: "assistant", content: `📝 Note saved to **Thoughts & Notes**: "${content.slice(0, 80)}${content.length > 80 ? "…" : ""}"` });
   };
 
   const applySlashCommand = (cmd) => {
@@ -270,38 +311,43 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
       setInput("");
       setSlashOpen(false);
 
+      const userMsg = { role: "user", content: userText, sender_email: currentUser?.email, sender_name: currentUser?.full_name };
+
       if (cmd === "/task") {
-        setMessages(prev => [...prev, { role: "user", content: userText }]);
+        setMessages(prev => [...prev, userMsg]);
+        await persistMessage(userMsg);
         if (!arg) {
-          setMessages(prev => [...prev, { role: "assistant", content: "What should the task be called? Reply with the task title." }]);
+          await addAndPersist({ role: "assistant", content: "What should the task be called? Reply with the task title." });
           return;
         }
-        setMessages(prev => [...prev, { role: "user", content: userText }]);
         await handleSlashTask(arg);
         return;
       }
       if (cmd === "/milestone") {
-        setMessages(prev => [...prev, { role: "user", content: userText }]);
+        setMessages(prev => [...prev, userMsg]);
+        await persistMessage(userMsg);
         if (!arg) {
-          setMessages(prev => [...prev, { role: "assistant", content: "What should the milestone be called? Reply with the milestone name." }]);
+          await addAndPersist({ role: "assistant", content: "What should the milestone be called? Reply with the milestone name." });
           return;
         }
         await handleSlashMilestone(arg);
         return;
       }
       if (cmd === "/note") {
-        setMessages(prev => [...prev, { role: "user", content: userText }]);
+        setMessages(prev => [...prev, userMsg]);
+        await persistMessage(userMsg);
         if (!arg) {
-          setMessages(prev => [...prev, { role: "assistant", content: "What would you like to note? Reply with the note content." }]);
+          await addAndPersist({ role: "assistant", content: "What would you like to note? Reply with the note content." });
           return;
         }
         await handleSlashNote(arg);
         return;
       }
       if (cmd === "/help") {
-        setMessages(prev => [...prev, { role: "user", content: userText }]);
+        setMessages(prev => [...prev, userMsg]);
+        await persistMessage(userMsg);
         const helpText = SLASH_COMMANDS.map(c => `**${c.command}** — ${c.description}`).join("\n");
-        setMessages(prev => [...prev, { role: "assistant", content: `Here are all available slash commands:\n\n${helpText}` }]);
+        await addAndPersist({ role: "assistant", content: `Here are all available slash commands:\n\n${helpText}` });
         return;
       }
       // For AI-powered commands (/idea, /brief, /blockers, /plan, /standup), expand to a prompt
@@ -314,14 +360,15 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
       };
       if (aiCommandPrompts[cmd]) {
         const prompt = aiCommandPrompts[cmd] + (arg && !aiCommandPrompts[cmd].includes(arg) ? ` Context: ${arg}` : "");
-        setMessages(prev => [...prev, { role: "user", content: userText }]);
+        setMessages(prev => [...prev, userMsg]);
+        await persistMessage(userMsg);
         setIsLoading(true);
         try {
           const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets);
           const result = await base44.integrations.Core.InvokeLLM({ prompt: `${systemPrompt}\n\n${prompt}` });
-          setMessages(prev => [...prev, { role: "assistant", content: result }]);
+          await addAndPersist({ role: "assistant", content: result });
         } catch {
-          setMessages(prev => [...prev, { role: "assistant", content: "Sorry, I ran into an issue. Please try again.", isError: true }]);
+          await addAndPersist({ role: "assistant", content: "Sorry, I ran into an issue. Please try again.", isError: true });
         } finally {
           setIsLoading(false);
         }
@@ -329,25 +376,23 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
       }
     }
 
-    const newMessages = [...messages, { role: "user", content: userText }];
+    const userMsg = { role: "user", content: userText, sender_email: currentUser?.email, sender_name: currentUser?.full_name };
+    const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput("");
     setIsLoading(true);
+    await persistMessage(userMsg);
 
     try {
       const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets);
-      const conversationHistory = newMessages.slice(-10).map(m =>
-        `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`
+      const conversationHistory = newMessages.slice(-20).map(m =>
+        `${m.role === "user" ? (m.sender_name || "User") : "Assistant"}: ${m.content}`
       ).join("\n\n");
-      const prompt = `${systemPrompt}\n\n--- CONVERSATION ---\n${conversationHistory}\n\nAssistant:`;
+      const prompt = `${systemPrompt}\n\n--- CONVERSATION HISTORY ---\n${conversationHistory}\n\nAssistant:`;
       const result = await base44.integrations.Core.InvokeLLM({ prompt });
-      setMessages(prev => [...prev, { role: "assistant", content: result }]);
+      await addAndPersist({ role: "assistant", content: result });
     } catch (e) {
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: "Sorry, I ran into an issue. Please try again.",
-        isError: true,
-      }]);
+      await addAndPersist({ role: "assistant", content: "Sorry, I ran into an issue. Please try again.", isError: true });
     } finally {
       setIsLoading(false);
     }
@@ -389,11 +434,13 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
     }
   };
 
-  const clearChat = () => {
-    setMessages([{
-      role: "assistant",
-      content: `Chat cleared! I still have full context of **${project?.title || "this project"}**. What do you want to work on?`,
-    }]);
+  const clearChat = async () => {
+    // Delete all persisted messages for this project
+    try {
+      const existing = await base44.entities.ProjectChatMessage.filter({ project_id: project.id });
+      await Promise.all(existing.map(r => base44.entities.ProjectChatMessage.delete(r.id)));
+    } catch {}
+    setMessages([WELCOME_MESSAGE(project?.title)]);
   };
 
   return (
@@ -426,6 +473,12 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
+        {!historyLoaded && (
+          <div className="flex items-center justify-center py-8 gap-2 text-gray-400 text-xs">
+            <div className="w-3 h-3 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+            Loading chat history...
+          </div>
+        )}
         {messages.map((msg, i) => (
           <div key={i} className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
             <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
@@ -436,6 +489,9 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
                 : <Bot className="w-3.5 h-3.5 text-white" />}
             </div>
             <div className="max-w-[80%] flex flex-col">
+              {msg.role === "user" && msg.sender_name && msg.sender_email !== currentUser?.email && (
+                <p className="text-[10px] text-gray-400 text-right mb-0.5 pr-1">{msg.sender_name}</p>
+              )}
               <div className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
                 msg.role === "user"
                   ? "bg-purple-600 text-white rounded-tr-sm"
