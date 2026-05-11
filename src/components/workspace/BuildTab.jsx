@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { AssetVersion } from "@/entities/all";
 import ReactMarkdown from "react-markdown";
+import ChatCommandBar from "./ChatCommandBar";
 import { toast } from "sonner";
 import { differenceInDays, format, isPast, isValid, parseISO } from "date-fns";
 
@@ -272,19 +273,30 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit }) {
                 ? <User className="w-3.5 h-3.5 text-white" />
                 : <Bot className="w-3.5 h-3.5 text-white" />}
             </div>
-            <div className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
-              msg.role === "user"
-                ? "bg-purple-600 text-white rounded-tr-sm"
-                : msg.isError
-                  ? "bg-red-50 border border-red-200 text-red-700 rounded-tl-sm"
-                  : "bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm"
-            }`}>
-              {msg.role === "assistant" ? (
-                <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-li:text-gray-800 prose-strong:text-gray-900">
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
-                </div>
-              ) : (
-                <p>{msg.content}</p>
+            <div className="max-w-[80%] flex flex-col">
+              <div className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                msg.role === "user"
+                  ? "bg-purple-600 text-white rounded-tr-sm"
+                  : msg.isError
+                    ? "bg-red-50 border border-red-200 text-red-700 rounded-tl-sm"
+                    : "bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm"
+              }`}>
+                {msg.role === "assistant" ? (
+                  <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-li:text-gray-800 prose-strong:text-gray-900">
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  </div>
+                ) : (
+                  <p>{msg.content}</p>
+                )}
+              </div>
+              {/* Action commands — only for non-first, non-error assistant messages when canEdit */}
+              {canEdit && msg.role === "assistant" && i > 0 && !msg.isError && (
+                <ChatCommandBar
+                  project={project}
+                  currentUser={currentUser}
+                  messageContent={msg.content}
+                  onSaved={() => {}}
+                />
               )}
             </div>
           </div>
