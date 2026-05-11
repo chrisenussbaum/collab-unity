@@ -72,75 +72,168 @@ const SLASH_COMMANDS = [
 
 // ─── Quick prompts ─────────────────────────────────────────────────────────
 
-const QUICK_PROMPTS = [
-  { label: "What should I build next?", icon: Lightbulb },
-  { label: "Suggest tools for this project", icon: Wrench },
-  { label: "Break this into milestones", icon: Flag },
-  { label: "Write a project brief", icon: FileText },
-];
+function getQuickPrompts(tasks, milestones) {
+  const hasTasks = tasks?.length > 0;
+  const hasMilestones = milestones?.length > 0;
+  const hasUnassigned = tasks?.some(t => !t.assigned_to && t.status !== "done");
+  const hasOverdue = tasks?.some(t => t.due_date && isPast(parseISO(t.due_date)) && t.status !== "done");
+
+  const prompts = [];
+  if (!hasTasks && !hasMilestones) prompts.push({ label: "Build a project plan for me", icon: Map });
+  if (!hasTasks) prompts.push({ label: "Create a task breakdown", icon: CheckSquare });
+  if (hasOverdue) prompts.push({ label: "Review overdue tasks", icon: AlertTriangle });
+  if (hasUnassigned) prompts.push({ label: "Assign tasks to collaborators", icon: Users });
+  if (!hasMilestones) prompts.push({ label: "Break this into milestones", icon: Flag });
+  if (hasTasks) prompts.push({ label: "What should I focus on next?", icon: Target });
+  prompts.push({ label: "Suggest tools for this project", icon: Wrench });
+  prompts.push({ label: "Identify blockers", icon: AlertTriangle });
+  prompts.push({ label: "Write a project brief", icon: FileText });
+  return prompts.slice(0, 4);
+}
 
 // ─── Build system prompt ───────────────────────────────────────────────────
 
-function buildSystemPrompt(project, tasks, milestones, assets) {
-  const taskLines = tasks?.slice(0, 15).map(t => {
-    const parts = [`- [${t.status}] ${t.title}`];
-    if (t.priority && t.priority !== "medium") parts[0] += ` (${t.priority} priority)`;
-    if (t.assigned_to) parts[0] += ` — assigned to ${t.assigned_to.split("@")[0]}`;
-    if (t.due_date) parts[0] += ` — due ${t.due_date}`;
-    if (t.description) parts[0] += `\n  Description: ${t.description}`;
-    return parts[0];
-  });
+function buildSystemPrompt(project, tasks, milestones, assets, projectUsers) {
+  const todoTasks = tasks?.filter(t => t.status === "todo") || [];
+  const inProgressTasks = tasks?.filter(t => t.status === "in_progress") || [];
+  const doneTasks = tasks?.filter(t => t.status === "done") || [];
+  const overdueTasks = tasks?.filter(t => t.due_date && isPast(parseISO(t.due_date)) && t.status !== "done") || [];
+  const unassignedTasks = tasks?.filter(t => !t.assigned_to && t.status !== "done") || [];
+  const completedMilestones = milestones?.filter(m => m.status === "completed") || [];
+  const pendingMilestones = milestones?.filter(m => m.status !== "completed") || [];
 
-  const milestoneLines = milestones?.slice(0, 8).map(m => {
-    let line = `- ${m.title || m.name} [${m.status || "not_started"}]`;
-    if (m.target_date) line += ` — target ${m.target_date}`;
-    if (m.description) line += `\n  ${m.description}`;
+  const taskProgress = tasks?.length
+    ? `${doneTasks.length}/${tasks.length} done (${Math.round((doneTasks.length / tasks.length) * 100)}%)`
+    : "no tasks yet";
+
+  const taskLines = tasks?.slice(0, 20).map(t => {
+    let line = `- [${t.status}] ${t.title}`;
+    if (t.priority && t.priority !== "medium") line += ` (${t.priority})`;
+    if (t.assigned_to) line += ` → ${t.assigned_to.split("@")[0]}`;
+    if (t.due_date) line += ` | due ${t.due_date}`;
     return line;
   });
 
-  const assetLines = assets?.slice(0, 20).map(a => {
-    let line = `- "${a.asset_name}" (${a.resource_type || "file"}, v${a.version_number || 1}`;
-    if (a.category) line += `, category: ${a.category}`;
-    if (a.tags?.length) line += `, tags: ${a.tags.join(", ")}`;
-    line += ")";
-    if (a.version_notes) line += `\n  Notes: ${a.version_notes}`;
-    if (a.file_url) line += `\n  URL: ${a.file_url}`;
+  const milestoneLines = milestones?.slice(0, 10).map(m => {
+    let line = `- [${m.status || "not_started"}] ${m.title || m.name}`;
+    if (m.target_date) line += ` | target ${m.target_date}`;
+    if (m.description) line += ` — ${m.description.slice(0, 80)}`;
     return line;
   });
+
+  const collaboratorLines = projectUsers?.map(u =>
+    `- ${u.full_name || u.email} (${u.email})`
+  );
 
   const parts = [
-    `You are an expert project collaborator and advisor embedded inside Collab Unity, a platform where people build projects together.`,
-    `You are helping with the following project:`,
-    `Project: "${project?.title || "Untitled"}"`,
+    `You are an intelligent, proactive project assistant embedded inside Collab Unity.`,
+    `You deeply understand this project and act as a smart team member helping drive progress.`,
+    `\n== PROJECT CONTEXT ==`,
+    `Title: "${project?.title || "Untitled"}"`,
     project?.description ? `Description: ${project.description}` : null,
     project?.classification ? `Classification: ${project.classification}` : null,
     project?.industry ? `Industry: ${project.industry}` : null,
-    project?.skills_needed?.length ? `Skills needed: ${project.skills_needed.join(", ")}` : null,
+    project?.status ? `Project status: ${project.status}` : null,
+    project?.skills_needed?.length ? `Skills: ${project.skills_needed.join(", ")}` : null,
     project?.tools_needed?.length ? `Tools needed: ${project.tools_needed.join(", ")}` : null,
-    project?.status ? `Status: ${project.status}` : null,
-    taskLines?.length ? `\nTasks (${tasks.length} total):\n${taskLines.join("\n")}` : null,
-    milestoneLines?.length ? `\nMilestones (${milestones.length} total):\n${milestoneLines.join("\n")}` : null,
-    assetLines?.length ? `\nProject Assets (${assets.length} total):\n${assetLines.join("\n")}` : null,
-    `\nWhen users ask about specific tasks, milestones, or assets, reference them by name. You can suggest which asset versions are relevant, flag overdue tasks, and connect project files to the work being done. Be specific, actionable, and use markdown formatting for clarity.`,
-    `\nIMPORTANT FORMATTING RULES for suggestions:`,
-    `- When suggesting TASKS: use bullet points starting with action verbs (e.g. "- Implement user auth", "- Design landing page")`,
-    `- When suggesting MILESTONES: include the word "phase", "launch", "release", "milestone", "sprint", or "MVP" in the line (e.g. "- MVP launch: core features complete")`,
-    `- When suggesting TOOLS: name the tool explicitly and include its URL if known (e.g. "- Figma (https://figma.com) for UI design")`,
-    `- This formatting allows the assistant bar to correctly parse and offer one-click creation of tasks, milestones, and tools.`,
+    project?.project_tools?.length ? `Tools in use: ${project.project_tools.map(t => t.name).join(", ")}` : null,
+    `\n== TASK PROGRESS ==`,
+    `Overall: ${taskProgress}`,
+    todoTasks.length ? `Todo (${todoTasks.length}): ${todoTasks.slice(0,5).map(t=>t.title).join(", ")}${todoTasks.length>5?" ...":""}` : null,
+    inProgressTasks.length ? `In Progress (${inProgressTasks.length}): ${inProgressTasks.slice(0,5).map(t=>t.title).join(", ")}` : null,
+    overdueTasks.length ? `⚠️ OVERDUE (${overdueTasks.length}): ${overdueTasks.map(t=>t.title).join(", ")}` : null,
+    unassignedTasks.length ? `Unassigned (${unassignedTasks.length}): ${unassignedTasks.slice(0,5).map(t=>t.title).join(", ")}` : null,
+    taskLines?.length ? `\nAll Tasks:\n${taskLines.join("\n")}` : null,
+    milestoneLines?.length ? `\n== MILESTONES ==\n${milestoneLines.join("\n")}` : `\n== MILESTONES ==\nNone yet`,
+    collaboratorLines?.length ? `\n== COLLABORATORS ==\n${collaboratorLines.join("\n")}` : null,
+    assets?.length ? `\n== ASSETS == (${assets.length} files/links)` : null,
+    `\n== YOUR BEHAVIOR ==`,
+    `You are conversational, smart, and proactive. Based on the project state:`,
+    `- If there are NO tasks yet → proactively suggest creating a task breakdown or milestone plan`,
+    `- If tasks are unassigned → suggest assigning them to collaborators by name`,
+    `- If tasks are overdue → flag this and suggest action`,
+    `- If milestones are missing → suggest creating them to structure the work`,
+    `- If project tools are missing → suggest relevant tools based on project type`,
+    `- If progress is low → motivate and suggest the next most impactful action`,
+    `- If progress is high → celebrate and suggest what comes next`,
+    `\nYou can EXECUTE ACTIONS directly — when a user asks you to create tasks, assign work, add milestones, save notes, etc., DO IT by including an "actions" array in your JSON response.`,
+    `\n== RESPONSE FORMAT ==`,
+    `You MUST respond with valid JSON (no markdown code blocks, just raw JSON):`,
+    `{`,
+    `  "message": "Your conversational response here (use markdown for formatting)",`,
+    `  "actions": [`,
+    `    {"type": "create_task", "title": "Task title", "description": "...", "priority": "medium|high|low|urgent", "assigned_to": "email@example.com or null", "due_date": "YYYY-MM-DD or null"},`,
+    `    {"type": "create_milestone", "title": "Milestone name", "description": "...", "target_date": "YYYY-MM-DD or null"},`,
+    `    {"type": "save_note", "title": "Note title", "content": "Note content"},`,
+    `    {"type": "suggest_tool", "name": "Tool name", "url": "https://...", "icon": "emoji"}`,
+    `  ]`,
+    `}`,
+    `- "actions" can be an empty array [] if no direct actions are needed`,
+    `- Only include actions the user actually asked for, or that are obviously needed`,
+    `- For assigned_to, use the exact email from the collaborators list above`,
+    `- Keep "message" conversational and reference actual project details`,
   ];
   return parts.filter(Boolean).join("\n");
 }
 
 // ─── AI Chat component ─────────────────────────────────────────────────────
 
-const WELCOME_MESSAGE = (title) => ({
+const WELCOME_MESSAGE = (title, taskCount, milestoneCount) => ({
   role: "assistant",
-  content: `Hey! I'm your project assistant for **${title || "this project"}**. I can help you plan tasks, brainstorm ideas, suggest tools, write briefs, debug blockers, and more. You can also **drag & drop files** here to save them to Assets.\n\nType **/** to see available slash commands. What do you want to work on?`,
+  content: taskCount === 0 && milestoneCount === 0
+    ? `Hey! I'm your project assistant for **${title || "this project"}**. This project doesn't have any tasks or milestones yet — want me to help you build out a plan? Just say "create a plan" or tell me what you're working on, and I'll get things set up.\n\nType **/** for quick commands.`
+    : `Hey! I'm your assistant for **${title || "this project"}**. I can see you have **${taskCount} task${taskCount !== 1 ? "s" : ""}** and **${milestoneCount} milestone${milestoneCount !== 1 ? "s" : ""}**. How can I help drive progress today?\n\nType **/** for quick commands.`,
   isWelcome: true,
 });
 
+// Execute a single AI action against the backend
+async function executeAction(action, project, currentUser, onProjectUpdate) {
+  if (!project?.id || !currentUser) return null;
+
+  if (action.type === "create_task") {
+    const created = await base44.entities.Task.create({
+      project_id: project.id,
+      title: action.title,
+      description: action.description || "",
+      priority: action.priority || "medium",
+      status: "todo",
+      assigned_to: action.assigned_to || undefined,
+      due_date: action.due_date || undefined,
+    });
+    if (onProjectUpdate) onProjectUpdate();
+    return `✅ Task created: **${action.title}**${action.assigned_to ? ` → assigned to ${action.assigned_to.split("@")[0]}` : ""}`;
+  }
+
+  if (action.type === "create_milestone") {
+    await base44.entities.ProjectMilestone.create({
+      project_id: project.id,
+      title: action.title,
+      description: action.description || "",
+      status: "not_started",
+      target_date: action.target_date || undefined,
+    });
+    if (onProjectUpdate) onProjectUpdate();
+    return `🏁 Milestone created: **${action.title}**`;
+  }
+
+  if (action.type === "save_note") {
+    await base44.entities.Thought.create({
+      project_id: project.id,
+      title: action.title || action.content?.slice(0, 60) || "Note",
+      content: action.content || "",
+    });
+    return `📝 Note saved: **${action.title || "Note"}**`;
+  }
+
+  if (action.type === "suggest_tool") {
+    return `🔧 Tool suggestion: **${action.name}**${action.url ? ` — [${action.url}](${action.url})` : ""}`;
+  }
+
+  return null;
+}
+
 function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers, onProjectUpdate }) {
-  const [messages, setMessages] = useState([WELCOME_MESSAGE(project?.title)]);
+  const [messages, setMessages] = useState([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0)]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -173,7 +266,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
             sender_name: r.sender_name,
             sender_email: r.sender_email,
           }));
-          setMessages([WELCOME_MESSAGE(project?.title), ...loaded]);
+          setMessages([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0), ...loaded]);
         }
         setHistoryLoaded(true);
       })
@@ -411,9 +504,29 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
         await persistMessage(userMsg);
         setIsLoading(true);
         try {
-          const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets);
-          const result = await base44.integrations.Core.InvokeLLM({ prompt: `${systemPrompt}\n\n${prompt}` });
-          await addAndPersist({ role: "assistant", content: result });
+          const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers);
+          const raw = await base44.integrations.Core.InvokeLLM({ prompt: `${systemPrompt}\n\n${prompt}\n\nRespond with valid JSON only:` });
+          let parsed = null;
+          try {
+            const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+            parsed = JSON.parse(cleaned);
+          } catch {
+            parsed = { message: raw, actions: [] };
+          }
+          const message = parsed?.message || raw;
+          const actions = Array.isArray(parsed?.actions) ? parsed.actions : [];
+          const actionResults = [];
+          if (canEdit && actions.length > 0) {
+            for (const action of actions) {
+              const result = await executeAction(action, project, currentUser, onProjectUpdate);
+              if (result) actionResults.push(result);
+            }
+          }
+          let finalContent = message;
+          if (actionResults.length > 0) {
+            finalContent += `\n\n---\n**Actions taken:**\n${actionResults.join("\n")}`;
+          }
+          await addAndPersist({ role: "assistant", content: finalContent });
         } catch {
           await addAndPersist({ role: "assistant", content: "Sorry, I ran into an issue. Please try again.", isError: true });
         } finally {
@@ -431,13 +544,44 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
     await persistMessage(userMsg);
 
     try {
-      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets);
+      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers);
       const conversationHistory = newMessages.slice(-20).map(m =>
         `${m.role === "user" ? (m.sender_name || "User") : "Assistant"}: ${m.content}`
       ).join("\n\n");
-      const prompt = `${systemPrompt}\n\n--- CONVERSATION HISTORY ---\n${conversationHistory}\n\nAssistant:`;
-      const result = await base44.integrations.Core.InvokeLLM({ prompt });
-      await addAndPersist({ role: "assistant", content: result });
+      const prompt = `${systemPrompt}\n\n--- CONVERSATION HISTORY ---\n${conversationHistory}\n\nRespond with valid JSON only (no markdown code blocks):`;
+
+      const raw = await base44.integrations.Core.InvokeLLM({ prompt });
+
+      // Parse JSON response
+      let parsed = null;
+      try {
+        // Strip markdown code fences if present
+        const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+        parsed = JSON.parse(cleaned);
+      } catch {
+        // If not valid JSON, treat the whole thing as a plain message
+        parsed = { message: raw, actions: [] };
+      }
+
+      const message = parsed?.message || raw;
+      const actions = Array.isArray(parsed?.actions) ? parsed.actions : [];
+
+      // Execute actions if user can edit
+      const actionResults = [];
+      if (canEdit && actions.length > 0) {
+        for (const action of actions) {
+          const result = await executeAction(action, project, currentUser, onProjectUpdate);
+          if (result) actionResults.push(result);
+        }
+      }
+
+      // Build final assistant message
+      let finalContent = message;
+      if (actionResults.length > 0) {
+        finalContent += `\n\n---\n**Actions taken:**\n${actionResults.join("\n")}`;
+      }
+
+      await addAndPersist({ role: "assistant", content: finalContent });
     } catch (e) {
       await addAndPersist({ role: "assistant", content: "Sorry, I ran into an issue. Please try again.", isError: true });
     } finally {
@@ -486,7 +630,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
       const existing = await base44.entities.ProjectChatMessage.filter({ project_id: project.id });
       await Promise.all(existing.map(r => base44.entities.ProjectChatMessage.delete(r.id)));
     } catch {}
-    setMessages([WELCOME_MESSAGE(project?.title)]);
+    setMessages([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0)]);
     setShowClearConfirm(false);
   };
 
@@ -509,7 +653,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
         return file_url;
       }));
 
-      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets);
+      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers);
       const analysisPrompt = `${systemPrompt}
 
 The user has shared ${files.length} file(s) for analysis: ${files.map(f => f.name).join(", ")}.
@@ -640,7 +784,7 @@ Be specific, reference the actual content you observe, and tie your feedback to 
         <div className="px-3 py-2 bg-white border-t border-gray-100">
           <p className="text-xs text-gray-400 mb-2 font-medium">Quick actions</p>
           <div className="flex flex-wrap gap-1.5">
-            {QUICK_PROMPTS.map((qp) => {
+            {getQuickPrompts(tasks, milestones).map((qp) => {
               const Icon = qp.icon;
               return (
                 <button
