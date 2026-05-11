@@ -121,7 +121,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit }) {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: `Hey! I'm your AI assistant for **${project?.title || "this project"}**. I can help you plan tasks, brainstorm ideas, suggest tools, write briefs, debug blockers, and more. You can also **drag & drop files** here to save them to Assets.\n\nType **/** to see available slash commands. What do you want to work on?`,
+      content: `Hey! I'm your project assistant for **${project?.title || "this project"}**. I can help you plan tasks, brainstorm ideas, suggest tools, write briefs, debug blockers, and more. You can also **drag & drop files** here to save them to Assets.\n\nType **/** to see available slash commands. What do you want to work on?`,
     },
   ]);
   const [input, setInput] = useState("");
