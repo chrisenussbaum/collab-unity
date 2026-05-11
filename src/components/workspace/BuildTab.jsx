@@ -535,8 +535,8 @@ export default function BuildTab({
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <div>
-              <p className="text-sm font-semibold leading-tight">AI Project Assistant</p>
-              <p className="text-xs text-white/70 leading-tight">Ask anything about your project</p>
+              <p className="text-sm font-semibold leading-tight">Project Assistant</p>
+              <p className="text-xs text-white/70 leading-tight">Your project workspace for "{project?.title || "this project"}"</p>
             </div>
           </div>
           <Badge className="bg-white/20 text-white border-0 text-xs">
