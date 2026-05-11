@@ -44,6 +44,7 @@ import ActivityTab from "./ActivityTab";
 import ThoughtsTab from "./ThoughtsTab";
 import IdeationHub from "./ideation/IdeationHub";
 import ToolsHub from "./ToolsHub";
+import WorkspaceSummaryBar from "./WorkspaceSummaryBar";
 // ─── Slash commands definition ─────────────────────────────────────────────
 
 const SLASH_COMMANDS = [
@@ -601,6 +602,13 @@ export default function BuildTab({
 }) {
   const canEdit = isCollaborator || isProjectOwner;
   const [activeSection, setActiveSection] = useState("chat");
+  const [activityLogs, setActivityLogs] = useState([]);
+
+  useEffect(() => {
+    if (!project?.id) return;
+    base44.entities.ActivityLog.filter({ project_id: project.id }, "-created_date", 10)
+      .then(setActivityLogs).catch(() => {});
+  }, [project?.id]);
 
   // Team build links (persisted via ProjectIDE entity)
   const [savedLinks, setSavedLinks] = useState([]);
@@ -735,6 +743,15 @@ export default function BuildTab({
 
         {/* Content pane */}
         <div className="flex-1 min-w-0 overflow-auto">
+          {/* Summary bar — always visible at top */}
+          <WorkspaceSummaryBar
+            project={project}
+            tasks={tasks}
+            milestones={milestones}
+            activityLogs={activityLogs}
+            onSectionClick={setActiveSection}
+          />
+
           {/* Section header strip */}
           {activeSection !== "chat" && (
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 bg-white">
