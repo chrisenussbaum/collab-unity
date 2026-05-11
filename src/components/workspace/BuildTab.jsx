@@ -12,8 +12,9 @@ import {
   PenTool, Eye, Search, ArrowRight, X, AlertTriangle, Hammer,
   Map, Rocket, Code2, Palette, Video, Music, Globe, GraduationCap,
   Gamepad2, FlaskConical, Target, Users, BarChart3, Film, Mic,
-  BookMarked, Package, Database, Zap, CheckCircle2, Circle
+  BookMarked, Package, Database, Zap, CheckCircle2, Circle, Paperclip, Upload
 } from "lucide-react";
+import { AssetVersion } from "@/entities/all";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import { differenceInDays, format, isPast, isValid, parseISO } from "date-fns";
@@ -100,20 +101,95 @@ function buildSystemPrompt(project, tasks, milestones, assets) {
 
 // ─── AI Chat component ─────────────────────────────────────────────────────
 
-function AIChat({ project, tasks, milestones, assets }) {
+function AIChat({ project, tasks, milestones, assets, currentUser, canEdit }) {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: `Hey! I'm your AI assistant for **${project?.title || "this project"}**. I can help you plan tasks, brainstorm ideas, suggest tools, write briefs, debug blockers, and more. What do you want to work on?`,
+      content: `Hey! I'm your AI assistant for **${project?.title || "this project"}**. I can help you plan tasks, brainstorm ideas, suggest tools, write briefs, debug blockers, and more. You can also **drag & drop files** here to save them to Assets. What do you want to work on?`,
     },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(null);
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const dragCounterRef = useRef(0);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const uploadFileToAssets = async (file) => {
+    if (!canEdit || !project?.id || !currentUser) return;
+    setUploadingFile(file.name);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const existingVersions = (assets || []).filter(a => a.asset_name === file.name);
+      const versionNumber = existingVersions.length > 0
+        ? Math.max(...existingVersions.map(a => a.version_number || 1)) + 1
+        : 1;
+      await AssetVersion.create({
+        project_id: project.id,
+        asset_name: file.name,
+        file_url,
+        file_name: file.name,
+        file_type: file.type,
+        file_size: file.size,
+        version_number: versionNumber,
+        version_notes: "Uploaded via AI chat",
+        uploaded_by: currentUser.email,
+        is_current: true,
+        category: "Uncategorized",
+        tags: [],
+        resource_type: "file",
+      });
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: `✅ **${file.name}** has been saved to your project Assets (v${versionNumber}). You can find it in the Assets section below.`,
+      }]);
+    } catch (e) {
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: `❌ Failed to upload **${file.name}**. Please try again.`,
+        isError: true,
+      }]);
+    } finally {
+      setUploadingFile(null);
+    }
+  };
+
+  const handleDragEnter = (e) => {
+    if (!canEdit) return;
+    e.preventDefault();
+    dragCounterRef.current += 1;
+    if (e.dataTransfer.types.includes("Files")) setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    dragCounterRef.current -= 1;
+    if (dragCounterRef.current === 0) setIsDragOver(false);
+  };
+
+  const handleDragOver = (e) => e.preventDefault();
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    dragCounterRef.current = 0;
+    setIsDragOver(false);
+    if (!canEdit) return;
+    const file = e.dataTransfer.files?.[0];
+    if (file) await uploadFileToAssets(file);
+  };
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await uploadFileToAssets(file);
+      e.target.value = "";
+    }
+  };
 
   const sendMessage = async (text) => {
     const userText = (text || input).trim();
@@ -158,7 +234,33 @@ function AIChat({ project, tasks, milestones, assets }) {
   };
 
   return (
-    <div className="flex flex-col" style={{ height: "520px" }}>
+    <div
+      className={`flex flex-col relative transition-colors ${isDragOver ? "bg-purple-50" : ""}`}
+      style={{ height: "520px" }}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Drag overlay */}
+      {isDragOver && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-purple-50/95 border-2 border-dashed border-purple-400 rounded-b-xl pointer-events-none">
+          <div className="text-center">
+            <Upload className="w-10 h-10 mx-auto text-purple-500 mb-2" />
+            <p className="text-purple-700 font-semibold">Drop to save to Assets</p>
+            <p className="text-purple-500 text-sm">File will be added to your project assets</p>
+          </div>
+        </div>
+      )}
+
+      {/* Upload in progress banner */}
+      {uploadingFile && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-purple-100 border-b border-purple-200 text-purple-700 text-xs font-medium">
+          <div className="w-3 h-3 border-2 border-purple-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+          Uploading <span className="font-semibold truncate max-w-[200px]">{uploadingFile}</span> to Assets...
+        </div>
+      )}
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
         {messages.map((msg, i) => (
@@ -229,12 +331,23 @@ function AIChat({ project, tasks, milestones, assets }) {
 
       {/* Input */}
       <div className="p-3 bg-white border-t border-gray-200">
+        <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
         <div className="flex gap-2 items-end">
+          {canEdit && (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              title="Attach file to Assets"
+              className="text-gray-400 hover:text-purple-600 transition-colors flex-shrink-0 pb-1.5"
+              disabled={!!uploadingFile}
+            >
+              <Paperclip className="w-4 h-4" />
+            </button>
+          )}
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask anything about your project... (⌘↵ to send)"
+            placeholder={canEdit ? "Ask anything or drop a file to save it to Assets... (⌘↵ to send)" : "Ask anything about your project... (⌘↵ to send)"}
             rows={1}
             className="resize-none text-sm min-h-[38px] max-h-[120px] flex-1"
             style={{ overflowY: input.split("\n").length > 2 ? "auto" : "hidden" }}
@@ -256,6 +369,11 @@ function AIChat({ project, tasks, milestones, assets }) {
             )}
           </div>
         </div>
+        {canEdit && (
+          <p className="text-xs text-gray-400 mt-1.5">
+            <Paperclip className="w-3 h-3 inline mr-0.5" /> Drag & drop a file anywhere in the chat to save it to Assets
+          </p>
+        )}
       </div>
     </div>
   );
@@ -413,7 +531,7 @@ export default function BuildTab({
             {tasks.length} tasks · {milestones.length} milestones · {assets.length} assets
           </Badge>
         </div>
-        <AIChat project={project} tasks={tasks} milestones={milestones} assets={assets} />
+        <AIChat project={project} tasks={tasks} milestones={milestones} assets={assets} currentUser={currentUser} canEdit={canEdit} />
       </div>
 
       {/* ── Team Build Links ── */}
