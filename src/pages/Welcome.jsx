@@ -562,258 +562,204 @@ const ChatMockup = () => {
   );
 };
 
-const WorkspaceMockup = () => {
-  const [activeTab, setActiveTab] = React.useState("overview");
-  
-  const tabs = [
-    { id: "overview", icon: LayoutGrid, label: "Overview" },
-    { id: "milestones", icon: CheckCircle, label: "Milestones" },
-    { id: "build", icon: Rocket, label: "Build" },
-    { id: "ideate", icon: Lightbulb, label: "Ideate" },
-    { id: "tools", icon: Settings, label: "Tools" }
+const BuildWorkspaceMockup = () => {
+  const [activeSection, setActiveSection] = React.useState("chat");
+
+  const sidebarItems = [
+    { id: "chat",       icon: Sparkles,     label: "Assistant" },
+    { id: "tasks",      icon: CheckSquare,  label: "Tasks" },
+    { id: "milestones", icon: CheckCircle,  label: "Milestones" },
+    { id: "assets",     icon: FolderOpen,   label: "Assets" },
+    { id: "notes",      icon: BookOpen,     label: "Notes" },
+    { id: "tools",      icon: Settings,     label: "Tools" },
   ];
 
-  const tabContent = {
-    overview: (
-      <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Project Overview</h3>
-        <p className="text-sm text-gray-600 mb-4">Activity, members, and project health at a glance</p>
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="p-3 bg-purple-50 rounded-lg border border-purple-100">
-            <p className="text-xs text-purple-600 font-medium mb-1">Tasks Done</p>
-            <p className="text-2xl font-bold text-purple-700">8/12</p>
-          </div>
-          <div className="p-3 bg-green-50 rounded-lg border border-green-100">
-            <p className="text-xs text-green-600 font-medium mb-1">Members</p>
-            <p className="text-2xl font-bold text-green-700">4</p>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces" alt="Alex" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
-            <div>
-              <p className="text-xs font-medium text-gray-800">Alex completed a task</p>
-              <p className="text-xs text-gray-500">2 hours ago</p>
+  const sectionContent = {
+    chat: (
+      <div className="flex flex-col h-full">
+        {/* Messages */}
+        <div className="flex-1 overflow-hidden space-y-3 p-3">
+          <div className="flex gap-2">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-3 h-3 text-white" />
+            </div>
+            <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-3 py-2 text-xs text-gray-700 max-w-[85%] shadow-sm">
+              Hey! I'm your <strong>Project Assistant</strong> for <em>Redapt Website Update</em>. I can help you plan tasks, brainstorm ideas, suggest tools, and more. What do you want to work on?
             </div>
           </div>
-          <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces" alt="Sarah" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
-            <div>
-              <p className="text-xs font-medium text-gray-800">Sarah uploaded a new asset</p>
-              <p className="text-xs text-gray-500">5 hours ago</p>
+          <div className="flex gap-2 flex-row-reverse">
+            <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0">
+              <User className="w-3 h-3 text-white" />
+            </div>
+            <div className="bg-purple-600 text-white rounded-2xl rounded-tr-sm px-3 py-2 text-xs max-w-[75%]">
+              Break this into milestones
             </div>
           </div>
-        </div>
-      </div>
-    ),
-    milestones: (
-      <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Milestones</h3>
-        <p className="text-sm text-gray-600 mb-4">Track key goals and project phases</p>
-        <div className="space-y-3">
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900">Design Phase</p>
-              <p className="text-xs text-gray-500">Completed · Apr 10</p>
+          <div className="flex gap-2">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-3 h-3 text-white" />
             </div>
-            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Done</span>
-          </div>
-          <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg flex items-center gap-3">
-            <Rocket className="w-5 h-5 text-purple-600 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900">Beta Launch</p>
-              <p className="text-xs text-gray-500">In Progress · Due Apr 30</p>
-            </div>
-            <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">Active</span>
-          </div>
-          <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3">
-            <Target className="w-5 h-5 text-gray-400 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-700">Public Release</p>
-              <p className="text-xs text-gray-400">Upcoming · May 15</p>
-            </div>
-            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">Todo</span>
-          </div>
-        </div>
-      </div>
-    ),
-    build: (
-      <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Build</h3>
-        <p className="text-sm text-gray-600 mb-4">Tasks and assets to get it done</p>
-        <div className="space-y-2 mb-3">
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <input type="checkbox" className="w-4 h-4 rounded" readOnly />
-            <div className="flex-1">
-              <p className="text-sm font-medium">Design landing page</p>
-              <p className="text-xs text-gray-500">Due: Tomorrow</p>
-            </div>
-            <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Urgent</span>
-          </div>
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <input type="checkbox" className="w-4 h-4 rounded" readOnly />
-            <div className="flex-1">
-              <p className="text-sm font-medium">Review pull requests</p>
-              <p className="text-xs text-gray-500">Due: Friday</p>
-            </div>
-            <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">Medium</span>
-          </div>
-          <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg opacity-60">
-            <input type="checkbox" checked readOnly className="w-4 h-4 rounded" />
-            <div className="flex-1">
-              <p className="text-sm font-medium line-through">Setup repository</p>
-              <p className="text-xs text-gray-500">Completed</p>
+            <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-3 py-2 text-xs text-gray-700 max-w-[85%] shadow-sm">
+              <p className="mb-1.5 font-medium">Here are 3 milestones:</p>
+              <p>1. <strong>Discovery & Design</strong> — wireframes, brand alignment</p>
+              <p>2. <strong>Development</strong> — build & integrate components</p>
+              <p>3. <strong>Launch</strong> — QA, deploy, go live</p>
+              {/* Action chips */}
+              <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-gray-100">
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs bg-orange-50 text-orange-700 border-orange-200 cursor-pointer">
+                  <CheckCircle className="w-3 h-3" /> Save as Milestone
+                </span>
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs bg-blue-50 text-blue-700 border-blue-200 cursor-pointer">
+                  <CheckSquare className="w-3 h-3" /> Save as Task
+                </span>
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs bg-green-50 text-green-700 border-green-200 cursor-pointer">
+                  <BookOpen className="w-3 h-3" /> Save as Note
+                </span>
+              </div>
             </div>
           </div>
         </div>
-        <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border border-dashed border-gray-300 cursor-pointer hover:bg-gray-100">
-          <FileText className="w-4 h-4 text-blue-500" />
-          <p className="text-xs text-gray-700">design-mockups.fig</p>
-          <span className="ml-auto text-xs text-gray-400">Asset</span>
-        </div>
-      </div>
-    ),
-    ideate: (
-      <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Ideation Board</h3>
-        <p className="text-sm text-gray-600 mb-4">Brainstorm and capture ideas together</p>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-sm font-medium">💡 Feature Idea</p>
-            <p className="text-xs text-gray-600 mt-2">Add dark mode support</p>
-          </div>
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm font-medium">🎯 Goal</p>
-            <p className="text-xs text-gray-600 mt-2">Launch beta by end of month</p>
-          </div>
-          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm font-medium">✅ Decision</p>
-            <p className="text-xs text-gray-600 mt-2">Use React for frontend</p>
-          </div>
-          <div className="p-4 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-50">
-            <span className="text-2xl">+</span>
+        {/* Input */}
+        <div className="p-2 border-t border-gray-200 bg-white">
+          <div className="flex gap-1.5 items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5">
+            <input className="flex-1 bg-transparent text-xs outline-none text-gray-500 placeholder-gray-400" placeholder="Ask anything..." readOnly />
+            <div className="w-5 h-5 bg-purple-600 rounded flex items-center justify-center flex-shrink-0">
+              <Send className="w-2.5 h-2.5 text-white" />
+            </div>
           </div>
         </div>
       </div>
     ),
     tasks: (
-      <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Task Board</h3>
-        <p className="text-sm text-gray-600 mb-4">Track progress and manage work</p>
-        <div className="space-y-3">
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <input type="checkbox" className="w-4 h-4 rounded" />
-            <div className="flex-1">
-              <p className="text-sm font-medium">Design landing page</p>
-              <p className="text-xs text-gray-500">Due: Tomorrow</p>
+      <div className="p-3 space-y-2">
+        <p className="text-xs font-semibold text-gray-700 mb-2">Tasks</p>
+        {[
+          { label: "Design landing page", priority: "Urgent", done: false, color: "bg-red-100 text-red-700" },
+          { label: "Review pull requests", priority: "Medium", done: false, color: "bg-yellow-100 text-yellow-700" },
+          { label: "Setup repository", priority: "", done: true, color: "" },
+        ].map((t, i) => (
+          <div key={i} className={`flex items-center gap-2 p-2 rounded-lg ${t.done ? "bg-green-50 opacity-60" : "bg-gray-50"}`}>
+            <input type="checkbox" readOnly checked={t.done} className="w-3.5 h-3.5" />
+            <div className="flex-1 min-w-0">
+              <p className={`text-xs font-medium truncate ${t.done ? "line-through text-gray-400" : "text-gray-800"}`}>{t.label}</p>
             </div>
-            <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">High</span>
+            {t.priority && <span className={`text-xs px-1.5 py-0.5 rounded ${t.color}`}>{t.priority}</span>}
           </div>
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <input type="checkbox" className="w-4 h-4 rounded" />
-            <div className="flex-1">
-              <p className="text-sm font-medium">Review pull requests</p>
-              <p className="text-xs text-gray-500">Due: Friday</p>
-            </div>
-            <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">Medium</span>
-          </div>
-          <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg opacity-60">
-            <input type="checkbox" checked readOnly className="w-4 h-4 rounded" />
-            <div className="flex-1">
-              <p className="text-sm font-medium line-through">Setup repository</p>
-              <p className="text-xs text-gray-500">Completed</p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
     ),
-    tools: (
-      <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Project Tools</h3>
-        <p className="text-sm text-gray-600 mb-6">Add and manage tools your team uses for collaboration</p>
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          {[
-            { name: "GitHub", url: "github.com/project", icon: "🐙" },
-            { name: "Figma", url: "figma.com/design", icon: "🎨" }
-          ].map((tool, i) => (
-            <div key={i} className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors cursor-pointer">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-xl border border-gray-200">
-                    {tool.icon}
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 text-sm">{tool.name}</h4>
-                    <p className="text-xs text-gray-500">{tool.url}</p>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-gray-400" />
-              </div>
-            </div>
-          ))}
-        </div>
-        <button className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-purple-400 hover:text-purple-600 transition-colors flex items-center justify-center space-x-2">
-          <span className="text-2xl">+</span>
-          <span className="font-medium">Add Custom Tool</span>
-        </button>
-      </div>
-    ),
-    assets: (
-      <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Project Assets</h3>
-        <p className="text-sm text-gray-600 mb-4">Manage files and resources</p>
-        <div className="space-y-2">
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
-            <FileText className="w-5 h-5 text-blue-500" />
-            <div className="flex-1">
-              <p className="text-sm font-medium">design-mockups.fig</p>
-              <p className="text-xs text-gray-500">Updated 2 hours ago</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
-            <FileText className="w-5 h-5 text-green-500" />
-            <div className="flex-1">
-              <p className="text-sm font-medium">project-brief.pdf</p>
-              <p className="text-xs text-gray-500">Updated yesterday</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
-            <FileText className="w-5 h-5 text-purple-500" />
-            <div className="flex-1">
-              <p className="text-sm font-medium">brand-guidelines.pdf</p>
-              <p className="text-xs text-gray-500">Updated last week</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  };
-
-  return (
-  <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
-    <div className="border-b border-gray-200 bg-gray-50">
-      <div className="flex items-center space-x-1 p-2 overflow-x-auto">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
+    milestones: (
+      <div className="p-3 space-y-2">
+        <p className="text-xs font-semibold text-gray-700 mb-2">Milestones</p>
+        {[
+          { label: "Discovery & Design", status: "Done", color: "bg-green-100 text-green-700", icon: CheckCircle, iconColor: "text-green-600" },
+          { label: "Development", status: "Active", color: "bg-purple-100 text-purple-700", icon: Rocket, iconColor: "text-purple-600" },
+          { label: "Launch", status: "Todo", color: "bg-gray-100 text-gray-600", icon: Target, iconColor: "text-gray-400" },
+        ].map((m, i) => {
+          const Icon = m.icon;
           return (
-            <button 
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.id ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{tab.label}</span>
-            </button>
+            <div key={i} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+              <Icon className={`w-4 h-4 flex-shrink-0 ${m.iconColor}`} />
+              <p className="flex-1 text-xs font-medium text-gray-800">{m.label}</p>
+              <span className={`text-xs px-1.5 py-0.5 rounded ${m.color}`}>{m.status}</span>
+            </div>
           );
         })}
       </div>
+    ),
+    assets: (
+      <div className="p-3 space-y-2">
+        <p className="text-xs font-semibold text-gray-700 mb-2">Assets</p>
+        {[
+          { name: "design-mockups.fig", color: "text-blue-500" },
+          { name: "project-brief.pdf", color: "text-green-500" },
+          { name: "brand-guidelines.pdf", color: "text-purple-500" },
+        ].map((a, i) => (
+          <div key={i} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+            <FileText className={`w-4 h-4 flex-shrink-0 ${a.color}`} />
+            <p className="text-xs font-medium text-gray-800 truncate">{a.name}</p>
+          </div>
+        ))}
+      </div>
+    ),
+    notes: (
+      <div className="p-3 space-y-2">
+        <p className="text-xs font-semibold text-gray-700 mb-2">Thoughts & Notes</p>
+        {[
+          { title: "Design System", content: "Stick to purple brand palette for consistency" },
+          { title: "Launch Checklist", content: "QA review, stakeholder sign-off, DNS update" },
+        ].map((n, i) => (
+          <div key={i} className="p-2.5 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-xs font-semibold text-gray-800 mb-0.5">{n.title}</p>
+            <p className="text-xs text-gray-600">{n.content}</p>
+          </div>
+        ))}
+      </div>
+    ),
+    tools: (
+      <div className="p-3 space-y-2">
+        <p className="text-xs font-semibold text-gray-700 mb-2">Project Tools</p>
+        {[
+          { name: "GitHub", icon: "🐙", url: "github.com/project" },
+          { name: "Figma", icon: "🎨", url: "figma.com/design" },
+        ].map((tool, i) => (
+          <div key={i} className="flex items-center gap-2 p-2 bg-gray-50 border border-gray-200 rounded-lg hover:border-purple-300 cursor-pointer">
+            <span className="text-lg">{tool.icon}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-gray-900">{tool.name}</p>
+              <p className="text-xs text-gray-400 truncate">{tool.url}</p>
+            </div>
+            <ArrowRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
+          </div>
+        ))}
+      </div>
+    ),
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+            <Sparkles className="w-3.5 h-3.5 text-white" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold leading-tight">Project Assistant</p>
+            <p className="text-xs text-white/70 leading-tight">Your project workspace for "Redapt Website"</p>
+          </div>
+        </div>
+        <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">3 tasks · 3 milestones</span>
+      </div>
+
+      {/* Body: sidebar + content */}
+      <div className="flex" style={{ height: "280px" }}>
+        {/* Sidebar */}
+        <div className="flex flex-col items-center gap-1 py-3 px-1.5 bg-gray-50 border-r border-gray-200 w-12 flex-shrink-0">
+          {sidebarItems.map((item) => {
+            const Icon = item.icon;
+            const active = activeSection === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                title={item.label}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                  active ? "bg-purple-600 text-white shadow-sm" : "text-gray-400 hover:bg-purple-50 hover:text-purple-600"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto bg-gray-50/40 flex flex-col">
+          {sectionContent[activeSection]}
+        </div>
+      </div>
     </div>
-    
-    <div className="p-6">
-      {tabContent[activeTab]}
-    </div>
-  </div>
   );
 };
 
@@ -1190,18 +1136,19 @@ export default function Welcome() {
       mockup: <ChatMockup />
     },
     {
-      title: "Workspace - Collaborate Seamlessly",
+      title: "Build Workspace",
       icon: Folder,
-      description: "Everything you need to build together in one integrated workspace",
+      description: "Your AI-powered project hub — chat with your Project Assistant and access all workspace sections in one unified space",
       color: "indigo",
       demoElements: [
-        { icon: LayoutGrid, label: "Overview", desc: "Project activity & stats" },
-        { icon: CheckSquare, label: "Milestones", desc: "Track key goals" },
-        { icon: Rocket, label: "Build", desc: "Tasks & asset management" },
-        { icon: Lightbulb, label: "Ideate", desc: "Rich text planning" },
-        { icon: Settings, label: "Tools", desc: "Integrated links" }
+        { icon: Sparkles, label: "Project Assistant", desc: "AI chat with full project context" },
+        { icon: CheckSquare, label: "Tasks", desc: "Action items & daily work" },
+        { icon: CheckCircle, label: "Milestones", desc: "Major goals & achievements" },
+        { icon: FolderOpen, label: "Assets", desc: "Files, uploads & links" },
+        { icon: BookOpen, label: "Notes", desc: "Thoughts & reflections" },
+        { icon: Settings, label: "Tools", desc: "Integrated project tools" }
       ],
-      mockup: <WorkspaceMockup />
+      mockup: <BuildWorkspaceMockup />
     },
     {
       title: "Profile - Showcase Your Work",
