@@ -117,7 +117,7 @@ function buildSystemPrompt(project, tasks, milestones, assets) {
 
 // ─── AI Chat component ─────────────────────────────────────────────────────
 
-function AIChat({ project, tasks, milestones, assets, currentUser, canEdit }) {
+function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers }) {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -377,6 +377,12 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit }) {
       if (e.key === "Enter" && !e.metaKey && !e.ctrlKey) { e.preventDefault(); if (filteredCommands[slashIndex]) applySlashCommand(filteredCommands[slashIndex]); return; }
       if (e.key === "Escape")    { setSlashOpen(false); return; }
     }
+    // Plain Enter = send; Shift+Enter = newline
+    if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      sendMessage();
+      return;
+    }
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       sendMessage();
@@ -448,10 +454,11 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit }) {
               {/* Action commands — only for non-first, non-error assistant messages when canEdit */}
               {canEdit && msg.role === "assistant" && i > 0 && !msg.isError && (
                 <ChatCommandBar
-                  project={project}
-                  currentUser={currentUser}
-                  messageContent={msg.content}
-                  onSaved={() => {}}
+                project={project}
+                currentUser={currentUser}
+                messageContent={msg.content}
+                projectUsers={projectUsers}
+                onSaved={() => {}}
                 />
               )}
             </div>
@@ -549,7 +556,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit }) {
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder={canEdit ? "Ask anything, type / for commands, or drop a file... (⌘↵ to send)" : "Ask anything about your project... (⌘↵ to send)"}
+            placeholder={canEdit ? "Ask anything, type / for commands... (↵ to send, ⇧↵ for newline)" : "Ask anything about your project... (↵ to send)"}
             rows={1}
             className="resize-none text-sm min-h-[38px] max-h-[120px] flex-1"
             style={{ overflowY: input.split("\n").length > 2 ? "auto" : "hidden" }}
@@ -764,7 +771,7 @@ export default function BuildTab({
 
           {/* Chat */}
           {activeSection === "chat" && (
-            <AIChat project={project} tasks={tasks} milestones={milestones} assets={assets} currentUser={currentUser} canEdit={canEdit} />
+            <AIChat project={project} tasks={tasks} milestones={milestones} assets={assets} currentUser={currentUser} canEdit={canEdit} projectUsers={projectUsers} />
           )}
 
           {/* Tasks */}
