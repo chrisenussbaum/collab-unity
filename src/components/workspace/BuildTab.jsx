@@ -44,6 +44,20 @@ import ActivityTab from "./ActivityTab";
 import ThoughtsTab from "./ThoughtsTab";
 import IdeationHub from "./ideation/IdeationHub";
 import ToolsHub from "./ToolsHub";
+// ─── Slash commands definition ─────────────────────────────────────────────
+
+const SLASH_COMMANDS = [
+  { command: "/task",        icon: CheckSquare, label: "Create Task",       description: "Quickly add a new task to this project",        color: "text-blue-600",   bg: "bg-blue-50" },
+  { command: "/milestone",   icon: Flag,        label: "Add Milestone",     description: "Create a new milestone or goal",                color: "text-orange-600", bg: "bg-orange-50" },
+  { command: "/note",        icon: BookOpen,    label: "Save Note",         description: "Add a thought or note to this project",         color: "text-green-600",  bg: "bg-green-50" },
+  { command: "/idea",        icon: Lightbulb,   label: "Brainstorm Ideas",  description: "Ask the assistant to generate ideas",           color: "text-yellow-600", bg: "bg-yellow-50" },
+  { command: "/brief",       icon: FileText,    label: "Write Brief",       description: "Generate a project brief or summary",           color: "text-purple-600", bg: "bg-purple-50" },
+  { command: "/blockers",    icon: AlertTriangle,label: "Identify Blockers", description: "Ask the assistant to surface current blockers", color: "text-red-600",    bg: "bg-red-50" },
+  { command: "/plan",        icon: Map,         label: "Create a Plan",     description: "Generate a step-by-step action plan",           color: "text-indigo-600", bg: "bg-indigo-50" },
+  { command: "/standup",     icon: Users,       label: "Standup Summary",   description: "Generate a team standup update",                color: "text-teal-600",   bg: "bg-teal-50" },
+  { command: "/help",        icon: Sparkles,    label: "Show Commands",     description: "List all available slash commands",             color: "text-gray-600",   bg: "bg-gray-50" },
+];
+
 // ─── Quick prompts ─────────────────────────────────────────────────────────
 
 const QUICK_PROMPTS = [
@@ -106,13 +120,16 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit }) {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: `Hey! I'm your AI assistant for **${project?.title || "this project"}**. I can help you plan tasks, brainstorm ideas, suggest tools, write briefs, debug blockers, and more. You can also **drag & drop files** here to save them to Assets. What do you want to work on?`,
+      content: `Hey! I'm your AI assistant for **${project?.title || "this project"}**. I can help you plan tasks, brainstorm ideas, suggest tools, write briefs, debug blockers, and more. You can also **drag & drop files** here to save them to Assets.\n\nType **/** to see available slash commands. What do you want to work on?`,
     },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(null);
+  const [slashOpen, setSlashOpen] = useState(false);
+  const [slashFilter, setSlashFilter] = useState("");
+  const [slashIndex, setSlashIndex] = useState(0);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const dragCounterRef = useRef(0);
@@ -192,9 +209,124 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit }) {
     }
   };
 
+  // Build a task via /task command
+  const handleSlashTask = async (taskTitle) => {
+    if (!project?.id || !currentUser || !canEdit) {
+      setMessages(prev => [...prev, { role: "assistant", content: "⚠️ You need edit access to create tasks." }]);
+      return;
+    }
+    const title = taskTitle.trim() || "New Task";
+    await base44.entities.Task.create({ project_id: project.id, title, status: "todo", priority: "medium" });
+    toast.success(`Task "${title}" created!`);
+    setMessages(prev => [...prev, { role: "assistant", content: `✅ Task **"${title}"** has been added to your project board.` }]);
+  };
+
+  // Build a milestone via /milestone command
+  const handleSlashMilestone = async (milestoneName) => {
+    if (!project?.id || !currentUser || !canEdit) {
+      setMessages(prev => [...prev, { role: "assistant", content: "⚠️ You need edit access to create milestones." }]);
+      return;
+    }
+    const name = milestoneName.trim() || "New Milestone";
+    await base44.entities.ProjectMilestone.create({ project_id: project.id, title: name, status: "not_started" });
+    toast.success(`Milestone "${name}" created!`);
+    setMessages(prev => [...prev, { role: "assistant", content: `🏁 Milestone **"${name}"** has been added to your project milestones.` }]);
+  };
+
+  // Save a note via /note command
+  const handleSlashNote = async (noteContent) => {
+    if (!project?.id || !currentUser || !canEdit) {
+      setMessages(prev => [...prev, { role: "assistant", content: "⚠️ You need edit access to save notes." }]);
+      return;
+    }
+    const content = noteContent.trim() || "Quick note";
+    await base44.entities.Thought.create({ project_id: project.id, title: content.slice(0, 60), content });
+    toast.success("Note saved!");
+    setMessages(prev => [...prev, { role: "assistant", content: `📝 Note saved to **Thoughts & Notes**: "${content.slice(0, 80)}${content.length > 80 ? "…" : ""}"` }]);
+  };
+
+  const applySlashCommand = (cmd) => {
+    setSlashOpen(false);
+    setSlashFilter("");
+    if (cmd.command === "/help") {
+      const helpText = SLASH_COMMANDS.map(c => `**${c.command}** — ${c.description}`).join("\n");
+      setMessages(prev => [...prev, { role: "assistant", content: `Here are all available slash commands:\n\n${helpText}` }]);
+      setInput("");
+      return;
+    }
+    // Replace current input with the command + space so user can type the argument
+    setInput(cmd.command + " ");
+  };
+
   const sendMessage = async (text) => {
     const userText = (text || input).trim();
     if (!userText || isLoading) return;
+
+    // ── Handle slash commands ──
+    if (userText.startsWith("/")) {
+      const [cmd, ...rest] = userText.split(/\s+/);
+      const arg = rest.join(" ");
+      setInput("");
+      setSlashOpen(false);
+
+      if (cmd === "/task") {
+        setMessages(prev => [...prev, { role: "user", content: userText }]);
+        if (!arg) {
+          setMessages(prev => [...prev, { role: "assistant", content: "What should the task be called? Reply with the task title." }]);
+          return;
+        }
+        setMessages(prev => [...prev, { role: "user", content: userText }]);
+        await handleSlashTask(arg);
+        return;
+      }
+      if (cmd === "/milestone") {
+        setMessages(prev => [...prev, { role: "user", content: userText }]);
+        if (!arg) {
+          setMessages(prev => [...prev, { role: "assistant", content: "What should the milestone be called? Reply with the milestone name." }]);
+          return;
+        }
+        await handleSlashMilestone(arg);
+        return;
+      }
+      if (cmd === "/note") {
+        setMessages(prev => [...prev, { role: "user", content: userText }]);
+        if (!arg) {
+          setMessages(prev => [...prev, { role: "assistant", content: "What would you like to note? Reply with the note content." }]);
+          return;
+        }
+        await handleSlashNote(arg);
+        return;
+      }
+      if (cmd === "/help") {
+        setMessages(prev => [...prev, { role: "user", content: userText }]);
+        const helpText = SLASH_COMMANDS.map(c => `**${c.command}** — ${c.description}`).join("\n");
+        setMessages(prev => [...prev, { role: "assistant", content: `Here are all available slash commands:\n\n${helpText}` }]);
+        return;
+      }
+      // For AI-powered commands (/idea, /brief, /blockers, /plan, /standup), expand to a prompt
+      const aiCommandPrompts = {
+        "/idea":     `Generate creative ideas for the project "${project?.title}". Be specific and actionable.`,
+        "/brief":    `Write a concise project brief for "${project?.title}" based on the project details.`,
+        "/blockers": `Based on the current tasks and project state, identify potential blockers or risks for "${project?.title}".`,
+        "/plan":     `Create a step-by-step action plan for "${project?.title}"${arg ? ` focused on: ${arg}` : ""}.`,
+        "/standup":  `Generate a team standup summary for "${project?.title}" based on current tasks and milestones.`,
+      };
+      if (aiCommandPrompts[cmd]) {
+        const prompt = aiCommandPrompts[cmd] + (arg && !aiCommandPrompts[cmd].includes(arg) ? ` Context: ${arg}` : "");
+        setMessages(prev => [...prev, { role: "user", content: userText }]);
+        setIsLoading(true);
+        try {
+          const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets);
+          const result = await base44.integrations.Core.InvokeLLM({ prompt: `${systemPrompt}\n\n${prompt}` });
+          setMessages(prev => [...prev, { role: "assistant", content: result }]);
+        } catch {
+          setMessages(prev => [...prev, { role: "assistant", content: "Sorry, I ran into an issue. Please try again.", isError: true }]);
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+    }
 
     const newMessages = [...messages, { role: "user", content: userText }];
     setMessages(newMessages);
@@ -220,7 +352,30 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit }) {
     }
   };
 
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setInput(val);
+    if (val.startsWith("/") && !val.includes(" ")) {
+      setSlashFilter(val.slice(1).toLowerCase());
+      setSlashOpen(true);
+      setSlashIndex(0);
+    } else {
+      setSlashOpen(false);
+      setSlashFilter("");
+    }
+  };
+
+  const filteredCommands = SLASH_COMMANDS.filter(c =>
+    slashFilter === "" || c.command.slice(1).startsWith(slashFilter)
+  );
+
   const handleKeyDown = (e) => {
+    if (slashOpen) {
+      if (e.key === "ArrowDown") { e.preventDefault(); setSlashIndex(i => Math.min(i + 1, filteredCommands.length - 1)); return; }
+      if (e.key === "ArrowUp")   { e.preventDefault(); setSlashIndex(i => Math.max(i - 1, 0)); return; }
+      if (e.key === "Enter" && !e.metaKey && !e.ctrlKey) { e.preventDefault(); if (filteredCommands[slashIndex]) applySlashCommand(filteredCommands[slashIndex]); return; }
+      if (e.key === "Escape")    { setSlashOpen(false); return; }
+    }
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       sendMessage();
@@ -344,6 +499,40 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit }) {
       {/* Input */}
       <div className="p-3 bg-white border-t border-gray-200">
         <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
+
+        {/* Slash command popup */}
+        {slashOpen && filteredCommands.length > 0 && (
+          <div className="mb-2 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+            <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3 text-purple-500" />
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Slash Commands</span>
+            </div>
+            {filteredCommands.map((cmd, idx) => {
+              const Icon = cmd.icon;
+              return (
+                <button
+                  key={cmd.command}
+                  onClick={() => applySlashCommand(cmd)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${
+                    idx === slashIndex ? "bg-purple-50" : "hover:bg-gray-50"
+                  }`}
+                >
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${cmd.bg}`}>
+                    <Icon className={`w-3.5 h-3.5 ${cmd.color}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-semibold text-gray-800">{cmd.command}</span>
+                      <span className="text-xs font-medium text-gray-600">{cmd.label}</span>
+                    </div>
+                    <p className="text-xs text-gray-400 truncate">{cmd.description}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <div className="flex gap-2 items-end">
           {canEdit && (
             <button
@@ -357,9 +546,9 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit }) {
           )}
           <Textarea
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder={canEdit ? "Ask anything or drop a file to save it to Assets... (⌘↵ to send)" : "Ask anything about your project... (⌘↵ to send)"}
+            placeholder={canEdit ? "Ask anything, type / for commands, or drop a file... (⌘↵ to send)" : "Ask anything about your project... (⌘↵ to send)"}
             rows={1}
             className="resize-none text-sm min-h-[38px] max-h-[120px] flex-1"
             style={{ overflowY: input.split("\n").length > 2 ? "auto" : "hidden" }}
