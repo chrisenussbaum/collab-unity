@@ -53,7 +53,33 @@ const QUICK_PROMPTS = [
 
 // ─── Build system prompt ───────────────────────────────────────────────────
 
-function buildSystemPrompt(project, tasks, milestones) {
+function buildSystemPrompt(project, tasks, milestones, assets) {
+  const taskLines = tasks?.slice(0, 15).map(t => {
+    const parts = [`- [${t.status}] ${t.title}`];
+    if (t.priority && t.priority !== "medium") parts[0] += ` (${t.priority} priority)`;
+    if (t.assigned_to) parts[0] += ` — assigned to ${t.assigned_to.split("@")[0]}`;
+    if (t.due_date) parts[0] += ` — due ${t.due_date}`;
+    if (t.description) parts[0] += `\n  Description: ${t.description}`;
+    return parts[0];
+  });
+
+  const milestoneLines = milestones?.slice(0, 8).map(m => {
+    let line = `- ${m.title || m.name} [${m.status || "not_started"}]`;
+    if (m.target_date) line += ` — target ${m.target_date}`;
+    if (m.description) line += `\n  ${m.description}`;
+    return line;
+  });
+
+  const assetLines = assets?.slice(0, 20).map(a => {
+    let line = `- "${a.asset_name}" (${a.resource_type || "file"}, v${a.version_number || 1}`;
+    if (a.category) line += `, category: ${a.category}`;
+    if (a.tags?.length) line += `, tags: ${a.tags.join(", ")}`;
+    line += ")";
+    if (a.version_notes) line += `\n  Notes: ${a.version_notes}`;
+    if (a.file_url) line += `\n  URL: ${a.file_url}`;
+    return line;
+  });
+
   const parts = [
     `You are an expert project collaborator and advisor embedded inside Collab Unity, a platform where people build projects together.`,
     `You are helping with the following project:`,
@@ -61,19 +87,20 @@ function buildSystemPrompt(project, tasks, milestones) {
     project?.description ? `Description: ${project.description}` : null,
     project?.classification ? `Classification: ${project.classification}` : null,
     project?.industry ? `Industry: ${project.industry}` : null,
-    project?.skills_needed?.length ? `Skills: ${project.skills_needed.join(", ")}` : null,
-    project?.tools_needed?.length ? `Tools: ${project.tools_needed.join(", ")}` : null,
+    project?.skills_needed?.length ? `Skills needed: ${project.skills_needed.join(", ")}` : null,
+    project?.tools_needed?.length ? `Tools needed: ${project.tools_needed.join(", ")}` : null,
     project?.status ? `Status: ${project.status}` : null,
-    tasks?.length ? `\nCurrent Tasks (${tasks.length}):\n${tasks.slice(0, 10).map(t => `- [${t.status}] ${t.title}`).join("\n")}` : null,
-    milestones?.length ? `\nMilestones:\n${milestones.slice(0, 5).map(m => `- ${m.title || m.name} (${m.status || "pending"})`).join("\n")}` : null,
-    `\nYou have full context of this project. Be specific, actionable, and refer to the actual project name and details in your responses. Keep answers concise unless asked to elaborate. Use markdown formatting for clarity.`,
+    taskLines?.length ? `\nTasks (${tasks.length} total):\n${taskLines.join("\n")}` : null,
+    milestoneLines?.length ? `\nMilestones (${milestones.length} total):\n${milestoneLines.join("\n")}` : null,
+    assetLines?.length ? `\nProject Assets (${assets.length} total):\n${assetLines.join("\n")}` : null,
+    `\nWhen users ask about specific tasks, milestones, or assets, reference them by name. You can suggest which asset versions are relevant, flag overdue tasks, and connect project files to the work being done. Be specific, actionable, and use markdown formatting for clarity.`,
   ];
   return parts.filter(Boolean).join("\n");
 }
 
 // ─── AI Chat component ─────────────────────────────────────────────────────
 
-function AIChat({ project, tasks, milestones }) {
+function AIChat({ project, tasks, milestones, assets }) {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -98,7 +125,7 @@ function AIChat({ project, tasks, milestones }) {
     setIsLoading(true);
 
     try {
-      const systemPrompt = buildSystemPrompt(project, tasks, milestones);
+      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets);
       const conversationHistory = newMessages.slice(-10).map(m =>
         `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`
       ).join("\n\n");
@@ -276,7 +303,7 @@ function Section({ icon: Icon, title, description, defaultOpen = false, badge, c
 export default function BuildTab({
   project, currentUser, isCollaborator, isProjectOwner,
   projectOwnerName, projectUsers, onProjectUpdate,
-  tasks = [], setTasks, milestones = [], setMilestones
+  tasks = [], setTasks, milestones = [], setMilestones, assets = []
 }) {
   const canEdit = isCollaborator || isProjectOwner;
 
@@ -383,10 +410,10 @@ export default function BuildTab({
             </div>
           </div>
           <Badge className="bg-white/20 text-white border-0 text-xs">
-            {tasks.length} tasks · {milestones.length} milestones
+            {tasks.length} tasks · {milestones.length} milestones · {assets.length} assets
           </Badge>
         </div>
-        <AIChat project={project} tasks={tasks} milestones={milestones} />
+        <AIChat project={project} tasks={tasks} milestones={milestones} assets={assets} />
       </div>
 
       {/* ── Team Build Links ── */}

@@ -5,6 +5,7 @@ import BuildTab from './BuildTab';
 const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, isCollaborator, isProjectOwner }) => {
   const [tasks, setTasks] = React.useState([]);
   const [milestones, setMilestones] = React.useState([]);
+  const [assets, setAssets] = React.useState([]);
 
   const projectOwnerName = project?.created_by ?
     (projectUsers?.find(u => u.email === project.created_by)?.full_name ||
@@ -15,6 +16,7 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
     if (!project?.id) return;
     base44.entities.Task.filter({ project_id: project.id }).then(setTasks).catch(() => {});
     base44.entities.ProjectMilestone.filter({ project_id: project.id }).then(setMilestones).catch(() => {});
+    base44.entities.AssetVersion.filter({ project_id: project.id }).then(setAssets).catch(() => {});
   }, [project?.id]);
 
   return (
@@ -31,6 +33,7 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
         setTasks={setTasks}
         milestones={milestones}
         setMilestones={setMilestones}
+        assets={assets}
       />
     </div>
   );
