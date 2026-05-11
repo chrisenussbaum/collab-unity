@@ -12,8 +12,19 @@ import {
   PenTool, Eye, Search, ArrowRight, X, AlertTriangle,
   Map, Rocket, Code2, Palette, Video, Music, Globe, GraduationCap,
   Gamepad2, FlaskConical, Target, Users, BarChart3, Film, Mic,
-  BookMarked, Package, Database, Zap, CheckCircle2, Circle, Paperclip, Upload
+  BookMarked, Package, Database, Zap, CheckCircle2, Circle, Paperclip, Upload,
+  ImagePlus, FileSearch
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AssetVersion } from "@/entities/all";
 import ReactMarkdown from "react-markdown";
 import ChatCommandBar from "./ChatCommandBar";
@@ -111,6 +122,11 @@ function buildSystemPrompt(project, tasks, milestones, assets) {
     milestoneLines?.length ? `\nMilestones (${milestones.length} total):\n${milestoneLines.join("\n")}` : null,
     assetLines?.length ? `\nProject Assets (${assets.length} total):\n${assetLines.join("\n")}` : null,
     `\nWhen users ask about specific tasks, milestones, or assets, reference them by name. You can suggest which asset versions are relevant, flag overdue tasks, and connect project files to the work being done. Be specific, actionable, and use markdown formatting for clarity.`,
+    `\nIMPORTANT FORMATTING RULES for suggestions:`,
+    `- When suggesting TASKS: use bullet points starting with action verbs (e.g. "- Implement user auth", "- Design landing page")`,
+    `- When suggesting MILESTONES: include the word "phase", "launch", "release", "milestone", "sprint", or "MVP" in the line (e.g. "- MVP launch: core features complete")`,
+    `- When suggesting TOOLS: name the tool explicitly and include its URL if known (e.g. "- Figma (https://figma.com) for UI design")`,
+    `- This formatting allows the assistant bar to correctly parse and offer one-click creation of tasks, milestones, and tools.`,
   ];
   return parts.filter(Boolean).join("\n");
 }
@@ -123,7 +139,7 @@ const WELCOME_MESSAGE = (title) => ({
   isWelcome: true,
 });
 
-function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers }) {
+function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers, onProjectUpdate }) {
   const [messages, setMessages] = useState([WELCOME_MESSAGE(project?.title)]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [input, setInput] = useState("");
@@ -133,8 +149,12 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
   const [slashOpen, setSlashOpen] = useState(false);
   const [slashFilter, setSlashFilter] = useState("");
   const [slashIndex, setSlashIndex] = useState(0);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [attachedFiles, setAttachedFiles] = useState([]); // files queued for AI analysis
+  const [analyzingFiles, setAnalyzingFiles] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const analyzeFileInputRef = useRef(null);
   const dragCounterRef = useRef(0);
 
   // Load persisted chat history
@@ -435,12 +455,61 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
   };
 
   const clearChat = async () => {
-    // Delete all persisted messages for this project
     try {
       const existing = await base44.entities.ProjectChatMessage.filter({ project_id: project.id });
       await Promise.all(existing.map(r => base44.entities.ProjectChatMessage.delete(r.id)));
     } catch {}
     setMessages([WELCOME_MESSAGE(project?.title)]);
+    setShowClearConfirm(false);
+  };
+
+  // ── File analysis (images, docs, video) ──
+  const handleAnalyzeFileSelect = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    e.target.value = "";
+    setAnalyzingFiles(true);
+    const userText = input.trim() || "Please analyze these files and provide detailed feedback and suggestions to help move this project forward.";
+    const userMsg = { role: "user", content: `📎 ${files.map(f => f.name).join(", ")} — ${userText}`, sender_email: currentUser?.email, sender_name: currentUser?.full_name };
+    setMessages(prev => [...prev, userMsg]);
+    await persistMessage(userMsg);
+    setInput("");
+
+    try {
+      // Upload all files and collect URLs
+      const uploadedUrls = await Promise.all(files.map(async (file) => {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        return file_url;
+      }));
+
+      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets);
+      const analysisPrompt = `${systemPrompt}
+
+The user has shared ${files.length} file(s) for analysis: ${files.map(f => f.name).join(", ")}.
+
+User's request: "${userText}"
+
+Please analyze the provided file(s) thoroughly. For images, compare visual designs, layouts, branding, and UX. For documents, review content, structure, and clarity. For videos, describe what you can observe. 
+
+Provide:
+1. **Detailed observations** about what you see in the file(s)
+2. **Specific actionable suggestions** to improve or move the project forward
+3. **Relevant tasks** the team should consider (format as bullet points starting with action verbs)
+4. **Any tools or resources** that could help
+
+Be specific, reference the actual content you observe, and tie your feedback to the project goals.`;
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: analysisPrompt,
+        file_urls: uploadedUrls,
+        model: "claude_sonnet_4_6"
+      });
+      await addAndPersist({ role: "assistant", content: result });
+    } catch (err) {
+      await addAndPersist({ role: "assistant", content: `❌ Failed to analyze the file(s). Please try again. (${err.message})`, isError: true });
+    } finally {
+      setAnalyzingFiles(false);
+    }
   };
 
   return (
@@ -510,11 +579,12 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
               {/* Action commands — only for non-first, non-error assistant messages when canEdit */}
               {canEdit && msg.role === "assistant" && i > 0 && !msg.isError && (
                 <ChatCommandBar
-                project={project}
-                currentUser={currentUser}
-                messageContent={msg.content}
-                projectUsers={projectUsers}
-                onSaved={() => {}}
+                  project={project}
+                  currentUser={currentUser}
+                  messageContent={msg.content}
+                  projectUsers={projectUsers}
+                  onProjectUpdate={onProjectUpdate}
+                  onSaved={() => {}}
                 />
               )}
             </div>
@@ -560,9 +630,43 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
         </div>
       )}
 
+      {/* Confirmation dialog for clear chat */}
+      <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear chat history?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all messages in this project chat for all collaborators. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={clearChat} className="bg-red-600 hover:bg-red-700 text-white">
+              Clear History
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Attached files for analysis preview */}
+      {analyzingFiles && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 border-b border-indigo-200 text-indigo-700 text-xs font-medium">
+          <div className="w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+          Analyzing files with AI — this may take a moment...
+        </div>
+      )}
+
       {/* Input */}
       <div className="p-3 bg-white border-t border-gray-200">
         <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
+        <input
+          ref={analyzeFileInputRef}
+          type="file"
+          className="hidden"
+          multiple
+          accept="image/*,video/*,.pdf,.doc,.docx,.txt,.csv,.xlsx,.pptx,.png,.jpg,.jpeg,.gif,.webp,.mp4,.mov"
+          onChange={handleAnalyzeFileSelect}
+        />
 
         {/* Slash command popup */}
         {slashOpen && filteredCommands.length > 0 && (
@@ -599,36 +703,50 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
 
         <div className="flex gap-2 items-end">
           {canEdit && (
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              title="Attach file to Assets"
-              className="text-gray-400 hover:text-purple-600 transition-colors flex-shrink-0 pb-1.5"
-              disabled={!!uploadingFile}
-            >
-              <Paperclip className="w-4 h-4" />
-            </button>
+            <div className="flex flex-col gap-1 pb-0.5">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                title="Attach file to Assets"
+                className="text-gray-400 hover:text-purple-600 transition-colors"
+                disabled={!!uploadingFile}
+              >
+                <Paperclip className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => analyzeFileInputRef.current?.click()}
+                title="Analyze image, doc, or video with AI"
+                className="text-gray-400 hover:text-indigo-600 transition-colors"
+                disabled={isLoading || analyzingFiles}
+              >
+                <FileSearch className="w-4 h-4" />
+              </button>
+            </div>
           )}
           <Textarea
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder={canEdit ? "Ask anything, type / for commands... (↵ to send, ⇧↵ for newline)" : "Ask anything about your project... (↵ to send)"}
+            placeholder={canEdit ? "Ask anything, type / for commands, or attach a file to analyze... (↵ send, ⇧↵ newline)" : "Ask anything about your project... (↵ to send)"}
             rows={1}
             className="resize-none text-sm min-h-[38px] max-h-[120px] flex-1"
             style={{ overflowY: input.split("\n").length > 2 ? "auto" : "hidden" }}
-            disabled={isLoading}
+            disabled={isLoading || analyzingFiles}
           />
           <div className="flex flex-col gap-1.5">
             <Button
               onClick={() => sendMessage()}
-              disabled={!input.trim() || isLoading}
+              disabled={!input.trim() || isLoading || analyzingFiles}
               size="sm"
               className="cu-button h-9 w-9 p-0 flex-shrink-0"
             >
               <Send className="w-3.5 h-3.5" />
             </Button>
             {messages.length > 2 && (
-              <button onClick={clearChat} className="text-gray-300 hover:text-gray-500 transition-colors" title="Clear chat">
+              <button
+                onClick={() => setShowClearConfirm(true)}
+                className="text-gray-300 hover:text-red-400 transition-colors"
+                title="Clear chat history"
+              >
                 <RefreshCw className="w-3.5 h-3.5" />
               </button>
             )}
@@ -636,7 +754,8 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
         </div>
         {canEdit && (
           <p className="text-xs text-gray-400 mt-1.5">
-            <Paperclip className="w-3 h-3 inline mr-0.5" /> Drag & drop a file anywhere in the chat to save it to Assets
+            <Paperclip className="w-3 h-3 inline mr-0.5" /> Drop files to save to Assets &nbsp;·&nbsp;
+            <FileSearch className="w-3 h-3 inline mr-0.5" /> Click the scan icon to analyze images/docs/videos with AI
           </p>
         )}
       </div>
@@ -827,7 +946,7 @@ export default function BuildTab({
 
           {/* Chat */}
           {activeSection === "chat" && (
-            <AIChat project={project} tasks={tasks} milestones={milestones} assets={assets} currentUser={currentUser} canEdit={canEdit} projectUsers={projectUsers} />
+            <AIChat project={project} tasks={tasks} milestones={milestones} assets={assets} currentUser={currentUser} canEdit={canEdit} projectUsers={projectUsers} onProjectUpdate={onProjectUpdate} />
           )}
 
           {/* Tasks */}

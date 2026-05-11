@@ -107,6 +107,23 @@ function parseAIMessage(content) {
   return { tasks: uniqueTasks, milestones: uniqueMilestones, tools: uniqueTools, noteTitle };
 }
 
+// Tool icon lookup (mirrors ToolsHub)
+function getToolIcon(toolName) {
+  const name = (toolName || "").toLowerCase();
+  const map = {
+    figma: "🎨", slack: "💬", trello: "📋", jira: "🔷", notion: "📝",
+    github: "🐙", gitlab: "🦊", "vs code": "💻", miro: "🖼️", discord: "🎮",
+    asana: "✅", zoom: "📹", canva: "🖌️", airtable: "📊", linear: "⚡",
+    clickup: "✓", dropbox: "📦", vercel: "▲", netlify: "🌐", firebase: "🔥",
+    supabase: "⚡", stripe: "💳", loom: "📹", calendly: "📅", typeform: "📝",
+    webflow: "🌊", shopify: "🛍️", aws: "☁️", google: "🔍", monday: "📆",
+  };
+  for (const [key, icon] of Object.entries(map)) {
+    if (name.includes(key)) return icon;
+  }
+  return "🔧";
+}
+
 // Tool URL lookup
 const TOOL_URLS = {
   figma: "https://figma.com", notion: "https://notion.so", trello: "https://trello.com",
@@ -129,7 +146,7 @@ const COMMANDS = [
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function ChatCommandBar({ project, currentUser, messageContent, projectUsers = [], onSaved }) {
+export default function ChatCommandBar({ project, currentUser, messageContent, projectUsers = [], onSaved, onProjectUpdate }) {
   const [activeCommand, setActiveCommand] = useState(null);
   const [saving, setSaving] = useState(false);
   const [savedCommands, setSavedCommands] = useState(new Set());
@@ -242,9 +259,14 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
           try { new URL(t.url); } catch { toast.error(`Invalid URL for "${t.name}"`); setSaving(false); return; }
         }
         const current = project.project_tools || [];
-        const updated = [...current, ...valid.map(t => ({ name: t.name.trim(), url: t.url.trim(), icon: "🔧" }))];
+        const newTools = valid.map(t => {
+          const icon = getToolIcon(t.name);
+          return { name: t.name.trim(), url: t.url.trim(), icon };
+        });
+        const updated = [...current, ...newTools];
         await base44.entities.Project.update(project.id, { project_tools: updated });
-        toast.success(`${valid.length} tool${valid.length > 1 ? "s" : ""} added!`);
+        toast.success(`${valid.length} tool${valid.length > 1 ? "s" : ""} added to Project Tools!`);
+        if (onProjectUpdate) onProjectUpdate();
         if (onSaved) onSaved("tool", updated);
       }
 
