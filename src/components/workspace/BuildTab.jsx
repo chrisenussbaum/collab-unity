@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import {
-  Send, Sparkles, Bot, User, RefreshCw, ChevronDown, ChevronUp,
+  Send, Sparkles, Bot, User, RefreshCw,
   Lightbulb, Wrench, Flag, FileText, CheckSquare, FileStack,
   Activity, BookOpen, Layers, Link2, Plus, Trash2, ExternalLink,
-  PenTool, Eye, Search, ArrowRight, X, AlertTriangle, Hammer,
+  PenTool, Eye, Search, ArrowRight, X, AlertTriangle,
   Map, Rocket, Code2, Palette, Video, Music, Globe, GraduationCap,
   Gamepad2, FlaskConical, Target, Users, BarChart3, Film, Mic,
   BookMarked, Package, Database, Zap, CheckCircle2, Circle, Paperclip, Upload
@@ -391,44 +391,19 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit }) {
   );
 }
 
-// ─── Collapsible section wrapper ───────────────────────────────────────────
-
-function Section({ icon: Icon, title, description, defaultOpen = false, badge, children }) {
-  const [open, setOpen] = useState(defaultOpen);
-
-  return (
-    <div className="border border-gray-200 rounded-xl bg-white overflow-hidden">
-      <button
-        onClick={() => setOpen(p => !p)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors text-left"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-            <Icon className="w-4 h-4 text-purple-600" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold text-gray-900">{title}</p>
-              {badge != null && (
-                <Badge className="bg-purple-100 text-purple-700 border-0 text-xs">{badge}</Badge>
-              )}
-            </div>
-            {description && <p className="text-xs text-gray-400">{description}</p>}
-          </div>
-        </div>
-        {open ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />}
-      </button>
-
-      {open && (
-        <div className="border-t border-gray-100 p-4">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Main BuildTab ─────────────────────────────────────────────────────────
+
+const SIDEBAR_SECTIONS = [
+  { id: "chat",      icon: Sparkles,    label: "Assistant",         shortLabel: "Chat" },
+  { id: "tasks",     icon: CheckSquare, label: "Tasks",             shortLabel: "Tasks" },
+  { id: "milestones",icon: Flag,        label: "Milestones",        shortLabel: "Miles." },
+  { id: "assets",    icon: FileStack,   label: "Assets",            shortLabel: "Assets" },
+  { id: "ideation",  icon: Lightbulb,   label: "Planning & Ideation", shortLabel: "Ideation" },
+  { id: "notes",     icon: BookOpen,    label: "Thoughts & Notes",  shortLabel: "Notes" },
+  { id: "tools",     icon: Wrench,      label: "Project Tools",     shortLabel: "Tools" },
+  { id: "links",     icon: Link2,       label: "Build Links",       shortLabel: "Links" },
+  { id: "activity",  icon: Activity,    label: "Activity",          shortLabel: "Activity" },
+];
 
 export default function BuildTab({
   project, currentUser, isCollaborator, isProjectOwner,
@@ -436,6 +411,7 @@ export default function BuildTab({
   tasks = [], setTasks, milestones = [], setMilestones, assets = []
 }) {
   const canEdit = isCollaborator || isProjectOwner;
+  const [activeSection, setActiveSection] = useState("chat");
 
   // Team build links (persisted via ProjectIDE entity)
   const [savedLinks, setSavedLinks] = useState([]);
@@ -512,195 +488,216 @@ export default function BuildTab({
   const todoCount = tasks.filter(t => t.status === "todo").length;
   const inProgressCount = tasks.filter(t => t.status === "in_progress").length;
 
+  const sectionBadges = {
+    tasks: inProgressCount > 0 ? inProgressCount : (todoCount > 0 ? todoCount : tasks.length || null),
+    milestones: milestones.length || null,
+    links: savedLinks.length || null,
+  };
+
+  const activeLabel = SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label || "";
+
   return (
-    <div className="space-y-4">
+    <div className="border border-purple-200 rounded-xl bg-white overflow-hidden shadow-sm">
       {/* ── Header ── */}
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
-          <Hammer className="w-5 h-5 text-white" />
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold leading-tight">Project Assistant</p>
+            <p className="text-xs text-white/70 leading-tight">Your project workspace for "{project?.title || "this project"}"</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Build Workspace</h2>
-          <p className="text-sm text-gray-500">
-            {project?.title ? `Your AI-powered workspace for "${project.title}"` : "Everything you need to build your project — in one place."}
-          </p>
-        </div>
+        <Badge className="bg-white/20 text-white border-0 text-xs hidden sm:flex">
+          {tasks.length} tasks · {milestones.length} milestones · {assets.length} assets
+        </Badge>
       </div>
 
-      {/* ── AI Chat (always open, primary feature) ── */}
-      <div className="border border-purple-200 rounded-xl bg-white overflow-hidden shadow-sm">
-        <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold leading-tight">Project Assistant</p>
-              <p className="text-xs text-white/70 leading-tight">Your project workspace for "{project?.title || "this project"}"</p>
-            </div>
-          </div>
-          <Badge className="bg-white/20 text-white border-0 text-xs">
-            {tasks.length} tasks · {milestones.length} milestones · {assets.length} assets
-          </Badge>
-        </div>
-        <AIChat project={project} tasks={tasks} milestones={milestones} assets={assets} currentUser={currentUser} canEdit={canEdit} />
-      </div>
-
-      {/* ── Team Build Links ── */}
-      <Section
-        icon={Link2}
-        title="Team Build Links"
-        description="Repos, staging environments, design files, docs"
-        badge={savedLinks.length || null}
-      >
-        {canEdit && (
-          <div className="mb-3">
-            {showAddLink ? (
-              <div className="p-3 bg-purple-50 rounded-lg border border-purple-200 space-y-2">
-                <Input placeholder="Label (e.g. GitHub Repo, Figma File)" value={linkLabel} onChange={(e) => setLinkLabel(e.target.value)} className="text-sm" />
-                <div className="flex gap-2">
-                  <Input type="url" placeholder="https://..." value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddLink()} className="text-sm" />
-                  <Button onClick={handleAddLink} size="sm" className="cu-button flex-shrink-0">Add</Button>
-                  <Button onClick={() => setShowAddLink(false)} size="sm" variant="ghost" className="flex-shrink-0">Cancel</Button>
-                </div>
-              </div>
-            ) : (
-              <Button variant="outline" size="sm" onClick={() => setShowAddLink(true)} className="text-xs gap-1">
-                <Plus className="w-3 h-3" /> Add Link
-              </Button>
-            )}
-          </div>
-        )}
-        {savedLinks.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-4">No build links yet.</p>
-        ) : (
-          <div className="space-y-2">
-            {savedLinks.map((link, i) => (
-              <div key={i} className="flex items-center space-x-3 p-2.5 bg-gray-50 border border-gray-200 rounded-lg group">
-                <img src={`https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}&sz=32`} alt="" className="w-4 h-4 flex-shrink-0" onError={(e) => { e.target.style.display = 'none'; }} />
-                <a href={link.url} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 hover:text-purple-700">
-                  <p className="font-medium text-sm text-gray-900 truncate">{link.label}</p>
-                  <p className="text-xs text-gray-400 truncate">{link.url}</p>
-                </a>
-                <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-purple-500"><ExternalLink className="w-3.5 h-3.5" /></a>
-                {canEdit && (
-                  <button onClick={() => handleRemoveLink(i)} className="text-gray-200 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+      {/* ── Body: sidebar + content ── */}
+      <div className="flex min-h-0">
+        {/* Sidebar */}
+        <div className="flex flex-col items-center gap-1 py-3 px-1.5 bg-gray-50 border-r border-gray-200 w-12 flex-shrink-0">
+          {SIDEBAR_SECTIONS.map((section) => {
+            const Icon = section.icon;
+            const active = activeSection === section.id;
+            const badge = sectionBadges[section.id];
+            return (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                title={section.label}
+                className={`relative w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 ${
+                  active
+                    ? "bg-purple-600 text-white shadow-sm"
+                    : "text-gray-400 hover:bg-purple-50 hover:text-purple-600"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {badge != null && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                    {badge > 9 ? "9+" : badge}
+                  </span>
                 )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Content pane */}
+        <div className="flex-1 min-w-0 overflow-auto">
+          {/* Section header strip */}
+          {activeSection !== "chat" && (
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 bg-white">
+              <div className="w-6 h-6 rounded-md bg-purple-100 flex items-center justify-center flex-shrink-0">
+                {(() => { const Icon = SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.icon; return Icon ? <Icon className="w-3.5 h-3.5 text-purple-600" /> : null; })()}
               </div>
-            ))}
-          </div>
-        )}
-      </Section>
+              <p className="text-sm font-semibold text-gray-800">{activeLabel}</p>
+            </div>
+          )}
 
-      {/* ── Tasks ── */}
-      <Section
-        icon={CheckSquare}
-        title="Tasks"
-        description="Action items and daily work"
-        badge={inProgressCount > 0 ? `${inProgressCount} in progress` : (todoCount > 0 ? `${todoCount} to do` : tasks.length)}
-        defaultOpen={true}
-      >
-        <TaskBoard
-          project={project}
-          currentUser={currentUser}
-          collaborators={projectUsers}
-          isCollaborator={isCollaborator}
-          isProjectOwner={isProjectOwner}
-          projectOwnerName={projectOwnerName}
-        />
-      </Section>
+          {/* Chat */}
+          {activeSection === "chat" && (
+            <AIChat project={project} tasks={tasks} milestones={milestones} assets={assets} currentUser={currentUser} canEdit={canEdit} />
+          )}
 
-      {/* ── Milestones ── */}
-      <Section
-        icon={Flag}
-        title="Milestones"
-        description="Major goals and key achievements"
-        badge={milestones.length || null}
-      >
-        <MilestonesTab
-          project={project}
-          currentUser={currentUser}
-          isCollaborator={isCollaborator}
-          isProjectOwner={isProjectOwner}
-        />
-      </Section>
+          {/* Tasks */}
+          {activeSection === "tasks" && (
+            <div className="p-4">
+              <TaskBoard
+                project={project}
+                currentUser={currentUser}
+                collaborators={projectUsers}
+                isCollaborator={isCollaborator}
+                isProjectOwner={isProjectOwner}
+                projectOwnerName={projectOwnerName}
+              />
+            </div>
+          )}
 
-      {/* ── Assets ── */}
-      <Section
-        icon={FileStack}
-        title="Assets"
-        description="Project files, uploads, and links"
-      >
-        <AssetsTab
-          project={project}
-          currentUser={currentUser}
-          isCollaborator={isCollaborator}
-          isProjectOwner={isProjectOwner}
-          projectOwnerName={projectOwnerName}
-        />
-      </Section>
+          {/* Milestones */}
+          {activeSection === "milestones" && (
+            <div className="p-4">
+              <MilestonesTab
+                project={project}
+                currentUser={currentUser}
+                isCollaborator={isCollaborator}
+                isProjectOwner={isProjectOwner}
+              />
+            </div>
+          )}
 
-      {/* ── Planning & Ideation ── */}
-      <Section
-        icon={Lightbulb}
-        title="Planning & Ideation"
-        description="Brainstorm, whiteboard, and plan project steps"
-      >
-        <IdeationHub
-          project={project}
-          currentUser={currentUser}
-          isCollaborator={isCollaborator}
-          isProjectOwner={isProjectOwner}
-          projectOwnerName={projectOwnerName}
-        />
-      </Section>
+          {/* Assets */}
+          {activeSection === "assets" && (
+            <div className="p-4">
+              <AssetsTab
+                project={project}
+                currentUser={currentUser}
+                isCollaborator={isCollaborator}
+                isProjectOwner={isProjectOwner}
+                projectOwnerName={projectOwnerName}
+              />
+            </div>
+          )}
 
-      {/* ── Thoughts ── */}
-      <Section
-        icon={BookOpen}
-        title="Thoughts & Notes"
-        description="Reflections, insights, and shared notes"
-      >
-        <ThoughtsTab
-          project={project}
-          currentUser={currentUser}
-          isCollaborator={isCollaborator}
-          isProjectOwner={isProjectOwner}
-          projectOwnerName={projectOwnerName}
-        />
-      </Section>
+          {/* Planning & Ideation */}
+          {activeSection === "ideation" && (
+            <div className="p-4">
+              <IdeationHub
+                project={project}
+                currentUser={currentUser}
+                isCollaborator={isCollaborator}
+                isProjectOwner={isProjectOwner}
+                projectOwnerName={projectOwnerName}
+              />
+            </div>
+          )}
 
-      {/* ── Tools ── */}
-      <Section
-        icon={Wrench}
-        title="Project Tools"
-        description="Tools and integrations for this project"
-      >
-        <ToolsHub
-          project={project}
-          onProjectUpdate={onProjectUpdate}
-          isCollaborator={isCollaborator}
-          isProjectOwner={isProjectOwner}
-          projectOwnerName={projectOwnerName}
-        />
-      </Section>
+          {/* Thoughts & Notes */}
+          {activeSection === "notes" && (
+            <div className="p-4">
+              <ThoughtsTab
+                project={project}
+                currentUser={currentUser}
+                isCollaborator={isCollaborator}
+                isProjectOwner={isProjectOwner}
+                projectOwnerName={projectOwnerName}
+              />
+            </div>
+          )}
 
-      {/* ── Activity ── */}
-      <Section
-        icon={Activity}
-        title="Activity"
-        description="Project activity timeline and history"
-      >
-        <ActivityTab
-          project={project}
-          currentUser={currentUser}
-          isCollaborator={isCollaborator}
-          isProjectOwner={isProjectOwner}
-          projectOwnerName={projectOwnerName}
-        />
-      </Section>
+          {/* Tools */}
+          {activeSection === "tools" && (
+            <div className="p-4">
+              <ToolsHub
+                project={project}
+                onProjectUpdate={onProjectUpdate}
+                isCollaborator={isCollaborator}
+                isProjectOwner={isProjectOwner}
+                projectOwnerName={projectOwnerName}
+              />
+            </div>
+          )}
+
+          {/* Build Links */}
+          {activeSection === "links" && (
+            <div className="p-4">
+              {canEdit && (
+                <div className="mb-3">
+                  {showAddLink ? (
+                    <div className="p-3 bg-purple-50 rounded-lg border border-purple-200 space-y-2">
+                      <Input placeholder="Label (e.g. GitHub Repo, Figma File)" value={linkLabel} onChange={(e) => setLinkLabel(e.target.value)} className="text-sm" />
+                      <div className="flex gap-2">
+                        <Input type="url" placeholder="https://..." value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddLink()} className="text-sm" />
+                        <Button onClick={handleAddLink} size="sm" className="cu-button flex-shrink-0">Add</Button>
+                        <Button onClick={() => setShowAddLink(false)} size="sm" variant="ghost" className="flex-shrink-0">Cancel</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={() => setShowAddLink(true)} className="text-xs gap-1">
+                      <Plus className="w-3 h-3" /> Add Link
+                    </Button>
+                  )}
+                </div>
+              )}
+              {savedLinks.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-8">No build links yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {savedLinks.map((link, i) => (
+                    <div key={i} className="flex items-center space-x-3 p-2.5 bg-gray-50 border border-gray-200 rounded-lg group">
+                      <img src={`https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}&sz=32`} alt="" className="w-4 h-4 flex-shrink-0" onError={(e) => { e.target.style.display = 'none'; }} />
+                      <a href={link.url} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 hover:text-purple-700">
+                        <p className="font-medium text-sm text-gray-900 truncate">{link.label}</p>
+                        <p className="text-xs text-gray-400 truncate">{link.url}</p>
+                      </a>
+                      <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-purple-500"><ExternalLink className="w-3.5 h-3.5" /></a>
+                      {canEdit && (
+                        <button onClick={() => handleRemoveLink(i)} className="text-gray-200 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Activity */}
+          {activeSection === "activity" && (
+            <div className="p-4">
+              <ActivityTab
+                project={project}
+                currentUser={currentUser}
+                isCollaborator={isCollaborator}
+                isProjectOwner={isProjectOwner}
+                projectOwnerName={projectOwnerName}
+              />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
