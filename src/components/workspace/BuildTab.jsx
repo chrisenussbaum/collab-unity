@@ -42,8 +42,6 @@ import ActivityTab from "./ActivityTab";
 import ThoughtsTab from "./ThoughtsTab";
 import IdeationHub from "./ideation/IdeationHub";
 import ToolsHub from "./ToolsHub";
-import OverviewTab from "./OverviewTab";
-
 // ─── Quick prompts ─────────────────────────────────────────────────────────
 
 const QUICK_PROMPTS = [
