@@ -3,6 +3,7 @@ import { useSearchParams, useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckSquare, Wrench, FileStack, Activity, Lightbulb, BookOpen, Flag, LayoutGrid, Hammer } from 'lucide-react';
 import HorizontalScrollContainer from '@/components/HorizontalScrollContainer';
+import { base44 } from "@/api/base44Client";
 
 import TaskBoard from './TaskBoard';
 import ToolsHub from './ToolsHub';
@@ -14,13 +15,14 @@ import IdeationHub from './ideation/IdeationHub';
 import ThoughtsTab from './ThoughtsTab';
 import MilestonesTab from './MilestonesTab';
 import BuildTab from './BuildTab';
-import { base44 } from "@/api/base44Client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, isCollaborator, isProjectOwner }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'overview');
+  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'build');
+  const [tasks, setTasks] = useState([]);
+  const [milestones, setMilestones] = useState([]);
   const tabsContainerRef = useRef(null);
   const scrollPositionRef = useRef(0);
   const [tabPresence, setTabPresence] = useState({});
@@ -73,6 +75,13 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
       console.warn('Failed to fetch tab presence:', error);
     }
   };
+
+  // Load tasks and milestones for AI assistant context
+  useEffect(() => {
+    if (!project?.id) return;
+    base44.entities.Task.filter({ project_id: project.id }).then(setTasks).catch(() => {});
+    base44.entities.ProjectMilestone.filter({ project_id: project.id }).then(setMilestones).catch(() => {});
+  }, [project?.id]);
 
   // Poll for tab presence updates
   useEffect(() => {
@@ -354,6 +363,8 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
                   currentUser={currentUser}
                   isCollaborator={isCollaborator}
                   isProjectOwner={isProjectOwner}
+                  tasks={tasks}
+                  milestones={milestones}
                 />
               </div>
             )}

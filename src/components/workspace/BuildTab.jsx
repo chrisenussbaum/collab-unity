@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import ProjectAIAssistant from "./ProjectAIAssistant";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -1094,7 +1095,7 @@ Use this context to give highly specific, actionable advice tailored to THIS exa
 
 // ─── Main BuildTab ─────────────────────────────────────────────────────────
 
-export default function BuildTab({ project, currentUser, isCollaborator, isProjectOwner }) {
+export default function BuildTab({ project, currentUser, isCollaborator, isProjectOwner, tasks = [], milestones = [] }) {
   const canEdit = isCollaborator || isProjectOwner;
   const storageKey = `cu_build_${project?.id}`;
 
@@ -1565,6 +1566,14 @@ export default function BuildTab({ project, currentUser, isCollaborator, isProje
           ))}
         </CardContent>
       </Card>
+
+      {/* ── AI Project Assistant ── */}
+      <ProjectAIAssistant
+        project={project}
+        tasks={tasks}
+        milestones={milestones}
+        defaultOpen={true}
+      />
 
       {/* ── Build Notes (always visible, persisted) ── */}
       <Card className="cu-card">
