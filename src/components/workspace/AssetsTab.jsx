@@ -7,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { FileStack, Plus, Upload, Trash2, ExternalLink, Link as LinkIcon, Download, File, Clock, FileText, MoreVertical, Edit, User as UserIcon, User, Eye, CheckSquare, Square, Tag, X } from "lucide-react";
+import { FileStack, Plus, Upload, Trash2, ExternalLink, Link as LinkIcon, Download, File, Clock, FileText, MoreVertical, Edit, User as UserIcon, User, Eye, CheckSquare, Square, Tag, X, LayoutGrid, List } from "lucide-react";
 import AssetPreviewModal from "./AssetPreviewModal";
+import AssetsGalleryView from "./AssetsGalleryView";
 import TagInput from "./TagInput";
 import BulkEditAssetsDialog from "./BulkEditAssetsDialog";
 import { AssetVersion, ActivityLog, User as UserEntity } from "@/entities/all";
@@ -52,6 +53,7 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
   const [selectedAssetIds, setSelectedAssetIds] = useState(new Set());
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [selectedTags, setSelectedTags] = useState([]); // multi-tag filter
+  const [viewMode, setViewMode] = useState("gallery"); // "gallery" | "list"
 
   const [formData, setFormData] = useState({
     asset_name: "",
@@ -546,12 +548,31 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
             <FileStack className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-purple-600" />
             Project Assets
           </CardTitle>
-          {isCollaborator && (
-            <Button onClick={handleOpenUploadDialog} className="cu-button w-full sm:w-auto">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Asset
-            </Button>
-          )}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* View toggle */}
+            <div className="flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
+              <button
+                onClick={() => setViewMode("gallery")}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === "gallery" ? "bg-white shadow text-purple-600" : "text-gray-400 hover:text-gray-600"}`}
+                title="Gallery view"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-white shadow text-purple-600" : "text-gray-400 hover:text-gray-600"}`}
+                title="List view"
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+            {isCollaborator && (
+              <Button onClick={handleOpenUploadDialog} className="cu-button flex-1 sm:flex-none">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Asset
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {/* Category Filter */}
@@ -649,7 +670,7 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
             </div>
           )}
 
-          {/* Assets List */}
+          {/* Assets */}
           {filteredAssets.length === 0 ? (
             <div className="text-center py-12">
               <FileStack className="w-16 h-16 mx-auto text-gray-300 mb-4" />
@@ -657,6 +678,16 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
                 {selectedCategory === "all" ? "No assets uploaded yet" : `No assets in "${selectedCategory}" category.`}
               </p>
             </div>
+          ) : viewMode === "gallery" ? (
+            <AssetsGalleryView
+              assets={filteredAssets}
+              isCollaborator={isCollaborator}
+              selectedAssetIds={selectedAssetIds}
+              onToggleSelect={toggleSelectAsset}
+              onPreview={(asset) => setPreviewAsset(asset)}
+              onEdit={handleEditAsset}
+              onDelete={(asset) => setDeletingAsset(asset)}
+            />
           ) : (
             <div className="space-y-3 sm:space-y-4">
               <AnimatePresence>
@@ -821,6 +852,7 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
       </Card>
 
       {/* Upload Modal */}
+
       <Dialog open={showUploadModal} onOpenChange={setShowUploadModal}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
