@@ -150,8 +150,10 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
   const [slashFilter, setSlashFilter] = useState("");
   const [slashIndex, setSlashIndex] = useState(0);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [attachedFiles, setAttachedFiles] = useState([]); // files queued for AI analysis
+  const [attachedFiles, setAttachedFiles] = useState([]);
   const [analyzingFiles, setAnalyzingFiles] = useState(false);
+  // Tracks when we're awaiting a follow-up argument for a slash command
+  const [pendingCommand, setPendingCommand] = useState(null); // e.g. "task" | "milestone" | "note"
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const analyzeFileInputRef = useRef(null);
@@ -324,6 +326,26 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
     const userText = (text || input).trim();
     if (!userText || isLoading) return;
 
+    // ── Handle pending command follow-up (e.g. after "/task" with no arg) ──
+    if (pendingCommand) {
+      const cmd = pendingCommand;
+      setPendingCommand(null);
+      setInput("");
+      const userMsg = { role: "user", content: userText, sender_email: currentUser?.email, sender_name: currentUser?.full_name };
+      setMessages(prev => [...prev, userMsg]);
+      await persistMessage(userMsg);
+      if (cmd === "task") {
+        await handleSlashTask(userText);
+        if (onProjectUpdate) onProjectUpdate();
+      } else if (cmd === "milestone") {
+        await handleSlashMilestone(userText);
+        if (onProjectUpdate) onProjectUpdate();
+      } else if (cmd === "note") {
+        await handleSlashNote(userText);
+      }
+      return;
+    }
+
     // ── Handle slash commands ──
     if (userText.startsWith("/")) {
       const [cmd, ...rest] = userText.split(/\s+/);
@@ -337,26 +359,31 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
         setMessages(prev => [...prev, userMsg]);
         await persistMessage(userMsg);
         if (!arg) {
+          setPendingCommand("task");
           await addAndPersist({ role: "assistant", content: "What should the task be called? Reply with the task title." });
           return;
         }
         await handleSlashTask(arg);
+        if (onProjectUpdate) onProjectUpdate();
         return;
       }
       if (cmd === "/milestone") {
         setMessages(prev => [...prev, userMsg]);
         await persistMessage(userMsg);
         if (!arg) {
+          setPendingCommand("milestone");
           await addAndPersist({ role: "assistant", content: "What should the milestone be called? Reply with the milestone name." });
           return;
         }
         await handleSlashMilestone(arg);
+        if (onProjectUpdate) onProjectUpdate();
         return;
       }
       if (cmd === "/note") {
         setMessages(prev => [...prev, userMsg]);
         await persistMessage(userMsg);
         if (!arg) {
+          setPendingCommand("note");
           await addAndPersist({ role: "assistant", content: "What would you like to note? Reply with the note content." });
           return;
         }
@@ -701,6 +728,19 @@ Be specific, reference the actual content you observe, and tie your feedback to 
           </div>
         )}
 
+        {/* Pending command indicator */}
+        {pendingCommand && (
+          <div className="mb-2 flex items-center gap-2 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg text-xs text-purple-700 font-medium">
+            <Zap className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>
+              Next message will <strong>create a {pendingCommand}</strong> — type the {pendingCommand === "task" ? "task title" : pendingCommand === "milestone" ? "milestone name" : "note content"} and press Enter
+            </span>
+            <button onClick={() => setPendingCommand(null)} className="ml-auto text-purple-400 hover:text-purple-600">
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+
         <div className="flex gap-2 items-end">
           {canEdit && (
             <div className="flex flex-col gap-1 pb-0.5">
@@ -726,7 +766,11 @@ Be specific, reference the actual content you observe, and tie your feedback to 
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder={canEdit ? "Ask anything, type / for commands, or attach a file to analyze... (↵ send, ⇧↵ newline)" : "Ask anything about your project... (↵ to send)"}
+            placeholder={
+              pendingCommand
+                ? `Type the ${pendingCommand === "task" ? "task title" : pendingCommand === "milestone" ? "milestone name" : "note content"} and press Enter...`
+                : canEdit ? "Ask anything, type / for commands, or attach a file to analyze... (↵ send, ⇧↵ newline)" : "Ask anything about your project... (↵ to send)"
+            }
             rows={1}
             className="resize-none text-sm min-h-[38px] max-h-[120px] flex-1"
             style={{ overflowY: input.split("\n").length > 2 ? "auto" : "hidden" }}

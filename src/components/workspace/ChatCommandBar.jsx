@@ -225,6 +225,7 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
           assigned_to: t.assigned_to?.trim() || undefined,
         })));
         toast.success(`${valid.length} task${valid.length > 1 ? "s" : ""} created!`);
+        if (onProjectUpdate) onProjectUpdate();
       }
 
       else if (activeCommand === "milestone") {
@@ -238,6 +239,7 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
           due_date: m.due_date || undefined,
         })));
         toast.success(`${valid.length} milestone${valid.length > 1 ? "s" : ""} created!`);
+        if (onProjectUpdate) onProjectUpdate();
       }
 
       else if (activeCommand === "note") {
@@ -249,6 +251,7 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
           last_edited_by: currentUser.email,
         });
         toast.success("Note saved!");
+        if (onProjectUpdate) onProjectUpdate();
       }
 
       else if (activeCommand === "tool") {
