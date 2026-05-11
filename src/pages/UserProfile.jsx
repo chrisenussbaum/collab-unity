@@ -18,7 +18,6 @@ import { Label } from "@/components/ui/label";
 import ProfileCompletionBanner from "../components/ProfileCompletionBanner";
 import VoiceIntroButton from "../components/profile/VoiceIntroButton";
 import VoicePlayButton from "../components/profile/VoicePlayButton";
-import ProfileViewStats from "../components/profile/ProfileViewStats";
 import UserProfileSkeleton from "../components/skeletons/UserProfileSkeleton";
 import UserProjectsList from "../components/profile/UserProjectsList";
 import FollowingProjectsList from "../components/profile/FollowingProjectsList";
@@ -1310,10 +1309,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                             <span className="text-sm sm:text-base">{profileUser.location}</span>
                           </div>
                         )}
-                        <ProfileViewStats
-                          profileViews={profileUser?.profile_views || 0}
-                          projectViews={profileUser?.project_views || 0}
-                        />
                         {!isOwner && propCurrentUser && (
                           <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-3">
                             <Button

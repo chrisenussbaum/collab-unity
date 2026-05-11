@@ -47,7 +47,6 @@ import WorkspaceTabs from "@/components/workspace/WorkspaceTabs";
 import ProjectHighlights from "../components/project/ProjectHighlights";
 import ProjectAnalyticsDashboard from "../components/project/ProjectAnalyticsDashboard";
 import ClickableImage from "../components/ClickableImage";
-import ContextualSearchAssistant from "../components/workspace/ContextualSearchAssistant";
 
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion"; // Added motion for banner animation
@@ -1052,7 +1051,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                   currentUser={currentUser}
                   onProjectUpdate={handleProjectUpdate}
                 />
-                <ContextualSearchAssistant project={project} />
                 <SocialsPanel
                   socialLinks={project.social_links || {}}
                   onUpdate={handleUpdateSocialLinks}
@@ -1514,7 +1512,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                   currentUser={currentUser}
                   onProjectUpdate={handleProjectUpdate}
                 />
-                <ContextualSearchAssistant project={project} />
                 <CommunicationsPanel 
                   project={project}
                   isCollaborator={userCanContribute}
