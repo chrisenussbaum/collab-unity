@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Project, ProjectApplaud, ProjectApplication, Notification, FeedPost, FeedPostApplaud } from "@/entities/all";
+import { Project, ProjectApplaud, Notification, FeedPost, FeedPostApplaud } from "@/entities/all";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -70,14 +70,8 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
   const [selectedProjectLink, setSelectedProjectLink] = useState(null);
   const [showLinkPreview, setShowLinkPreview] = useState(false);
   const [showFundingDialog, setShowFundingDialog] = useState(false);
-  const [showApplyDialog, setShowApplyDialog] = useState(false);
-  const [applyMessage, setApplyMessage] = useState("");
-  const [hasApplied, setHasApplied] = useState(false);
-  const [isApplying, setIsApplying] = useState(false);
 
   const isOwnProject = currentUser && project.created_by === currentUser.email;
-  const isCollaborator = currentUser && project.collaborator_emails?.includes(currentUser.email);
-  const isProjectOpen = project.status === 'seeking_collaborators';
 
   const statusConfig = {
     seeking_collaborators: { color: "border-orange-500", icon: <Users className="w-3 h-3 mr-1 text-orange-500" />, label: "Seeking Collaborators" },
@@ -115,31 +109,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
     if (currentUser?.followed_projects) setIsFollowing(currentUser.followed_projects.includes(project.id));
     setFollowersCount(project.followers_count || 0);
   }, [currentUser, project.id, project.followers_count]);
-
-  useEffect(() => {
-    const checkApplication = async () => {
-      if (!currentUser || isOwnProject || isCollaborator) return;
-      try {
-        const apps = await ProjectApplication.filter({ project_id: project.id, applicant_email: currentUser.email });
-        setHasApplied(apps.length > 0);
-      } catch {}
-    };
-    checkApplication();
-  }, [currentUser, project.id]);
-
-  const handleApply = async () => {
-    if (!currentUser || isOwnProject || isCollaborator || hasApplied) return;
-    setIsApplying(true);
-    try {
-      await ProjectApplication.create({ project_id: project.id, applicant_email: currentUser.email, message: applyMessage, status: 'pending' });
-      Notification.create({ user_email: project.created_by, title: "New project application!", message: `${currentUser.full_name || currentUser.email} applied to join "${project.title}".`, type: "project_application", related_project_id: project.id, actor_email: currentUser.email, actor_name: currentUser.full_name || currentUser.email, metadata: { project_title: project.title } }).catch(console.error);
-      setHasApplied(true);
-      setShowApplyDialog(false);
-      setApplyMessage("");
-      toast.success("Application sent!");
-    } catch { toast.error("Failed to send application."); }
-    finally { setIsApplying(false); }
-  };
 
   const handleFollow = async (e) => {
     e.preventDefault(); e.stopPropagation();
@@ -227,24 +196,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showApplyDialog} onOpenChange={setShowApplyDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Users className="w-5 h-5 text-purple-600" />Apply to Join</DialogTitle>
-            <DialogDescription>Send an application to collaborate on <span className="font-semibold">{project.title}</span>.</DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <textarea value={applyMessage} onChange={e => setApplyMessage(e.target.value)} placeholder="Tell the project owner why you'd like to join and what you bring to the team (optional)..." className="w-full border border-gray-200 rounded-lg p-3 text-sm resize-none h-28 focus:outline-none focus:ring-2 focus:ring-purple-400" />
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowApplyDialog(false)}>Cancel</Button>
-            <Button onClick={handleApply} disabled={isApplying} style={{ background: 'var(--cu-primary)' }} className="text-white">
-              {isApplying ? "Sending..." : "Send Application"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <Dialog open={showAllLinksDialog} onOpenChange={setShowAllLinksDialog}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="flex items-center"><LinkIcon className="w-5 h-5 mr-2 text-purple-600" />All Project Links</DialogTitle><DialogDescription>Explore all {project.project_urls?.length} links for this project</DialogDescription></DialogHeader>
@@ -303,6 +254,11 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
+                {currentUser && !isOwnProject && (
+                  <Button variant="ghost" size="icon" className={`h-9 w-9 ${isFollowing ? 'text-purple-600 hover:text-purple-700 bg-purple-50' : 'text-gray-400 hover:text-purple-600 hover:bg-purple-50'}`} onClick={handleFollow} title={isFollowing ? "Unfollow project" : "Follow for updates"}>
+                    {isFollowing ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
+                  </Button>
+                )}
                 <Button variant="ghost" size="icon" onClick={handleShare} className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 h-9 w-9" title="Share project"><Share2 className="w-4 h-4" /></Button>
               </div>
             </div>
@@ -425,25 +381,16 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
 
           <CardFooter className="bg-gray-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-t border-gray-200">
             <div className="w-full">
-              <div className="flex justify-around pb-4 border-b flex-wrap gap-y-1">
+              <div className="flex justify-around pb-4 border-b">
                 <Button variant="ghost" size="sm" className={`flex items-center space-x-2 transition-colors cu-text-responsive-sm ${isApplauded ? 'text-purple-600 hover:text-purple-700' : 'text-gray-600 hover:text-purple-600'}`} onClick={handleApplaud}>
                   <HandHeart className="cu-icon-sm" /><span className="hidden sm:inline">Applaud</span>
                   {applaudCount > 0 && <span className="cu-text-responsive-xs bg-gray-200 px-2 py-1 rounded-full ml-1">{applaudCount}</span>}
                 </Button>
-                <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-gray-600 cu-text-responsive-sm" onClick={() => commentsRef.current?.toggle()}>
-                  <MessageCircle className="cu-icon-sm" /><span className="hidden sm:inline">Comment</span>
-                </Button>
-                {currentUser && !isOwnProject && !isCollaborator && (
-                  <Button variant="ghost" size="sm" className={`flex items-center space-x-2 cu-text-responsive-sm transition-colors ${isFollowing ? 'text-purple-600 hover:text-purple-700' : 'text-gray-600 hover:text-purple-600'}`} onClick={handleFollow} title={isFollowing ? "Unfollow" : "Follow for updates"}>
-                    {isFollowing ? <BookmarkCheck className="cu-icon-sm" /> : <Bookmark className="cu-icon-sm" />}
-                    <span className="hidden sm:inline">{isFollowing ? "Following" : "Follow"}</span>
+                <div className="flex-1 flex justify-center">
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-gray-600 cu-text-responsive-sm" onClick={() => commentsRef.current?.toggle()}>
+                    <MessageCircle className="cu-icon-sm" /><span className="hidden sm:inline">Comment</span>
                   </Button>
-                )}
-                {currentUser && !isOwnProject && !isCollaborator && isProjectOpen && (
-                  <Button variant="ghost" size="sm" className={`flex items-center space-x-2 cu-text-responsive-sm transition-colors ${hasApplied ? 'text-green-600' : 'text-gray-600 hover:text-green-600'}`} onClick={() => !hasApplied && setShowApplyDialog(true)} title={hasApplied ? "Already applied" : "Apply to join"} disabled={hasApplied}>
-                    <Users className="cu-icon-sm" /><span className="hidden sm:inline">{hasApplied ? "Applied" : "Apply"}</span>
-                  </Button>
-                )}
+                </div>
                 <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors cu-text-responsive-sm" onClick={handleFund} disabled={!project.paypal_link && !project.venmo_link && !project.cashapp_link}>
                   <DollarSign className="cu-icon-sm" /><span className="hidden sm:inline">Fund</span>
                 </Button>
@@ -513,8 +460,6 @@ export default function Feed({ currentUser, authIsLoading }) {
   const [filterIndustry, setFilterIndustry] = useState("");
   const [filterArea, setFilterArea] = useState("");
   const [filterType, setFilterType] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
-  const [filterSkill, setFilterSkill] = useState("");
 
   const location = useLocation();
   const highlightedItemIdRef = useRef(null);
@@ -641,25 +586,19 @@ export default function Feed({ currentUser, authIsLoading }) {
     const industries = new Set();
     const areas = new Set();
     const types = new Set();
-    const statuses = new Set();
-    const skills = new Set();
     projects.forEach(p => {
       if (p.industry) industries.add(p.industry);
       if (p.area_of_interest) areas.add(p.area_of_interest);
       if (p.project_type) types.add(p.project_type);
-      if (p.status) statuses.add(p.status);
-      if (p.skills_needed) p.skills_needed.forEach(s => skills.add(s));
     });
     return {
       industries: [...industries].sort(),
       areas: [...areas].sort(),
       types: [...types].sort(),
-      statuses: [...statuses].sort(),
-      skills: [...skills].sort(),
     };
   }, [projects]);
 
-  const hasActiveFilters = filterIndustry || filterArea || filterType || filterStatus || filterSkill;
+  const hasActiveFilters = filterIndustry || filterArea || filterType;
 
   const displayedItems = React.useMemo(() => {
     let filtered = allFeedItems;
@@ -676,10 +615,8 @@ export default function Feed({ currentUser, authIsLoading }) {
     if (filterIndustry) filtered = filtered.filter(item => item.itemType !== 'project' || item.industry === filterIndustry);
     if (filterArea) filtered = filtered.filter(item => item.itemType !== 'project' || item.area_of_interest === filterArea);
     if (filterType) filtered = filtered.filter(item => item.itemType !== 'project' || item.project_type === filterType);
-    if (filterStatus) filtered = filtered.filter(item => item.itemType !== 'project' || item.status === filterStatus);
-    if (filterSkill) filtered = filtered.filter(item => item.itemType !== 'project' || item.skills_needed?.includes(filterSkill));
     return filtered.slice(0, displayedItemsCount);
-  }, [allFeedItems, searchQuery, filterIndustry, filterArea, filterType, filterStatus, filterSkill, displayedItemsCount]);
+  }, [allFeedItems, searchQuery, filterIndustry, filterArea, filterType, displayedItemsCount]);
 
   useEffect(() => {
     const checkUserProjects = async () => {
@@ -746,7 +683,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                   <Input type="text" placeholder="Search posts and projects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-white" />
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </motion.div>
-                <FeedFilterBar filterOptions={filterOptions} filterIndustry={filterIndustry} setFilterIndustry={setFilterIndustry} filterArea={filterArea} setFilterArea={setFilterArea} filterType={filterType} setFilterType={setFilterType} filterStatus={filterStatus} setFilterStatus={setFilterStatus} filterSkill={filterSkill} setFilterSkill={setFilterSkill} hasActiveFilters={hasActiveFilters} onClearFilters={() => { setFilterIndustry(""); setFilterArea(""); setFilterType(""); setFilterStatus(""); setFilterSkill(""); }} />
+                <FeedFilterBar filterOptions={filterOptions} filterIndustry={filterIndustry} setFilterIndustry={setFilterIndustry} filterArea={filterArea} setFilterArea={setFilterArea} filterType={filterType} setFilterType={setFilterType} hasActiveFilters={hasActiveFilters} onClearFilters={() => { setFilterIndustry(""); setFilterArea(""); setFilterType(""); }} />
               </>
             )}
             <FeedList {...feedListProps} />
@@ -772,7 +709,7 @@ export default function Feed({ currentUser, authIsLoading }) {
             <Input type="text" placeholder="Search posts and projects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-white" />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           </div>
-          <FeedFilterBar filterOptions={filterOptions} filterIndustry={filterIndustry} setFilterIndustry={setFilterIndustry} filterArea={filterArea} setFilterArea={setFilterArea} filterType={filterType} setFilterType={setFilterType} filterStatus={filterStatus} setFilterStatus={setFilterStatus} filterSkill={filterSkill} setFilterSkill={setFilterSkill} hasActiveFilters={hasActiveFilters} onClearFilters={() => { setFilterIndustry(""); setFilterArea(""); setFilterType(""); setFilterStatus(""); setFilterSkill(""); }} />
+          <FeedFilterBar filterOptions={filterOptions} filterIndustry={filterIndustry} setFilterIndustry={setFilterIndustry} filterArea={filterArea} setFilterArea={setFilterArea} filterType={filterType} setFilterType={setFilterType} hasActiveFilters={hasActiveFilters} onClearFilters={() => { setFilterIndustry(""); setFilterArea(""); setFilterType(""); }} />
           <FeedList {...feedListProps} />
         </div>
       </div>
