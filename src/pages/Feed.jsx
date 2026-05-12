@@ -16,8 +16,10 @@ import {
 import {
   MessageCircle, Share2, Users, CheckCircle, Clock, Camera, Search, MapPin,
   Link as LinkIcon, Tag, Building2, ChevronLeft, ChevronRight, Sparkles, Plus,
-  Lightbulb, Bookmark, BookmarkCheck, ExternalLink, DollarSign, CreditCard, Wallet, HandHeart
+  Lightbulb, Bookmark, BookmarkCheck, ExternalLink, DollarSign, CreditCard, Wallet, HandHeart,
+  SlidersHorizontal, X
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { base44 } from "@/api/base44Client";
@@ -35,6 +37,7 @@ import OptimizedAvatar from "@/components/OptimizedAvatar";
 import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
 import FeedPostSkeleton from "@/components/skeletons/FeedPostSkeleton";
 import FeedPostItem from "@/components/feed/FeedPostItem";
+import FeedFilterBar from "@/components/feed/FeedFilterBar";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -454,6 +457,9 @@ export default function Feed({ currentUser, authIsLoading }) {
   const [showFirstProjectPrompt, setShowFirstProjectPrompt] = useState(false);
   const [userProjectCount, setUserProjectCount] = useState(null);
   const [showCreatePostDialog, setShowCreatePostDialog] = useState(false);
+  const [filterIndustry, setFilterIndustry] = useState("");
+  const [filterArea, setFilterArea] = useState("");
+  const [filterType, setFilterType] = useState("");
 
   const location = useLocation();
   const highlightedItemIdRef = useRef(null);
@@ -575,11 +581,30 @@ export default function Feed({ currentUser, authIsLoading }) {
     if (postIds.length > 0) { try { const r = await withRetry(() => FeedPostApplaud.filter({ feed_post_id: { $in: postIds } })); if (r) setFeedPostApplauds(r); } catch (e) { console.error(e); } }
   }, [projects, feedPosts]);
 
+  // Derive unique filter options from loaded projects
+  const filterOptions = React.useMemo(() => {
+    const industries = new Set();
+    const areas = new Set();
+    const types = new Set();
+    projects.forEach(p => {
+      if (p.industry) industries.add(p.industry);
+      if (p.area_of_interest) areas.add(p.area_of_interest);
+      if (p.project_type) types.add(p.project_type);
+    });
+    return {
+      industries: [...industries].sort(),
+      areas: [...areas].sort(),
+      types: [...types].sort(),
+    };
+  }, [projects]);
+
+  const hasActiveFilters = filterIndustry || filterArea || filterType;
+
   const displayedItems = React.useMemo(() => {
     let filtered = allFeedItems;
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = allFeedItems.filter(item => {
+      filtered = filtered.filter(item => {
         if (item.itemType === 'project') {
           return item.title?.toLowerCase().includes(query) || item.description?.toLowerCase().includes(query) || item.location?.toLowerCase().includes(query) || item.industry?.toLowerCase().includes(query) || item.area_of_interest?.toLowerCase().includes(query) || item.skills_needed?.some(s => s.toLowerCase().includes(query));
         } else {
@@ -587,8 +612,11 @@ export default function Feed({ currentUser, authIsLoading }) {
         }
       });
     }
+    if (filterIndustry) filtered = filtered.filter(item => item.itemType !== 'project' || item.industry === filterIndustry);
+    if (filterArea) filtered = filtered.filter(item => item.itemType !== 'project' || item.area_of_interest === filterArea);
+    if (filterType) filtered = filtered.filter(item => item.itemType !== 'project' || item.project_type === filterType);
     return filtered.slice(0, displayedItemsCount);
-  }, [allFeedItems, searchQuery, displayedItemsCount]);
+  }, [allFeedItems, searchQuery, filterIndustry, filterArea, filterType, displayedItemsCount]);
 
   useEffect(() => {
     const checkUserProjects = async () => {
@@ -655,6 +683,7 @@ export default function Feed({ currentUser, authIsLoading }) {
                   <Input type="text" placeholder="Search posts and projects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-white" />
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </motion.div>
+                <FeedFilterBar filterOptions={filterOptions} filterIndustry={filterIndustry} setFilterIndustry={setFilterIndustry} filterArea={filterArea} setFilterArea={setFilterArea} filterType={filterType} setFilterType={setFilterType} hasActiveFilters={hasActiveFilters} onClearFilters={() => { setFilterIndustry(""); setFilterArea(""); setFilterType(""); }} />
               </>
             )}
             <FeedList {...feedListProps} />
@@ -676,10 +705,11 @@ export default function Feed({ currentUser, authIsLoading }) {
               </Link>
             </>
           )}
-          <div className="relative mb-6">
+          <div className="relative mb-3">
             <Input type="text" placeholder="Search posts and projects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-white" />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           </div>
+          <FeedFilterBar filterOptions={filterOptions} filterIndustry={filterIndustry} setFilterIndustry={setFilterIndustry} filterArea={filterArea} setFilterArea={setFilterArea} filterType={filterType} setFilterType={setFilterType} hasActiveFilters={hasActiveFilters} onClearFilters={() => { setFilterIndustry(""); setFilterArea(""); setFilterType(""); }} />
           <FeedList {...feedListProps} />
         </div>
       </div>
