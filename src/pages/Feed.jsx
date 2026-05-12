@@ -312,32 +312,17 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
                     {project.project_urls.length > 3 && (<Button variant="outline" size="sm" onClick={() => setShowAllLinksDialog(true)} className="w-full"><LinkIcon className="w-4 h-4 mr-2" />View All {project.project_urls.length} Showcase Links</Button>)}
                   </div>
                 ) : (() => {
-                  const linkItem = project.project_urls[0];
-                  const url = typeof linkItem === 'object' ? linkItem.url : linkItem;
-                  const title = typeof linkItem === 'object' ? linkItem.title : '';
-                  return (
-                    <a href={url} target="_blank" rel="noopener noreferrer" className="block">
-                      <div className="flex-shrink-0 w-full max-w-md mx-auto">
-                        <Card className="cu-card bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden border-2 border-gray-100 hover:border-green-300 group">
-                          <div className="p-4">
-                            <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                              <Badge className="bg-green-100 text-green-700 flex items-center gap-1"><LinkIcon className="w-3 h-3" />Published</Badge>
-                              <img src={getFaviconUrl(url)} alt="" className="w-5 h-5 object-contain" onError={(e) => e.currentTarget.style.display='none'} />
-                            </div>
-                            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-3">
-                              <div className="bg-gray-900 px-3 py-2 flex items-center justify-between"><div className="flex items-center space-x-1"><span className="w-2 h-2 rounded-full bg-red-500"></span><span className="w-2 h-2 rounded-full bg-yellow-500"></span><span className="w-2 h-2 rounded-full bg-green-500"></span></div><span className="text-[10px] text-gray-400">{getDomain(url)}</span></div>
-                              <div className="aspect-video bg-white flex items-center justify-center p-6 group-hover:bg-gray-50 transition-colors">
-                                <div className="text-center"><img src={getFaviconUrl(url)} alt="" className="w-20 h-20 mx-auto mb-3 object-contain" onError={(e) => e.currentTarget.style.display='none'} />{title && <p className="text-base font-bold text-gray-900 mb-1 line-clamp-2 px-2">{title}</p>}<p className="text-xs text-gray-500 mt-1">Click to visit</p></div>
-                              </div>
-                            </div>
-                            <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-green-600 transition-colors">{title || getDomain(url)}</h4>
-                            <p className="text-xs text-gray-500">Click anywhere to visit this site</p>
-                          </div>
-                        </Card>
-                      </div>
-                    </a>
-                  );
-                })()}
+                   const linkItem = project.project_urls[0];
+                   const url = typeof linkItem === 'object' ? linkItem.url : linkItem;
+                   const title = typeof linkItem === 'object' ? linkItem.title : '';
+                   return (
+                     <MicrolinkPreview
+                       url={url}
+                       title={title || ''}
+                       className="w-full max-w-md mx-auto"
+                     />
+                   );
+                 })()}
               </div>
             )}
 
