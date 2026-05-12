@@ -64,37 +64,57 @@ export default function LearningHub({ currentUser }) {
     return matchesSearch && matchesCategory;
   });
 
-  const handleAiSearch = async () => {
-    if (!aiTopic.trim()) return;
+  const handleAiSearch = async (topicOverride) => {
+    const topic = (topicOverride || aiTopic).trim();
+    if (!topic) return;
+    if (topicOverride) setAiTopic(topicOverride);
     setAiLoading(true);
     setAiResults([]);
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a learning resource curator for a collaborative project platform. 
-      The user wants to learn about: "${aiTopic}".
-      Suggest 4 real, specific learning resources (articles, videos, courses, books) that would be helpful.
-      For each, provide: title, url (a real plausible url), platform (YouTube/Coursera/etc), format (Video/Article/Course/Book), a one-sentence description, and whether it's free (true/false).`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          resources: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                title: { type: "string" },
-                url: { type: "string" },
-                platform: { type: "string" },
-                format: { type: "string" },
-                description: { type: "string" },
-                free: { type: "boolean" }
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a learning resource curator for a collaborative project platform.
+The user wants to learn about: "${topic}".
+Suggest 6 real, specific learning resources (articles, videos, courses, books) that would be genuinely helpful.
+Use well-known platforms: YouTube, Coursera, Udemy, freeCodeCamp, MDN, Khan Academy, Harvard OpenCourseWare, edX, Skillshare, Medium, dev.to, etc.
+For each resource provide: title, url (a real existing URL), platform, format (one of: Video, Article, Course, Book, Workshop), a one-sentence description, and free (true/false).
+Only return resources you are confident actually exist.`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            resources: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  url: { type: "string" },
+                  platform: { type: "string" },
+                  format: { type: "string" },
+                  description: { type: "string" },
+                  free: { type: "boolean" }
+                }
               }
             }
           }
         }
+      });
+      const found = result?.resources || [];
+      if (found.length === 0) {
+        toast.error("No resources found for that topic. Try rephrasing.");
       }
-    });
-    setAiResults(result?.resources || []);
-    setAiLoading(false);
+      setAiResults(found);
+    } catch (err) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  // When the main search bar has a query that yields no local results, offer AI search
+  const handleMainSearchAI = () => {
+    handleAiSearch(searchQuery);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -132,20 +152,32 @@ export default function LearningHub({ currentUser }) {
               {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
             </Button>
           </div>
+          {aiLoading && (
+            <div className="mt-4 flex items-center gap-3 text-sm text-purple-700">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Searching the web for resources on "{aiTopic}"…
+            </div>
+          )}
           {aiResults.length > 0 && (
-            <div className="mt-4 grid sm:grid-cols-2 gap-3">
-              {aiResults.map((r, i) => (
-                <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="bg-white rounded-lg border border-purple-100 p-3 hover:border-purple-400 transition-colors group">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-medium text-sm text-gray-900 group-hover:text-purple-700 line-clamp-1">{r.title}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{r.platform} · {r.format} · {r.free ? "Free" : "Paid"}</p>
-                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">{r.description}</p>
+            <div className="mt-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Results for "{aiTopic}"</p>
+                <button onClick={() => setAiResults([])} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Clear</button>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {aiResults.map((r, i) => (
+                  <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="bg-white rounded-lg border border-purple-100 p-3 hover:border-purple-400 transition-colors group">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-medium text-sm text-gray-900 group-hover:text-purple-700 line-clamp-1">{r.title}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{r.platform} · {r.format} · {r.free ? "Free" : "Paid"}</p>
+                        <p className="text-xs text-gray-600 mt-1 line-clamp-2">{r.description}</p>
+                      </div>
+                      <ExternalLink className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
                     </div>
-                    <ExternalLink className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                  </div>
-                </a>
-              ))}
+                  </a>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -209,7 +241,18 @@ export default function LearningHub({ currentUser }) {
         {filtered.length === 0 && (
           <div className="text-center py-16 text-gray-500">
             <BookOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p className="font-medium">No resources found. Try the AI finder above!</p>
+            <p className="font-medium mb-2">No resources found for "{searchQuery}".</p>
+            {searchQuery && (
+              <Button
+                onClick={handleMainSearchAI}
+                disabled={aiLoading}
+                style={{ background: "var(--cu-primary)" }}
+                className="text-white mt-2"
+              >
+                {aiLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                Find with AI
+              </Button>
+            )}
           </div>
         )}
       </div>
