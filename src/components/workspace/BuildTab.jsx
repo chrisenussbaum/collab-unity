@@ -186,6 +186,44 @@ const WELCOME_MESSAGE = (title, taskCount, milestoneCount) => ({
   isWelcome: true,
 });
 
+// Context-aware suggested next actions after the AI finishes a task
+function getContextualFollowUps(tasks, milestones, lastAssistantMessage) {
+  const hasTasks = tasks?.length > 0;
+  const hasMilestones = milestones?.length > 0;
+  const hasUnassigned = tasks?.some(t => !t.assigned_to && t.status !== "done");
+  const hasOverdue = tasks?.some(t => t.due_date && isPast(parseISO(t.due_date)) && t.status !== "done");
+  const msg = lastAssistantMessage?.toLowerCase() || "";
+
+  const suggestions = [];
+
+  // Detect what was just done and suggest logical next step
+  if (msg.includes("task") && msg.includes("created")) {
+    if (!hasMilestones) suggestions.push({ label: "Now break this into milestones", icon: Flag });
+    if (hasUnassigned) suggestions.push({ label: "Assign these tasks to collaborators", icon: Users });
+    suggestions.push({ label: "What should I work on first?", icon: Target });
+  } else if (msg.includes("milestone") && msg.includes("created")) {
+    if (!hasTasks) suggestions.push({ label: "Create tasks for the first milestone", icon: CheckSquare });
+    suggestions.push({ label: "Set target dates for milestones", icon: Map });
+  } else if (msg.includes("plan") || msg.includes("step-by-step")) {
+    suggestions.push({ label: "Create tasks from this plan", icon: CheckSquare });
+    suggestions.push({ label: "Add milestones for each phase", icon: Flag });
+  } else if (msg.includes("brief") || msg.includes("summary")) {
+    suggestions.push({ label: "Build a task breakdown", icon: CheckSquare });
+    suggestions.push({ label: "Identify potential blockers", icon: AlertTriangle });
+  } else if (msg.includes("brainstorm") || msg.includes("idea")) {
+    suggestions.push({ label: "Turn these ideas into tasks", icon: CheckSquare });
+    suggestions.push({ label: "Create a plan from these ideas", icon: Map });
+  }
+
+  // Always-relevant fallbacks
+  if (hasOverdue && suggestions.length < 2) suggestions.push({ label: "Review overdue tasks", icon: AlertTriangle });
+  if (!hasMilestones && suggestions.length < 2) suggestions.push({ label: "Add milestones to this project", icon: Flag });
+  if (suggestions.length < 2) suggestions.push({ label: "What should I focus on next?", icon: Target });
+  if (suggestions.length < 3) suggestions.push({ label: "Write a project brief", icon: FileText });
+
+  return suggestions.slice(0, 3);
+}
+
 // Execute a single AI action against the backend
 async function executeAction(action, project, currentUser, onProjectUpdate) {
   if (!project?.id || !currentUser) return null;
@@ -247,12 +285,17 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
   const [analyzingFiles, setAnalyzingFiles] = useState(false);
   // Tracks when we're awaiting a follow-up argument for a slash command
   const [pendingCommand, setPendingCommand] = useState(null); // e.g. "task" | "milestone" | "note"
+  // Whether AI is in "conversational flow" and should show continue/stop buttons
+  const [awaitingContinue, setAwaitingContinue] = useState(false);
+  const [pendingFollowUp, setPendingFollowUp] = useState(null); // next suggested prompt
+  const [shouldAutoAnalyze, setShouldAutoAnalyze] = useState(false);
+  const hasAutoAnalyzedRef = useRef(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const analyzeFileInputRef = useRef(null);
   const dragCounterRef = useRef(0);
 
-  // Load persisted chat history
+  // Load persisted chat history, then auto-analyze if no history exists
   useEffect(() => {
     if (!project?.id) return;
     base44.entities.ProjectChatMessage.filter({ project_id: project.id }, "created_date", 100)
@@ -267,8 +310,16 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
             sender_email: r.sender_email,
           }));
           setMessages([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0), ...loaded]);
+          setHistoryLoaded(true);
+        } else {
+          // No history — trigger auto-analysis after a brief delay
+          setHistoryLoaded(true);
+          if (!hasAutoAnalyzedRef.current) {
+            hasAutoAnalyzedRef.current = true;
+            // Use a ref-safe approach — set a flag and let an effect handle it
+            setShouldAutoAnalyze(true);
+          }
         }
-        setHistoryLoaded(true);
       })
       .catch(() => setHistoryLoaded(true));
   }, [project?.id]);
@@ -285,6 +336,42 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
       is_error: msg.isError || false,
     });
   }, [project?.id, currentUser]);
+
+  // Auto-analysis: called once when project first opens with no chat history
+  const triggerAutoAnalysis = useCallback(async () => {
+    if (!project?.id) return;
+    setIsLoading(true);
+    try {
+      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers);
+      const analysisRequest = `Analyze the current state of this project. Summarize what exists (tasks, milestones, assets, collaborators), identify the most important next steps, and end with ONE specific question asking what the user wants to work on first. Be concise and conversational. Respond with valid JSON only.`;
+      const raw = await base44.integrations.Core.InvokeLLM({ prompt: `${systemPrompt}\n\n${analysisRequest}` });
+      let parsed = null;
+      try {
+        const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+        parsed = JSON.parse(cleaned);
+      } catch {
+        parsed = { message: raw, actions: [] };
+      }
+      const msg = { role: "assistant", content: parsed?.message || raw };
+      setMessages(prev => [...prev, msg]);
+      await persistMessage(msg);
+      // Prime the follow-up flow
+      setAwaitingContinue(true);
+      setPendingFollowUp("continue");
+    } catch {
+      // Silently fail — welcome message is still shown
+    } finally {
+      setIsLoading(false);
+    }
+  }, [project, tasks, milestones, assets, projectUsers, persistMessage]);
+
+  // Trigger auto-analysis once history confirms no messages
+  useEffect(() => {
+    if (shouldAutoAnalyze) {
+      setShouldAutoAnalyze(false);
+      setTimeout(() => triggerAutoAnalysis(), 800);
+    }
+  }, [shouldAutoAnalyze, triggerAutoAnalysis]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -527,6 +614,11 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
             finalContent += `\n\n---\n**Actions taken:**\n${actionResults.join("\n")}`;
           }
           await addAndPersist({ role: "assistant", content: finalContent });
+          if (actionResults.length > 0 || actions.length > 0) {
+            const followUps = getContextualFollowUps(tasks, milestones, finalContent);
+            setPendingFollowUp(followUps[0]?.label || "What else would you like to do?");
+            setAwaitingContinue(true);
+          }
         } catch {
           await addAndPersist({ role: "assistant", content: "Sorry, I ran into an issue. Please try again.", isError: true });
         } finally {
@@ -582,6 +674,12 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
       }
 
       await addAndPersist({ role: "assistant", content: finalContent });
+      // After executing actions, prompt to continue
+      if (actionResults.length > 0 || actions.length > 0) {
+        const followUps = getContextualFollowUps(tasks, milestones, finalContent);
+        setPendingFollowUp(followUps[0]?.label || "What else would you like to do?");
+        setAwaitingContinue(true);
+      }
     } catch (e) {
       await addAndPersist({ role: "assistant", content: "Sorry, I ran into an issue. Please try again.", isError: true });
     } finally {
@@ -756,6 +854,7 @@ Be specific, reference the actual content you observe, and tie your feedback to 
                   projectUsers={projectUsers}
                   onProjectUpdate={onProjectUpdate}
                   onSaved={() => {}}
+                  onAIAction={(prompt) => { setAwaitingContinue(false); sendMessage(prompt); }}
                 />
               )}
             </div>
@@ -779,12 +878,64 @@ Be specific, reference the actual content you observe, and tie your feedback to 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Quick Prompts */}
-      {messages.length <= 1 && (
+      {/* Continue / Stop flow — shown after AI executes actions */}
+      {awaitingContinue && !isLoading && (
+        <div className="px-3 py-2.5 bg-purple-50 border-t border-purple-100">
+          <p className="text-xs text-purple-600 font-medium mb-2">
+            {pendingFollowUp === "continue"
+              ? "Would you like me to continue helping with this project?"
+              : `Want to continue? I suggest: **${pendingFollowUp}**`}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => {
+                setAwaitingContinue(false);
+                sendMessage(pendingFollowUp === "continue"
+                  ? "Yes, what should we work on next?"
+                  : pendingFollowUp);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-full text-xs font-medium transition-colors"
+            >
+              ✓ Yes, continue
+            </button>
+            <button
+              onClick={() => {
+                setAwaitingContinue(false);
+                setPendingFollowUp(null);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-300 text-gray-600 rounded-full text-xs font-medium transition-colors"
+            >
+              ✕ No, stop for now
+            </button>
+            {/* Show contextual alternatives */}
+            {getContextualFollowUps(tasks, milestones, messages[messages.length - 1]?.content).slice(0, 2).map((s) => {
+              const Icon = s.icon;
+              return (
+                <button
+                  key={s.label}
+                  onClick={() => { setAwaitingContinue(false); sendMessage(s.label); }}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white hover:bg-purple-50 border border-purple-200 text-purple-700 rounded-full text-xs font-medium transition-colors"
+                >
+                  <Icon className="w-3 h-3" />
+                  {s.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Quick Prompts — shown on fresh chat or after stop */}
+      {messages.length <= 1 && !awaitingContinue && (
         <div className="px-3 py-2 bg-white border-t border-gray-100">
           <p className="text-xs text-gray-400 mb-2 font-medium">Quick actions</p>
           <div className="flex flex-wrap gap-1.5">
-            {getQuickPrompts(tasks, milestones).map((qp) => {
+            {[
+              ...getQuickPrompts(tasks, milestones),
+              { label: "Brainstorm ideas", icon: Lightbulb },
+              { label: "Write a project brief", icon: FileText },
+              { label: "Create a full plan", icon: Map },
+            ].slice(0, 6).map((qp) => {
               const Icon = qp.icon;
               return (
                 <button

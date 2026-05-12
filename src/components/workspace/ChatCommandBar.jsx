@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckSquare, Flag, BookOpen, Wrench, X, Check, Zap, ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import { CheckSquare, Flag, BookOpen, Wrench, X, Check, Zap, ChevronDown, ChevronUp, Plus, Trash2, Lightbulb, Map, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -138,15 +138,22 @@ const TOOL_URLS = {
 };
 
 const COMMANDS = [
-  { id: "task",      label: "Create Task",    icon: CheckSquare, color: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100" },
-  { id: "milestone", label: "Add Milestone",  icon: Flag,        color: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100" },
-  { id: "note",      label: "Save Note",      icon: BookOpen,    color: "bg-green-50 text-green-700 border-green-200 hover:bg-green-100" },
-  { id: "tool",      label: "Add Tool",       icon: Wrench,      color: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100" },
+  { id: "task",       label: "Create Task",    icon: CheckSquare, color: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100" },
+  { id: "milestone",  label: "Add Milestone",  icon: Flag,        color: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100" },
+  { id: "note",       label: "Save Note",      icon: BookOpen,    color: "bg-green-50 text-green-700 border-green-200 hover:bg-green-100" },
+  { id: "tool",       label: "Add Tool",       icon: Wrench,      color: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100" },
+];
+
+// AI action chips — these send a prompt to the AI
+const AI_ACTIONS = [
+  { id: "brainstorm", label: "Brainstorm",  icon: Lightbulb, prompt: "Brainstorm creative ideas for this project. Be specific and actionable.",        color: "bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100" },
+  { id: "plan",       label: "Make a Plan", icon: Map,       prompt: "Create a step-by-step action plan for this project.",                             color: "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100" },
+  { id: "brief",      label: "Write Brief", icon: FileText,  prompt: "Write a concise project brief summarizing goals, audience, deliverables, and timeline.", color: "bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100" },
 ];
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function ChatCommandBar({ project, currentUser, messageContent, projectUsers = [], onSaved, onProjectUpdate }) {
+export default function ChatCommandBar({ project, currentUser, messageContent, projectUsers = [], onSaved, onProjectUpdate, onAIAction }) {
   const [activeCommand, setActiveCommand] = useState(null);
   const [saving, setSaving] = useState(false);
   const [savedCommands, setSavedCommands] = useState(new Set());
@@ -285,6 +292,17 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
     <div className="mt-2">
       {/* Command chips */}
       <div className="flex flex-wrap gap-1.5">
+        {/* AI action chips */}
+        {onAIAction && AI_ACTIONS.map(action => (
+          <button
+            key={action.id}
+            onClick={() => onAIAction(action.prompt)}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-medium transition-all ${action.color}`}
+          >
+            <action.icon className="w-3 h-3" />
+            {action.label}
+          </button>
+        ))}
         {COMMANDS.map(cmd => {
           const Icon = cmd.icon;
           const saved = savedCommands.has(cmd.id);
