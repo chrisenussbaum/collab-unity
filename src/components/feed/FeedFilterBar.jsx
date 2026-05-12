@@ -13,10 +13,12 @@ export default function FeedFilterBar({
   filterIndustry, setFilterIndustry,
   filterArea, setFilterArea,
   filterType, setFilterType,
+  filterStatus, setFilterStatus,
+  filterSkill, setFilterSkill,
   hasActiveFilters, onClearFilters
 }) {
   if (!filterOptions) return null;
-  const hasOptions = filterOptions.industries.length > 0 || filterOptions.areas.length > 0 || filterOptions.types.length > 0;
+  const hasOptions = filterOptions.industries.length > 0 || filterOptions.areas.length > 0 || filterOptions.types.length > 0 || filterOptions.statuses.length > 0 || filterOptions.skills.length > 0;
   if (!hasOptions) return null;
 
   return (
@@ -26,6 +28,20 @@ export default function FeedFilterBar({
           <SlidersHorizontal className="w-3.5 h-3.5" />
           <span>Filter:</span>
         </div>
+
+        {filterOptions.statuses.length > 0 && (
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="h-8 text-xs w-40 bg-white">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={null}>All Statuses</SelectItem>
+              {filterOptions.statuses.map(s => (
+                <SelectItem key={s} value={s}>{formatLabel(s)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
 
         {filterOptions.types.length > 0 && (
           <Select value={filterType} onValueChange={setFilterType}>
@@ -64,6 +80,20 @@ export default function FeedFilterBar({
               <SelectItem value={null}>All Areas</SelectItem>
               {filterOptions.areas.map(a => (
                 <SelectItem key={a} value={a}>{formatLabel(a)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        {filterOptions.skills.length > 0 && (
+          <Select value={filterSkill} onValueChange={setFilterSkill}>
+            <SelectTrigger className="h-8 text-xs w-36 bg-white">
+              <SelectValue placeholder="Skill" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={null}>All Skills</SelectItem>
+              {filterOptions.skills.map(s => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
               ))}
             </SelectContent>
           </Select>
