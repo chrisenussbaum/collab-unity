@@ -82,6 +82,7 @@ import {
 
 import ProjectLinksManager from "../components/ProjectLinksManager";
 import CollaboratorPresence from "../components/CollaboratorPresence";
+import MicrolinkPreview from "../components/MicrolinkPreview";
 
 
 // Add Hat icon component after imports - LIGHTER VERSION
@@ -1327,51 +1328,17 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                         showArrows={project.project_urls.length > 1}
                       >
                         {project.project_urls.map((linkItem, index) => {
-                          const linkUrl = typeof linkItem === 'object' ? linkItem.url : linkItem;
-                          const linkTitle = typeof linkItem === 'object' ? linkItem.title : '';
-                          return (
-                            <a
-                              key={index}
-                              href={linkUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex-shrink-0 w-[280px] sm:w-[320px] block group"
-                            >
-                              <Card className="cu-card bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden h-full">
-                                <div className="p-3">
-                                  <div className="flex items-center justify-between text-xs text-gray-500 mb-2 px-2">
-                                    <div className="flex items-center space-x-1.5">
-                                      <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                                      <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-                                      <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                                    </div>
-                                    <div className="flex-1 text-center bg-white rounded-md mx-3 py-0.5 truncate text-[10px] sm:text-xs">
-                                      {getLinkDomain(linkUrl)}
-                                    </div>
-                                  </div>
-                                  <div className="relative aspect-video bg-white rounded-lg flex items-center justify-center overflow-hidden border">
-                                    <div className="text-center p-4">
-                                      <img 
-                                        src={getFaviconUrl(linkUrl)} 
-                                        alt="Favicon" 
-                                        className="w-10 h-10 mx-auto mb-2" 
-                                        onError={(e) => e.currentTarget.style.display = 'none'} 
-                                      />
-                                      {linkTitle && (
-                                        <p className="font-bold text-base text-gray-900 mb-1">{linkTitle}</p>
-                                      )}
-                                      <p className="font-semibold text-sm text-gray-800">{linkTitle ? 'Showcase' : 'Showcase'}</p>
-                                      <p className="text-xs text-gray-500 mt-1">Click to visit</p>
-                                    </div>
-                                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                      <LinkIcon className="w-6 h-6 text-black/50" />
-                                    </div>
-                                  </div>
-                                </div>
-                              </Card>
-                            </a>
-                          );
-                        })}
+                           const linkUrl = typeof linkItem === 'object' ? linkItem.url : linkItem;
+                           const linkTitle = typeof linkItem === 'object' ? linkItem.title : '';
+                           return (
+                             <MicrolinkPreview
+                               key={index}
+                               url={linkUrl}
+                               title={linkTitle || ''}
+                               className="flex-shrink-0 w-[280px] sm:w-[320px]"
+                             />
+                           );
+                         })}
                       </HorizontalScrollContainer>
 
                       {project.project_urls.length > 3 && (
