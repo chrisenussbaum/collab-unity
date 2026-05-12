@@ -1319,9 +1319,13 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {project.project_urls && project.project_urls.length === 1 ? (
-                    <ProjectLinkPreview linkData={typeof project.project_urls[0] === 'object' ? project.project_urls[0] : { url: project.project_urls[0] }} />
-                  ) : project.project_urls && project.project_urls.length > 1 ? (
+                   {project.project_urls && project.project_urls.length === 1 ? (
+                     <MicrolinkPreview
+                       url={typeof project.project_urls[0] === 'object' ? project.project_urls[0].url : project.project_urls[0]}
+                       title={typeof project.project_urls[0] === 'object' ? project.project_urls[0].title : ''}
+                       className="w-full max-w-md mx-auto"
+                     />
+                   ) : project.project_urls && project.project_urls.length > 1 ? (
                     <div className="space-y-3">
                       <HorizontalScrollContainer
                         className="pb-2"
