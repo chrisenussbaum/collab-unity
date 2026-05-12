@@ -1,0 +1,37 @@
+{
+  "name": "LearningResource",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "format": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "difficulty": {
+      "type": "string"
+    },
+    "duration": {
+      "type": "string"
+    },
+    "free": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "title",
+    "url",
+    "category",
+    "format"
+  ]
+}

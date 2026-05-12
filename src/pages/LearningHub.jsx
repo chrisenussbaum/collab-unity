@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,8 +50,15 @@ export default function LearningHub({ currentUser }) {
   const [aiTopic, setAiTopic] = useState("");
   const [aiResults, setAiResults] = useState([]);
   const [aiLoading, setAiLoading] = useState(false);
+  const [resources, setResources] = useState(RESOURCES);
 
-  const filtered = RESOURCES.filter(r => {
+  useEffect(() => {
+    base44.entities.LearningResource.list().then(data => {
+      if (data && data.length > 0) setResources(data);
+    }).catch(() => {});
+  }, []);
+
+  const filtered = resources.filter(r => {
     const matchesSearch = !searchQuery || r.title.toLowerCase().includes(searchQuery.toLowerCase()) || r.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "All" || r.category === selectedCategory;
     return matchesSearch && matchesCategory;

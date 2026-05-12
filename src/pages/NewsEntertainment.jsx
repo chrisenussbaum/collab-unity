@@ -7,6 +7,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tv, Search, ExternalLink, Loader2, Flame, Globe, Lightbulb, Briefcase, Palette, Cpu, Music, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 
+const FALLBACK_NEWS_SOURCES = [
+  { name: "TechCrunch", url: "https://techcrunch.com", category: "Tech", description: "Startup and technology news", color: "bg-green-50 border-green-200" },
+  { name: "The Verge", url: "https://theverge.com", category: "Tech", description: "Tech, science, art & culture", color: "bg-blue-50 border-blue-200" },
+  { name: "Fast Company", url: "https://fastcompany.com", category: "Business", description: "Business, innovation & design", color: "bg-orange-50 border-orange-200" },
+  { name: "Hacker News", url: "https://news.ycombinator.com", category: "Tech", description: "Top tech & startup discussions", color: "bg-amber-50 border-amber-200" },
+  { name: "Dezeen", url: "https://dezeen.com", category: "Design", description: "Architecture & design inspiration", color: "bg-pink-50 border-pink-200" },
+  { name: "Variety", url: "https://variety.com", category: "Entertainment", description: "Film, TV & entertainment news", color: "bg-purple-50 border-purple-200" },
+  { name: "Billboard", url: "https://billboard.com", category: "Entertainment", description: "Music charts & artist news", color: "bg-red-50 border-red-200" },
+  { name: "ESPN", url: "https://espn.com", category: "Sports", description: "Live scores & sports news", color: "bg-yellow-50 border-yellow-200" },
+  { name: "Science Daily", url: "https://sciencedaily.com", category: "Science", description: "Latest scientific discoveries", color: "bg-teal-50 border-teal-200" },
+  { name: "Wired", url: "https://wired.com", category: "Tech", description: "Future of technology & culture", color: "bg-indigo-50 border-indigo-200" },
+  { name: "Harvard Business Review", url: "https://hbr.org", category: "Business", description: "Management & business insights", color: "bg-slate-50 border-slate-200" },
+  { name: "Awwwards", url: "https://awwwards.com", category: "Design", description: "Award-winning web design", color: "bg-rose-50 border-rose-200" },
+];
+
 const CATEGORIES = [
   { label: "All", icon: Globe },
   { label: "Tech", icon: Cpu },
@@ -37,21 +52,6 @@ const VIDEOS = [
 // Curated news feeds by category
 const getFavicon = (url) => `https://www.google.com/s2/favicons?domain=${url}&sz=64`;
 
-const NEWS_SOURCES = [
-  { name: "TechCrunch", url: "https://techcrunch.com", category: "Tech", description: "Startup and technology news", color: "bg-green-50 border-green-200" },
-  { name: "The Verge", url: "https://theverge.com", category: "Tech", description: "Tech, science, art & culture", color: "bg-blue-50 border-blue-200" },
-  { name: "Fast Company", url: "https://fastcompany.com", category: "Business", description: "Business, innovation & design", color: "bg-orange-50 border-orange-200" },
-  { name: "Hacker News", url: "https://news.ycombinator.com", category: "Tech", description: "Top tech & startup discussions", color: "bg-amber-50 border-amber-200" },
-  { name: "Dezeen", url: "https://dezeen.com", category: "Design", description: "Architecture & design inspiration", color: "bg-pink-50 border-pink-200" },
-  { name: "Variety", url: "https://variety.com", category: "Entertainment", description: "Film, TV & entertainment news", color: "bg-purple-50 border-purple-200" },
-  { name: "Billboard", url: "https://billboard.com", category: "Entertainment", description: "Music charts & artist news", color: "bg-red-50 border-red-200" },
-  { name: "ESPN", url: "https://espn.com", category: "Sports", description: "Live scores & sports news", color: "bg-yellow-50 border-yellow-200" },
-  { name: "Science Daily", url: "https://sciencedaily.com", category: "Science", description: "Latest scientific discoveries", color: "bg-teal-50 border-teal-200" },
-  { name: "Wired", url: "https://wired.com", category: "Tech", description: "Future of technology & culture", color: "bg-indigo-50 border-indigo-200" },
-  { name: "Harvard Business Review", url: "https://hbr.org", category: "Business", description: "Management & business insights", color: "bg-slate-50 border-slate-200" },
-  { name: "Awwwards", url: "https://awwwards.com", category: "Design", description: "Award-winning web design", color: "bg-rose-50 border-rose-200" },
-];
-
 export default function NewsEntertainment({ currentUser }) {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -59,6 +59,13 @@ export default function NewsEntertainment({ currentUser }) {
   const [aiHeadlines, setAiHeadlines] = useState([]);
   const [loadingHeadlines, setLoadingHeadlines] = useState(false);
   const [headlinesFetched, setHeadlinesFetched] = useState(false);
+  const [newsSources, setNewsSources] = useState(FALLBACK_NEWS_SOURCES);
+
+  useEffect(() => {
+    base44.entities.NewsSource.list().then(data => {
+      if (data && data.length > 0) setNewsSources(data);
+    }).catch(() => {});
+  }, []);
 
   const fetchAiHeadlines = async () => {
     setLoadingHeadlines(true);
@@ -89,7 +96,7 @@ export default function NewsEntertainment({ currentUser }) {
     setHeadlinesFetched(true);
   };
 
-  const filteredSources = NEWS_SOURCES.filter(s => {
+  const filteredSources = newsSources.filter(s => {
     const matchesCategory = selectedCategory === "All" || s.category === selectedCategory;
     const matchesSearch = !searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
