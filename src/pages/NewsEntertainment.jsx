@@ -63,7 +63,7 @@ export default function NewsEntertainment({ currentUser }) {
   const fetchAiHeadlines = async () => {
     setLoadingHeadlines(true);
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a news curator. Generate 8 realistic, engaging trending headlines from today (${new Date().toDateString()}) across tech, business, design, entertainment, and science. Make them feel current, specific, and relevant to creators and entrepreneurs.`,
+      prompt: `You are a news curator. Generate 8 realistic, engaging trending headlines from today (${new Date().toDateString()}) across tech, business, design, entertainment, and science. Make them feel current, specific, and relevant to creators and entrepreneurs. For each headline, include a real URL to the actual article or a search URL on the source's website.`,
       add_context_from_internet: true,
       response_json_schema: {
         type: "object",
@@ -76,7 +76,8 @@ export default function NewsEntertainment({ currentUser }) {
                 headline: { type: "string" },
                 category: { type: "string" },
                 summary: { type: "string" },
-                source: { type: "string" }
+                source: { type: "string" },
+                url: { type: "string" }
               }
             }
           }
@@ -177,14 +178,22 @@ export default function NewsEntertainment({ currentUser }) {
             <div className="grid sm:grid-cols-2 gap-3">
               {aiHeadlines.map((item, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                  <div className="bg-white rounded-lg border border-purple-100 p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge className={`text-xs ${categoryHeadlineColors[item.category] || "bg-gray-100 text-gray-700"}`}>{item.category}</Badge>
-                      {item.source && <span className="text-xs text-gray-400">{item.source}</span>}
+                  <a
+                    href={item.url || `https://www.google.com/search?q=${encodeURIComponent(item.headline)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block group"
+                  >
+                    <div className="bg-white rounded-lg border border-purple-100 p-3 hover:border-purple-300 hover:shadow-sm transition-all cursor-pointer">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge className={`text-xs ${categoryHeadlineColors[item.category] || "bg-gray-100 text-gray-700"}`}>{item.category}</Badge>
+                        {item.source && <span className="text-xs text-gray-400">{item.source}</span>}
+                        <ExternalLink className="w-3 h-3 text-gray-300 group-hover:text-purple-400 ml-auto transition-colors" />
+                      </div>
+                      <p className="text-sm font-semibold text-gray-900 leading-snug mb-1 group-hover:text-purple-700 transition-colors">{item.headline}</p>
+                      <p className="text-xs text-gray-500 line-clamp-2">{item.summary}</p>
                     </div>
-                    <p className="text-sm font-semibold text-gray-900 leading-snug mb-1">{item.headline}</p>
-                    <p className="text-xs text-gray-500 line-clamp-2">{item.summary}</p>
-                  </div>
+                  </a>
                 </motion.div>
               ))}
             </div>
