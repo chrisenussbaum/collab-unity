@@ -35,19 +35,21 @@ const VIDEOS = [
 ];
 
 // Curated news feeds by category
+const getFavicon = (url) => `https://www.google.com/s2/favicons?domain=${url}&sz=64`;
+
 const NEWS_SOURCES = [
-  { name: "TechCrunch", url: "https://techcrunch.com", category: "Tech", description: "Startup and technology news", icon: "💻", color: "bg-green-50 border-green-200" },
-  { name: "The Verge", url: "https://theverge.com", category: "Tech", description: "Tech, science, art & culture", icon: "⚡", color: "bg-blue-50 border-blue-200" },
-  { name: "Fast Company", url: "https://fastcompany.com", category: "Business", description: "Business, innovation & design", icon: "🚀", color: "bg-orange-50 border-orange-200" },
-  { name: "Hacker News", url: "https://news.ycombinator.com", category: "Tech", description: "Top tech & startup discussions", icon: "🔥", color: "bg-amber-50 border-amber-200" },
-  { name: "Dezeen", url: "https://dezeen.com", category: "Design", description: "Architecture & design inspiration", icon: "🎨", color: "bg-pink-50 border-pink-200" },
-  { name: "Variety", url: "https://variety.com", category: "Entertainment", description: "Film, TV & entertainment news", icon: "🎬", color: "bg-purple-50 border-purple-200" },
-  { name: "Billboard", url: "https://billboard.com", category: "Entertainment", description: "Music charts & artist news", icon: "🎵", color: "bg-red-50 border-red-200" },
-  { name: "ESPN", url: "https://espn.com", category: "Sports", description: "Live scores & sports news", icon: "🏆", color: "bg-yellow-50 border-yellow-200" },
-  { name: "Science Daily", url: "https://sciencedaily.com", category: "Science", description: "Latest scientific discoveries", icon: "🔬", color: "bg-teal-50 border-teal-200" },
-  { name: "Wired", url: "https://wired.com", category: "Tech", description: "Future of technology & culture", icon: "🌐", color: "bg-indigo-50 border-indigo-200" },
-  { name: "Harvard Business Review", url: "https://hbr.org", category: "Business", description: "Management & business insights", icon: "📊", color: "bg-slate-50 border-slate-200" },
-  { name: "Awwwards", url: "https://awwwards.com", category: "Design", description: "Award-winning web design", icon: "🏅", color: "bg-rose-50 border-rose-200" },
+  { name: "TechCrunch", url: "https://techcrunch.com", category: "Tech", description: "Startup and technology news", color: "bg-green-50 border-green-200" },
+  { name: "The Verge", url: "https://theverge.com", category: "Tech", description: "Tech, science, art & culture", color: "bg-blue-50 border-blue-200" },
+  { name: "Fast Company", url: "https://fastcompany.com", category: "Business", description: "Business, innovation & design", color: "bg-orange-50 border-orange-200" },
+  { name: "Hacker News", url: "https://news.ycombinator.com", category: "Tech", description: "Top tech & startup discussions", color: "bg-amber-50 border-amber-200" },
+  { name: "Dezeen", url: "https://dezeen.com", category: "Design", description: "Architecture & design inspiration", color: "bg-pink-50 border-pink-200" },
+  { name: "Variety", url: "https://variety.com", category: "Entertainment", description: "Film, TV & entertainment news", color: "bg-purple-50 border-purple-200" },
+  { name: "Billboard", url: "https://billboard.com", category: "Entertainment", description: "Music charts & artist news", color: "bg-red-50 border-red-200" },
+  { name: "ESPN", url: "https://espn.com", category: "Sports", description: "Live scores & sports news", color: "bg-yellow-50 border-yellow-200" },
+  { name: "Science Daily", url: "https://sciencedaily.com", category: "Science", description: "Latest scientific discoveries", color: "bg-teal-50 border-teal-200" },
+  { name: "Wired", url: "https://wired.com", category: "Tech", description: "Future of technology & culture", color: "bg-indigo-50 border-indigo-200" },
+  { name: "Harvard Business Review", url: "https://hbr.org", category: "Business", description: "Management & business insights", color: "bg-slate-50 border-slate-200" },
+  { name: "Awwwards", url: "https://awwwards.com", category: "Design", description: "Award-winning web design", color: "bg-rose-50 border-rose-200" },
 ];
 
 export default function NewsEntertainment({ currentUser }) {
@@ -238,7 +240,7 @@ export default function NewsEntertainment({ currentUser }) {
                   <Card className={`cu-card border hover:shadow-md transition-all group ${source.color}`}>
                     <CardContent className="pt-4 pb-4">
                       <div className="flex items-start gap-3">
-                        <span className="text-2xl">{source.icon}</span>
+                        <img src={getFavicon(source.url)} alt={source.name} className="w-8 h-8 rounded object-contain flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
                             <h3 className="font-bold text-gray-900 text-sm group-hover:text-purple-700 transition-colors">{source.name}</h3>
