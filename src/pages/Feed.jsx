@@ -38,6 +38,7 @@ import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
 import FeedPostSkeleton from "@/components/skeletons/FeedPostSkeleton";
 import FeedPostItem from "@/components/feed/FeedPostItem";
 import FeedFilterBar from "@/components/feed/FeedFilterBar";
+import MicrolinkPreview from "@/components/MicrolinkPreview";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -201,25 +202,17 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
           <DialogHeader><DialogTitle className="flex items-center"><LinkIcon className="w-5 h-5 mr-2 text-purple-600" />All Project Links</DialogTitle><DialogDescription>Explore all {project.project_urls?.length} links for this project</DialogDescription></DialogHeader>
           <div className="grid gap-3 py-4">
             {project.project_urls?.map((linkItem, index) => {
-              const url = typeof linkItem === 'object' ? linkItem.url : linkItem;
-              const title = typeof linkItem === 'object' ? linkItem.title : '';
-              return (
-                <a key={index} href={url} target="_blank" rel="noopener noreferrer" className="block group">
-                  <Card className="cu-card bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden">
-                    <div className="p-4">
-                      <div className="flex items-center justify-between text-xs text-gray-500 mb-3 px-2">
-                        <div className="flex items-center space-x-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500"></span><span className="w-2.5 h-2.5 rounded-full bg-yellow-500"></span><span className="w-2.5 h-2.5 rounded-full bg-green-500"></span></div>
-                        <div className="flex-1 text-center bg-white rounded-md mx-4 py-1 truncate">{getDomain(url)}</div>
-                      </div>
-                      <div className="relative aspect-video bg-white rounded-lg flex items-center justify-center overflow-hidden border">
-                        <div className="text-center p-4"><img src={getFaviconUrl(url)} alt="" className="w-16 h-16 mx-auto mb-2 object-contain" onError={(e) => e.currentTarget.style.display='none'} />{title && <p className="text-base font-bold text-gray-900 mb-1 line-clamp-2">{title}</p>}<p className="text-sm text-gray-500 mt-1">Click to visit</p></div>
-                        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><LinkIcon className="w-8 h-8 text-black/50" /></div>
-                      </div>
-                    </div>
-                  </Card>
-                </a>
-              );
-            })}
+               const url = typeof linkItem === 'object' ? linkItem.url : linkItem;
+               const title = typeof linkItem === 'object' ? linkItem.title : '';
+               return (
+                 <MicrolinkPreview
+                   key={index}
+                   url={url}
+                   title={title || ''}
+                   className="block w-full max-w-md"
+                 />
+               );
+             })}
           </div>
         </DialogContent>
       </Dialog>
@@ -307,23 +300,12 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
                         const url = typeof linkItem === 'object' ? linkItem.url : linkItem;
                         const title = typeof linkItem === 'object' ? linkItem.title : '';
                         return (
-                          <a key={index} href={url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[360px] block">
-                            <Card className="cu-card bg-gray-50 hover:bg-gray-100 transition-colors overflow-hidden h-full border-2 border-gray-100 hover:border-green-300 group">
-                              <div className="p-3">
-                                <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-                                  <Badge className="bg-green-100 text-green-700 flex items-center gap-1"><LinkIcon className="w-3 h-3" />Showcase</Badge>
-                                  <img src={getFaviconUrl(url)} alt="" className="w-4 h-4 object-contain" onError={(e) => e.currentTarget.style.display='none'} />
-                                </div>
-                                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-2">
-                                  <div className="bg-gray-900 px-3 py-2 flex items-center justify-between"><div className="flex items-center space-x-1"><span className="w-2 h-2 rounded-full bg-red-500"></span><span className="w-2 h-2 rounded-full bg-yellow-500"></span><span className="w-2 h-2 rounded-full bg-green-500"></span></div><span className="text-[10px] text-gray-400">{getDomain(url)}</span></div>
-                                  <div className="aspect-video bg-white flex items-center justify-center p-4 group-hover:bg-gray-50 transition-colors">
-                                    <div className="text-center"><img src={getFaviconUrl(url)} alt="" className="w-16 h-16 mx-auto mb-2 object-contain" onError={(e) => e.currentTarget.style.display='none'} />{title && <p className="text-sm font-bold text-gray-900 mb-1 line-clamp-2">{title}</p>}<p className="text-[10px] text-gray-500 mt-1">Click to visit</p></div>
-                                  </div>
-                                </div>
-                                <h4 className="font-semibold text-sm text-gray-900 line-clamp-1 group-hover:text-green-600 transition-colors">{title || getDomain(url)}</h4>
-                              </div>
-                            </Card>
-                          </a>
+                          <MicrolinkPreview
+                            key={index}
+                            url={url}
+                            title={title || ''}
+                            className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[360px]"
+                          />
                         );
                       })}
                     </HorizontalScrollContainer>
