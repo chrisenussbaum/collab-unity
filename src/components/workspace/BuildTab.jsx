@@ -72,26 +72,67 @@ const SLASH_COMMANDS = [
 
 // ─── Quick prompts ─────────────────────────────────────────────────────────
 
-function getQuickPrompts(tasks, milestones) {
+function getQuickPrompts(tasks, milestones, assets) {
+  const phase = detectProjectPhase(tasks, milestones, assets);
   const hasTasks = tasks?.length > 0;
   const hasMilestones = milestones?.length > 0;
   const hasUnassigned = tasks?.some(t => !t.assigned_to && t.status !== "done");
   const hasOverdue = tasks?.some(t => t.due_date && isPast(parseISO(t.due_date)) && t.status !== "done");
 
-  const prompts = [];
-  if (!hasTasks && !hasMilestones) prompts.push({ label: "Build a project plan for me", icon: Map });
-  if (!hasTasks) prompts.push({ label: "Create a task breakdown", icon: CheckSquare });
-  if (hasOverdue) prompts.push({ label: "Review overdue tasks", icon: AlertTriangle });
-  if (hasUnassigned) prompts.push({ label: "Assign tasks to collaborators", icon: Users });
-  if (!hasMilestones) prompts.push({ label: "Break this into milestones", icon: Flag });
-  if (hasTasks) prompts.push({ label: "What should I focus on next?", icon: Target });
-  prompts.push({ label: "Suggest tools for this project", icon: Wrench });
-  prompts.push({ label: "Identify blockers", icon: AlertTriangle });
-  prompts.push({ label: "Write a project brief", icon: FileText });
-  return prompts.slice(0, 4);
+  const byPhase = {
+    ideation: [
+      { label: "Help me define this project", icon: Lightbulb },
+      { label: "Build a project plan for me", icon: Map },
+      { label: "What should I build first?", icon: Target },
+      { label: "Write a project brief", icon: FileText },
+    ],
+    planning: [
+      { label: "Create tasks for my first milestone", icon: CheckSquare },
+      { label: "Break milestones into tasks", icon: Flag },
+      { label: "What should I work on first?", icon: Target },
+      { label: "Assign tasks to collaborators", icon: Users },
+    ],
+    early_execution: [
+      { label: "What should I focus on next?", icon: Target },
+      hasUnassigned && { label: "Assign tasks to collaborators", icon: Users },
+      hasOverdue && { label: "Review overdue tasks", icon: AlertTriangle },
+      { label: "Identify blockers", icon: AlertTriangle },
+    ].filter(Boolean),
+    mid_execution: [
+      { label: "What should I focus on next?", icon: Target },
+      hasOverdue && { label: "Review overdue tasks", icon: AlertTriangle },
+      { label: "Generate a standup summary", icon: Users },
+      { label: "Suggest tools to speed things up", icon: Wrench },
+    ].filter(Boolean),
+    near_completion: [
+      { label: "What's left to finish this?", icon: CheckCircle2 },
+      { label: "Write a project wrap-up brief", icon: FileText },
+      { label: "Review remaining tasks", icon: CheckSquare },
+      { label: "Prepare for launch", icon: Rocket },
+    ],
+  };
+
+  return (byPhase[phase] || byPhase.ideation).slice(0, 4);
 }
 
 // ─── Build system prompt ───────────────────────────────────────────────────
+
+// Detect the current project phase based on task/milestone state
+function detectProjectPhase(tasks, milestones, assets) {
+  const hasTasks = tasks?.length > 0;
+  const hasMilestones = milestones?.length > 0;
+  const hasAssets = assets?.length > 0;
+  const doneTasks = tasks?.filter(t => t.status === "done") || [];
+  const totalTasks = tasks?.length || 0;
+  const progress = totalTasks > 0 ? doneTasks.length / totalTasks : 0;
+
+  if (!hasTasks && !hasMilestones) return "ideation";
+  if (hasMilestones && !hasTasks) return "planning";
+  if (hasTasks && progress < 0.3) return "early_execution";
+  if (hasTasks && progress >= 0.3 && progress < 0.8) return "mid_execution";
+  if (hasTasks && progress >= 0.8) return "near_completion";
+  return "planning";
+}
 
 function buildSystemPrompt(project, tasks, milestones, assets, projectUsers) {
   const todoTasks = tasks?.filter(t => t.status === "todo") || [];
@@ -101,6 +142,7 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers) {
   const unassignedTasks = tasks?.filter(t => !t.assigned_to && t.status !== "done") || [];
   const completedMilestones = milestones?.filter(m => m.status === "completed") || [];
   const pendingMilestones = milestones?.filter(m => m.status !== "completed") || [];
+  const phase = detectProjectPhase(tasks, milestones, assets);
 
   const taskProgress = tasks?.length
     ? `${doneTasks.length}/${tasks.length} done (${Math.round((doneTasks.length / tasks.length) * 100)}%)`
@@ -125,9 +167,31 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers) {
     `- ${u.full_name || u.email} (${u.email})`
   );
 
+  // Phase-specific guidance for the AI
+  const phaseGuidance = {
+    ideation: `The project has NO tasks or milestones yet — this is the IDEATION phase. Your primary goal is to help the owner clarify the project vision and convert ideas into an actionable plan. Suggest using the Planning & Ideation tab to brainstorm, then offer to create a task breakdown and milestones from the discussion.`,
+    planning: `The project has milestones but NO tasks — this is the PLANNING phase. Help the user break milestones into concrete, assignable tasks. Ask which milestone to tackle first and offer to create tasks for it.`,
+    early_execution: `The project is in EARLY EXECUTION (less than 30% complete). Focus on momentum: help assign unassigned tasks, resolve blockers, and ensure the team knows what to work on next.`,
+    mid_execution: `The project is in MID EXECUTION. Focus on keeping progress steady: flag overdue items, celebrate completed work, and help prioritize the remaining tasks.`,
+    near_completion: `The project is NEAR COMPLETION (80%+ done). Help the user identify final remaining work, wrap up loose ends, and prepare for launch or handoff. Suggest reviewing assets and writing a final project brief.`,
+  };
+
   const parts = [
-    `You are an intelligent, proactive project assistant embedded inside Collab Unity.`,
-    `You deeply understand this project and act as a smart team member helping drive progress.`,
+    `You are an intelligent, proactive project assistant embedded inside Collab Unity — a collaborative project platform.`,
+    `You deeply understand this project and act as a smart co-pilot driving it from its current state toward completion.`,
+    `\n== WORKSPACE TABS AVAILABLE ==`,
+    `Users can navigate these workspace tabs at any time. When relevant, suggest they switch to a tab by name:`,
+    `- Assistant (AI chat — current view)`,
+    `- Tasks (task board with todo/in_progress/done columns)`,
+    `- Milestones (project phases and goals with target dates)`,
+    `- Assets (files, images, documents, and links)`,
+    `- Planning & Ideation (brainstorming, mind maps, kanban, whiteboard)`,
+    `- Thoughts & Notes (quick notes and saved ideas)`,
+    `- Project Tools (tools and platforms the team is using)`,
+    `- Build Links (GitHub, Figma, deployment links, etc.)`,
+    `- Activity (recent project activity log)`,
+    `\n== CURRENT PROJECT PHASE: ${phase.toUpperCase()} ==`,
+    phaseGuidance[phase],
     `\n== PROJECT CONTEXT ==`,
     `Title: "${project?.title || "Untitled"}"`,
     project?.description ? `Description: ${project.description}` : null,
@@ -148,19 +212,20 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers) {
     collaboratorLines?.length ? `\n== COLLABORATORS ==\n${collaboratorLines.join("\n")}` : null,
     assets?.length ? `\n== ASSETS == (${assets.length} files/links)` : null,
     `\n== YOUR BEHAVIOR ==`,
-    `You are conversational, smart, and proactive. Based on the project state:`,
-    `- If there are NO tasks yet → proactively suggest creating a task breakdown or milestone plan`,
+    `You are conversational, smart, and phase-aware. Always meet the user where they are:`,
+    `- Reference the current phase and what's most important for THIS phase`,
+    `- Suggest specific workspace tabs by name when relevant (e.g. "Head over to the Tasks tab to see your board")`,
     `- If tasks are unassigned → suggest assigning them to collaborators by name`,
     `- If tasks are overdue → flag this and suggest action`,
     `- If milestones are missing → suggest creating them to structure the work`,
     `- If project tools are missing → suggest relevant tools based on project type`,
-    `- If progress is low → motivate and suggest the next most impactful action`,
-    `- If progress is high → celebrate and suggest what comes next`,
-    `\nYou can EXECUTE ACTIONS directly — when a user asks you to create tasks, assign work, add milestones, save notes, etc., DO IT by including an "actions" array in your JSON response.`,
+    `- Always end with one clear next-step question or suggestion to keep momentum`,
+    `\nYou can EXECUTE ACTIONS directly — when a user asks you to create tasks, assign work, add milestones, save notes, etc., DO IT by including an "actions" array in your JSON response. Also include a "navigate_to" field if you want to suggest the user switch to a workspace tab.`,
     `\n== RESPONSE FORMAT ==`,
     `You MUST respond with valid JSON (no markdown code blocks, just raw JSON):`,
     `{`,
     `  "message": "Your conversational response here (use markdown for formatting)",`,
+    `  "navigate_to": "tasks|milestones|assets|ideation|notes|tools|links|activity|null",`,
     `  "actions": [`,
     `    {"type": "create_task", "title": "Task title", "description": "...", "priority": "medium|high|low|urgent", "assigned_to": "email@example.com or null", "due_date": "YYYY-MM-DD or null"},`,
     `    {"type": "create_milestone", "title": "Milestone name", "description": "...", "target_date": "YYYY-MM-DD or null"},`,
@@ -169,22 +234,35 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers) {
     `  ]`,
     `}`,
     `- "actions" can be an empty array [] if no direct actions are needed`,
+    `- "navigate_to" should be null unless you want to redirect the user to a specific tab after your response`,
     `- Only include actions the user actually asked for, or that are obviously needed`,
     `- For assigned_to, use the exact email from the collaborators list above`,
-    `- Keep "message" conversational and reference actual project details`,
+    `- Keep "message" conversational, reference actual project details, and always suggest a clear next step`,
   ];
   return parts.filter(Boolean).join("\n");
 }
 
 // ─── AI Chat component ─────────────────────────────────────────────────────
 
-const WELCOME_MESSAGE = (title, taskCount, milestoneCount) => ({
-  role: "assistant",
-  content: taskCount === 0 && milestoneCount === 0
-    ? `Hey! I'm your project assistant for **${title || "this project"}**. This project doesn't have any tasks or milestones yet — want me to help you build out a plan? Just say "create a plan" or tell me what you're working on, and I'll get things set up.\n\nType **/** for quick commands.`
-    : `Hey! I'm your assistant for **${title || "this project"}**. I can see you have **${taskCount} task${taskCount !== 1 ? "s" : ""}** and **${milestoneCount} milestone${milestoneCount !== 1 ? "s" : ""}**. How can I help drive progress today?\n\nType **/** for quick commands.`,
-  isWelcome: true,
-});
+const WELCOME_MESSAGE = (title, taskCount, milestoneCount, assets) => {
+  const phase = detectProjectPhase(
+    taskCount > 0 ? Array(taskCount).fill({}) : [],
+    milestoneCount > 0 ? Array(milestoneCount).fill({}) : [],
+    assets
+  );
+  const phaseIntros = {
+    ideation: `Hey! I'm your project assistant for **${title || "this project"}**. It looks like you're just getting started — no tasks or milestones yet. Let's shape your idea into a real plan. Tell me what you're building, or say **"create a plan"** and I'll get things rolling.\n\nType **/** for quick commands.`,
+    planning: `Hey! I'm your assistant for **${title || "this project"}**. You have **${milestoneCount} milestone${milestoneCount !== 1 ? "s" : ""}** set up — great start! Let's break them into tasks so your team knows exactly what to do. Want me to create tasks for your first milestone?\n\nType **/** for quick commands.`,
+    early_execution: `Hey! I'm your assistant for **${title || "this project"}**. You're in the early stages with **${taskCount} task${taskCount !== 1 ? "s" : ""}** underway. Let's keep the momentum going — want me to review what's left and suggest what to tackle first?\n\nType **/** for quick commands.`,
+    mid_execution: `Hey! I'm your assistant for **${title || "this project"}**. Good progress on **${title || "this project"}**! With **${taskCount} task${taskCount !== 1 ? "s" : ""}** in flight, let's make sure nothing is falling behind. Want a status check?\n\nType **/** for quick commands.`,
+    near_completion: `Hey! I'm your assistant for **${title || "this project"}**. You're almost there! Most of your tasks are done. Let's focus on wrapping up the remaining work and preparing for launch. Want me to do a final review?\n\nType **/** for quick commands.`,
+  };
+  return {
+    role: "assistant",
+    content: phaseIntros[phase] || phaseIntros.ideation,
+    isWelcome: true,
+  };
+};
 
 // Context-aware suggested next actions after the AI finishes a task
 function getContextualFollowUps(tasks, milestones, lastAssistantMessage) {
@@ -270,8 +348,8 @@ async function executeAction(action, project, currentUser, onProjectUpdate) {
   return null;
 }
 
-function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers, onProjectUpdate }) {
-  const [messages, setMessages] = useState([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0)]);
+function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers, onProjectUpdate, onNavigateTo }) {
+  const [messages, setMessages] = useState([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0, assets)]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -300,16 +378,16 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
     if (!project?.id) return;
     base44.entities.ProjectChatMessage.filter({ project_id: project.id }, "created_date", 100)
       .then(records => {
-        if (records?.length > 0) {
-          const loaded = records.map(r => ({
-            id: r.id,
-            role: r.role,
-            content: r.content,
-            isError: r.is_error,
-            sender_name: r.sender_name,
-            sender_email: r.sender_email,
-          }));
-          setMessages([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0), ...loaded]);
+      if (records?.length > 0) {
+        const loaded = records.map(r => ({
+          id: r.id,
+          role: r.role,
+          content: r.content,
+          isError: r.is_error,
+          sender_name: r.sender_name,
+          sender_email: r.sender_email,
+        }));
+        setMessages([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0, assets), ...loaded]);
           setHistoryLoaded(true);
         } else {
           // No history — trigger auto-analysis after a brief delay
@@ -616,6 +694,9 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
             finalContent += `\n\n---\n**Actions taken:**\n${actionResults.join("\n")}`;
           }
           await addAndPersist({ role: "assistant", content: finalContent });
+          if (parsed?.navigate_to && parsed.navigate_to !== "null" && onNavigateTo) {
+            onNavigateTo(parsed.navigate_to);
+          }
           if (actionResults.length > 0 || actions.length > 0) {
             const followUps = getContextualFollowUps(tasks, milestones, finalContent);
             setPendingFollowUp(followUps[0]?.label || "What else would you like to do?");
@@ -677,6 +758,10 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
       }
 
       await addAndPersist({ role: "assistant", content: finalContent });
+      // Navigate to a tab if the AI suggests it
+      if (parsed?.navigate_to && parsed.navigate_to !== "null" && onNavigateTo) {
+        onNavigateTo(parsed.navigate_to);
+      }
       // After executing actions, prompt to continue
       if (actionResults.length > 0 || actions.length > 0) {
         const followUps = getContextualFollowUps(tasks, milestones, finalContent);
@@ -731,7 +816,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
       const existing = await base44.entities.ProjectChatMessage.filter({ project_id: project.id });
       await Promise.all(existing.map(r => base44.entities.ProjectChatMessage.delete(r.id)));
     } catch {}
-    setMessages([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0)]);
+    setMessages([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0, assets)]);
     setShowClearConfirm(false);
   };
 
@@ -944,12 +1029,7 @@ Be specific, reference the actual content you observe, and tie your feedback to 
         <div className="px-3 py-2 bg-white border-t border-gray-100">
           <p className="text-xs text-gray-400 mb-2 font-medium">Quick actions</p>
           <div className="flex flex-wrap gap-1.5">
-            {[
-              ...getQuickPrompts(tasks, milestones),
-              { label: "Brainstorm ideas", icon: Lightbulb },
-              { label: "Write a project brief", icon: FileText },
-              { label: "Create a full plan", icon: Map },
-            ].slice(0, 6).map((qp) => {
+            {getQuickPrompts(tasks, milestones, assets).map((qp) => {
               const Icon = qp.icon;
               return (
                 <button
@@ -1299,7 +1379,7 @@ export default function BuildTab({
 
           {/* Chat */}
           {activeSection === "chat" && (
-            <AIChat project={project} tasks={tasks} milestones={milestones} assets={assets} currentUser={currentUser} canEdit={canEdit} projectUsers={projectUsers} onProjectUpdate={onProjectUpdate} />
+            <AIChat project={project} tasks={tasks} milestones={milestones} assets={assets} currentUser={currentUser} canEdit={canEdit} projectUsers={projectUsers} onProjectUpdate={onProjectUpdate} onNavigateTo={setActiveSection} />
           )}
 
           {/* Tasks */}
