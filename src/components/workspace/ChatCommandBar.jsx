@@ -289,15 +289,15 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
   };
 
   return (
-    <div className="mt-2">
-      {/* Command chips */}
-      <div className="flex flex-wrap gap-1.5">
+    <div className="mt-2 overflow-hidden">
+      {/* Command chips — horizontal scroll on mobile/tablet */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
         {/* AI action chips */}
         {onAIAction && AI_ACTIONS.map(action => (
           <button
             key={action.id}
             onClick={() => onAIAction(action.prompt)}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-medium transition-all ${action.color}`}
+            className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-medium transition-all ${action.color}`}
           >
             <action.icon className="w-3 h-3" />
             {action.label}
@@ -314,7 +314,7 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
               key={cmd.id}
               onClick={() => openCommand(cmd.id)}
               disabled={saved}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-medium transition-all ${
+              className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-medium transition-all ${
                 saved
                   ? "bg-gray-50 text-gray-400 border-gray-200 cursor-default"
                   : active
