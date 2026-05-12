@@ -66,7 +66,6 @@ import ProjectMembershipManager from "../components/ProjectMembershipManager";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import { UploadFile } from "@/integrations/Core";
 import ProjectFundingCard from "../components/ProjectFundingCard";
-import CommunicationsPanel from '../components/CommunicationsPanel';
 import SocialsPanel from '../components/SocialsPanel';
 import ProjectLinkPreview from "../components/ProjectLinkPreview"; // New import
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer"; // New import
@@ -1454,12 +1453,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
 
 
 
-              {/* Team Communications Panel */}
-              <CommunicationsPanel 
-                project={project}
-                isCollaborator={userCanContribute}
-              />
-
               {/* Project Membership Manager */}
               {(isOwner || isExplicitCollaborator || (userApplication && userApplication.status === 'accepted')) && (
                 <ProjectMembershipManager
@@ -1511,10 +1504,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                   project={project}
                   currentUser={currentUser}
                   onProjectUpdate={handleProjectUpdate}
-                />
-                <CommunicationsPanel 
-                  project={project}
-                  isCollaborator={userCanContribute}
                 />
                 {(isOwner || isExplicitCollaborator || (userApplication && userApplication.status === 'accepted')) && (
                   <ProjectMembershipManager
