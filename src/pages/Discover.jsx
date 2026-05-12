@@ -951,7 +951,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   </div>
                   <div>
                     <p className="font-bold text-gray-900 text-sm">News &amp; Entertainment</p>
-                    <p className="text-xs text-gray-500">Trends, news &amp; videos</p>
+                    <p className="text-xs text-gray-500">Trending news</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-500 ml-auto flex-shrink-0 transition-colors" />
                 </div>
