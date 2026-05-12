@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Clock, CheckCircle, MapPin, Building2, Tag, Eye, Plus, Briefcase, Lightbulb, Sparkles, Filter, X, Bookmark, BookmarkCheck, HandHeart, Camera, Play, ExternalLink } from "lucide-react";
+import { Users, Clock, CheckCircle, MapPin, Building2, Tag, Eye, Plus, Briefcase, Lightbulb, Sparkles, Filter, X, Bookmark, BookmarkCheck, HandHeart, Camera, Play, ExternalLink, MessageSquare, BookOpen, Trophy, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -930,10 +930,47 @@ export default function Discover({ currentUser: propCurrentUser }) {
               Connect with talented professionals, collaborate on meaningful projects,
               and bring your vision to life.
             </p>
-            
 
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link to="/Forums" className="w-full sm:w-auto">
+                <div className="group flex items-center gap-4 bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer text-left w-full">
+                  <div className="w-11 h-11 rounded-xl cu-gradient flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900 text-sm">Community Forums</p>
+                    <p className="text-xs text-gray-500">Ask, discuss &amp; connect</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-500 ml-auto flex-shrink-0 transition-colors" />
+                </div>
+              </Link>
+              <Link to="/LearningHub" className="w-full sm:w-auto">
+                <div className="group flex items-center gap-4 bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer text-left w-full">
+                  <div className="w-11 h-11 rounded-xl cu-gradient flex items-center justify-center flex-shrink-0">
+                    <BookOpen className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900 text-sm">Learning Hub</p>
+                    <p className="text-xs text-gray-500">Courses, videos &amp; AI finder</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-500 ml-auto flex-shrink-0 transition-colors" />
+                </div>
+              </Link>
+              <Link to="/ProjectShowcases" className="w-full sm:w-auto">
+                <div className="group flex items-center gap-4 bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer text-left w-full">
+                  <div className="w-11 h-11 rounded-xl cu-gradient flex items-center justify-center flex-shrink-0">
+                    <Trophy className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900 text-sm">Project Showcases</p>
+                    <p className="text-xs text-gray-500">Get inspired by the community</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-500 ml-auto flex-shrink-0 transition-colors" />
+                </div>
+              </Link>
+            </div>
 
-          </motion.div>
+            </motion.div>
         </div>
       </div>
 

@@ -7,6 +7,9 @@ import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
+import Forums from './pages/Forums';
+import LearningHub from './pages/LearningHub';
+import ProjectShowcases from './pages/ProjectShowcases';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
@@ -60,6 +63,9 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/Forums" element={<LayoutWrapper currentPageName="Forums"><Forums /></LayoutWrapper>} />
+      <Route path="/LearningHub" element={<LayoutWrapper currentPageName="LearningHub"><LearningHub /></LayoutWrapper>} />
+      <Route path="/ProjectShowcases" element={<LayoutWrapper currentPageName="ProjectShowcases"><ProjectShowcases /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
