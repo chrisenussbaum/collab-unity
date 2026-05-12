@@ -939,7 +939,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
                   </div>
                   <div>
                     <p className="font-bold text-gray-900 text-sm">Learning Hub</p>
-                    <p className="text-xs text-gray-500">Courses &amp; videos finder</p>
+                    <p className="text-xs text-gray-500">Courses &amp; videos</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-500 ml-auto flex-shrink-0 transition-colors" />
                 </div>
