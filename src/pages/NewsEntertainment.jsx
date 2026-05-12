@@ -249,10 +249,10 @@ export default function NewsEntertainment({ currentUser }) {
                   <Card className={`cu-card border hover:shadow-md transition-all group overflow-hidden ${source.color}`}>
                     <div className="relative w-full h-32 overflow-hidden bg-gray-100">
                       <img
-                        src={`https://api.screenshotmachine.com?key=demo&url=${encodeURIComponent(source.url)}&dimension=1024x600&format=jpg&delay=2000`}
+                        src={`https://api.microlink.io/?url=${encodeURIComponent(source.url)}&screenshot=true&meta=false&embed=screenshot.url`}
                         alt={`${source.name} preview`}
                         className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                        onError={e => { e.target.style.display = 'none'; e.target.parentElement.classList.add('flex','items-center','justify-center'); }}
+                        onError={e => { e.target.style.display = 'none'; }}
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                     </div>

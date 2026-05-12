@@ -170,10 +170,10 @@ export default function LearningHub({ currentUser }) {
                 <Card className="cu-card h-full flex flex-col hover:border-purple-300 transition-all overflow-hidden group">
                   <div className="relative w-full h-32 overflow-hidden bg-gray-100">
                     <img
-                      src={`https://api.screenshotmachine.com?key=demo&url=${encodeURIComponent(r.url)}&dimension=1024x600&format=jpg&delay=2000`}
+                      src={`https://api.microlink.io/?url=${encodeURIComponent(r.url)}&screenshot=true&meta=false&embed=screenshot.url`}
                       alt={`${r.title} preview`}
                       className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                      onError={e => { e.target.style.display = 'none'; e.target.parentElement.classList.add('flex','items-center','justify-center'); }}
+                      onError={e => { e.target.style.display = 'none'; }}
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                   </div>
