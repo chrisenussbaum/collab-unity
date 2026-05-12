@@ -838,7 +838,7 @@ Be specific, reference the actual content you observe, and tie your feedback to 
                     : "bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm"
               }`}>
                 {msg.role === "assistant" ? (
-                  <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-li:text-gray-800 prose-strong:text-gray-900">
+                  <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-li:text-gray-800 prose-strong:text-gray-900 [&_a]:break-all [&_strong]:break-words break-words">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </div>
                 ) : (
