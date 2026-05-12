@@ -31,7 +31,6 @@ import ProjectActivityIndicator, { isProjectActive } from "@/components/ProjectA
 import OptimizedImage from "@/components/OptimizedImage";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
-import ProjectGuidancePanel from "@/components/ProjectGuidancePanel";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -453,12 +452,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                           )}
                         </Link>
 
-                        {/* Personalized guidance — only for active projects */}
-                        {project.status !== "completed" && (
-                          <div className="mt-4 pt-4 border-t border-gray-100">
-                            <ProjectGuidancePanel project={project} />
-                          </div>
-                        )}
+
                       </CardContent>
                     </Card>
                   </motion.div>
