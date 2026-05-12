@@ -153,7 +153,7 @@ export default function NewsEntertainment({ currentUser }) {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Flame className="w-5 h-5 text-purple-600" />
-              <h2 className="font-bold text-gray-900">Today's AI-Powered Headlines</h2>
+              <h2 className="font-bold text-gray-900">Today's Trending News</h2>
             </div>
             <Button
               onClick={fetchAiHeadlines}
@@ -246,10 +246,19 @@ export default function NewsEntertainment({ currentUser }) {
             ) : filteredSources.map((source, i) => (
               <motion.div key={source.name} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
                 <a href={source.url} target="_blank" rel="noopener noreferrer">
-                  <Card className={`cu-card border hover:shadow-md transition-all group ${source.color}`}>
-                    <CardContent className="pt-4 pb-4">
+                  <Card className={`cu-card border hover:shadow-md transition-all group overflow-hidden ${source.color}`}>
+                    <div className="relative w-full h-32 overflow-hidden bg-gray-100">
+                      <img
+                        src={`https://api.screenshotmachine.com?key=demo&url=${encodeURIComponent(source.url)}&dimension=1024x600&format=jpg&delay=2000`}
+                        alt={`${source.name} preview`}
+                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                        onError={e => { e.target.style.display = 'none'; e.target.parentElement.classList.add('flex','items-center','justify-center'); }}
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                    </div>
+                    <CardContent className="pt-3 pb-3">
                       <div className="flex items-start gap-3">
-                        <img src={getFavicon(source.url)} alt={source.name} className="w-8 h-8 rounded object-contain flex-shrink-0" />
+                        <img src={getFavicon(source.url)} alt={source.name} className="w-7 h-7 rounded object-contain flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
                             <h3 className="font-bold text-gray-900 text-sm group-hover:text-purple-700 transition-colors">{source.name}</h3>

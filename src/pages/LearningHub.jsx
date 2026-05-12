@@ -110,7 +110,7 @@ export default function LearningHub({ currentUser }) {
         <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-5 mb-8">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-5 h-5 text-purple-600" />
-            <h2 className="font-bold text-gray-900">AI Resource Finder</h2>
+            <h2 className="font-bold text-gray-900">Resource Finder</h2>
           </div>
           <p className="text-sm text-gray-600 mb-3">Tell us what you want to learn and we'll find resources for you.</p>
           <div className="flex gap-2">
@@ -167,14 +167,23 @@ export default function LearningHub({ currentUser }) {
           {filtered.map((r, i) => (
             <motion.div key={r.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
               <a href={r.url} target="_blank" rel="noopener noreferrer">
-                <Card className="cu-card h-full flex flex-col hover:border-purple-300 transition-all">
+                <Card className="cu-card h-full flex flex-col hover:border-purple-300 transition-all overflow-hidden group">
+                  <div className="relative w-full h-32 overflow-hidden bg-gray-100">
+                    <img
+                      src={`https://api.screenshotmachine.com?key=demo&url=${encodeURIComponent(r.url)}&dimension=1024x600&format=jpg&delay=2000`}
+                      alt={`${r.title} preview`}
+                      className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                      onError={e => { e.target.style.display = 'none'; e.target.parentElement.classList.add('flex','items-center','justify-center'); }}
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                  </div>
                   <CardHeader className="pb-2">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-purple-600">{FORMAT_ICONS[r.format] || <BookOpen className="w-4 h-4" />}</span>
                       <span className="text-xs text-gray-500 font-medium">{r.format}</span>
                       {r.free && <Badge className="text-xs bg-green-100 text-green-700 ml-auto">Free</Badge>}
                     </div>
-                    <h3 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2">{r.title}</h3>
+                    <h3 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-purple-700 transition-colors">{r.title}</h3>
                   </CardHeader>
                   <CardContent className="flex-1 pb-2">
                     <p className="text-xs text-gray-600 line-clamp-3">{r.description}</p>
