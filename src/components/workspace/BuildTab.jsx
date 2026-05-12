@@ -373,13 +373,15 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
     }
   }, [shouldAutoAnalyze, triggerAutoAnalysis]);
 
-  const isFirstRender = useRef(true);
+  const prevMessageCountRef = useRef(0);
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
+    const prev = prevMessageCountRef.current;
+    const curr = messages.length;
+    prevMessageCountRef.current = curr;
+    // Only scroll when a new message is actually added (not on initial load/history restore)
+    if (curr > prev && prev > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const uploadFileToAssets = async (file) => {

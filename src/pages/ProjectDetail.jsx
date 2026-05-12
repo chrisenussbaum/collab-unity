@@ -432,19 +432,23 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
     return () => { isMounted.current = false; };
   }, [projectId, initializeProjectPage]);
 
-  // Prevent scroll restoration and force scroll to top on load
+  // Force scroll to top whenever the project finishes loading
   useEffect(() => {
     if (window.history.scrollRestoration) {
       window.history.scrollRestoration = 'manual';
     }
-    window.scrollTo(0, 0);
-    
     return () => {
       if (window.history.scrollRestoration) {
         window.history.scrollRestoration = 'auto';
       }
     };
-  }, [projectId]);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && project) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [isLoading, project?.id]);
 
   const handleShare = () => {
     const url = window.location.href;
