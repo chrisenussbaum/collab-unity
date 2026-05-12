@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { UploadFile } from "@/integrations/Core";
-import { CheckSquare, Plus, Edit, Trash2, Calendar, User, AlertCircle, Circle, Clock, CheckCircle2, Flag, MessageSquare, TrendingUp, Upload, Link as LinkIcon, Paperclip, X as XIcon, Filter } from "lucide-react";
+import { CheckSquare, Plus, Edit, Trash2, Calendar, User, AlertCircle, Circle, Clock, CheckCircle2, Flag, MessageSquare, TrendingUp, Upload, Link as LinkIcon, Paperclip, X as XIcon, Filter, Square, CheckSquare2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Task, Notification, ActivityLog } from "@/entities/all";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -65,6 +66,11 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [isTaskDetailOpen, setIsTaskDetailOpen] = useState(false);
+
+  // Multi-select state
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+  const [bulkAssignTo, setBulkAssignTo] = useState("");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -405,11 +411,72 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
     }
   };
 
+  const toggleSelect = (taskId, e) => {
+    e.stopPropagation();
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(taskId) ? next.delete(taskId) : next.add(taskId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === sortedTasksForSelectAll.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sortedTasksForSelectAll.map(t => t.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm(`Delete ${selectedIds.size} task(s)? This cannot be undone.`)) return;
+    setIsBulkProcessing(true);
+    try {
+      await Promise.all([...selectedIds].map(id => Task.delete(id)));
+      setSelectedIds(new Set());
+      await fetchTasks();
+    } catch (error) {
+      toast.error("Failed to delete some tasks");
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkStatusChange = async (newStatus) => {
+    setIsBulkProcessing(true);
+    try {
+      await Promise.all([...selectedIds].map(id => Task.update(id, { status: newStatus })));
+      setSelectedIds(new Set());
+      await fetchTasks();
+    } catch (error) {
+      toast.error("Failed to update some tasks");
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkReassign = async () => {
+    if (!bulkAssignTo) return;
+    setIsBulkProcessing(true);
+    try {
+      await Promise.all([...selectedIds].map(id => Task.update(id, { assigned_to: bulkAssignTo })));
+      setSelectedIds(new Set());
+      setBulkAssignTo("");
+      await fetchTasks();
+    } catch (error) {
+      toast.error("Failed to reassign some tasks");
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
   const sortedTasks = [...tasks].sort((a, b) => {
     if (sortBy === "priority") return (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2);
     if (sortBy === "status")   return (STATUS_ORDER[a.status] ?? 0) - (STATUS_ORDER[b.status] ?? 0);
     return 0;
   });
+  // Used for "select all" — defined after sortedTasks
+  const sortedTasksForSelectAll = sortedTasks;
 
   if (!project) {
     return (
@@ -549,6 +616,61 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
             </Button>
           </div>
         </CardHeader>
+
+        {/* Bulk Action Bar */}
+        {selectedIds.size > 0 && (
+          <div className="px-6 pb-4 border-t pt-3 bg-purple-50 rounded-b-lg">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-purple-700">{selectedIds.size} selected</span>
+              <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => setSelectedIds(new Set())}>
+                Clear
+              </Button>
+
+              {/* Bulk Status */}
+              <Select onValueChange={handleBulkStatusChange} disabled={isBulkProcessing}>
+                <SelectTrigger className="w-32 h-7 text-xs">
+                  <SelectValue placeholder="Set Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusColumns.map(col => (
+                    <SelectItem key={col.id} value={col.id}>{col.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Bulk Reassign */}
+              <div className="flex items-center gap-1">
+                <Select value={bulkAssignTo} onValueChange={setBulkAssignTo} disabled={isBulkProcessing}>
+                  <SelectTrigger className="w-36 h-7 text-xs">
+                    <SelectValue placeholder="Reassign to..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {collaborators?.map(c => (
+                      <SelectItem key={c.email} value={c.email}>{c.full_name || c.email}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {bulkAssignTo && (
+                  <Button size="sm" className="cu-button h-7 text-xs" onClick={handleBulkReassign} disabled={isBulkProcessing}>
+                    Apply
+                  </Button>
+                )}
+              </div>
+
+              {/* Bulk Delete */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs text-red-600 border-red-300 hover:bg-red-50"
+                onClick={handleBulkDelete}
+                disabled={isBulkProcessing}
+              >
+                <Trash2 className="w-3 h-3 mr-1" />
+                {isBulkProcessing ? "Processing..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
 
       {isLoading ? (
@@ -581,105 +703,49 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                         <AnimatePresence>
                           {columnTasks.map((task) => {
                             const assignedUser = collaborators?.find(c => c.email === task.assigned_to);
-                            
+                            const isChecked = selectedIds.has(task.id);
                             return (
-                              <motion.div
-                                key={task.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                              >
-                                <Card 
-                                  className="hover:shadow-md transition-shadow cursor-pointer"
-                                  onClick={() => {
-                                    setSelectedTask(task);
-                                    setIsTaskDetailOpen(true);
-                                  }}
-                                >
+                              <motion.div key={task.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                                <Card className={`hover:shadow-md transition-shadow cursor-pointer ${isChecked ? 'ring-2 ring-purple-400 bg-purple-50' : ''}`} onClick={() => { setSelectedTask(task); setIsTaskDetailOpen(true); }}>
                                   <CardContent className="p-3">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <h4 className="font-medium text-sm flex-1">{task.title}</h4>
-                                      <PriorityBadge priority={task.priority || 'medium'} />
+                                    <div className="flex items-start gap-2 mb-2">
+                                      <Checkbox checked={isChecked} onCheckedChange={() => toggleSelect(task.id, { stopPropagation: () => {} })} onClick={(e) => e.stopPropagation()} className="mt-0.5 flex-shrink-0" />
+                                      <div className="flex items-center justify-between flex-1 min-w-0">
+                                        <h4 className="font-medium text-sm flex-1 mr-1">{task.title}</h4>
+                                        <PriorityBadge priority={task.priority || 'medium'} />
                                       </div>
-                                      {task.description && (
-                                      <p className="text-xs text-gray-600 mb-2 line-clamp-2">{task.description}</p>
-                                      )}
-                                      <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-                                      {task.due_date && (
-                                        <span className="flex items-center">
-                                          <Calendar className="w-3 h-3 mr-1" />
-                                          {format(new Date(task.due_date), 'MMM d')}
-                                        </span>
-                                      )}
-                                      {assignedUser && (
-                                        <span className="flex items-center">
-                                          <User className="w-3 h-3 mr-1" />
-                                          {assignedUser.full_name || assignedUser.email.split('@')[0]}
-                                        </span>
-                                      )}
-                                      </div>
-                                      <div className="flex items-center justify-between mt-2">
-                                      <Select
-                                        value={task.status}
-                                        onValueChange={(value) => handleStatusChange(task, value)}
-                                      >
-                                        <SelectTrigger 
-                                          className="w-24 h-7 text-xs"
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          <SelectValue />
-                                        </SelectTrigger>
+                                    </div>
+                                    {task.description && <p className="text-xs text-gray-600 mb-2 line-clamp-2 ml-6">{task.description}</p>}
+                                    <div className="flex items-center justify-between text-xs text-gray-500 mb-2 ml-6">
+                                      {task.due_date && <span className="flex items-center"><Calendar className="w-3 h-3 mr-1" />{format(new Date(task.due_date), 'MMM d')}</span>}
+                                      {assignedUser && <span className="flex items-center"><User className="w-3 h-3 mr-1" />{assignedUser.full_name || assignedUser.email.split('@')[0]}</span>}
+                                    </div>
+                                    <div className="flex items-center justify-between mt-2 ml-6">
+                                      <Select value={task.status} onValueChange={(value) => handleStatusChange(task, value)}>
+                                        <SelectTrigger className="w-24 h-7 text-xs" onClick={(e) => e.stopPropagation()}><SelectValue /></SelectTrigger>
                                         <SelectContent onClick={(e) => e.stopPropagation()}>
-                                          {statusColumns.map((col) => (
-                                            <SelectItem key={col.id} value={col.id}>
-                                              {col.label}
-                                            </SelectItem>
-                                          ))}
+                                          {statusColumns.map((col) => <SelectItem key={col.id} value={col.id}>{col.label}</SelectItem>)}
                                         </SelectContent>
                                       </Select>
                                       <div className="flex items-center space-x-1">
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-7 w-7"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleOpenDialog(task);
-                                          }}
-                                        >
-                                          <Edit className="w-3 h-3" />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDelete(task);
-                                          }}
-                                        >
-                                          <Trash2 className="w-3 h-3" />
-                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); handleOpenDialog(task); }}><Edit className="w-3 h-3" /></Button>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); handleDelete(task); }}><Trash2 className="w-3 h-3" /></Button>
                                       </div>
-                                      </div>
-                                      </CardContent>
-                                      </Card>
-                                      </motion.div>
-                                      );
-                                      })}
-                                      </AnimatePresence>
-                                      {columnTasks.length === 0 && (
-                                      <div className="text-center py-8 text-gray-400">
-                                      <p className="text-sm">No tasks</p>
-                                      </div>
-                                      )}
-                                      </CardContent>
-                                      </Card>
-                                      );
-                                      })}
-                                      </div>
-                                      </div>
-                                      )}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              </motion.div>
+                            );
+                          })}
+                        </AnimatePresence>
+                        {columnTasks.length === 0 && <div className="text-center py-8 text-gray-400"><p className="text-sm">No tasks</p></div>}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
                                       {/* Tasks grouped by milestone */}
           {milestones.map((milestone) => {
@@ -708,85 +774,33 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                           <AnimatePresence>
                             {columnTasks.map((task) => {
                               const assignedUser = collaborators?.find(c => c.email === task.assigned_to);
-                              
+                              const isChecked = selectedIds.has(task.id);
                               return (
-                                <motion.div
-                                  key={task.id}
-                                  initial={{ opacity: 0, y: 20 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: -20 }}
-                                >
-                                  <Card 
-                                    className="hover:shadow-md transition-shadow cursor-pointer"
-                                    onClick={() => {
-                                      setSelectedTask(task);
-                                      setIsTaskDetailOpen(true);
-                                    }}
-                                  >
+                                <motion.div key={task.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                                  <Card className={`hover:shadow-md transition-shadow cursor-pointer ${isChecked ? 'ring-2 ring-purple-400 bg-purple-50' : ''}`} onClick={() => { setSelectedTask(task); setIsTaskDetailOpen(true); }}>
                                     <CardContent className="p-3">
-                                      <div className="flex items-center justify-between mb-2">
-                                        <h4 className="font-medium text-sm flex-1">{task.title}</h4>
-                                        <PriorityBadge priority={task.priority || 'medium'} />
+                                      <div className="flex items-start gap-2 mb-2">
+                                        <Checkbox checked={isChecked} onCheckedChange={() => toggleSelect(task.id, { stopPropagation: () => {} })} onClick={(e) => e.stopPropagation()} className="mt-0.5 flex-shrink-0" />
+                                        <div className="flex items-center justify-between flex-1 min-w-0">
+                                          <h4 className="font-medium text-sm flex-1 mr-1">{task.title}</h4>
+                                          <PriorityBadge priority={task.priority || 'medium'} />
+                                        </div>
                                       </div>
-                                      {task.description && (
-                                        <p className="text-xs text-gray-600 mb-2 line-clamp-2">{task.description}</p>
-                                      )}
-                                      <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-                                        {task.due_date && (
-                                          <span className="flex items-center">
-                                            <Calendar className="w-3 h-3 mr-1" />
-                                            {format(new Date(task.due_date), 'MMM d')}
-                                          </span>
-                                        )}
-                                        {assignedUser && (
-                                          <span className="flex items-center">
-                                            <User className="w-3 h-3 mr-1" />
-                                            {assignedUser.full_name || assignedUser.email.split('@')[0]}
-                                          </span>
-                                        )}
+                                      {task.description && <p className="text-xs text-gray-600 mb-2 line-clamp-2 ml-6">{task.description}</p>}
+                                      <div className="flex items-center justify-between text-xs text-gray-500 mb-2 ml-6">
+                                        {task.due_date && <span className="flex items-center"><Calendar className="w-3 h-3 mr-1" />{format(new Date(task.due_date), 'MMM d')}</span>}
+                                        {assignedUser && <span className="flex items-center"><User className="w-3 h-3 mr-1" />{assignedUser.full_name || assignedUser.email.split('@')[0]}</span>}
                                       </div>
-                                      <div className="flex items-center justify-between mt-2">
-                                        <Select
-                                          value={task.status}
-                                          onValueChange={(value) => handleStatusChange(task, value)}
-                                        >
-                                          <SelectTrigger 
-                                            className="w-24 h-7 text-xs"
-                                            onClick={(e) => e.stopPropagation()}
-                                          >
-                                            <SelectValue />
-                                          </SelectTrigger>
+                                      <div className="flex items-center justify-between mt-2 ml-6">
+                                        <Select value={task.status} onValueChange={(value) => handleStatusChange(task, value)}>
+                                          <SelectTrigger className="w-24 h-7 text-xs" onClick={(e) => e.stopPropagation()}><SelectValue /></SelectTrigger>
                                           <SelectContent onClick={(e) => e.stopPropagation()}>
-                                            {statusColumns.map((col) => (
-                                              <SelectItem key={col.id} value={col.id}>
-                                                {col.label}
-                                              </SelectItem>
-                                            ))}
+                                            {statusColumns.map((col) => <SelectItem key={col.id} value={col.id}>{col.label}</SelectItem>)}
                                           </SelectContent>
                                         </Select>
                                         <div className="flex items-center space-x-1">
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-7 w-7"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleOpenDialog(task);
-                                            }}
-                                          >
-                                            <Edit className="w-3 h-3" />
-                                          </Button>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleDelete(task);
-                                            }}
-                                          >
-                                            <Trash2 className="w-3 h-3" />
-                                          </Button>
+                                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); handleOpenDialog(task); }}><Edit className="w-3 h-3" /></Button>
+                                          <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); handleDelete(task); }}><Trash2 className="w-3 h-3" /></Button>
                                         </div>
                                       </div>
                                     </CardContent>
@@ -826,6 +840,7 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                   <AnimatePresence>
                     {columnTasks.map((task) => {
                       const assignedUser = collaborators?.find(c => c.email === task.assigned_to);
+                      const isChecked = selectedIds.has(task.id);
                       
                       return (
                         <motion.div
@@ -835,35 +850,40 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                           exit={{ opacity: 0, y: -20 }}
                         >
                           <Card 
-                            className="hover:shadow-md transition-shadow cursor-pointer"
+                            className={`hover:shadow-md transition-shadow cursor-pointer ${isChecked ? 'ring-2 ring-purple-400 bg-purple-50' : ''}`}
                             onClick={() => {
                               setSelectedTask(task);
                               setIsTaskDetailOpen(true);
                             }}
                           >
                             <CardContent className="p-3">
-                              <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-medium text-sm flex-1">{task.title}</h4>
-                                <PriorityBadge priority={task.priority || 'medium'} />
+                              <div className="flex items-start gap-2 mb-2">
+                                <Checkbox
+                                  checked={isChecked}
+                                  onCheckedChange={(checked) => toggleSelect(task.id, { stopPropagation: () => {} })}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="mt-0.5 flex-shrink-0"
+                                />
+                                <div className="flex items-center justify-between flex-1 min-w-0">
+                                  <h4 className="font-medium text-sm flex-1 mr-1">{task.title}</h4>
+                                  <PriorityBadge priority={task.priority || 'medium'} />
+                                </div>
                               </div>
                               {task.description && (
-                                <p className="text-xs text-gray-600 mb-2 line-clamp-2">{task.description}</p>
+                                <p className="text-xs text-gray-600 mb-2 line-clamp-2 ml-6">{task.description}</p>
                               )}
                               {task.progress > 0 && (
-                                <div className="mb-2">
+                                <div className="mb-2 ml-6">
                                   <div className="flex items-center justify-between mb-1">
                                     <span className="text-xs text-gray-500">Progress</span>
                                     <span className="text-xs font-medium text-purple-600">{task.progress}%</span>
                                   </div>
                                   <div className="w-full bg-gray-200 rounded-full h-1.5">
-                                    <div
-                                      className="bg-purple-600 h-1.5 rounded-full"
-                                      style={{ width: `${task.progress}%` }}
-                                    />
+                                    <div className="bg-purple-600 h-1.5 rounded-full" style={{ width: `${task.progress}%` }} />
                                   </div>
                                 </div>
                               )}
-                              <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+                              <div className="flex items-center justify-between text-xs text-gray-500 mb-2 ml-6">
                                 {task.due_date && (
                                   <span className="flex items-center">
                                     <Calendar className="w-3 h-3 mr-1" />
@@ -877,53 +897,25 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                                   </span>
                                 )}
                               </div>
-                              <div className="flex items-center justify-between mt-2">
-                              <Select
-                                value={task.status}
-                                onValueChange={(value) => {
-                                  handleStatusChange(task, value);
-                                }}
-                              >
-                                <SelectTrigger 
-                                  className="w-24 h-7 text-xs"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent onClick={(e) => e.stopPropagation()}>
-                                  {statusColumns.map((col) => (
-                                    <SelectItem key={col.id} value={col.id}>
-                                      {col.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <div className="flex items-center space-x-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedTask(task);
-                                    setIsTaskDetailOpen(true);
-                                  }}
-                                  title="View task details"
-                                >
-                                  <Edit className="w-3 h-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDelete(task);
-                                  }}
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
-                              </div>
+                              <div className="flex items-center justify-between mt-2 ml-6">
+                                <Select value={task.status} onValueChange={(value) => handleStatusChange(task, value)}>
+                                  <SelectTrigger className="w-24 h-7 text-xs" onClick={(e) => e.stopPropagation()}>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent onClick={(e) => e.stopPropagation()}>
+                                    {statusColumns.map((col) => (
+                                      <SelectItem key={col.id} value={col.id}>{col.label}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <div className="flex items-center space-x-1">
+                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setSelectedTask(task); setIsTaskDetailOpen(true); }} title="View task details">
+                                    <Edit className="w-3 h-3" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); handleDelete(task); }}>
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
                               </div>
                             </CardContent>
                           </Card>
