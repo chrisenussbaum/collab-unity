@@ -373,16 +373,10 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
     }
   }, [shouldAutoAnalyze, triggerAutoAnalysis]);
 
-  const prevMessageCountRef = useRef(0);
-  useEffect(() => {
-    const prev = prevMessageCountRef.current;
-    const curr = messages.length;
-    prevMessageCountRef.current = curr;
-    // Only scroll when a new message is actually added (not on initial load/history restore)
-    if (curr > prev && prev > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
+  const userSentRef = useRef(false);
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
 
   const uploadFileToAssets = async (file) => {
     if (!canEdit || !project?.id || !currentUser) return;
@@ -458,7 +452,8 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
   const addAndPersist = useCallback(async (msg) => {
     setMessages(prev => [...prev, msg]);
     await persistMessage(msg);
-  }, [persistMessage]);
+    setTimeout(scrollToBottom, 50);
+  }, [persistMessage, scrollToBottom]);
 
   // Build a task via /task command
   const handleSlashTask = async (taskTitle) => {
@@ -641,6 +636,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
     setInput("");
     setIsLoading(true);
     await persistMessage(userMsg);
+    setTimeout(scrollToBottom, 50);
 
     try {
       const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers);

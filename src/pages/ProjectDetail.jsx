@@ -432,23 +432,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
     return () => { isMounted.current = false; };
   }, [projectId, initializeProjectPage]);
 
-  // Force scroll to top whenever the project finishes loading
-  useEffect(() => {
-    if (window.history.scrollRestoration) {
-      window.history.scrollRestoration = 'manual';
-    }
-    return () => {
-      if (window.history.scrollRestoration) {
-        window.history.scrollRestoration = 'auto';
-      }
-    };
-  }, []);
 
-  useEffect(() => {
-    if (!isLoading && project) {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }
-  }, [isLoading, project?.id]);
 
   const handleShare = () => {
     const url = window.location.href;
