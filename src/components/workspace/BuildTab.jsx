@@ -836,7 +836,7 @@ Be specific, reference the actual content you observe, and tie your feedback to 
                   ? <img src={avatarSrc} alt={avatarFallback} className="w-full h-full object-cover" />
                   : <span className="text-white text-[10px] font-bold">{avatarFallback}</span>
               ) : (
-                <Lightbulb className="w-3.5 h-3.5 text-white" />
+                <img src="https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/ceb9c969c_collabunityassistant.png" alt="Assistant" className="w-full h-full object-cover rounded-full" />
               )}
             </div>
             <div className="max-w-[80%] flex flex-col">
@@ -877,8 +877,8 @@ Be specific, reference the actual content you observe, and tie your feedback to 
 
         {isLoading && (
           <div className="flex gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-              <Lightbulb className="w-3.5 h-3.5 text-white" />
+            <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
+              <img src="https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/ceb9c969c_collabunityassistant.png" alt="Assistant" className="w-full h-full object-cover" />
             </div>
             <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
               <div className="flex gap-1 items-center">
@@ -1233,8 +1233,8 @@ export default function BuildTab({
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-            <Lightbulb className="w-4 h-4 text-white" />
+          <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 bg-white">
+            <img src="https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/ceb9c969c_collabunityassistant.png" alt="Assistant" className="w-full h-full object-cover" />
           </div>
           <div>
             <p className="text-sm font-semibold leading-tight">Project Assistant</p>
