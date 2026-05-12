@@ -432,20 +432,19 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
     return () => { isMounted.current = false; };
   }, [projectId, initializeProjectPage]);
 
-  // Prevent scroll restoration when tab changes
+  // Prevent scroll restoration and force scroll to top on load
   useEffect(() => {
-    // Disable scroll restoration for this page
     if (window.history.scrollRestoration) {
       window.history.scrollRestoration = 'manual';
     }
+    window.scrollTo(0, 0);
     
     return () => {
-      // Re-enable on unmount
       if (window.history.scrollRestoration) {
         window.history.scrollRestoration = 'auto';
       }
     };
-  }, []);
+  }, [projectId]);
 
   const handleShare = () => {
     const url = window.location.href;

@@ -373,7 +373,12 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
     }
   }, [shouldAutoAnalyze, triggerAutoAnalysis]);
 
+  const isFirstRender = useRef(true);
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -817,14 +822,24 @@ Be specific, reference the actual content you observe, and tie your feedback to 
             Loading chat history...
           </div>
         )}
-        {messages.map((msg, i) => (
+        {messages.map((msg, i) => {
+          const senderProfile = msg.role === "user"
+            ? (projectUsers?.find(u => u.email === (msg.sender_email || currentUser?.email)) || null)
+            : null;
+          const avatarSrc = senderProfile?.profile_image || (msg.role === "user" ? currentUser?.profile_image : null);
+          const avatarFallback = senderProfile?.full_name?.[0] || currentUser?.full_name?.[0] || "U";
+          return (
           <div key={i} className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden ${
               msg.role === "user" ? "bg-purple-600" : "bg-gradient-to-br from-purple-500 to-indigo-600"
             }`}>
-              {msg.role === "user"
-                ? <User className="w-3.5 h-3.5 text-white" />
-                : <Bot className="w-3.5 h-3.5 text-white" />}
+              {msg.role === "user" ? (
+                avatarSrc
+                  ? <img src={avatarSrc} alt={avatarFallback} className="w-full h-full object-cover" />
+                  : <span className="text-white text-[10px] font-bold">{avatarFallback}</span>
+              ) : (
+                <Lightbulb className="w-3.5 h-3.5 text-white" />
+              )}
             </div>
             <div className="max-w-[80%] flex flex-col">
               {msg.role === "user" && msg.sender_name && msg.sender_email !== currentUser?.email && (
@@ -859,12 +874,13 @@ Be specific, reference the actual content you observe, and tie your feedback to 
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
 
         {isLoading && (
           <div className="flex gap-2.5">
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-              <Bot className="w-3.5 h-3.5 text-white" />
+              <Lightbulb className="w-3.5 h-3.5 text-white" />
             </div>
             <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
               <div className="flex gap-1 items-center">
@@ -1220,7 +1236,7 @@ export default function BuildTab({
       <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-4 h-4 text-white" />
+            <Lightbulb className="w-4 h-4 text-white" />
           </div>
           <div>
             <p className="text-sm font-semibold leading-tight">Project Assistant</p>
