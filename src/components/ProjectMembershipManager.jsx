@@ -14,13 +14,25 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, UserMinus, LogOut, Crown, UserPlus, Search, Loader2 } from "lucide-react";
+import { Users, UserMinus, LogOut, Crown, UserPlus, Search, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { Project, ProjectInvitation, Notification, ProjectApplication, User } from "@/entities/all"; // Added User for follower notification
+import { Project, ProjectInvitation, Notification, ProjectApplication, User } from "@/entities/all";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ConfirmationDialog from "./ConfirmationDialog";
 import { getAllPublicUserProfiles } from "@/functions/getAllPublicUserProfiles";
+
+const ROLE_OPTIONS = ["Designer", "Developer", "Researcher", "Writer", "Marketer", "Manager", "Other"];
+
+const ROLE_COLORS = {
+  Designer: "bg-pink-100 text-pink-700",
+  Developer: "bg-blue-100 text-blue-700",
+  Researcher: "bg-amber-100 text-amber-700",
+  Writer: "bg-green-100 text-green-700",
+  Marketer: "bg-orange-100 text-orange-700",
+  Manager: "bg-purple-100 text-purple-700",
+  Other: "bg-gray-100 text-gray-600",
+};
 
 export default function ProjectMembershipManager({
   project,
@@ -44,6 +56,9 @@ export default function ProjectMembershipManager({
   const [selectedUser, setSelectedUser] = useState(null);
   const [inviteMessage, setInviteMessage] = useState("");
   const [isSendingInvite, setIsSendingInvite] = useState(false);
+
+  const [editingRoleFor, setEditingRoleFor] = useState(null); // email of member being role-edited
+  const [savingRole, setSavingRole] = useState(false);
 
   useEffect(() => {
     const loadAllUsers = async () => {
@@ -302,6 +317,20 @@ export default function ProjectMembershipManager({
     }
   };
 
+  const handleSetRole = async (memberEmail, role) => {
+    setSavingRole(true);
+    try {
+      const updatedRoles = { ...(project.collaborator_roles || {}), [memberEmail]: role };
+      await Project.update(project.id, { collaborator_roles: updatedRoles });
+      setEditingRoleFor(null);
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      toast.error("Failed to update role.");
+    } finally {
+      setSavingRole(false);
+    }
+  };
+
   const owner = projectUsers.find(u => u.email === project.created_by);
   const collaborators = projectUsers.filter(u => u.email !== project.created_by);
   const totalMembers = projectUsers.length;
@@ -537,46 +566,103 @@ export default function ProjectMembershipManager({
           )}
 
           {/* Collaborators */}
-          {collaborators.map((member) => (
-            <div key={member.email} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-              <div className="flex items-center space-x-3 flex-1 min-w-0">
-                <Link
-                  to={createPageUrl(member.username ? `UserProfile?username=${member.username}` : `UserProfile?email=${member.email}`)}
-                >
-                  <Avatar className="w-10 h-10 sm:w-12 sm:h-12 cursor-pointer">
-                    <AvatarImage src={member.profile_image} className="object-cover" />
-                    <AvatarFallback className="bg-gray-200 text-gray-600">
-                      {member.full_name?.[0] || member.email?.[0] || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                </Link>
-                <div className="flex-1 min-w-0">
-                  <Link
-                    to={createPageUrl(member.username ? `UserProfile?username=${member.username}` : `UserProfile?email=${member.email}`)}
-                    className="font-semibold text-sm sm:text-base text-gray-900 hover:text-purple-600 transition-colors block truncate"
-                  >
-                    {member.full_name || member.email}
-                  </Link>
-                  {member.location && (
-                    <p className="text-xs text-gray-500 truncate">{member.location}</p>
+          {collaborators.map((member) => {
+            const memberRole = project.collaborator_roles?.[member.email];
+            const isEditingThisMember = editingRoleFor === member.email;
+            return (
+              <div key={member.email} className="p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    <Link to={createPageUrl(member.username ? `UserProfile?username=${member.username}` : `UserProfile?email=${member.email}`)}>
+                      <Avatar className="w-10 h-10 sm:w-12 sm:h-12 cursor-pointer">
+                        <AvatarImage src={member.profile_image} className="object-cover" />
+                        <AvatarFallback className="bg-gray-200 text-gray-600">
+                          {member.full_name?.[0] || member.email?.[0] || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Link>
+                    <div className="flex-1 min-w-0">
+                      <Link
+                        to={createPageUrl(member.username ? `UserProfile?username=${member.username}` : `UserProfile?email=${member.email}`)}
+                        className="font-semibold text-sm sm:text-base text-gray-900 hover:text-purple-600 transition-colors block truncate"
+                      >
+                        {member.full_name || member.email}
+                      </Link>
+                      {/* Role badge (view mode) */}
+                      {!isEditingThisMember && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          {memberRole ? (
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${ROLE_COLORS[memberRole] || ROLE_COLORS.Other}`}>
+                              {memberRole}
+                            </span>
+                          ) : (
+                            member.location && <p className="text-xs text-gray-500 truncate">{member.location}</p>
+                          )}
+                          {isOwner && (
+                            <button
+                              onClick={() => setEditingRoleFor(member.email)}
+                              className="text-gray-400 hover:text-purple-600 transition-colors ml-1"
+                              title="Assign role"
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {isOwner && !isEditingThisMember && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { setMemberToRemove(member); setShowRemoveConfirm(true); }}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                    >
+                      <UserMinus className="w-4 h-4" />
+                    </Button>
                   )}
                 </div>
+
+                {/* Role selector (edit mode) */}
+                {isEditingThisMember && (
+                  <div className="mt-2 ml-13 pl-[52px]">
+                    <p className="text-xs text-gray-500 mb-1.5">Assign a role:</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {ROLE_OPTIONS.map(role => (
+                        <button
+                          key={role}
+                          disabled={savingRole}
+                          onClick={() => handleSetRole(member.email, role)}
+                          className={`text-xs font-medium px-2.5 py-1 rounded-full border transition-all ${
+                            memberRole === role
+                              ? `${ROLE_COLORS[role] || ROLE_COLORS.Other} border-current`
+                              : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600'
+                          }`}
+                        >
+                          {role}
+                        </button>
+                      ))}
+                      {memberRole && (
+                        <button
+                          disabled={savingRole}
+                          onClick={() => handleSetRole(member.email, null)}
+                          className="text-xs font-medium px-2.5 py-1 rounded-full border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 bg-white transition-all"
+                        >
+                          Clear
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setEditingRoleFor(null)}
+                        className="text-xs font-medium px-2.5 py-1 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-100 bg-white transition-all"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              {isOwner && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setMemberToRemove(member);
-                    setShowRemoveConfirm(true);
-                  }}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
-                >
-                  <UserMinus className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-          ))}
+            );
+          })}
 
           {/* Empty State */}
           {totalMembers === 1 && (

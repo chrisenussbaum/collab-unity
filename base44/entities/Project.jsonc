@@ -1,0 +1,283 @@
+{
+  "name": "Project",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Project name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Project description"
+    },
+    "project_type": {
+      "type": "string",
+      "enum": [
+        "Personal",
+        "Collaborative"
+      ],
+      "description": "Whether the project is personal or collaborative"
+    },
+    "classification": {
+      "type": "string",
+      "enum": [
+        "educational",
+        "career_development",
+        "hobby",
+        "business",
+        "nonprofit",
+        "startup"
+      ],
+      "description": "Project classification"
+    },
+    "industry": {
+      "type": "string",
+      "description": "The industry the project belongs to"
+    },
+    "area_of_interest": {
+      "type": "string",
+      "maxLength": 20,
+      "description": "Main area or field of the project (max 20 characters)"
+    },
+    "location": {
+      "type": "string",
+      "description": "The physical location or region for the project"
+    },
+    "project_urls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Display title for the link (e.g., 'Live Demo', 'GitHub Repo')"
+          },
+          "url": {
+            "type": "string",
+            "description": "The actual URL"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "description": "External showcase links with titles"
+    },
+    "skills_needed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Skills required for the project"
+    },
+    "tools_needed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tools required for the project"
+    },
+    "project_tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Tools and platforms used in the project workspace"
+    },
+    "collaborator_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of emails of the project owner and accepted collaborators"
+    },
+    "collaborator_roles": {
+      "type": "object",
+      "description": "Map of collaborator email to their role on the project (e.g. { 'user@example.com': 'Designer' })"
+    },
+    "current_collaborators_count": {
+      "type": "number",
+      "default": 1,
+      "description": "Number of users actually collaborating on the project"
+    },
+    "followers_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of users following this project for updates"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "seeking_collaborators",
+        "in_progress",
+        "completed"
+      ],
+      "default": "seeking_collaborators",
+      "description": "Current project status"
+    },
+    "logo_url": {
+      "type": "string",
+      "description": "Project logo image URL"
+    },
+    "highlights": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "media_url": {
+            "type": "string",
+            "description": "URL of the media file (image or video)"
+          },
+          "image_url": {
+            "type": "string",
+            "description": "Legacy field - URL of image file"
+          },
+          "media_type": {
+            "type": "string",
+            "enum": [
+              "image",
+              "video"
+            ],
+            "default": "image",
+            "description": "Type of media - image or video"
+          },
+          "thumbnail_url": {
+            "type": "string",
+            "description": "Thumbnail image URL for videos"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Caption for the media"
+          },
+          "aspect_ratio": {
+            "type": "string",
+            "description": "Aspect ratio of the media"
+          },
+          "uploaded_by": {
+            "type": "string",
+            "description": "Email of user who uploaded the media"
+          },
+          "uploaded_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the media was uploaded"
+          },
+          "file_name": {
+            "type": "string",
+            "description": "Original filename"
+          },
+          "file_size": {
+            "type": "number",
+            "description": "File size in bytes"
+          }
+        }
+      },
+      "description": "Project highlight media (images and videos) with captions"
+    },
+    "is_visible_on_feed": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the project is visible on the public Feed page"
+    },
+    "template_id": {
+      "type": "string",
+      "description": "ID of the project template this project was created from"
+    },
+    "learning_resources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "AI-generated learning resources for this project"
+    },
+    "paypal_link": {
+      "type": "string",
+      "description": "Project's PayPal funding link"
+    },
+    "venmo_link": {
+      "type": "string",
+      "description": "Project's Venmo funding link"
+    },
+    "cashapp_link": {
+      "type": "string",
+      "description": "Project's CashApp funding link"
+    },
+    "project_ideation": {
+      "type": "string",
+      "description": "Rich text content for project planning and ideation"
+    },
+    "project_ideation_metadata": {
+      "type": "object",
+      "properties": {
+        "last_saved_by": {
+          "type": "string"
+        },
+        "last_saved_by_name": {
+          "type": "string"
+        },
+        "last_saved_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "Metadata about who last edited the ideation content"
+    },
+    "social_links": {
+      "type": "object",
+      "properties": {
+        "instagram": {
+          "type": "string"
+        },
+        "facebook": {
+          "type": "string"
+        },
+        "twitter": {
+          "type": "string"
+        },
+        "youtube": {
+          "type": "string"
+        },
+        "twitch": {
+          "type": "string"
+        },
+        "tiktok": {
+          "type": "string"
+        },
+        "linkedin": {
+          "type": "string"
+        },
+        "website": {
+          "type": "string"
+        }
+      },
+      "description": "Social media links for the project"
+    }
+  },
+  "required": [
+    "title",
+    "description",
+    "project_type"
+  ]
+}
