@@ -50,7 +50,7 @@
         "properties": {
           "title": {
             "type": "string",
-            "description": "Display title for the link"
+            "description": "Display title for the link (e.g., 'Live Demo', 'GitHub Repo')"
           },
           "url": {
             "type": "string",
@@ -104,7 +104,7 @@
     },
     "collaborator_roles": {
       "type": "object",
-      "description": "Map of collaborator email to their role on the project"
+      "description": "Map of collaborator email to their role on the project (e.g. { 'user@example.com': 'Designer' })"
     },
     "current_collaborators_count": {
       "type": "number",
@@ -140,9 +140,9 @@
       "type": "string",
       "description": "Project logo image URL"
     },
-    "background_color": {
+    "background_image_url": {
       "type": "string",
-      "description": "Project background banner color (CSS gradient)"
+      "description": "Project background banner image URL"
     },
     "highlights": {
       "type": "array",
@@ -164,7 +164,7 @@
               "video"
             ],
             "default": "image",
-            "description": "Type of media"
+            "description": "Type of media - image or video"
           },
           "thumbnail_url": {
             "type": "string",
