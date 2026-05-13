@@ -19,6 +19,7 @@ import ConfirmationDialog from "@/components/ConfirmationDialog";
 import ArrayInputWithSearch from "@/components/ArrayInputWithSearch";
 import { generateProjectSuggestions } from "@/functions/generateProjectSuggestions";
 import { base44 } from "@/api/base44Client";
+import CreateProjectAssistant from "@/components/CreateProjectAssistant";
 import { validateVideo, isImageFile, isVideoFile, optimizeImage, formatFileSize } from "@/components/mediaOptimization";
 
 const PROJECT_CLASSIFICATIONS = [
@@ -1154,6 +1155,8 @@ export default function CreateProject() {
               )}
 
 
+
+              <CreateProjectAssistant formData={formData} currentStep={currentStep} />
 
               <div className="flex justify-between pt-6 border-t">
                 <Button
