@@ -58,8 +58,8 @@ const FeedPostMockup = () => {
   const [showcaseIndex, setShowcaseIndex] = React.useState(0);
   
   const showcaseItems = [
-    { title: "Live Demo", domain: "myproject.app", screenshotUrl: "https://images.unsplash.com/photo-1547658719-da2b51169166?w=800&h=450&fit=crop" },
-    { title: "Design Mockup", domain: "figma.com", screenshotUrl: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=450&fit=crop" },
+    { title: "Story World Map", domain: "miro.com", screenshotUrl: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&h=450&fit=crop" },
+    { title: "Chapter Draft", domain: "notion.so", screenshotUrl: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&h=450&fit=crop" },
   ];
   
   const currentItem = showcaseItems[showcaseIndex];
@@ -71,7 +71,7 @@ const FeedPostMockup = () => {
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-start space-x-3 flex-1">
             <img 
-              src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=100&h=100&fit=crop"
+              src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=100&h=100&fit=crop"
               alt="Project Logo"
               className="w-11 h-11 rounded-lg object-cover flex-shrink-0"
             />
