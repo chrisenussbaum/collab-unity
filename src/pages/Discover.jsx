@@ -916,8 +916,11 @@ export default function Discover({ currentUser: propCurrentUser }) {
         </DialogContent>
       </Dialog>
 
-      <div className="bg-white border-b border-gray-200 py-16 sm:py-20 md:py-24 -mt-14 pt-28 sm:-mt-16 sm:pt-32 md:-mt-20 md:pt-36">
-        <div className="cu-container">
+      <div className="relative overflow-hidden -mt-14 pt-28 sm:-mt-16 sm:pt-32 md:-mt-20 md:pt-36 pb-16 sm:pb-20 md:pb-24 border-b border-purple-100"
+        style={{ background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 40%, #ddd6fe 100%)" }}>
+        <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-20 pointer-events-none" style={{ background: "radial-gradient(circle, #7c3aed, transparent)", transform: "translate(30%, -30%)" }} />
+        <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-15 pointer-events-none" style={{ background: "radial-gradient(circle, #5b47db, transparent)", transform: "translate(-30%, 30%)" }} />
+        <div className="cu-container relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -933,27 +936,27 @@ export default function Discover({ currentUser: propCurrentUser }) {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/LearningHub" className="w-full sm:w-auto">
-                <div className="group flex items-center gap-4 bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer text-left w-full">
-                  <div className="w-11 h-11 rounded-xl cu-gradient flex items-center justify-center flex-shrink-0">
+                <div className="group flex items-center gap-4 bg-white/80 backdrop-blur-sm border border-purple-200 rounded-xl px-5 py-4 shadow-sm hover:shadow-md hover:border-purple-400 hover:bg-white transition-all cursor-pointer text-left w-full">
+                  <div className="w-11 h-11 rounded-xl cu-gradient flex items-center justify-center flex-shrink-0 shadow-md shadow-purple-200">
                     <BookOpen className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <p className="font-bold text-gray-900 text-sm">Learning Hub</p>
                     <p className="text-xs text-gray-500">Courses &amp; videos</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-500 ml-auto flex-shrink-0 transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-purple-300 group-hover:text-purple-600 ml-auto flex-shrink-0 transition-colors" />
                 </div>
               </Link>
               <Link to="/NewsEntertainment" className="w-full sm:w-auto">
-                <div className="group flex items-center gap-4 bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer text-left w-full">
-                  <div className="w-11 h-11 rounded-xl cu-gradient flex items-center justify-center flex-shrink-0">
+                <div className="group flex items-center gap-4 bg-white/80 backdrop-blur-sm border border-purple-200 rounded-xl px-5 py-4 shadow-sm hover:shadow-md hover:border-purple-400 hover:bg-white transition-all cursor-pointer text-left w-full">
+                  <div className="w-11 h-11 rounded-xl cu-gradient flex items-center justify-center flex-shrink-0 shadow-md shadow-purple-200">
                     <Tv className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <p className="font-bold text-gray-900 text-sm">News &amp; Entertainment</p>
                     <p className="text-xs text-gray-500">Trending news</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-500 ml-auto flex-shrink-0 transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-purple-300 group-hover:text-purple-600 ml-auto flex-shrink-0 transition-colors" />
                 </div>
               </Link>
             </div>

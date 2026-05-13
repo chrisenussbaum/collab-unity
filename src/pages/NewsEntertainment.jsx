@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tv, Search, ExternalLink, Loader2, Flame, Globe, Lightbulb, Briefcase, Palette, Cpu, Music, Trophy, ChevronLeft } from "lucide-react";
+import { Tv, Search, ExternalLink, Loader2, Flame, Globe, Lightbulb, Briefcase, Palette, Cpu, Music, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
@@ -134,18 +134,14 @@ export default function NewsEntertainment({ currentUser }) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 py-12 -mt-14 pt-28 sm:-mt-16 sm:pt-32">
-        <div className="cu-container mb-4">
-          <button
-            onClick={() => navigate("/Discover")}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-sm font-medium text-gray-600 hover:border-purple-400 hover:text-purple-700 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" /> Discover
-          </button>
-        </div>
-        <div className="cu-container text-center">
+      <div className="relative overflow-hidden -mt-14 pt-28 sm:-mt-16 sm:pt-32 pb-12 border-b border-purple-100"
+        style={{ background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 40%, #ddd6fe 100%)" }}>
+        {/* Decorative blobs */}
+        <div className="absolute top-0 right-0 w-72 h-72 rounded-full opacity-20 pointer-events-none" style={{ background: "radial-gradient(circle, #7c3aed, transparent)", transform: "translate(30%, -30%)" }} />
+        <div className="absolute bottom-0 left-0 w-56 h-56 rounded-full opacity-15 pointer-events-none" style={{ background: "radial-gradient(circle, #5b47db, transparent)", transform: "translate(-30%, 30%)" }} />
+        <div className="cu-container text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="w-14 h-14 rounded-2xl cu-gradient flex items-center justify-center mx-auto mb-4">
+            <div className="w-14 h-14 rounded-2xl cu-gradient flex items-center justify-center mx-auto mb-4 shadow-lg shadow-purple-200">
               <Tv className="w-7 h-7 text-white" />
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
