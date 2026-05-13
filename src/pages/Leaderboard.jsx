@@ -117,8 +117,8 @@ export default function Leaderboard({ currentUser }) {
           className="mb-8"
         >
           <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50 transition-all border border-transparent hover:border-purple-200 mb-6"
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-purple-700 hover:bg-white transition-all border border-gray-200 hover:border-purple-300 hover:shadow-sm mb-6"
           >
             <ArrowLeft className="w-4 h-4" />
             Back

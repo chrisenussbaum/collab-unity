@@ -153,8 +153,8 @@ export default function NotificationSettings({ currentUser: propUser }) {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-6">
         <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50 transition-all border border-transparent hover:border-purple-200"
+          onClick={() => window.history.back()}
+          className="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-purple-700 hover:bg-white transition-all border border-gray-200 hover:border-purple-300 hover:shadow-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
