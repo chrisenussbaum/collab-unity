@@ -137,6 +137,16 @@ export default function ReportBug({ currentUser }) {
           animate={{ opacity: 1, y: 0 }}
         >
         
+          <div className="mb-6">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50 transition-all border border-transparent hover:border-purple-200"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
+          </div>
+
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Bug className="w-8 h-8 text-red-600" />

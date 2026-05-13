@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Loader2, Bell, MessageCircle, Calendar, Briefcase, Star, ThumbsUp, CheckSquare, Users } from "lucide-react";
+import { Loader2, Bell, MessageCircle, Calendar, Briefcase, Star, ThumbsUp, CheckSquare, Users, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -151,6 +151,15 @@ export default function NotificationSettings({ currentUser: propUser }) {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50 transition-all border border-transparent hover:border-purple-200"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+      </div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
           <Bell className="w-8 h-8 text-purple-600" />

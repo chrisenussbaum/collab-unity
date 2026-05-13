@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Trophy, Star, Users, Zap, TrendingUp, Award, Crown, Medal } from "lucide-react";
+import { Trophy, Star, Users, Zap, TrendingUp, Award, Crown, Medal, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import BadgeDisplay, { LevelBadge } from "../components/gamification/BadgeDisplay";
 import OptimizedAvatar from "../components/OptimizedAvatar";
 
 export default function Leaderboard({ currentUser }) {
+  const navigate = useNavigate();
   const [topUsers, setTopUsers] = useState([]);
   const [topCreators, setTopCreators] = useState([]);
   const [topCollaborators, setTopCollaborators] = useState([]);
@@ -113,6 +114,20 @@ export default function Leaderboard({ currentUser }) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50 transition-all border border-transparent hover:border-purple-200 mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </button>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           className="mb-8 text-center"
         >
           <div className="flex items-center justify-center mb-4">
@@ -123,6 +138,7 @@ export default function Leaderboard({ currentUser }) {
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Leaderboard</h1>
           <p className="text-gray-600">See who's leading the Collab Unity community</p>
         </motion.div>
+
 
         {/* Tabs */}
         <div className="flex justify-start sm:justify-center mb-8 space-x-2 overflow-x-auto pb-2 px-4 sm:px-0 scrollbar-hide">

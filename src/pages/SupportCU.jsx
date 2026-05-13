@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { Heart, Users, Zap, Sparkles, ArrowLeft, ExternalLink } from "lucide-rea
 import { motion } from "framer-motion";
 
 export default function SupportCU() {
+  const navigate = useNavigate();
+
   const handleVenmoRedirect = () => {
     window.open('https://venmo.com/chrisenussbaum', '_blank', 'noopener,noreferrer');
   };
@@ -19,6 +21,15 @@ export default function SupportCU() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
+          <div className="mb-6">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50 transition-all border border-transparent hover:border-purple-200"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
+          </div>
 
           <div className="text-center mb-12">
             <img 
