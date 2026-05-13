@@ -633,7 +633,7 @@ export default function CreateProject() {
         className="hidden"
       />
 
-      <div className={`bg-gray-50 w-full ${currentStep === 0 || currentStep === 'import' ? 'flex items-center justify-center py-8 min-h-[calc(100svh-4rem-83px)] lg:min-h-[calc(100svh-4rem)] lg:h-[calc(100svh-4rem)] overflow-y-auto' : 'min-h-screen py-4'}`}>
+      <div className={`w-full ${currentStep === 0 || currentStep === 'import' ? 'flex items-center justify-center py-8 min-h-[calc(100svh-4rem-83px)] lg:min-h-[calc(100svh-4rem)] lg:h-[calc(100svh-4rem)] overflow-y-auto' : 'min-h-screen py-4'}`}>
         <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Landing / Idea Input Screen */}
