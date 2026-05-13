@@ -60,6 +60,7 @@ export default function NewsEntertainment({ currentUser }) {
   const [loadingHeadlines, setLoadingHeadlines] = useState(false);
   const [headlinesFetched, setHeadlinesFetched] = useState(false);
   const [newsSources, setNewsSources] = useState(FALLBACK_NEWS_SOURCES);
+  const [trendingTopic, setTrendingTopic] = useState(null);
 
   useEffect(() => {
     base44.entities.NewsSource.list().then(data => {
@@ -67,10 +68,16 @@ export default function NewsEntertainment({ currentUser }) {
     }).catch(() => {});
   }, []);
 
-  const fetchAiHeadlines = async () => {
+  // Auto-load headlines on mount
+  useEffect(() => {
+    fetchAiHeadlines();
+  }, []);
+
+  const fetchAiHeadlines = async (topic = null) => {
     setLoadingHeadlines(true);
+    const topicClause = topic ? `Focus specifically on the topic: "${topic}".` : "Cover a broad mix of tech, business, design, entertainment, and science.";
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a news curator. Generate 8 realistic, engaging trending headlines from today (${new Date().toDateString()}) across tech, business, design, entertainment, and science. Make them feel current, specific, and relevant to creators and entrepreneurs. For each headline, include a real URL to the actual article or a search URL on the source's website.`,
+      prompt: `You are a news curator. Generate 8 realistic, engaging trending headlines from today (${new Date().toDateString()}). ${topicClause} Make them feel current, specific, and relevant to creators and entrepreneurs. For each headline, include a real URL to the actual article or a search URL on the source's website.`,
       add_context_from_internet: true,
       response_json_schema: {
         type: "object",
@@ -94,6 +101,11 @@ export default function NewsEntertainment({ currentUser }) {
     setAiHeadlines(result?.headlines || []);
     setLoadingHeadlines(false);
     setHeadlinesFetched(true);
+  };
+
+  const handleTrendingTopicClick = (topic) => {
+    setTrendingTopic(topic);
+    fetchAiHeadlines(topic);
   };
 
   const filteredSources = newsSources.filter(s => {
@@ -146,8 +158,8 @@ export default function NewsEntertainment({ currentUser }) {
             {TRENDING_TOPICS.map(topic => (
               <button
                 key={topic}
-                onClick={() => setSearchQuery(topic)}
-                className="flex-shrink-0 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 hover:border-purple-400 hover:text-purple-700 transition-colors whitespace-nowrap"
+                onClick={() => handleTrendingTopicClick(topic)}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${trendingTopic === topic ? "cu-gradient text-white border border-transparent" : "bg-white border border-gray-200 text-gray-600 hover:border-purple-400 hover:text-purple-700"}`}
               >
                 {topic}
               </button>
@@ -160,21 +172,28 @@ export default function NewsEntertainment({ currentUser }) {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Flame className="w-5 h-5 text-purple-600" />
-              <h2 className="font-bold text-gray-900">Today's Trending News</h2>
+              <h2 className="font-bold text-gray-900">
+                Today's Trending News{trendingTopic ? <span className="ml-2 text-sm font-normal text-purple-600">— {trendingTopic}</span> : ""}
+              </h2>
             </div>
-            <Button
-              onClick={fetchAiHeadlines}
-              disabled={loadingHeadlines}
-              size="sm"
-              style={{ background: "var(--cu-primary)" }}
-              className="text-white text-xs"
-            >
-              {loadingHeadlines ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Flame className="w-3.5 h-3.5 mr-1" />}
-              {headlinesFetched ? "Refresh" : "Load Headlines"}
-            </Button>
+            <div className="flex items-center gap-2">
+              {trendingTopic && (
+                <button onClick={() => { setTrendingTopic(null); fetchAiHeadlines(null); }} className="text-xs text-gray-400 hover:text-gray-600 underline">Clear</button>
+              )}
+              <Button
+                onClick={() => fetchAiHeadlines(trendingTopic)}
+                disabled={loadingHeadlines}
+                size="sm"
+                style={{ background: "var(--cu-primary)" }}
+                className="text-white text-xs"
+              >
+                {loadingHeadlines ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Flame className="w-3.5 h-3.5 mr-1" />}
+                Refresh
+              </Button>
+            </div>
           </div>
-          {!headlinesFetched && !loadingHeadlines && (
-            <p className="text-sm text-gray-500">Click "Load Headlines" to fetch today's top stories using AI.</p>
+          {loadingHeadlines && !headlinesFetched && (
+            <p className="text-sm text-gray-500">Fetching today's top stories...</p>
           )}
           {loadingHeadlines && (
             <div className="flex items-center gap-2 text-sm text-gray-500 py-4">
