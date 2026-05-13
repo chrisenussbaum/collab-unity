@@ -1340,6 +1340,13 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                               <Edit className="w-4 h-4 mr-2" />
                               Edit Profile
                             </Button>
+                            <Button
+                              variant="outline"
+                              onClick={handleOpenGenerateResume}
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              Generate Resume
+                            </Button>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="outline">
@@ -1347,10 +1354,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={handleOpenGenerateResume}>
-                                  <Download className="w-4 h-4 mr-2" />
-                                  Generate Resume
-                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => setIsContactModalOpen(true)}>
                                   <Info className="w-4 h-4 mr-2" />
                                   Contact Info
