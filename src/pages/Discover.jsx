@@ -868,7 +868,7 @@ export default function Discover({ currentUser: propCurrentUser }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Dialog open={showApplicationDialog} onOpenChange={setShowApplicationDialog}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>

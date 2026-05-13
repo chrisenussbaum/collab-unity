@@ -349,7 +349,7 @@ export default function Layout({ children, currentPageName }) {
 
   if (!authChecked || isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(160deg, #f8f7ff 0%, #f3f0ff 40%, #f5f3ff 70%, #faf5ff 100%)" }}>
         <div className="w-12 sm:w-16 h-12 sm:h-16 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
           <Lightbulb className="w-6 sm:w-8 h-6 sm:h-8 text-white animate-pulse" />
         </div>
@@ -454,7 +454,7 @@ export default function Layout({ children, currentPageName }) {
   // Show loading overlay when logging out
   if (isLoggingOut) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(160deg, #f8f7ff 0%, #f3f0ff 40%, #f5f3ff 70%, #faf5ff 100%)" }}>
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-purple-600 animate-spin mx-auto mb-4" />
           <p className="text-gray-600 font-medium">Signing out...</p>
@@ -464,7 +464,7 @@ export default function Layout({ children, currentPageName }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden" style={{ background: "linear-gradient(160deg, #f8f7ff 0%, #f3f0ff 40%, #f5f3ff 70%, #faf5ff 100%)" }}>
       <Toaster 
         position="top-right" 
         richColors 
