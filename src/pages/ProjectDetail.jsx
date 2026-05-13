@@ -162,26 +162,29 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const logoInputRef = useRef(null);
 
-  // Background image upload
-  const [isUploadingBg, setIsUploadingBg] = useState(false);
-  const bgInputRef = useRef(null);
+  // Background color picker
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
-  const handleBgUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) { toast.error("Please upload an image file."); return; }
-    if (file.size > 10 * 1024 * 1024) { toast.error("Image too large. Max 10MB."); return; }
-    setIsUploadingBg(true);
+  const BG_COLORS = [
+    { label: "Purple", value: "linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%)" },
+    { label: "Indigo", value: "linear-gradient(135deg, #4338ca 0%, #6366f1 100%)" },
+    { label: "Blue", value: "linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)" },
+    { label: "Teal", value: "linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)" },
+    { label: "Green", value: "linear-gradient(135deg, #15803d 0%, #22c55e 100%)" },
+    { label: "Rose", value: "linear-gradient(135deg, #be123c 0%, #f43f5e 100%)" },
+    { label: "Orange", value: "linear-gradient(135deg, #c2410c 0%, #f97316 100%)" },
+    { label: "Pink", value: "linear-gradient(135deg, #9d174d 0%, #ec4899 100%)" },
+    { label: "Slate", value: "linear-gradient(135deg, #334155 0%, #64748b 100%)" },
+    { label: "Dark", value: "linear-gradient(135deg, #111827 0%, #374151 100%)" },
+  ];
+
+  const handleBgColorChange = async (colorValue) => {
     try {
-      const { file_url } = await withRetry(() => UploadFile({ file }));
-      await withRetry(() => Project.update(projectId, { background_image_url: file_url }));
-      setProject(prev => ({ ...prev, background_image_url: file_url }));
-      toast.success("Background image updated!");
+      await withRetry(() => Project.update(projectId, { background_color: colorValue }));
+      setProject(prev => ({ ...prev, background_color: colorValue }));
+      setShowColorPicker(false);
     } catch (error) {
-      toast.error("Failed to upload background image.");
-    } finally {
-      setIsUploadingBg(false);
-      if (bgInputRef.current) bgInputRef.current.value = "";
+      toast.error("Failed to update background color.");
     }
   };
 
@@ -920,15 +923,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         className="hidden"
       />
 
-      {/* Hidden file input for background image */}
-      <input
-        type="file"
-        accept="image/png, image/jpeg, image/jpg, image/webp"
-        ref={bgInputRef}
-        onChange={handleBgUpload}
-        className="hidden"
-      />
-
       <Dialog open={showApplyModal} onOpenChange={setShowApplyModal}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -954,26 +948,41 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
       </Dialog>
       
       {/* Project Background Banner */}
-      {(project.background_image_url || isOwner) && (
-        <div className="relative w-full h-40 sm:h-52 md:h-64 overflow-hidden group mb-0">
-          {project.background_image_url ? (
-            <img src={project.background_image_url} alt="Project background" className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full" style={{ background: "linear-gradient(135deg, #6d28d9 0%, #4f46e5 50%, #7c3aed 100%)" }} />
-          )}
-          <div className="absolute inset-0 bg-black/20" />
-          {isOwner && (
+      <div className="relative w-full h-32 sm:h-44 overflow-hidden group">
+        <div
+          className="w-full h-full transition-all duration-300"
+          style={{ background: project.background_color || "linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%)" }}
+        />
+        <div className="absolute inset-0 bg-black/10" />
+        {isOwner && (
+          <div className="absolute bottom-3 right-3">
             <button
-              onClick={() => !isUploadingBg && bgInputRef.current?.click()}
-              disabled={isUploadingBg}
-              className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-black/50 hover:bg-black/70 text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
+              onClick={() => setShowColorPicker(v => !v)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/40 hover:bg-black/60 text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
             >
-              <Camera className="w-4 h-4" />
-              {isUploadingBg ? "Uploading..." : project.background_image_url ? "Change Background" : "Add Background"}
+              <div className="w-3 h-3 rounded-full border-2 border-white" style={{ background: project.background_color || "#7c3aed" }} />
+              Color
             </button>
-          )}
-        </div>
-      )}
+            {showColorPicker && (
+              <div className="absolute bottom-9 right-0 bg-white rounded-xl shadow-xl p-3 flex flex-wrap gap-2 w-48 z-20 border border-gray-100">
+                {BG_COLORS.map(c => (
+                  <button
+                    key={c.label}
+                    title={c.label}
+                    onClick={() => handleBgColorChange(c.value)}
+                    className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-transform"
+                    style={{
+                      background: c.value,
+                      borderColor: project.background_color === c.value ? '#fff' : 'transparent',
+                      outline: project.background_color === c.value ? '2px solid #6d28d9' : 'none',
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="cu-container cu-page">
         <div className="flex items-center justify-end mb-4 sm:mb-6">
