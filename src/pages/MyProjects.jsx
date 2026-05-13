@@ -21,7 +21,9 @@ import {
   Eye,
   EyeOff,
   Search,
-  Trash2
+  Trash2,
+  Archive,
+  ArchiveRestore
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -47,6 +49,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
   const [projectToDelete, setProjectToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [collaboratorProfiles, setCollaboratorProfiles] = useState({});
+  const [archivingId, setArchivingId] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -137,27 +140,49 @@ export default function MyProjects({ currentUser, authIsLoading }) {
     }
   };
 
+  const handleArchiveToggle = async (project, archive) => {
+    setArchivingId(project.id);
+    try {
+      await base44.entities.Project.update(project.id, {
+        is_archived: archive,
+        archived_at: archive ? new Date().toISOString() : null,
+      });
+      queryClient.invalidateQueries(['my-projects']);
+      toast.success(archive ? "Project archived." : "Project restored to active.");
+    } catch (error) {
+      toast.error("Failed to update project. Please try again.");
+    } finally {
+      setArchivingId(null);
+    }
+  };
+
   // Filter projects based on search query and active tab
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = searchQuery === "" || 
-      project.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.industry?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.area_of_interest?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (project.skills_needed && project.skills_needed.some(skill => 
-        skill.toLowerCase().includes(searchQuery.toLowerCase())
-      ));
+  const activeProjects = projects.filter(p => !p.is_archived);
+  const archivedProjects = projects.filter(p => p.is_archived);
 
-    const matchesTab = activeTab === "public" 
-      ? project.is_visible_on_feed !== false 
-      : project.is_visible_on_feed === false;
+  const matchesSearch = (project) =>
+    searchQuery === "" ||
+    project.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    project.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    project.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    project.industry?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    project.area_of_interest?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (project.skills_needed && project.skills_needed.some(skill =>
+      skill.toLowerCase().includes(searchQuery.toLowerCase())
+    ));
 
-    return matchesSearch && matchesTab;
-  });
+  const filteredProjects = (() => {
+    if (activeTab === "archived") return archivedProjects.filter(matchesSearch);
+    const pool = activeProjects;
+    return pool.filter(p => {
+      const tabMatch = activeTab === "public" ? p.is_visible_on_feed !== false : p.is_visible_on_feed === false;
+      return tabMatch && matchesSearch(p);
+    });
+  })();
 
-  const publicProjectsCount = projects.filter(p => p.is_visible_on_feed !== false).length;
-  const privateProjectsCount = projects.filter(p => p.is_visible_on_feed === false).length;
+  const publicProjectsCount = activeProjects.filter(p => p.is_visible_on_feed !== false).length;
+  const privateProjectsCount = activeProjects.filter(p => p.is_visible_on_feed === false).length;
+  const archivedProjectsCount = archivedProjects.length;
 
   const handleDeleteProject = async () => {
     if (!projectToDelete) return;
@@ -224,24 +249,41 @@ export default function MyProjects({ currentUser, authIsLoading }) {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="public" className="flex items-center gap-2">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsTrigger value="public" className="flex items-center gap-1.5">
                 <Eye className="w-4 h-4" />
-                <span className="hidden sm:inline">Public Projects</span>
-                <span className="sm:hidden">Public</span>
+                <span className="hidden sm:inline">Public</span>
                 <Badge variant="secondary" className="ml-1">{publicProjectsCount}</Badge>
               </TabsTrigger>
-              <TabsTrigger value="private" className="flex items-center gap-2">
+              <TabsTrigger value="private" className="flex items-center gap-1.5">
                 <EyeOff className="w-4 h-4" />
-                <span className="hidden sm:inline">Private Projects</span>
-                <span className="sm:hidden">Private</span>
+                <span className="hidden sm:inline">Private</span>
                 <Badge variant="secondary" className="ml-1">{privateProjectsCount}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="archived" className="flex items-center gap-1.5">
+                <Archive className="w-4 h-4" />
+                <span className="hidden sm:inline">Archived</span>
+                <Badge variant="secondary" className="ml-1">{archivedProjectsCount}</Badge>
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </motion.div>
 
-        {projects.length === 0 ? (
+        {activeTab === "archived" && archivedProjectsCount === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-16"
+          >
+            <div className="w-24 h-24 bg-gradient-to-br from-amber-50 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Archive className="w-12 h-12 text-amber-500" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">No archived projects</h2>
+            <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
+              Archive completed projects to keep your active workspace clutter-free. Use the archive button on any project card.
+            </p>
+          </motion.div>
+        ) : projects.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -336,6 +378,20 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
+                                    handleArchiveToggle(project, !project.is_archived);
+                                  }}
+                                  disabled={archivingId === project.id}
+                                  className={`h-8 w-8 ${project.is_archived ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-50' : 'text-gray-400 hover:text-amber-500 hover:bg-amber-50'}`}
+                                  title={project.is_archived ? "Restore project" : "Archive project"}
+                                >
+                                  {project.is_archived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
                                     setProjectToDelete(project);
                                   }}
                                   className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
@@ -384,6 +440,12 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                           <Badge className="text-xs bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 border border-purple-200">
                             {project.project_type}
                           </Badge>
+                          {project.is_archived && (
+                            <Badge className="text-xs bg-amber-100 text-amber-700 border border-amber-200 flex items-center gap-1">
+                              <Archive className="w-3 h-3" />
+                              Archived
+                            </Badge>
+                          )}
                         </div>
                       </CardHeader>
 

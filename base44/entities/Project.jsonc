@@ -126,6 +126,16 @@
       "default": "seeking_collaborators",
       "description": "Current project status"
     },
+    "is_archived": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the project has been archived by the owner"
+    },
+    "archived_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the project was archived"
+    },
     "logo_url": {
       "type": "string",
       "description": "Project logo image URL"
