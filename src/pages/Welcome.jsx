@@ -58,8 +58,8 @@ const FeedPostMockup = () => {
   const [showcaseIndex, setShowcaseIndex] = React.useState(0);
   
   const showcaseItems = [
-    { title: "Live Website", domain: "velnor.pro", screenshotUrl: "https://api.microlink.io/?url=https%3A%2F%2Fvelnor.pro&screenshot=true&meta=false&embed=screenshot.url" },
-    { title: "GitHub Repo", domain: "github.com", screenshotUrl: "https://api.microlink.io/?url=https%3A%2F%2Fgithub.com&screenshot=true&meta=false&embed=screenshot.url" },
+    { title: "Live Demo", domain: "myproject.app", screenshotUrl: "https://images.unsplash.com/photo-1547658719-da2b51169166?w=800&h=450&fit=crop" },
+    { title: "Design Mockup", domain: "figma.com", screenshotUrl: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=450&fit=crop" },
   ];
   
   const currentItem = showcaseItems[showcaseIndex];
@@ -153,17 +153,7 @@ const FeedPostMockup = () => {
               src={currentItem.screenshotUrl}
               alt={currentItem.title}
               className="w-full h-full object-cover"
-              onError={e => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
             />
-            <div className="absolute inset-0 hidden items-center justify-center bg-gray-50">
-              <div className="text-center">
-                <Globe className="w-8 h-8 text-gray-300 mx-auto mb-1" />
-                <p className="text-xs text-gray-400">{currentItem.domain}</p>
-              </div>
-            </div>
           </div>
           {/* Title bar */}
           <div className="px-3 py-2 bg-white">
@@ -202,16 +192,16 @@ const FeedPostMockup = () => {
             <svg className="w-3.5 h-3.5 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             Recent Activity <span className="bg-gray-200 text-gray-600 rounded-full px-1.5">2</span>
           </div>
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2 text-xs text-gray-600">
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+            <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 rounded-lg px-3 py-2 flex-shrink-0">
               <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=40&h=40&fit=crop&crop=faces" className="w-5 h-5 rounded-full object-cover flex-shrink-0" alt="" />
-              <span><span className="font-medium text-gray-800">Jordan Blake</span> posted a discussion comment</span>
-              <span className="ml-auto text-gray-400 whitespace-nowrap">2 days ago</span>
+              <span><span className="font-medium text-gray-800">Jordan B.</span> posted a comment</span>
+              <span className="text-gray-400 whitespace-nowrap">2d ago</span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-600">
+            <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 rounded-lg px-3 py-2 flex-shrink-0">
               <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=faces" className="w-5 h-5 rounded-full object-cover flex-shrink-0" alt="" />
               <span><span className="font-medium text-gray-800">Alex M.</span> completed a task</span>
-              <span className="ml-auto text-gray-400 whitespace-nowrap">4 days ago</span>
+              <span className="text-gray-400 whitespace-nowrap">4d ago</span>
             </div>
           </div>
         </div>
