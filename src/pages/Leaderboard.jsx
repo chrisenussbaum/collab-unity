@@ -99,7 +99,7 @@ export default function Leaderboard({ currentUser }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Trophy className="w-16 h-16 text-purple-600 animate-bounce mx-auto mb-4" />
           <p className="text-gray-600">Loading leaderboard...</p>
@@ -109,7 +109,7 @@ export default function Leaderboard({ currentUser }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

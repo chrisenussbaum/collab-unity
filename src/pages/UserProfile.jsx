@@ -1012,7 +1012,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
 
   if (!profileUser) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center max-w-md mx-auto">
           <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Profile Not Found</h3>
           <p className="text-sm sm:text-base text-gray-600 mb-6">The profile you're looking for doesn't exist or hasn't been set up yet.</p>
@@ -1220,7 +1220,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         isSubmitting={isSubmittingReview}
       />
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <div>
             {isOwner && propCurrentUser && (

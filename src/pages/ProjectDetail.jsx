@@ -162,6 +162,29 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const logoInputRef = useRef(null);
 
+  // Background image upload
+  const [isUploadingBg, setIsUploadingBg] = useState(false);
+  const bgInputRef = useRef(null);
+
+  const handleBgUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error("Please upload an image file."); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error("Image too large. Max 10MB."); return; }
+    setIsUploadingBg(true);
+    try {
+      const { file_url } = await withRetry(() => UploadFile({ file }));
+      await withRetry(() => Project.update(projectId, { background_image_url: file_url }));
+      setProject(prev => ({ ...prev, background_image_url: file_url }));
+      toast.success("Background image updated!");
+    } catch (error) {
+      toast.error("Failed to upload background image.");
+    } finally {
+      setIsUploadingBg(false);
+      if (bgInputRef.current) bgInputRef.current.value = "";
+    }
+  };
+
   // New state for invitations
   const [pendingInvitation, setPendingInvitation] = useState(null);
   const [isRespondingToInvite, setIsRespondingToInvite] = useState(false);
@@ -841,7 +864,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   // Enhanced loading state as per outline
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse">
           <Lightbulb className="w-16 h-16 text-purple-600" />
         </div>
@@ -852,7 +875,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   // Enhanced error state as per outline (using !project for primary error condition)
   if (!project) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
           <h3 className="text-xl font-semibold mb-2">Project Not Found</h3>
           <p className="text-gray-600 mb-4">This project doesn't exist or you don't have access to it.</p>
@@ -897,6 +920,15 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         className="hidden"
       />
 
+      {/* Hidden file input for background image */}
+      <input
+        type="file"
+        accept="image/png, image/jpeg, image/jpg, image/webp"
+        ref={bgInputRef}
+        onChange={handleBgUpload}
+        className="hidden"
+      />
+
       <Dialog open={showApplyModal} onOpenChange={setShowApplyModal}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -921,6 +953,28 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         </DialogContent>
       </Dialog>
       
+      {/* Project Background Banner */}
+      {(project.background_image_url || isOwner) && (
+        <div className="relative w-full h-40 sm:h-52 md:h-64 overflow-hidden group mb-0">
+          {project.background_image_url ? (
+            <img src={project.background_image_url} alt="Project background" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full" style={{ background: "linear-gradient(135deg, #6d28d9 0%, #4f46e5 50%, #7c3aed 100%)" }} />
+          )}
+          <div className="absolute inset-0 bg-black/20" />
+          {isOwner && (
+            <button
+              onClick={() => !isUploadingBg && bgInputRef.current?.click()}
+              disabled={isUploadingBg}
+              className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-black/50 hover:bg-black/70 text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
+            >
+              <Camera className="w-4 h-4" />
+              {isUploadingBg ? "Uploading..." : project.background_image_url ? "Change Background" : "Add Background"}
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="cu-container cu-page">
         <div className="flex items-center justify-end mb-4 sm:mb-6">
           <div className="flex items-center space-x-2 sm:space-x-3">

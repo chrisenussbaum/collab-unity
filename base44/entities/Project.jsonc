@@ -140,6 +140,10 @@
       "type": "string",
       "description": "Project logo image URL"
     },
+    "background_image_url": {
+      "type": "string",
+      "description": "Project background banner image URL"
+    },
     "highlights": {
       "type": "array",
       "items": {
