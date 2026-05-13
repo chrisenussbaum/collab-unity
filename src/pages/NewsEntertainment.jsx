@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tv, Search, ExternalLink, Loader2, Flame, Globe, Lightbulb, Briefcase, Palette, Cpu, Music, Trophy } from "lucide-react";
+import { Tv, Search, ExternalLink, Loader2, Flame, Globe, Lightbulb, Briefcase, Palette, Cpu, Music, Trophy, ChevronLeft } from "lucide-react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const FALLBACK_NEWS_SOURCES = [
   { name: "TechCrunch", url: "https://techcrunch.com", category: "Tech", description: "Startup and technology news", color: "bg-green-50 border-green-200" },
@@ -53,6 +54,7 @@ const VIDEOS = [
 const getFavicon = (url) => `https://www.google.com/s2/favicons?domain=${url}&sz=64`;
 
 export default function NewsEntertainment({ currentUser }) {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("news"); // "news" | "videos"
@@ -133,7 +135,13 @@ export default function NewsEntertainment({ currentUser }) {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 py-12 -mt-14 pt-28 sm:-mt-16 sm:pt-32">
-        <div className="cu-container text-center">
+        <div className="cu-container text-center relative">
+          <button
+            onClick={() => navigate("/Discover")}
+            className="absolute left-0 top-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-sm font-medium text-gray-600 hover:border-purple-400 hover:text-purple-700 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" /> Discover
+          </button>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="w-14 h-14 rounded-2xl cu-gradient flex items-center justify-center mx-auto mb-4">
               <Tv className="w-7 h-7 text-white" />
