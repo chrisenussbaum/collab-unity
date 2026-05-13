@@ -144,16 +144,62 @@ const COMMANDS = [
   { id: "tool",       label: "Add Tool",       icon: Wrench,      color: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100" },
 ];
 
-// AI action chips — these send a prompt to the AI
-const AI_ACTIONS = [
-  { id: "brainstorm", label: "Brainstorm",  icon: Lightbulb, prompt: "Brainstorm creative ideas for this project. Be specific and actionable.",        color: "bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100" },
-  { id: "plan",       label: "Make a Plan", icon: Map,       prompt: "Create a step-by-step action plan for this project.",                             color: "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100" },
-  { id: "brief",      label: "Write Brief", icon: FileText,  prompt: "Write a concise project brief summarizing goals, audience, deliverables, and timeline.", color: "bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100" },
-];
+// Generate context-aware AI action prompts based on project state
+function getAIActions(project, tasks, milestones) {
+  const title = project?.title || "this project";
+  const todoCount = tasks?.filter(t => t.status === "todo").length || 0;
+  const overdueCount = tasks?.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== "done").length || 0;
+  const unassignedCount = tasks?.filter(t => !t.assigned_to && t.status !== "done").length || 0;
+  const milestoneCount = milestones?.length || 0;
+  const hasTasks = (tasks?.length || 0) > 0;
+  const hasMilestones = milestoneCount > 0;
+
+  // Build context-specific prompts
+  const brainstormPrompt = hasTasks
+    ? `Brainstorm new ideas and features for "${title}". We already have ${tasks.length} tasks. What creative angles or approaches haven't we considered yet? Be specific.`
+    : `Brainstorm the key ideas, features, and goals for "${title}". What should we focus on building first? Give me 5-7 concrete, actionable ideas.`;
+
+  const planPrompt = hasMilestones
+    ? `Create a detailed step-by-step action plan for "${title}". We have ${milestoneCount} milestone${milestoneCount !== 1 ? "s" : ""} set${hasTasks ? ` and ${tasks.length} tasks` : " but no tasks yet"}. Break this down into clear next actions.`
+    : `Create a complete project plan for "${title}" — define the main phases/milestones, break each into tasks, and give us a realistic timeline. Be specific and actionable.`;
+
+  const briefPrompt = `Write a comprehensive project brief for "${title}" that includes: project overview, goals & objectives, target audience, key deliverables, success metrics, and timeline. Base it on the actual project details.`;
+
+  // Context-specific extra actions
+  const extraActions = [];
+  if (overdueCount > 0) {
+    extraActions.push({
+      id: "overdue", label: `Review ${overdueCount} Overdue`, icon: CheckSquare,
+      prompt: `I have ${overdueCount} overdue task${overdueCount > 1 ? "s" : ""} in "${title}". Help me triage them — which should I prioritize and which can be rescheduled or removed?`,
+      color: "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+    });
+  }
+  if (unassignedCount > 0 && todoCount > 0) {
+    extraActions.push({
+      id: "assign", label: `Assign ${unassignedCount} Tasks`, icon: CheckSquare,
+      prompt: `I have ${unassignedCount} unassigned task${unassignedCount > 1 ? "s" : ""} in "${title}". Help me figure out how to assign them effectively based on the project needs.`,
+      color: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+    });
+  }
+  if (!hasMilestones && hasTasks) {
+    extraActions.push({
+      id: "milestones", label: "Add Milestones", icon: Flag,
+      prompt: `"${title}" has ${tasks.length} tasks but no milestones. Help me define 3-5 meaningful milestones that group these tasks into phases or goals.`,
+      color: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100"
+    });
+  }
+
+  return [
+    { id: "brainstorm", label: "Brainstorm",  icon: Lightbulb, prompt: brainstormPrompt, color: "bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100" },
+    { id: "plan",       label: "Make a Plan", icon: Map,       prompt: planPrompt,       color: "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100" },
+    { id: "brief",      label: "Write Brief", icon: FileText,  prompt: briefPrompt,      color: "bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100" },
+    ...extraActions.slice(0, 2),
+  ];
+}
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function ChatCommandBar({ project, currentUser, messageContent, projectUsers = [], onSaved, onProjectUpdate, onAIAction }) {
+export default function ChatCommandBar({ project, currentUser, messageContent, projectUsers = [], tasks = [], milestones = [], onSaved, onProjectUpdate, onAIAction }) {
   const [activeCommand, setActiveCommand] = useState(null);
   const [saving, setSaving] = useState(false);
   const [savedCommands, setSavedCommands] = useState(new Set());
@@ -292,8 +338,8 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
     <div className="mt-2 overflow-hidden">
       {/* Command chips — horizontal scroll on mobile/tablet */}
       <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch" }}>
-        {/* AI action chips */}
-        {onAIAction && AI_ACTIONS.map(action => (
+        {/* AI action chips — context-aware */}
+        {onAIAction && getAIActions(project, tasks, milestones).map(action => (
           <button
             key={action.id}
             onClick={() => onAIAction(action.prompt)}

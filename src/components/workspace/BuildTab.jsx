@@ -134,7 +134,7 @@ function detectProjectPhase(tasks, milestones, assets) {
   return "planning";
 }
 
-function buildSystemPrompt(project, tasks, milestones, assets, projectUsers) {
+function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, extraContext = {}) {
   const todoTasks = tasks?.filter(t => t.status === "todo") || [];
   const inProgressTasks = tasks?.filter(t => t.status === "in_progress") || [];
   const doneTasks = tasks?.filter(t => t.status === "done") || [];
@@ -176,9 +176,25 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers) {
     near_completion: `The project is NEAR COMPLETION (80%+ done). Help the user identify final remaining work, wrap up loose ends, and prepare for launch or handoff. Suggest reviewing assets and writing a final project brief.`,
   };
 
+  // Build asset context
+  const assetLines = assets?.slice(0, 10).map(a => `- ${a.asset_name || a.file_name} (${a.file_type || "file"})${a.category ? ` [${a.category}]` : ""}`);
+
+  // Build tools context
+  const toolLines = project?.project_tools?.map(t => `- ${t.name}${t.url ? ` (${t.url})` : ""}`);
+
+  // Build links context
+  const linkLines = extraContext.buildLinks?.map(l => `- ${l.label}: ${l.url}`);
+
+  // Build thoughts/notes context
+  const thoughtLines = extraContext.thoughts?.slice(0, 5).map(t => `- "${t.title}"${t.content ? `: ${t.content.slice(0, 80)}` : ""}`);
+
+  // Recent activity
+  const activityLines = extraContext.activityLogs?.slice(0, 5).map(a => `- ${a.user_name || a.user_email}: ${a.action_description}`);
+
   const parts = [
     `You are an intelligent, proactive project assistant embedded inside Collab Unity — a collaborative project platform.`,
     `You deeply understand this project and act as a smart co-pilot driving it from its current state toward completion.`,
+    `Today's date: ${new Date().toISOString().split("T")[0]}`,
     `\n== WORKSPACE TABS AVAILABLE ==`,
     `Users can navigate these workspace tabs at any time. When relevant, suggest they switch to a tab by name:`,
     `- Assistant (AI chat — current view)`,
@@ -198,28 +214,37 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers) {
     project?.classification ? `Classification: ${project.classification}` : null,
     project?.industry ? `Industry: ${project.industry}` : null,
     project?.status ? `Project status: ${project.status}` : null,
-    project?.skills_needed?.length ? `Skills: ${project.skills_needed.join(", ")}` : null,
+    project?.location ? `Location: ${project.location}` : null,
+    project?.area_of_interest ? `Area of interest: ${project.area_of_interest}` : null,
+    project?.skills_needed?.length ? `Skills needed: ${project.skills_needed.join(", ")}` : null,
     project?.tools_needed?.length ? `Tools needed: ${project.tools_needed.join(", ")}` : null,
-    project?.project_tools?.length ? `Tools in use: ${project.project_tools.map(t => t.name).join(", ")}` : null,
+    toolLines?.length ? `\n== PROJECT TOOLS IN USE ==\n${toolLines.join("\n")}` : `\n== PROJECT TOOLS == None added yet`,
+    linkLines?.length ? `\n== BUILD LINKS ==\n${linkLines.join("\n")}` : `\n== BUILD LINKS == None added yet`,
     `\n== TASK PROGRESS ==`,
     `Overall: ${taskProgress}`,
-    todoTasks.length ? `Todo (${todoTasks.length}): ${todoTasks.slice(0,5).map(t=>t.title).join(", ")}${todoTasks.length>5?" ...":""}` : null,
+    todoTasks.length ? `Todo (${todoTasks.length}): ${todoTasks.slice(0,5).map(t=>t.title).join(", ")}${todoTasks.length>5?" ...":""}` : "No todo tasks",
     inProgressTasks.length ? `In Progress (${inProgressTasks.length}): ${inProgressTasks.slice(0,5).map(t=>t.title).join(", ")}` : null,
     overdueTasks.length ? `⚠️ OVERDUE (${overdueTasks.length}): ${overdueTasks.map(t=>t.title).join(", ")}` : null,
     unassignedTasks.length ? `Unassigned (${unassignedTasks.length}): ${unassignedTasks.slice(0,5).map(t=>t.title).join(", ")}` : null,
     taskLines?.length ? `\nAll Tasks:\n${taskLines.join("\n")}` : null,
-    milestoneLines?.length ? `\n== MILESTONES ==\n${milestoneLines.join("\n")}` : `\n== MILESTONES ==\nNone yet`,
-    collaboratorLines?.length ? `\n== COLLABORATORS ==\n${collaboratorLines.join("\n")}` : null,
-    assets?.length ? `\n== ASSETS == (${assets.length} files/links)` : null,
+    milestoneLines?.length ? `\n== MILESTONES ==\n${milestoneLines.join("\n")}\nCompleted: ${completedMilestones.length}, Pending: ${pendingMilestones.length}` : `\n== MILESTONES ==\nNone yet`,
+    assetLines?.length ? `\n== ASSETS (${assets.length} total) ==\n${assetLines.join("\n")}` : `\n== ASSETS == None uploaded yet`,
+    thoughtLines?.length ? `\n== THOUGHTS & NOTES ==\n${thoughtLines.join("\n")}` : `\n== THOUGHTS & NOTES == None saved yet`,
+    activityLines?.length ? `\n== RECENT ACTIVITY ==\n${activityLines.join("\n")}` : null,
+    collaboratorLines?.length ? `\n== COLLABORATORS (${projectUsers.length}) ==\n${collaboratorLines.join("\n")}` : `\n== COLLABORATORS == Just the project owner`,
     `\n== YOUR BEHAVIOR ==`,
     `You are conversational, smart, and phase-aware. Always meet the user where they are:`,
     `- Reference the current phase and what's most important for THIS phase`,
-    `- Suggest specific workspace tabs by name when relevant (e.g. "Head over to the Tasks tab to see your board")`,
-    `- If tasks are unassigned → suggest assigning them to collaborators by name`,
-    `- If tasks are overdue → flag this and suggest action`,
+    `- Suggest specific workspace tabs by name when relevant`,
+    `- If tasks are unassigned → suggest assigning them to specific collaborators by name`,
+    `- If tasks are overdue → urgently flag this and suggest action`,
     `- If milestones are missing → suggest creating them to structure the work`,
-    `- If project tools are missing → suggest relevant tools based on project type`,
+    `- If no tools are added → suggest relevant tools based on the project type and industry`,
+    `- If no build links → suggest adding key links like GitHub, Figma, deployment URLs`,
+    `- If thoughts/notes exist → reference them when relevant`,
+    `- Reference actual collaborator names when suggesting task assignments`,
     `- Always end with one clear next-step question or suggestion to keep momentum`,
+    `- Be specific and personal — reference actual project data, not generic advice`,
     `\nYou can EXECUTE ACTIONS directly — when a user asks you to create tasks, assign work, add milestones, save notes, etc., DO IT by including an "actions" array in your JSON response. Also include a "navigate_to" field if you want to suggest the user switch to a workspace tab.`,
     `\n== RESPONSE FORMAT ==`,
     `You MUST respond with valid JSON (no markdown code blocks, just raw JSON):`,
@@ -348,8 +373,9 @@ async function executeAction(action, project, currentUser, onProjectUpdate) {
   return null;
 }
 
-function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers, onProjectUpdate, onNavigateTo }) {
+function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers, onProjectUpdate, onNavigateTo, buildLinks = [], activityLogs = [] }) {
   const [messages, setMessages] = useState([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0, assets)]);
+  const [thoughts, setThoughts] = useState([]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -372,6 +398,12 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
   const fileInputRef = useRef(null);
   const analyzeFileInputRef = useRef(null);
   const dragCounterRef = useRef(0);
+
+  // Load thoughts/notes for context
+  useEffect(() => {
+    if (!project?.id) return;
+    base44.entities.Thought.filter({ project_id: project.id }, "-created_date", 10).then(setThoughts).catch(() => {});
+  }, [project?.id]);
 
   // Load persisted chat history, then auto-analyze if no history exists
   useEffect(() => {
@@ -420,8 +452,8 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
     if (!project?.id) return;
     setIsLoading(true);
     try {
-      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers);
-      const analysisRequest = `Analyze the current state of this project. Summarize what exists (tasks, milestones, assets, collaborators), identify the most important next steps, and end with ONE specific question asking what the user wants to work on first. Be concise and conversational. Respond with valid JSON only.`;
+      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs });
+      const analysisRequest = `Analyze the current state of this project. Summarize what exists (tasks, milestones, assets, tools, build links, notes, collaborators), identify the most important next steps based on what's missing or overdue, and end with ONE specific question asking what the user wants to work on first. Be concise, specific, and conversational. Respond with valid JSON only.`;
       const raw = await base44.integrations.Core.InvokeLLM({ prompt: `${systemPrompt}\n\n${analysisRequest}` });
       let parsed = null;
       try {
@@ -671,7 +703,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
         await persistMessage(userMsg);
         setIsLoading(true);
         try {
-          const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers);
+          const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs });
           const raw = await base44.integrations.Core.InvokeLLM({ prompt: `${systemPrompt}\n\n${prompt}\n\nRespond with valid JSON only:` });
           let parsed = null;
           try {
@@ -720,7 +752,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
     setTimeout(scrollToBottom, 50);
 
     try {
-      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers);
+      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs });
       const conversationHistory = newMessages.slice(-20).map(m =>
         `${m.role === "user" ? (m.sender_name || "User") : "Assistant"}: ${m.content}`
       ).join("\n\n");
@@ -839,7 +871,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
         return file_url;
       }));
 
-      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers);
+      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs });
       const analysisPrompt = `${systemPrompt}
 
 The user has shared ${files.length} file(s) for analysis: ${files.map(f => f.name).join(", ")}.
@@ -950,6 +982,8 @@ Be specific, reference the actual content you observe, and tie your feedback to 
                   currentUser={currentUser}
                   messageContent={msg.content}
                   projectUsers={projectUsers}
+                  tasks={tasks}
+                  milestones={milestones}
                   onProjectUpdate={onProjectUpdate}
                   onSaved={() => {}}
                   onAIAction={(prompt) => { setAwaitingContinue(false); sendMessage(prompt); }}
@@ -1379,7 +1413,7 @@ export default function BuildTab({
 
           {/* Chat */}
           {activeSection === "chat" && (
-            <AIChat project={project} tasks={tasks} milestones={milestones} assets={assets} currentUser={currentUser} canEdit={canEdit} projectUsers={projectUsers} onProjectUpdate={onProjectUpdate} onNavigateTo={setActiveSection} />
+            <AIChat project={project} tasks={tasks} milestones={milestones} assets={assets} currentUser={currentUser} canEdit={canEdit} projectUsers={projectUsers} onProjectUpdate={onProjectUpdate} onNavigateTo={setActiveSection} buildLinks={savedLinks} activityLogs={activityLogs} />
           )}
 
           {/* Tasks */}
