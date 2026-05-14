@@ -21,7 +21,7 @@ const PillButton = ({ children, primary, onClick, className = "" }) => (
       inline-flex items-center justify-center gap-2 rounded-full text-sm font-medium transition-all
       px-5 py-2
       ${primary
-        ? "bg-blue-600 text-white hover:bg-blue-700"
+        ? "bg-[#5B47DB] text-white hover:bg-[#4A37C0]"
         : "bg-transparent border border-gray-400 text-gray-800 hover:border-gray-700"
       }
       ${className}
@@ -33,7 +33,7 @@ const PillButton = ({ children, primary, onClick, className = "" }) => (
 
 // ─── Minimal Nav ──────────────────────────────────────────────────────────────
 const Nav = ({ onAuth }) => {
-  const [scrolled, setScrolled] = useState(false);
+  const [scrolled, setScrolled] = React.useState(false);
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll);
@@ -43,30 +43,31 @@ const Nav = ({ onAuth }) => {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-white/90 backdrop-blur-xl border-b border-gray-200/80" : "bg-white/70 backdrop-blur-md"
+        scrolled ? "bg-white/95 backdrop-blur-xl shadow-sm border-b border-gray-200" : "bg-white/80 backdrop-blur-md"
       }`}
     >
-      <div className="max-w-[980px] mx-auto px-4 flex items-center justify-between h-12">
-        {/* Logo */}
-        <a href="#" className="flex-shrink-0">
-          <img src={LOGO_URL} alt="Collab Unity" className="w-6 h-6 rounded object-cover" />
+      <div className="max-w-[980px] mx-auto px-6 flex items-center justify-between h-14">
+        {/* Logo + Brand */}
+        <a href="#" className="flex items-center gap-2 flex-shrink-0">
+          <img src={LOGO_URL} alt="Collab Unity" className="w-7 h-7 rounded-lg object-cover" />
+          <span className="text-sm font-semibold text-gray-900 hidden sm:inline">Collab Unity</span>
         </a>
 
         {/* Center Nav */}
-        <nav className="hidden md:flex items-center gap-6 text-[13px] text-gray-700">
-          <a href="#features" className="hover:text-black transition-colors">Features</a>
-          <a href="#how-it-works" className="hover:text-black transition-colors">How It Works</a>
-          <a href="#about" className="hover:text-black transition-colors">About</a>
-          <a href="#faq" className="hover:text-black transition-colors">FAQ</a>
-          <Link to={createPageUrl("Contact")} className="hover:text-black transition-colors">Contact</Link>
+        <nav className="hidden md:flex items-center gap-7 text-[13px] text-gray-600 font-medium">
+          <a href="#features" className="hover:text-[#5B47DB] transition-colors">Features</a>
+          <a href="#how-it-works" className="hover:text-[#5B47DB] transition-colors">How It Works</a>
+          <a href="#about" className="hover:text-[#5B47DB] transition-colors">About</a>
+          <a href="#faq" className="hover:text-[#5B47DB] transition-colors">FAQ</a>
+          <Link to={createPageUrl("Contact")} className="hover:text-[#5B47DB] transition-colors">Contact</Link>
         </nav>
 
         {/* Right */}
-        <div className="flex items-center gap-4 text-[13px]">
-          <button onClick={onAuth} className="text-gray-700 hover:text-black transition-colors">Log in</button>
+        <div className="flex items-center gap-3 text-[13px]">
+          <button onClick={onAuth} className="text-gray-600 font-medium hover:text-[#5B47DB] transition-colors">Log in</button>
           <button
             onClick={onAuth}
-            className="bg-blue-600 text-white rounded-full px-4 py-1.5 text-[13px] font-medium hover:bg-blue-700 transition-colors"
+            className="bg-[#5B47DB] text-white rounded-full px-4 py-2 text-[13px] font-medium hover:bg-[#4A37C0] transition-colors shadow-sm"
           >
             Sign up free
           </button>
@@ -182,7 +183,7 @@ const FeaturePanel = ({ bg, eyebrow, title, subtitle, cta, ctaSecondary, onAuth,
         <button
           onClick={onAuth}
           className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${
-            light ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-white text-gray-900 hover:bg-gray-100"
+            light ? "bg-[#5B47DB] text-white hover:bg-[#4A37C0]" : "bg-white text-gray-900 hover:bg-gray-100"
           }`}
         >
           {cta}
@@ -191,7 +192,7 @@ const FeaturePanel = ({ bg, eyebrow, title, subtitle, cta, ctaSecondary, onAuth,
           <button
             onClick={onAuth}
             className={`rounded-full px-5 py-2 text-sm font-medium border transition-colors ${
-              light ? "border-blue-600 text-blue-600 hover:bg-blue-50" : "border-white/50 text-white hover:border-white"
+              light ? "border-[#5B47DB] text-[#5B47DB] hover:bg-purple-50" : "border-white/50 text-white hover:border-white"
             }`}
           >
             {ctaSecondary}
@@ -295,7 +296,7 @@ const HowItWorks = ({ onAuth }) => (
       <div className="mt-12">
         <button
           onClick={onAuth}
-          className="bg-blue-600 text-white rounded-full px-6 py-3 text-sm font-medium hover:bg-blue-700 transition-colors"
+          className="bg-[#5B47DB] text-white rounded-full px-6 py-3 text-sm font-medium hover:bg-[#4A37C0] transition-colors"
         >
           Get started — it's free
         </button>
@@ -397,7 +398,7 @@ const FeaturesShowcase = ({ onAuth }) => {
             <div className={`max-w-[980px] mx-auto flex flex-col ${isEven ? "lg:flex-row" : "lg:flex-row-reverse"} items-center gap-12`}>
               {/* Text */}
               <div className="flex-1 text-left">
-                <p className={`text-sm font-semibold mb-2 ${f.light ? "text-blue-600" : "text-blue-400"}`}>{f.eyebrow}</p>
+                <p className={`text-sm font-semibold mb-2 ${f.light ? "text-[#5B47DB]" : "text-purple-300"}`}>{f.eyebrow}</p>
                 <h2 className={`text-3xl sm:text-4xl font-semibold tracking-tight mb-4 leading-tight ${f.light ? "text-gray-900" : "text-white"}`}>
                   {f.title}
                 </h2>
@@ -405,7 +406,7 @@ const FeaturesShowcase = ({ onAuth }) => {
                 <ul className="space-y-2 mb-8">
                   {f.items.map((item, j) => (
                     <li key={j} className="flex items-center gap-2">
-                      <CheckCircle className={`w-4 h-4 flex-shrink-0 ${f.light ? "text-blue-600" : "text-blue-400"}`} />
+                      <CheckCircle className={`w-4 h-4 flex-shrink-0 ${f.light ? "text-[#5B47DB]" : "text-purple-300"}`} />
                       <span className={`text-sm font-medium ${f.light ? "text-gray-700" : "text-gray-300"}`}>{item}</span>
                     </li>
                   ))}
@@ -413,7 +414,7 @@ const FeaturesShowcase = ({ onAuth }) => {
                 <button
                   onClick={onAuth}
                   className={`rounded-full px-5 py-2.5 text-sm font-medium transition-colors ${
-                    f.light ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-white text-gray-900 hover:bg-gray-100"
+                    f.light ? "bg-[#5B47DB] text-white hover:bg-[#4A37C0]" : "bg-white text-gray-900 hover:bg-gray-100"
                   }`}
                 >
                   Get started
@@ -423,8 +424,8 @@ const FeaturesShowcase = ({ onAuth }) => {
               {/* Visual */}
               <div className="flex-1 w-full">
                 {f.image ? (
-                  <div className="rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50">
-                    <img src={f.image} alt={f.eyebrow} className="w-full object-cover" style={{ aspectRatio: "16/10" }} />
+                  <div className="rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50 cursor-pointer hover:shadow-3xl transition-shadow group" onClick={onAuth}>
+                    <img src={f.image} alt={f.eyebrow} className="w-full object-cover group-hover:scale-[1.02] transition-transform duration-500" style={{ aspectRatio: "16/10" }} />
                   </div>
                 ) : (
                   <div className="rounded-2xl bg-gray-800 border border-gray-700 p-8 shadow-2xl" style={{ aspectRatio: "16/10" }}>
@@ -489,13 +490,13 @@ const CTABanner = ({ onAuth }) => (
       <div className="flex items-center justify-center gap-4 flex-wrap">
         <button
           onClick={onAuth}
-          className="bg-blue-600 text-white rounded-full px-6 py-3 text-sm font-medium hover:bg-blue-700 transition-colors"
+          className="bg-[#5B47DB] text-white rounded-full px-6 py-3 text-sm font-medium hover:bg-[#4A37C0] transition-colors"
         >
           Start for free <ArrowRight className="inline w-4 h-4 ml-1" />
         </button>
         <button
           onClick={onAuth}
-          className="text-blue-600 text-sm font-medium hover:underline"
+          className="text-[#5B47DB] text-sm font-medium hover:underline"
         >
           Already have an account? Sign in
         </button>
@@ -614,6 +615,7 @@ export default function Welcome() {
             ctaSecondary="Explore the platform"
             onAuth={handleAuth}
             light
+
           >
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
               {[

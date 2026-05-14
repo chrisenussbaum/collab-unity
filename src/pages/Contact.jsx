@@ -1,268 +1,133 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Mail, MessageCircle, Send, CheckCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import { Mail, Send, CheckCircle, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
-import PublicPageLayout from "@/components/PublicPageLayout";
 
-const translations = {
-  en: {
-    title: "Contact Us",
-    subtitle: "We'd love to hear from you",
-    sendMessage: "Send us a message",
-    nameLabel: "Name",
-    namePlaceholder: "Your name",
-    emailLabel: "Email",
-    emailPlaceholder: "your.email@example.com",
-    subjectLabel: "Subject",
-    subjectPlaceholder: "What's this about?",
-    messageLabel: "Message",
-    messagePlaceholder: "Tell us more about your inquiry...",
-    sendButton: "Send Message",
-    sending: "Sending...",
-    thankYou: "Message Sent!",
-    thankYouMessage: "Thank you for reaching out. We'll get back to you as soon as possible."
-  },
-  es: {
-    title: "Contáctanos",
-    subtitle: "Nos encantaría saber de ti",
-    sendMessage: "Envíanos un mensaje",
-    nameLabel: "Nombre",
-    namePlaceholder: "Tu nombre",
-    emailLabel: "Correo Electrónico",
-    emailPlaceholder: "tu.correo@ejemplo.com",
-    subjectLabel: "Asunto",
-    subjectPlaceholder: "¿De qué se trata?",
-    messageLabel: "Mensaje",
-    messagePlaceholder: "Cuéntanos más sobre tu consulta...",
-    sendButton: "Enviar Mensaje",
-    sending: "Enviando...",
-    thankYou: "¡Mensaje Enviado!",
-    thankYouMessage: "Gracias por contactarnos. Te responderemos lo antes posible."
-  },
-  fr: {
-    title: "Nous Contacter",
-    subtitle: "Nous aimerions avoir de vos nouvelles",
-    sendMessage: "Envoyez-nous un message",
-    nameLabel: "Nom",
-    namePlaceholder: "Votre nom",
-    emailLabel: "E-mail",
-    emailPlaceholder: "votre.email@exemple.com",
-    subjectLabel: "Sujet",
-    subjectPlaceholder: "De quoi s'agit-il?",
-    messageLabel: "Message",
-    messagePlaceholder: "Parlez-nous de votre demande...",
-    sendButton: "Envoyer le Message",
-    sending: "Envoi...",
-    thankYou: "Message Envoyé!",
-    thankYouMessage: "Merci de nous avoir contactés. Nous vous répondrons dans les plus brefs délais."
-  }
-};
+const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg";
 
 export default function Contact() {
-  const [language, setLanguage] = useState('en');
-  const t = translations[language];
-  
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: ""
-  });
+  const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleAuth = () => {
-    window.location.href = "https://collabunity.io/login";
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!formData.name || !formData.email || !formData.subject || !formData.message) {
       toast.error("Please fill in all fields");
       return;
     }
-
     setIsSubmitting(true);
-    
     try {
-      // Send email using Base44 integration
       await base44.integrations.Core.SendEmail({
         to: "collabunity@collabunity.io",
         subject: `[Contact Form] ${formData.subject}`,
-        body: `
-New contact form submission from Collab Unity:
-
-Name: ${formData.name}
-Email: ${formData.email}
-Subject: ${formData.subject}
-
-Message:
-${formData.message}
-
----
-Sent from Collab Unity Contact Form
-        `.trim()
+        body: `New contact form submission:\n\nName: ${formData.name}\nEmail: ${formData.email}\nSubject: ${formData.subject}\n\nMessage:\n${formData.message}`.trim()
       });
-
       setIsSubmitted(true);
-      
-      // Reset form after 3 seconds
       setTimeout(() => {
         setFormData({ name: "", email: "", subject: "", message: "" });
         setIsSubmitted(false);
-      }, 3000);
+      }, 4000);
     } catch (error) {
-      console.error("Error sending message:", error);
-      toast.error("Failed to send message. Please try again or email us directly at collabunity@collabunity.io");
+      toast.error("Failed to send message. Email us directly at collabunity@collabunity.io");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
   return (
-    <PublicPageLayout currentLanguage={language} onLanguageChange={setLanguage}>
-      <div className="py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-                <MessageCircle className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-[#f5f5f7] font-sans antialiased">
+      {/* Nav */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl shadow-sm border-b border-gray-200">
+        <div className="max-w-[980px] mx-auto px-6 flex items-center justify-between h-14">
+          <Link to={createPageUrl("Welcome")} className="flex items-center gap-2">
+            <img src={LOGO_URL} alt="Collab Unity" className="w-7 h-7 rounded-lg object-cover" />
+            <span className="text-sm font-semibold text-gray-900">Collab Unity</span>
+          </Link>
+          <Link to={createPageUrl("Welcome")} className="flex items-center gap-1.5 text-[13px] text-[#5B47DB] font-medium hover:text-[#4A37C0] transition-colors">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
+          </Link>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <div className="pt-28 pb-6 text-center px-4">
+        <p className="text-xs font-semibold text-[#5B47DB] uppercase tracking-widest mb-3">Get in Touch</p>
+        <h1 className="text-4xl sm:text-5xl font-semibold text-gray-900 tracking-tight mb-3">Contact Us</h1>
+        <p className="text-lg text-gray-500 max-w-md mx-auto">We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+      </div>
+
+      {/* Form Card */}
+      <div className="max-w-[640px] mx-auto px-4 pb-20">
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-200/60 p-8 sm:p-10">
+          {isSubmitted ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">{t.title}</h1>
-              <p className="text-xl text-gray-600">{t.subtitle}</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Message Sent!</h3>
+              <p className="text-gray-500">Thank you for reaching out. We'll get back to you as soon as possible.</p>
             </div>
-          </motion.div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <Label htmlFor="name" className="text-sm font-medium text-gray-700">Name</Label>
+                  <Input id="name" placeholder="Your name" value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} required className="rounded-xl border-gray-200 focus:border-[#5B47DB] focus:ring-[#5B47DB]" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
+                  <Input id="email" type="email" placeholder="your@email.com" value={formData.email} onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))} required className="rounded-xl border-gray-200" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="subject" className="text-sm font-medium text-gray-700">Subject</Label>
+                <Input id="subject" placeholder="What's this about?" value={formData.subject} onChange={(e) => setFormData(p => ({ ...p, subject: e.target.value }))} required className="rounded-xl border-gray-200" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="message" className="text-sm font-medium text-gray-700">Message</Label>
+                <Textarea id="message" placeholder="Tell us more..." rows={6} value={formData.message} onChange={(e) => setFormData(p => ({ ...p, message: e.target.value }))} required className="resize-none rounded-xl border-gray-200" />
+              </div>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-[#5B47DB] hover:bg-[#4A37C0] text-white rounded-full py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Sending...</>
+                ) : (
+                  <><Send className="w-4 h-4" /> Send Message</>
+                )}
+              </button>
+            </form>
+          )}
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="md:col-span-3"
-            >
-              <Card className="cu-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Mail className="w-5 h-5 mr-2 text-purple-600" />
-                    {t.sendMessage}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isSubmitted ? (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-12"
-                    >
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <CheckCircle className="w-8 h-8 text-green-600" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                        {t.thankYou}
-                      </h3>
-                      <p className="text-gray-600">
-                        {t.thankYouMessage}
-                      </p>
-                    </motion.div>
-                  ) : (
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <Label htmlFor="name">{t.nameLabel} *</Label>
-                          <Input
-                            id="name"
-                            placeholder={t.namePlaceholder}
-                            value={formData.name}
-                            onChange={(e) => handleChange("name", e.target.value)}
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="email">{t.emailLabel} *</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            placeholder={t.emailPlaceholder}
-                            value={formData.email}
-                            onChange={(e) => handleChange("email", e.target.value)}
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="subject">{t.subjectLabel} *</Label>
-                        <Input
-                          id="subject"
-                          placeholder={t.subjectPlaceholder}
-                          value={formData.subject}
-                          onChange={(e) => handleChange("subject", e.target.value)}
-                          required
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="message">{t.messageLabel} *</Label>
-                        <Textarea
-                          id="message"
-                          placeholder={t.messagePlaceholder}
-                          rows={6}
-                          value={formData.message}
-                          onChange={(e) => handleChange("message", e.target.value)}
-                          required
-                          className="resize-none"
-                        />
-                      </div>
-
-                      <Button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full bg-purple-600 hover:bg-purple-700"
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                            {t.sending}
-                          </>
-                        ) : (
-                          <>
-                            <Send className="w-4 h-4 mr-2" />
-                            {t.sendButton}
-                          </>
-                        )}
-                      </Button>
-                    </form>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >            
-          </motion.div>
+        {/* Alt contact */}
+        <div className="text-center mt-8">
+          <p className="text-sm text-gray-500">
+            Prefer email? Reach us directly at{" "}
+            <a href="mailto:collabunity@collabunity.io" className="text-[#5B47DB] font-medium hover:underline">
+              collabunity@collabunity.io
+            </a>
+          </p>
         </div>
       </div>
-    </PublicPageLayout>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 py-6 px-4 text-center bg-white">
+        <div className="flex items-center justify-center gap-6 text-xs text-gray-400">
+          <Link to={createPageUrl("Welcome")} className="hover:text-gray-600 transition-colors">Home</Link>
+          <Link to={createPageUrl("TermsOfService")} className="hover:text-gray-600 transition-colors">Terms</Link>
+          <Link to={createPageUrl("PrivacyPolicy")} className="hover:text-gray-600 transition-colors">Privacy</Link>
+          <span>© 2025 Collab Unity</span>
+        </div>
+      </footer>
+    </div>
   );
 }
