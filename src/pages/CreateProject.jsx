@@ -602,7 +602,7 @@ export default function CreateProject() {
 
   const nextStep = () => {
     if (validateStep()) {
-      if (currentStep < 3) setCurrentStep(currentStep + 1);
+      if (currentStep < 2) setCurrentStep(currentStep + 1);
     }
   };
 
@@ -745,7 +745,6 @@ export default function CreateProject() {
                 <span>
                   {currentStep === 1 && "Project Information"}
                   {currentStep === 2 && "Collaboration Requirements"}
-                  {currentStep === 3 && "Media"}
                 </span>
               </CardTitle>
             </CardHeader>
@@ -1167,7 +1166,7 @@ export default function CreateProject() {
                 </Button>
 
                 <div className="flex space-x-3">
-                  {currentStep < 3 ? (
+                  {currentStep < 2 ? (
                     <Button
                       onClick={nextStep}
                       className="cu-button"
