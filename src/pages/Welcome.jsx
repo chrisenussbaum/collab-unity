@@ -223,7 +223,7 @@ const WorkspaceMockup = () => {
   const content = {
     chat: (
       <div className="p-3 space-y-2 flex-1">
-        <div className="flex gap-2"><div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0"><Sparkles className="w-2.5 h-2.5 text-white" /></div><div className="bg-white border border-gray-200 rounded-xl rounded-tl-none px-2.5 py-1.5 text-xs text-gray-700 max-w-[85%]">Hey! I'm your <strong>Project Assistant</strong> for <em>Redapt Website</em>. What do you want to work on?</div></div>
+        <div className="flex gap-2"><div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0"><Sparkles className="w-2.5 h-2.5 text-white" /></div><div className="bg-white border border-gray-200 rounded-xl rounded-tl-none px-2.5 py-1.5 text-xs text-gray-700 max-w-[85%]">Hey! I'm your <strong>Project Assistant</strong> for <em>Collab Unity Website</em>. What do you want to work on?</div></div>
         <div className="flex gap-2 flex-row-reverse"><div className="w-5 h-5 rounded-full bg-[#5B47DB] flex items-center justify-center flex-shrink-0"><User className="w-2.5 h-2.5 text-white" /></div><div className="bg-[#5B47DB] text-white rounded-xl rounded-tr-none px-2.5 py-1.5 text-xs max-w-[75%]">Break this into milestones</div></div>
         <div className="flex gap-2"><div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0"><Sparkles className="w-2.5 h-2.5 text-white" /></div><div className="bg-white border border-gray-200 rounded-xl rounded-tl-none px-2.5 py-1.5 text-xs text-gray-700 max-w-[85%]"><p className="font-medium mb-1">Here are 3 milestones:</p><p>1. Discovery & Design</p><p>2. Development</p><p>3. Launch</p><div className="flex gap-1 mt-1.5 flex-wrap">{["Save as Milestone", "Create Tasks"].map(a => <span key={a} className="bg-orange-50 text-orange-700 border border-orange-200 rounded-full px-1.5 py-0.5 text-[10px] cursor-pointer">{a}</span>)}</div></div></div>
       </div>
@@ -277,7 +277,7 @@ const WorkspaceMockup = () => {
   return (
     <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
       <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-[#5B47DB] to-indigo-600 text-white">
-        <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center"><Sparkles className="w-3 h-3 text-white" /></div><div><p className="text-[11px] font-semibold">Project Assistant</p><p className="text-[10px] text-white/70">Redapt Website</p></div></div>
+        <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center"><Sparkles className="w-3 h-3 text-white" /></div><div><p className="text-[11px] font-semibold">Project Assistant</p><p className="text-[10px] text-white/70">Collab Unity Website</p></div></div>
         <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">3 tasks · 3 milestones</span>
       </div>
       <div className="flex" style={{ height: 260 }}>
@@ -302,10 +302,10 @@ const ProfileMockup = () => (
       <div className="flex items-start gap-3">
         <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=faces" alt="Sarah Kristine" className="w-14 h-14 rounded-full object-cover border-2 border-white/30 flex-shrink-0" />
         <div>
-          <h3 className="text-base font-bold mb-0.5">Sarah Kristine</h3>
-          <p className="text-purple-200 text-xs mb-1">@sarahkristine</p>
+          <h3 className="text-base font-bold mb-0.5">Brenda Song</h3>
+          <p className="text-purple-200 text-xs mb-1">@brendasong</p>
           <div className="flex items-center gap-3 text-xs text-purple-100">
-            <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />Chelan, WA</span>
+            <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />Spokane, WA</span>
             <span className="flex items-center gap-0.5"><Users className="w-3 h-3" />Remote</span>
           </div>
         </div>
@@ -330,7 +330,7 @@ const ProfileMockup = () => (
         </div>
         <div className="mt-2 pt-2 border-t border-gray-100">
           <p className="text-[10px] font-semibold text-gray-800">B.S. Biology</p>
-          <p className="text-[10px] text-gray-400">Pacific Lutheran University · 2020</p>
+          <p className="text-[10px] text-gray-400">Oregon State University · 2020</p>
         </div>
       </div>
     </div>
@@ -724,8 +724,8 @@ const FeaturesShowcase = ({ onAuth }) => {
     },
     {
       eyebrow: "Build Workspace",
-      title: "Your AI-powered project command center.",
-      subtitle: "Tasks, milestones, assets, notes, and an AI assistant — all in one unified workspace.",
+      title: "Your collaborative project workspace.",
+      subtitle: "Tasks, milestones, assets, notes, and a project assistant — all in one unified workspace.",
       bg: "bg-white",
       accentBg: "bg-gradient-to-br from-[#5B47DB] to-indigo-700",
       items: ["Project Assistant", "Task & milestone board", "Asset management", "Notes & ideation"],
@@ -868,7 +868,7 @@ const CTABanner = ({ onAuth }) => (
 // ─── FAQ ──────────────────────────────────────────────────────────────────────
 const FAQ = () => {
   const faqs = [
-    { q: "What is Collab Unity?", a: "A project-based collaboration platform connecting creators, learners, and innovators to build projects together with built-in tools for tasks, chat, assets, and AI assistance." },
+    { q: "What is Collab Unity?", a: "A project-based collaboration platform connecting creators, learners, and innovators to build projects together with built-in tools for tasks, chat, assets, and project assistance." },
     { q: "Is it free?", a: "Yes. Core features are completely free — create projects, join collaborations, use workspace tools, message teammates, and build your profile at no cost." },
     { q: "Who is it for?", a: "Students, developers, designers, entrepreneurs, hobbyists — anyone who wants to build something with others." },
     { q: "How do I find collaborators?", a: "Create a project and list the skills you need. It appears on Discover where others can apply. AI matching also recommends relevant people and projects." },
