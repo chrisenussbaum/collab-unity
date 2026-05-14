@@ -32,7 +32,7 @@ const PillButton = ({ children, primary, onClick, className = "" }) => (
 // ─── Nav (always solid, no fade) ──────────────────────────────────────────────
 const Nav = ({ onAuth }) => (
   <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-    <div className="max-w-[980px] mx-auto px-6 flex items-center justify-between h-14">
+    <div className="w-full px-6 flex items-center justify-between h-14">
       <a href="#" className="flex items-center gap-2 flex-shrink-0">
         <img src={LOGO_URL} alt="Collab Unity" className="w-7 h-7 rounded-lg object-cover" />
         <span className="text-sm font-semibold text-gray-900 hidden sm:inline">Collab Unity</span>
@@ -336,8 +336,146 @@ const ProfileMockup = ({ onAuth }) => (
   </div>
 );
 
+// ─── Interactive Hero Mockup ──────────────────────────────────────────────────
+const TABS = [
+  {
+    label: "Feed", icon: LayoutGrid, url: "collabunity.io/feed",
+    content: [
+      { title: "The Forgotten Library", user: "Jordan Blake", img: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=120&h=120&fit=crop", status: "Seeking Collaborators", statusColor: "bg-orange-100 text-orange-700", skills: ["Creative Writing", "Storytelling"] },
+      { title: "Mobile Fitness App", user: "Alex Chen", img: "https://images.unsplash.com/photo-1461773518188-b3e86f98242f?w=120&h=120&fit=crop", status: "In Progress", statusColor: "bg-blue-100 text-blue-700", skills: ["Flutter", "Firebase"] },
+      { title: "AI Health Tracker", user: "Sara Patel", img: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=120&h=120&fit=crop", status: "Seeking Collaborators", statusColor: "bg-green-100 text-green-700", skills: ["Python", "ML"] },
+    ],
+  },
+  {
+    label: "Discover", icon: Compass, url: "collabunity.io/discover",
+    content: [
+      { title: "Social Media Dashboard", user: "Mike Ross", img: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=120&h=120&fit=crop", status: "85% Match", statusColor: "bg-purple-100 text-purple-700", skills: ["React", "Analytics"] },
+      { title: "E-commerce Platform", user: "Lisa Wang", img: "https://images.unsplash.com/photo-1661956602116-aa6865609028?w=120&h=120&fit=crop", status: "78% Match", statusColor: "bg-purple-100 text-purple-700", skills: ["Node.js", "Stripe"] },
+      { title: "Podcast Platform", user: "Jordan B.", img: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=120&h=120&fit=crop", status: "In Progress", statusColor: "bg-blue-100 text-blue-700", skills: ["Adobe", "YouTube"] },
+    ],
+  },
+  {
+    label: "My Projects", icon: Folder, url: "collabunity.io/projects",
+    content: [
+      { title: "Redapt Website", user: "You (Owner)", img: "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=120&h=120&fit=crop", status: "In Progress", statusColor: "bg-blue-100 text-blue-700", skills: ["React", "Tailwind"] },
+      { title: "Community Forum", user: "You (Collaborator)", img: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=120&h=120&fit=crop", status: "Seeking Collaborators", statusColor: "bg-orange-100 text-orange-700", skills: ["Vue", "Firebase"] },
+    ],
+  },
+  {
+    label: "Chat", icon: MessageCircle, url: "collabunity.io/chat",
+    isChat: true,
+    chats: [
+      { name: "Alex Johnson", msg: "Just pushed the new design!", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces", online: true },
+      { name: "Sarah Lee", msg: "Let's sync tomorrow?", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=faces", online: false },
+      { name: "Team Project", msg: "New task assigned to you", avatar: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=80&h=80&fit=crop", online: true },
+    ],
+    messages: [
+      { from: "them", text: "Hey! How's the project coming along?", time: "10:30 AM" },
+      { from: "me", text: "Great! Just finished the design mockups 🎨", time: "10:32 AM" },
+      { from: "them", text: "Awesome! Can't wait to see them 👀", time: "10:33 AM" },
+    ],
+  },
+];
+
+const HeroMockup = ({ onAuth }) => {
+  const [activeTab, setActiveTab] = useState(0);
+  const tab = TABS[activeTab];
+
+  return (
+    <div className="mt-14 max-w-4xl mx-auto px-4">
+      <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200/60">
+        {/* Browser chrome */}
+        <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full bg-red-400 flex-shrink-0" />
+          <span className="w-3 h-3 rounded-full bg-yellow-400 flex-shrink-0" />
+          <span className="w-3 h-3 rounded-full bg-green-400 flex-shrink-0" />
+          <div className="mx-auto bg-white rounded-full px-4 py-1 text-xs text-gray-400 border border-gray-200">{tab.url}</div>
+        </div>
+        {/* App shell */}
+        <div className="grid grid-cols-4 min-h-[280px]">
+          {/* Sidebar */}
+          <div className="col-span-1 border-r border-gray-100 bg-gray-50/60 p-3 flex flex-col gap-1">
+            {TABS.map((t, i) => {
+              const Icon = t.icon;
+              return (
+                <button
+                  key={t.label}
+                  onClick={() => setActiveTab(i)}
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors text-left w-full ${activeTab === i ? "bg-purple-100 text-[#5B47DB]" : "text-gray-500 hover:bg-gray-100 hover:text-gray-800"}`}
+                >
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">{t.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          {/* Content */}
+          <div className="col-span-3 p-4">
+            {tab.isChat ? (
+              <div className="grid grid-cols-5 h-full gap-3">
+                <div className="col-span-2 space-y-1.5">
+                  <p className="text-xs font-bold text-gray-700 mb-2">Messages</p>
+                  {tab.chats.map((c, i) => (
+                    <div key={i} className={`flex items-center gap-2 p-2 rounded-xl cursor-pointer transition-colors ${i === 0 ? "bg-purple-50 border border-purple-100" : "hover:bg-gray-50"}`}>
+                      <div className="relative flex-shrink-0">
+                        <img src={c.avatar} alt={c.name} className="w-8 h-8 rounded-full object-cover" />
+                        {c.online && <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border border-white" />}
+                      </div>
+                      <div className="min-w-0"><p className="text-xs font-semibold text-gray-900 truncate">{c.name}</p><p className="text-[10px] text-gray-400 truncate">{c.msg}</p></div>
+                    </div>
+                  ))}
+                </div>
+                <div className="col-span-3 flex flex-col bg-gray-50 rounded-2xl overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 bg-white">
+                    <img src={tab.chats[0].avatar} alt="" className="w-6 h-6 rounded-full object-cover" />
+                    <p className="text-xs font-semibold text-gray-900">{tab.chats[0].name}</p>
+                    <span className="text-[10px] text-green-500 ml-auto">● Online</span>
+                  </div>
+                  <div className="flex-1 p-3 space-y-2 overflow-hidden">
+                    {tab.messages.map((m, j) => (
+                      <div key={j} className={`flex ${m.from === "me" ? "justify-end" : "justify-start"}`}>
+                        <div className={`rounded-2xl px-3 py-1.5 max-w-[85%] text-xs ${m.from === "me" ? "bg-[#5B47DB] text-white rounded-tr-none" : "bg-white border border-gray-200 text-gray-700 rounded-tl-none"}`}>
+                          {m.text}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="px-2 py-1.5 bg-white border-t border-gray-200 flex items-center gap-1.5">
+                    <div className="flex-1 bg-gray-50 border border-gray-200 rounded-full px-3 py-1 text-[11px] text-gray-400">Type a message...</div>
+                    <div className="w-6 h-6 bg-[#5B47DB] rounded-full flex items-center justify-center flex-shrink-0"><Send className="w-3 h-3 text-white" /></div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                <p className="text-xs font-bold text-gray-700 mb-3">{tab.label}</p>
+                {tab.content.map((p, i) => (
+                  <div key={i} className="bg-gray-50 hover:bg-white rounded-xl border border-gray-100 hover:border-purple-100 hover:shadow-sm p-3 flex items-center gap-3 transition-all cursor-pointer" onClick={onAuth}>
+                    <img src={p.img} alt={p.title} className="w-11 h-11 rounded-xl object-cover flex-shrink-0 border border-gray-200" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{p.title}</p>
+                      <p className="text-[11px] text-gray-400 mb-1">{p.user}</p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${p.statusColor}`}>{p.status}</span>
+                        {p.skills.map(s => <span key={s} className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{s}</span>)}
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Hero Section ─────────────────────────────────────────────────────────────
-const HeroSection = ({ onAuth }) => (
+const HeroSection = ({ onAuth }) => {
+  const handleAuth = onAuth;
+  return (
   <section className="pt-32 pb-12 text-center bg-[#f5f5f7] px-4">
     <div className="max-w-[700px] mx-auto">
       <p className="text-sm font-semibold text-[#5B47DB] mb-3 tracking-wide uppercase">Collab Unity</p>
@@ -352,33 +490,11 @@ const HeroSection = ({ onAuth }) => (
         <PillButton onClick={onAuth}>Log in to your account</PillButton>
       </div>
     </div>
-    {/* Hero Visual */}
-    <div className="mt-16 max-w-4xl mx-auto">
-      <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200/60">
-        <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-red-400" /><span className="w-3 h-3 rounded-full bg-yellow-400" /><span className="w-3 h-3 rounded-full bg-green-400" />
-          <div className="mx-auto bg-white rounded-full px-4 py-1 text-xs text-gray-400 border border-gray-200">collabunity.io/feed</div>
-        </div>
-        <div className="p-6 bg-gradient-to-b from-white to-gray-50 grid grid-cols-3 gap-4 min-h-[260px]">
-          <div className="col-span-1 space-y-2">
-            {[{ label: "Feed", icon: LayoutGrid, active: true }, { label: "Discover", icon: Compass }, { label: "My Projects", icon: Folder }, { label: "Chat", icon: MessageCircle }].map(item => {
-              const Icon = item.icon;
-              return <div key={item.label} className={`flex items-center gap-2 p-2 rounded-lg text-sm font-medium ${item.active ? "bg-purple-50 text-[#5B47DB]" : "text-gray-500"}`}><Icon className="w-4 h-4" />{item.label}</div>;
-            })}
-          </div>
-          <div className="col-span-2 space-y-2">
-            {[{ title: "AI-Powered Health Tracker", status: "Seeking Collaborators", color: "bg-green-100 text-green-700" }, { title: "E-Commerce Platform", status: "In Progress", color: "bg-blue-100 text-blue-700" }, { title: "Educational App for Kids", status: "Seeking Collaborators", color: "bg-purple-100 text-purple-700" }].map((p, i) => (
-              <div key={i} className="bg-white rounded-xl border border-gray-100 p-3 flex items-center gap-3 shadow-sm">
-                <div className="w-9 h-9 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-lg flex-shrink-0" />
-                <div className="flex-1 min-w-0"><p className="text-sm font-semibold text-gray-900 truncate">{p.title}</p><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.color}`}>{p.status}</span></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
+    {/* Hero Visual — Interactive Mockup */}
+    <HeroMockup onAuth={handleAuth} />
   </section>
-);
+  );
+};
 
 // ─── Stats Banner ─────────────────────────────────────────────────────────────
 const StatsBanner = () => (
@@ -582,7 +698,7 @@ const FAQ = () => {
 const Footer = () => (
   <footer className="bg-[#f5f5f7] border-t border-gray-200 py-10 px-4">
     <div className="max-w-[980px] mx-auto">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 text-sm text-gray-500 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between gap-8 text-sm text-gray-500 mb-8">
         <div>
           <h5 className="font-semibold text-gray-900 mb-3">Platform</h5>
           <ul className="space-y-2">
@@ -592,24 +708,9 @@ const Footer = () => (
           </ul>
         </div>
         <div>
-          <h5 className="font-semibold text-gray-900 mb-3">Company</h5>
-          <ul className="space-y-2">
-            <li><Link to={createPageUrl("AboutUs")} className="hover:text-gray-900 transition-colors">About Us</Link></li>
-            <li><Link to={createPageUrl("Contact")} className="hover:text-gray-900 transition-colors">Contact</Link></li>
-            <li><Link to={createPageUrl("Testimonials")} className="hover:text-gray-900 transition-colors">Testimonials</Link></li>
-          </ul>
-        </div>
-        <div>
-          <h5 className="font-semibold text-gray-900 mb-3">Support</h5>
-          <ul className="space-y-2">
-            <li><Link to={createPageUrl("ReportBug")} className="hover:text-gray-900 transition-colors">Report a Bug</Link></li>
-            <li><Link to={createPageUrl("FeatureRequest")} className="hover:text-gray-900 transition-colors">Feature Request</Link></li>
-            <li><Link to={createPageUrl("SupportCU")} className="hover:text-gray-900 transition-colors">Support Us</Link></li>
-          </ul>
-        </div>
-        <div>
           <h5 className="font-semibold text-gray-900 mb-3">Legal</h5>
           <ul className="space-y-2">
+            <li><Link to={createPageUrl("Contact")} className="hover:text-gray-900 transition-colors">Contact</Link></li>
             <li><Link to={createPageUrl("TermsOfService")} className="hover:text-gray-900 transition-colors">Terms of Service</Link></li>
             <li><Link to={createPageUrl("PrivacyPolicy")} className="hover:text-gray-900 transition-colors">Privacy Policy</Link></li>
           </ul>
@@ -623,9 +724,7 @@ const Footer = () => (
             <span className="text-xs text-gray-400 ml-2">Where Ideas Happen</span>
           </div>
         </div>
-        <div className="flex items-center gap-4 text-xs text-gray-400">
-          <span>Copyright © 2025 Collab Unity. All rights reserved.</span>
-        </div>
+        <span className="text-xs text-gray-400">Copyright © 2025 Collab Unity. All rights reserved.</span>
       </div>
     </div>
   </footer>
