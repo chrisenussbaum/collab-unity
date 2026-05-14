@@ -434,21 +434,21 @@ const HeroFeedTab = () => (
     <div className="border border-gray-200 rounded-xl p-3 bg-white">
       <div className="flex items-start justify-between mb-1.5">
         <div className="flex items-center gap-2">
-          <img src="https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=80&h=80&fit=crop" alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+          <img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=80&h=80&fit=crop" alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
           <div>
-            <p className="text-xs font-bold text-gray-900">Redapt Website Update</p>
-            <p className="text-[10px] text-gray-400">Chris Nussbaum · 1 month ago</p>
+            <p className="text-xs font-bold text-gray-900">AI Study Companion App</p>
+            <p className="text-[10px] text-gray-400">Jamie Rivera · 3 days ago</p>
           </div>
         </div>
         <Share2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
       </div>
       <div className="flex gap-1 flex-wrap mb-1.5">
-        <span className="text-[10px] border border-gray-300 text-gray-600 rounded-full px-2 py-0.5">In Progress</span>
-        <span className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">Personal</span>
-        <span className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">Career Development</span>
-        <span className="text-[10px] text-purple-600 px-1">👥 1 collaborator</span>
+        <span className="text-[10px] border border-gray-300 text-gray-600 rounded-full px-2 py-0.5">Seeking Collaborators</span>
+        <span className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">Collaborative</span>
+        <span className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">Educational</span>
+        <span className="text-[10px] text-purple-600 px-1">👥 3 collaborators</span>
       </div>
-      <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">The Redapt Website Update aims to enhance the user experience and modernize the web interface. Our goal is to integrate new functionalities, improve navigation...</p>
+      <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">Building an AI-powered study companion that adapts to each student's learning style. Looking for ML engineers, UX designers, and educators to join the team...</p>
     </div>
   </div>
 );
