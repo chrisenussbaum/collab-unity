@@ -1240,7 +1240,6 @@ const SIDEBAR_SECTIONS = [
   { id: "ideation",  icon: Lightbulb,   label: "Planning & Ideation", shortLabel: "Ideation" },
   { id: "notes",     icon: BookOpen,    label: "Thoughts & Notes",  shortLabel: "Notes" },
   { id: "tools",     icon: Wrench,      label: "Project Tools",     shortLabel: "Tools" },
-  { id: "links",     icon: Link2,       label: "Build Links",       shortLabel: "Links" },
   { id: "activity",  icon: Activity,    label: "Activity",          shortLabel: "Activity" },
 ];
 
@@ -1491,51 +1490,6 @@ export default function BuildTab({
                 isProjectOwner={isProjectOwner}
                 projectOwnerName={projectOwnerName}
               />
-            </div>
-          )}
-
-          {/* Build Links */}
-          {activeSection === "links" && (
-            <div className="p-4">
-              {canEdit && (
-                <div className="mb-3">
-                  {showAddLink ? (
-                    <div className="p-3 bg-purple-50 rounded-lg border border-purple-200 space-y-2">
-                      <Input placeholder="Label (e.g. GitHub Repo, Figma File)" value={linkLabel} onChange={(e) => setLinkLabel(e.target.value)} className="text-sm" />
-                      <div className="flex gap-2">
-                        <Input type="url" placeholder="https://..." value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddLink()} className="text-sm" />
-                        <Button onClick={handleAddLink} size="sm" className="cu-button flex-shrink-0">Add</Button>
-                        <Button onClick={() => setShowAddLink(false)} size="sm" variant="ghost" className="flex-shrink-0">Cancel</Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <Button variant="outline" size="sm" onClick={() => setShowAddLink(true)} className="text-xs gap-1">
-                      <Plus className="w-3 h-3" /> Add Link
-                    </Button>
-                  )}
-                </div>
-              )}
-              {savedLinks.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-8">No build links yet.</p>
-              ) : (
-                <div className="space-y-2">
-                  {savedLinks.map((link, i) => (
-                    <div key={i} className="flex items-center space-x-3 p-2.5 bg-gray-50 border border-gray-200 rounded-lg group">
-                      <img src={`https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}&sz=32`} alt="" className="w-4 h-4 flex-shrink-0" onError={(e) => { e.target.style.display = 'none'; }} />
-                      <a href={link.url} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 hover:text-purple-700">
-                        <p className="font-medium text-sm text-gray-900 truncate">{link.label}</p>
-                        <p className="text-xs text-gray-400 truncate">{link.url}</p>
-                      </a>
-                      <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-purple-500"><ExternalLink className="w-3.5 h-3.5" /></a>
-                      {canEdit && (
-                        <button onClick={() => handleRemoveLink(i)} className="text-gray-200 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           )}
 
