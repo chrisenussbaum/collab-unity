@@ -56,7 +56,7 @@ const Nav = ({ onAuth }) => (
 
 // ─── Interactive Mockups (from old version, Apple-styled) ─────────────────────
 
-const FeedMockup = ({ onAuth }) => {
+const FeedMockup = () => {
   const [showcaseIndex, setShowcaseIndex] = useState(0);
   const showcaseItems = [
     { title: "Story World Map", domain: "miro.com", img: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&h=450&fit=crop" },
@@ -64,7 +64,7 @@ const FeedMockup = ({ onAuth }) => {
   ];
   const cur = showcaseItems[showcaseIndex];
   return (
-    <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200 cursor-pointer" onClick={onAuth}>
+    <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
       <div className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-start gap-3">
@@ -115,8 +115,8 @@ const FeedMockup = ({ onAuth }) => {
   );
 };
 
-const DiscoverMockup = ({ onAuth }) => (
-  <div className="space-y-3 cursor-pointer" onClick={onAuth}>
+const DiscoverMockup = () => (
+  <div className="space-y-3">
     <div className="bg-purple-50 rounded-2xl p-4 border border-purple-100">
       <div className="flex items-center gap-2 mb-2">
         <Sparkles className="w-4 h-4 text-purple-600" />
@@ -155,7 +155,7 @@ const DiscoverMockup = ({ onAuth }) => (
   </div>
 );
 
-const ChatMockup = ({ onAuth }) => {
+const ChatMockup = () => {
   const [active, setActive] = useState(0);
   const chats = [
     { name: "Alex Johnson", msg: "Sounds good!", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces", online: true, messages: [{ from: "them", text: "Hey! How's the project coming along?", time: "10:30 AM" }, { from: "me", text: "Great! Just finished the design mockups", time: "10:32 AM" }, { from: "them", text: "Awesome! Can't wait to see them 👀", time: "10:33 AM" }] },
@@ -209,7 +209,7 @@ const ChatMockup = ({ onAuth }) => {
   );
 };
 
-const WorkspaceMockup = ({ onAuth }) => {
+const WorkspaceMockup = () => {
   const [section, setSection] = useState("milestones");
   const sidebar = [
     { id: "chat", icon: Sparkles, label: "Assistant" },
@@ -274,7 +274,7 @@ const WorkspaceMockup = ({ onAuth }) => {
     ),
   };
   return (
-    <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200 cursor-pointer" onClick={onAuth}>
+    <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
       <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-[#5B47DB] to-indigo-600 text-white">
         <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center"><Sparkles className="w-3 h-3 text-white" /></div><div><p className="text-[11px] font-semibold">Project Assistant</p><p className="text-[10px] text-white/70">Redapt Website</p></div></div>
         <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">3 tasks · 3 milestones</span>
@@ -295,8 +295,8 @@ const WorkspaceMockup = ({ onAuth }) => {
   );
 };
 
-const ProfileMockup = ({ onAuth }) => (
-  <div className="space-y-3 cursor-pointer" onClick={onAuth}>
+const ProfileMockup = () => (
+  <div className="space-y-3">
     <div className="bg-gradient-to-r from-[#5B47DB] to-pink-500 rounded-2xl p-4 text-white">
       <div className="flex items-start gap-3">
         <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=faces" alt="Sarah Kristine" className="w-14 h-14 rounded-full object-cover border-2 border-white/30 flex-shrink-0" />
@@ -377,7 +377,7 @@ const TABS = [
   },
 ];
 
-const HeroMockup = ({ onAuth }) => {
+const HeroMockup = () => {
   const [activeTab, setActiveTab] = useState(0);
   const tab = TABS[activeTab];
 
@@ -450,7 +450,7 @@ const HeroMockup = ({ onAuth }) => {
               <div className="space-y-2.5">
                 <p className="text-xs font-bold text-gray-700 mb-3">{tab.label}</p>
                 {tab.content.map((p, i) => (
-                  <div key={i} className="bg-gray-50 hover:bg-white rounded-xl border border-gray-100 hover:border-purple-100 hover:shadow-sm p-3 flex items-center gap-3 transition-all cursor-pointer" onClick={onAuth}>
+                  <div key={i} className="bg-gray-50 hover:bg-white rounded-xl border border-gray-100 hover:border-purple-100 hover:shadow-sm p-3 flex items-center gap-3 transition-all">
                     <img src={p.img} alt={p.title} className="w-11 h-11 rounded-xl object-cover flex-shrink-0 border border-gray-200" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 truncate">{p.title}</p>
@@ -491,7 +491,7 @@ const HeroSection = ({ onAuth }) => {
       </div>
     </div>
     {/* Hero Visual — Interactive Mockup */}
-    <HeroMockup onAuth={handleAuth} />
+    <HeroMockup />
   </section>
   );
 };
@@ -517,7 +517,7 @@ const FeaturesShowcase = ({ onAuth }) => {
       bg: "bg-[#f5f5f7]",
       accentBg: "bg-gradient-to-br from-[#5B47DB] to-purple-700",
       items: ["Published project cards", "Media highlights", "Applaud & comments", "Link previews"],
-      mockup: <FeedMockup onAuth={onAuth} />,
+      mockup: <FeedMockup />,
     },
     {
       eyebrow: "Discover",
@@ -526,7 +526,7 @@ const FeaturesShowcase = ({ onAuth }) => {
       bg: "bg-white",
       accentBg: "bg-gradient-to-br from-blue-500 to-cyan-500",
       items: ["AI-powered recommendations", "Filter by skill & industry", "Direct apply flow", "Collaborator profiles"],
-      mockup: <DiscoverMockup onAuth={onAuth} />,
+      mockup: <DiscoverMockup />,
     },
     {
       eyebrow: "Chat",
@@ -535,7 +535,7 @@ const FeaturesShowcase = ({ onAuth }) => {
       bg: "bg-[#f5f5f7]",
       accentBg: "bg-gradient-to-br from-orange-500 to-red-500",
       items: ["Direct messages", "Team group chats", "Share updates", "Task mentions"],
-      mockup: <ChatMockup onAuth={onAuth} />,
+      mockup: <ChatMockup />,
     },
     {
       eyebrow: "Build Workspace",
@@ -544,7 +544,7 @@ const FeaturesShowcase = ({ onAuth }) => {
       bg: "bg-white",
       accentBg: "bg-gradient-to-br from-[#5B47DB] to-indigo-700",
       items: ["AI Project Assistant", "Task & milestone board", "Asset management", "Notes & ideation"],
-      mockup: <WorkspaceMockup onAuth={onAuth} />,
+      mockup: <WorkspaceMockup />,
     },
     {
       eyebrow: "Profile",
@@ -553,7 +553,7 @@ const FeaturesShowcase = ({ onAuth }) => {
       bg: "bg-[#f5f5f7]",
       accentBg: "bg-gradient-to-br from-pink-500 to-purple-600",
       items: ["Live project portfolio", "Skill endorsements", "Peer reviews", "AI-generated resume PDF"],
-      mockup: <ProfileMockup onAuth={onAuth} />,
+      mockup: <ProfileMockup />,
     },
   ];
 
