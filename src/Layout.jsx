@@ -349,9 +349,9 @@ export default function Layout({ children, currentPageName }) {
 
   if (!authChecked || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f5f5f7]">
-        <div className="w-10 h-10 rounded-full bg-[#5B47DB] flex items-center justify-center mx-auto">
-          <Lightbulb className="w-5 h-5 text-white animate-pulse" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(160deg, #f8f7ff 0%, #f3f0ff 40%, #f5f3ff 70%, #faf5ff 100%)" }}>
+        <div className="w-12 sm:w-16 h-12 sm:h-16 cu-gradient rounded-full flex items-center justify-center mx-auto mb-4">
+          <Lightbulb className="w-6 sm:w-8 h-6 sm:h-8 text-white animate-pulse" />
         </div>
       </div>
     );
@@ -454,17 +454,17 @@ export default function Layout({ children, currentPageName }) {
   // Show loading overlay when logging out
   if (isLoggingOut) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f5f5f7]">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(160deg, #f8f7ff 0%, #f3f0ff 40%, #f5f3ff 70%, #faf5ff 100%)" }}>
         <div className="text-center">
-          <Loader2 className="w-8 h-8 text-[#5B47DB] animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-500 font-medium">Signing out...</p>
+          <Loader2 className="w-12 h-12 text-purple-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Signing out...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#f5f5f7" }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: "linear-gradient(160deg, #f8f7ff 0%, #f3f0ff 40%, #f5f3ff 70%, #faf5ff 100%)" }}>
       <Toaster 
         position="top-right" 
         richColors 
@@ -979,8 +979,8 @@ export default function Layout({ children, currentPageName }) {
       `}</style>
 
       {/* Mobile/Tablet Header (visible on screens < 1024px) */}
-      <nav className="lg:hidden fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-200/80 z-50 safe-area-inset-top">
-        <div className="flex items-center justify-between px-4 md:px-8 h-14 gap-3">
+      <nav className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 safe-area-inset-top">
+        <div className="flex items-center justify-between px-4 md:px-8 h-16 md:h-18 gap-3">
           <Link 
             to={createPageUrl("Feed")}
             className="flex-shrink-0"
@@ -1046,9 +1046,9 @@ export default function Layout({ children, currentPageName }) {
       </nav>
 
       {/* Desktop Navigation (visible on screens >= 1024px) */}
-      <nav className="hidden lg:block fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-200/80 z-50">
+      <nav className="hidden lg:block fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
         <div className="cu-container">
-          <div className="flex justify-between items-center h-14 gap-6">
+          <div className="flex justify-between items-center h-16 gap-6">
             <Link 
               to={createPageUrl("Feed")}
               className="flex-shrink-0"
@@ -1070,15 +1070,15 @@ export default function Layout({ children, currentPageName }) {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
                 return (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors ${
-                    isActive 
-                      ? 'text-[#5B47DB]' 
-                      : 'text-gray-600 hover:text-[#5B47DB]'
-                  }`}
-                >
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors cu-text-responsive-sm ${
+                      isActive 
+                        ? 'text-purple-600' 
+                        : 'text-gray-600 hover:text-purple-600'
+                    }`}
+                  >
                     <Icon className="cu-icon-sm" />
                     <span>{item.name}</span>
                   </Link>
@@ -1090,8 +1090,8 @@ export default function Layout({ children, currentPageName }) {
               {currentUser ? (
                 <>
                   <Link to={createPageUrl("CreateProject")}>
-                    <Button className="bg-[#5B47DB] hover:bg-[#4A37C0] text-white text-[13px] font-medium rounded-full px-4 py-2 h-auto shadow-none">
-                      <Plus className="w-3.5 h-3.5 mr-1.5" />
+                    <Button style={{ background: 'var(--cu-primary)' }} className="text-white cu-text-responsive-sm hover:opacity-90">
+                      <Plus className="cu-icon-sm mr-2" />
                       Create Project
                     </Button>
                   </Link>
@@ -1152,14 +1152,14 @@ export default function Layout({ children, currentPageName }) {
         </div>
       </nav>
 
-      <main className="pt-14 pb-[83px] lg:pt-14 lg:pb-8">
+      <main className="pt-16 md:pt-18 pb-[83px] lg:pt-16 lg:pb-8">
         {React.cloneElement(children, { currentUser, authIsLoading: isLoading })}
       </main>
 
       {/* Mobile/Tablet Bottom Navigation (visible on screens < 1024px) */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200/80 lg:hidden z-50 safe-area-inset-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden z-50 safe-area-inset-bottom">
         <div className="relative pb-[18px] -mt-[5px]">
-          <div className={`grid h-[66px] ${currentUser ? 'grid-cols-5' : 'grid-cols-3'}`}>
+          <div className={`grid h-[70px] ${currentUser ? 'grid-cols-5' : 'grid-cols-3'}`}>
             {mobileNavItems.map((item, index) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -1172,10 +1172,10 @@ export default function Layout({ children, currentPageName }) {
                     to={item.path}
                     className="flex flex-col items-center justify-center relative"
                   >
-                    <div className="absolute -top-5 w-12 h-12 bg-[#5B47DB] rounded-full shadow-md flex items-center justify-center transition-transform hover:scale-105">
-                      <Plus className="w-6 h-6 text-white" strokeWidth={2.5} />
+                    <div className="absolute -top-6 w-14 h-14 cu-gradient rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110">
+                      <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
                     </div>
-                    <span className="text-[10px] mt-5 font-medium text-[#5B47DB]">
+                    <span className="cu-text-responsive-xs mt-5 font-medium text-purple-600">
                       {item.name}
                     </span>
                   </Link>
@@ -1187,11 +1187,11 @@ export default function Layout({ children, currentPageName }) {
                   key={item.name}
                   to={item.path}
                   className={`flex flex-col items-center justify-center transition-colors ${
-                    isActive ? 'text-[#5B47DB]' : 'text-gray-400 hover:text-[#5B47DB]'
+                    isActive ? 'text-purple-600' : 'text-gray-500 hover:text-purple-600'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="text-[10px] mt-0.5 font-medium">
+                  <Icon className="cu-icon-sm" />
+                  <span className="cu-text-responsive-xs mt-1 font-medium">
                     {item.name === "My Projects" ? "Projects" : item.name}
                   </span>
                 </Link>
