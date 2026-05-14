@@ -8,7 +8,7 @@ import {
   User, FileText, CheckSquare, Send, Search, Share2, DollarSign,
   HandHeart, Briefcase, ChevronLeft, ChevronRight, BookOpen,
   MapPin, Building2, Tag, Bookmark, Eye, Settings, FolderOpen,
-  Target, MessageSquare, Badge as BadgeIcon
+  Target, MessageSquare, Badge as BadgeIcon, GraduationCap, Newspaper, Play, Clock, Star, TrendingUp
 } from "lucide-react";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg";
@@ -148,7 +148,8 @@ const DiscoverMockup = () => (
             <img src={p.img} alt={p.name} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
             <div><p className="text-xs font-bold text-gray-900 leading-tight">{p.name}</p><span className="text-[10px] text-blue-600 border border-blue-200 px-1 py-0.5 rounded-full">{p.type}</span></div>
           </div>
-          <div className="flex gap-1 mt-1.5">{p.skills.map(s => <span key={s} className="bg-gray-100 text-gray-600 text-[10px] px-1.5 py-0.5 rounded">{s}</span>)}</div>
+          <div className="flex gap-1 mt-1.5 mb-2">{p.skills.map(s => <span key={s} className="bg-gray-100 text-gray-600 text-[10px] px-1.5 py-0.5 rounded">{s}</span>)}</div>
+          <button className="w-full text-[10px] py-1 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-1"><Briefcase className="w-3 h-3" />Apply</button>
         </div>
       ))}
     </div>
@@ -336,6 +337,77 @@ const ProfileMockup = () => (
   </div>
 );
 
+const LearningHubMockup = () => (
+  <div className="space-y-3">
+    <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200 p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <GraduationCap className="w-4 h-4 text-[#5B47DB]" />
+        <h4 className="font-semibold text-gray-900 text-sm">Learning Hub</h4>
+        <span className="ml-auto text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">Curated for You</span>
+      </div>
+      <div className="space-y-2">
+        {[
+          { title: "React for Beginners", category: "Development", duration: "4h 30m", level: "Beginner", color: "bg-blue-50 text-blue-700", img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=80&h=80&fit=crop" },
+          { title: "Figma UI/UX Masterclass", category: "Design", duration: "6h 15m", level: "Intermediate", color: "bg-pink-50 text-pink-700", img: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=80&h=80&fit=crop" },
+          { title: "Product Management 101", category: "Business", duration: "3h 00m", level: "Beginner", color: "bg-green-50 text-green-700", img: "https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?w=80&h=80&fit=crop" },
+        ].map((r, i) => (
+          <div key={i} className="flex items-center gap-3 p-2 bg-gray-50 rounded-xl border border-gray-100 hover:border-purple-100 transition-colors">
+            <img src={r.img} alt={r.title} className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-gray-900 truncate">{r.title}</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${r.color}`}>{r.category}</span>
+                <span className="flex items-center gap-0.5 text-[10px] text-gray-400"><Clock className="w-2.5 h-2.5" />{r.duration}</span>
+              </div>
+            </div>
+            <button className="flex-shrink-0 w-7 h-7 bg-[#5B47DB] rounded-full flex items-center justify-center"><Play className="w-3 h-3 text-white fill-white" /></button>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div className="grid grid-cols-2 gap-2">
+      {[{ label: "Courses Available", value: "200+", icon: BookOpen, color: "text-purple-500" }, { label: "Avg. Rating", value: "4.8★", icon: Star, color: "text-yellow-500" }].map((s, i) => (
+        <div key={i} className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm flex items-center gap-2">
+          <s.icon className={`w-4 h-4 ${s.color} flex-shrink-0`} />
+          <div><p className="text-xs font-bold text-gray-900">{s.value}</p><p className="text-[10px] text-gray-400">{s.label}</p></div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const NewsEntertainmentMockup = () => (
+  <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200 p-4">
+    <div className="flex items-center gap-2 mb-3">
+      <Newspaper className="w-4 h-4 text-[#5B47DB]" />
+      <h4 className="font-semibold text-gray-900 text-sm">News & Entertainment</h4>
+      <span className="ml-auto text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-medium">Trending</span>
+    </div>
+    <div className="space-y-2.5">
+      {[
+        { title: "The Future of Remote Collaboration in 2025", source: "TechCrunch", time: "2h ago", tag: "Tech", tagColor: "bg-blue-100 text-blue-700", img: "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=80&h=80&fit=crop" },
+        { title: "10 Tools Every Creator Needs This Year", source: "Product Hunt", time: "5h ago", tag: "Design", tagColor: "bg-pink-100 text-pink-700", img: "https://images.unsplash.com/photo-1542744094-24638eff58bb?w=80&h=80&fit=crop" },
+        { title: "How Open Source is Shaping Modern Dev", source: "GitHub Blog", time: "1d ago", tag: "Dev", tagColor: "bg-green-100 text-green-700", img: "https://images.unsplash.com/photo-1587440871875-191322ee64b0?w=80&h=80&fit=crop" },
+      ].map((n, i) => (
+        <div key={i} className="flex gap-3 items-start">
+          <img src={n.img} alt={n.title} className="w-12 h-12 rounded-xl object-cover flex-shrink-0 border border-gray-100" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-gray-900 leading-tight line-clamp-2">{n.title}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${n.tagColor}`}>{n.tag}</span>
+              <span className="text-[10px] text-gray-400">{n.source} · {n.time}</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+    <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
+      <span className="flex items-center gap-1 text-[10px] text-gray-500"><TrendingUp className="w-3 h-3 text-orange-500" /> Updated hourly</span>
+      <button className="text-[10px] text-[#5B47DB] font-medium hover:underline">See all →</button>
+    </div>
+  </div>
+);
+
 // ─── Interactive Hero Mockup ──────────────────────────────────────────────────
 const TABS = [
   {
@@ -518,6 +590,7 @@ const FeaturesShowcase = ({ onAuth }) => {
       accentBg: "bg-gradient-to-br from-[#5B47DB] to-purple-700",
       items: ["Published project cards", "Media highlights", "Applaud & comments", "Link previews"],
       mockup: <FeedMockup />,
+      icon: LayoutGrid,
     },
     {
       eyebrow: "Discover",
@@ -527,6 +600,7 @@ const FeaturesShowcase = ({ onAuth }) => {
       accentBg: "bg-gradient-to-br from-blue-500 to-cyan-500",
       items: ["AI-powered recommendations", "Filter by skill & industry", "Direct apply flow", "Collaborator profiles"],
       mockup: <DiscoverMockup />,
+      icon: Compass,
     },
     {
       eyebrow: "Chat",
@@ -536,6 +610,7 @@ const FeaturesShowcase = ({ onAuth }) => {
       accentBg: "bg-gradient-to-br from-orange-500 to-red-500",
       items: ["Direct messages", "Team group chats", "Share updates", "Task mentions"],
       mockup: <ChatMockup />,
+      icon: MessageCircle,
     },
     {
       eyebrow: "Build Workspace",
@@ -545,6 +620,7 @@ const FeaturesShowcase = ({ onAuth }) => {
       accentBg: "bg-gradient-to-br from-[#5B47DB] to-indigo-700",
       items: ["AI Project Assistant", "Task & milestone board", "Asset management", "Notes & ideation"],
       mockup: <WorkspaceMockup />,
+      icon: Sparkles,
     },
     {
       eyebrow: "Profile",
@@ -554,6 +630,27 @@ const FeaturesShowcase = ({ onAuth }) => {
       accentBg: "bg-gradient-to-br from-pink-500 to-purple-600",
       items: ["Live project portfolio", "Skill endorsements", "Peer reviews", "AI-generated resume PDF"],
       mockup: <ProfileMockup />,
+      icon: User,
+    },
+    {
+      eyebrow: "Learning Hub",
+      title: "Level up while you build.",
+      subtitle: "Access a curated library of courses, tutorials, and resources to sharpen your skills — right alongside your projects.",
+      bg: "bg-white",
+      accentBg: "bg-gradient-to-br from-[#5B47DB] to-blue-500",
+      items: ["Curated courses & tutorials", "Skill-matched recommendations", "Track your progress", "Free & premium resources"],
+      mockup: <LearningHubMockup />,
+      icon: GraduationCap,
+    },
+    {
+      eyebrow: "News & Entertainment",
+      title: "Stay inspired and informed.",
+      subtitle: "Follow the latest in tech, design, and entrepreneurship — handpicked stories to fuel your creativity and keep you sharp.",
+      bg: "bg-[#f5f5f7]",
+      accentBg: "bg-gradient-to-br from-orange-500 to-red-500",
+      items: ["Curated tech & design news", "Trending topics in your field", "Updated hourly", "Discover new tools & ideas"],
+      mockup: <NewsEntertainmentMockup />,
+      icon: Newspaper,
     },
   ];
 
@@ -567,11 +664,7 @@ const FeaturesShowcase = ({ onAuth }) => {
               {/* Text side */}
               <div className="flex-1 text-left">
                 <div className={`w-12 h-12 ${f.accentBg} rounded-2xl flex items-center justify-center mb-5`}>
-                  {i === 0 && <LayoutGrid className="w-6 h-6 text-white" />}
-                  {i === 1 && <Compass className="w-6 h-6 text-white" />}
-                  {i === 2 && <MessageCircle className="w-6 h-6 text-white" />}
-                  {i === 3 && <Sparkles className="w-6 h-6 text-white" />}
-                  {i === 4 && <User className="w-6 h-6 text-white" />}
+                  {(() => { const Icon = f.icon || [LayoutGrid, Compass, MessageCircle, Sparkles, User, GraduationCap, Newspaper][i]; return <Icon className="w-6 h-6 text-white" />; })()}
                 </div>
                 <p className="text-sm font-semibold text-[#5B47DB] mb-1">{f.eyebrow}</p>
                 <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 tracking-tight mb-4 leading-tight">{f.title}</h2>
