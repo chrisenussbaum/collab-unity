@@ -434,10 +434,10 @@ const HeroFeedTab = () => (
     <div className="border border-gray-200 rounded-xl p-3 bg-white">
       <div className="flex items-start justify-between mb-1.5">
         <div className="flex items-center gap-2">
-          <img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=80&h=80&fit=crop" alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+          <img src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=80&h=80&fit=crop" alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
           <div>
-            <p className="text-xs font-bold text-gray-900">AI Study Companion App</p>
-            <p className="text-[10px] text-gray-400">Jamie Rivera · 3 days ago</p>
+            <p className="text-xs font-bold text-gray-900">Community Garden App</p>
+            <p className="text-[10px] text-gray-400">Taylor Moss · 2 days ago</p>
           </div>
         </div>
         <Share2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
@@ -445,10 +445,22 @@ const HeroFeedTab = () => (
       <div className="flex gap-1 flex-wrap mb-1.5">
         <span className="text-[10px] border border-gray-300 text-gray-600 rounded-full px-2 py-0.5">Seeking Collaborators</span>
         <span className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">Collaborative</span>
-        <span className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">Educational</span>
-        <span className="text-[10px] text-purple-600 px-1">👥 3 collaborators</span>
+        <span className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">Nonprofit</span>
       </div>
-      <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">Building an AI-powered study companion that adapts to each student's learning style. Looking for ML engineers, UX designers, and educators to join the team...</p>
+      <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">Building a mobile app to help neighborhoods organize shared garden spaces, track plant schedules, and coordinate volunteers. Need designers and mobile devs...</p>
+      {/* Collaborator avatars */}
+      <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-gray-100">
+        <div className="flex -space-x-1.5">
+          {[
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces",
+            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=faces",
+            "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=faces",
+          ].map((src, i) => (
+            <img key={i} src={src} alt="" className="w-5 h-5 rounded-full object-cover border border-white" />
+          ))}
+        </div>
+        <span className="text-[10px] text-gray-400">3 collaborators</span>
+      </div>
     </div>
   </div>
 );
@@ -648,7 +660,7 @@ const HeroMockup = () => {
 const HeroSection = ({ onAuth }) => {
   const handleAuth = onAuth;
   return (
-  <section className="pt-32 pb-12 text-center bg-[#f5f5f7] px-4">
+  <section className="pt-32 pb-12 text-center px-4" style={{ background: "transparent" }}>
     <div className="max-w-[700px] mx-auto">
       <p className="text-sm font-semibold text-[#5B47DB] mb-3 tracking-wide uppercase">Collab Unity</p>
       <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold text-gray-900 tracking-tight leading-tight mb-5">
@@ -658,7 +670,7 @@ const HeroSection = ({ onAuth }) => {
         The platform for creators, builders, and innovators to launch projects, find collaborators, and ship together.
       </p>
       <div className="flex items-center justify-center gap-4 flex-wrap">
-        <PillButton primary onClick={onAuth}>Get started free <ArrowRight className="w-4 h-4" /></PillButton>
+        <PillButton primary onClick={onAuth}>Get started <ArrowRight className="w-4 h-4" /></PillButton>
         <PillButton onClick={onAuth}>Log in to your account</PillButton>
       </div>
     </div>
@@ -817,7 +829,7 @@ const HowItWorks = ({ onAuth }) => (
         })}
       </div>
       <div className="mt-12">
-        <button onClick={onAuth} className="bg-[#5B47DB] text-white rounded-full px-6 py-3 text-sm font-medium hover:bg-[#4A37C0] transition-colors">Get started — it's free</button>
+        <button onClick={onAuth} className="bg-[#5B47DB] text-white rounded-full px-6 py-3 text-sm font-medium hover:bg-[#4A37C0] transition-colors">Get started</button>
       </div>
     </div>
   </section>
@@ -848,7 +860,7 @@ const CTABanner = ({ onAuth }) => (
       <h2 className="text-4xl sm:text-5xl font-semibold text-gray-900 tracking-tight mb-4 leading-tight">Ready to build something great?</h2>
       <p className="text-xl text-gray-500 mb-8">Join a growing community of creators bringing ambitious ideas to life. Free to start, forever.</p>
       <div className="flex items-center justify-center gap-4 flex-wrap">
-        <button onClick={onAuth} className="bg-[#5B47DB] text-white rounded-full px-6 py-3 text-sm font-medium hover:bg-[#4A37C0] transition-colors">Start for free <ArrowRight className="inline w-4 h-4 ml-1" /></button>
+        <button onClick={onAuth} className="bg-[#5B47DB] text-white rounded-full px-6 py-3 text-sm font-medium hover:bg-[#4A37C0] transition-colors">Get started <ArrowRight className="inline w-4 h-4 ml-1" /></button>
         <button onClick={onAuth} className="text-[#5B47DB] text-sm font-medium hover:underline">Already have an account? Sign in</button>
       </div>
     </div>
@@ -930,7 +942,7 @@ export default function Welcome() {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans antialiased">
+    <div className="min-h-screen font-sans antialiased" style={{ background: "linear-gradient(160deg, #f8f7ff 0%, #f3f0ff 40%, #f5f3ff 70%, #faf5ff 100%)" }}>
       <Nav onAuth={handleAuth} />
       <HeroSection onAuth={handleAuth} />
       <StatsBanner />
