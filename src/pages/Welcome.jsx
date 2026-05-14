@@ -409,49 +409,189 @@ const NewsEntertainmentMockup = () => (
 );
 
 // ─── Interactive Hero Mockup ──────────────────────────────────────────────────
-const TABS = [
-  {
-    label: "Feed", icon: LayoutGrid, url: "collabunity.io/feed",
-    content: [
-      { title: "The Forgotten Library", user: "Jordan Blake", img: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=120&h=120&fit=crop", status: "Seeking Collaborators", statusColor: "bg-orange-100 text-orange-700", skills: ["Creative Writing", "Storytelling"] },
-      { title: "Mobile Fitness App", user: "Alex Chen", img: "https://images.unsplash.com/photo-1461773518188-b3e86f98242f?w=120&h=120&fit=crop", status: "In Progress", statusColor: "bg-blue-100 text-blue-700", skills: ["Flutter", "Firebase"] },
-      { title: "AI Health Tracker", user: "Sara Patel", img: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=120&h=120&fit=crop", status: "Seeking Collaborators", statusColor: "bg-green-100 text-green-700", skills: ["Python", "ML"] },
-    ],
-  },
-  {
-    label: "Discover", icon: Compass, url: "collabunity.io/discover",
-    content: [
-      { title: "Social Media Dashboard", user: "Mike Ross", img: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=120&h=120&fit=crop", status: "85% Match", statusColor: "bg-purple-100 text-purple-700", skills: ["React", "Analytics"] },
-      { title: "E-commerce Platform", user: "Lisa Wang", img: "https://images.unsplash.com/photo-1661956602116-aa6865609028?w=120&h=120&fit=crop", status: "78% Match", statusColor: "bg-purple-100 text-purple-700", skills: ["Node.js", "Stripe"] },
-      { title: "Podcast Platform", user: "Jordan B.", img: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=120&h=120&fit=crop", status: "In Progress", statusColor: "bg-blue-100 text-blue-700", skills: ["Adobe", "YouTube"] },
-    ],
-  },
-  {
-    label: "My Projects", icon: Folder, url: "collabunity.io/projects",
-    content: [
-      { title: "Redapt Website", user: "You (Owner)", img: "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=120&h=120&fit=crop", status: "In Progress", statusColor: "bg-blue-100 text-blue-700", skills: ["React", "Tailwind"] },
-      { title: "Community Forum", user: "You (Collaborator)", img: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=120&h=120&fit=crop", status: "Seeking Collaborators", statusColor: "bg-orange-100 text-orange-700", skills: ["Vue", "Firebase"] },
-    ],
-  },
-  {
-    label: "Chat", icon: MessageCircle, url: "collabunity.io/chat",
-    isChat: true,
-    chats: [
-      { name: "Alex Johnson", msg: "Just pushed the new design!", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces", online: true },
-      { name: "Sarah Lee", msg: "Let's sync tomorrow?", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=faces", online: false },
-      { name: "Team Project", msg: "New task assigned to you", avatar: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=80&h=80&fit=crop", online: true },
-    ],
-    messages: [
+
+const HERO_TABS = [
+  { label: "Feed", icon: LayoutGrid, url: "collabunity.io/feed" },
+  { label: "Discover", icon: Compass, url: "collabunity.io/discover" },
+  { label: "My Projects", icon: Folder, url: "collabunity.io/myprojects" },
+  { label: "Chat", icon: MessageCircle, url: "collabunity.io/chat" },
+];
+
+const HeroFeedTab = () => (
+  <div className="space-y-2">
+    {/* Create post bar */}
+    <div className="bg-[#5B47DB] text-white rounded-xl px-3 py-2 flex items-center justify-center gap-1.5 text-xs font-medium cursor-pointer hover:bg-[#4A37C0] transition-colors">
+      <span className="text-base leading-none">+</span> Post
+    </div>
+    {/* Got an idea banner */}
+    <div className="bg-gradient-to-r from-[#5B47DB] to-indigo-600 rounded-xl p-3 flex items-center justify-between">
+      <div><p className="text-white text-xs font-semibold">Got an idea?</p><p className="text-purple-200 text-[10px]">Create a project and find collaborators</p></div>
+      <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0"><span className="text-white text-sm leading-none">+</span></div>
+    </div>
+    {/* Search */}
+    <div className="relative"><Search className="w-3 h-3 absolute left-2.5 top-2 text-gray-400" /><div className="w-full pl-7 pr-2 py-1.5 text-[10px] bg-gray-50 border border-gray-200 rounded-lg text-gray-400">Search posts and projects...</div></div>
+    {/* Feed card */}
+    <div className="border border-gray-200 rounded-xl p-3 bg-white">
+      <div className="flex items-start justify-between mb-1.5">
+        <div className="flex items-center gap-2">
+          <img src="https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=80&h=80&fit=crop" alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+          <div>
+            <p className="text-xs font-bold text-gray-900">Redapt Website Update</p>
+            <p className="text-[10px] text-gray-400">Chris Nussbaum · 1 month ago</p>
+          </div>
+        </div>
+        <Share2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
+      </div>
+      <div className="flex gap-1 flex-wrap mb-1.5">
+        <span className="text-[10px] border border-gray-300 text-gray-600 rounded-full px-2 py-0.5">In Progress</span>
+        <span className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">Personal</span>
+        <span className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">Career Development</span>
+        <span className="text-[10px] text-purple-600 px-1">👥 1 collaborator</span>
+      </div>
+      <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">The Redapt Website Update aims to enhance the user experience and modernize the web interface. Our goal is to integrate new functionalities, improve navigation...</p>
+    </div>
+  </div>
+);
+
+const HeroDiscoverTab = () => (
+  <div className="space-y-2">
+    {/* Hero banner */}
+    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-3 text-center border border-purple-100">
+      <h3 className="font-bold text-gray-900 text-sm mb-0.5">Where <span className="text-[#5B47DB]">Ideas</span> Happen</h3>
+      <p className="text-[10px] text-gray-500 mb-2">Connect with talented professionals and collaborate.</p>
+      <div className="grid grid-cols-2 gap-1.5">
+        {[{ label: "Learning Hub", sub: "Courses & videos", icon: GraduationCap }, { label: "News", sub: "Trending news", icon: Newspaper }].map((b, i) => (
+          <div key={i} className="bg-white rounded-lg p-2 border border-gray-100 flex items-center gap-1.5 cursor-pointer hover:border-purple-200 transition-colors">
+            <div className="w-6 h-6 bg-purple-100 rounded-md flex items-center justify-center flex-shrink-0"><b.icon className="w-3 h-3 text-[#5B47DB]" /></div>
+            <div><p className="text-[10px] font-semibold text-gray-900">{b.label}</p><p className="text-[9px] text-gray-400">{b.sub}</p></div>
+          </div>
+        ))}
+      </div>
+    </div>
+    {/* Tabs */}
+    <div className="grid grid-cols-2 gap-1 bg-gray-100 p-0.5 rounded-lg">
+      <div className="bg-white rounded-md py-1 text-center text-[10px] font-semibold text-gray-900">📊 Projects</div>
+      <div className="py-1 text-center text-[10px] font-medium text-gray-500">👥 Collaborators</div>
+    </div>
+    {/* Recommended */}
+    <div className="flex items-center gap-1 mb-1"><Sparkles className="w-3 h-3 text-purple-600" /><p className="text-[10px] font-semibold text-gray-900">Recommended for You</p></div>
+    <div className="grid grid-cols-2 gap-1.5">
+      {[
+        { name: "UW Masters Digital Media", match: "7%", img: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=80&h=80&fit=crop", skills: ["Intercultural Communication", "Digital Media"] },
+        { name: "Screen Time Challenge App", match: "5%", img: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=80&h=80&fit=crop", skills: ["Mobile Development", "UI/UX Design"] },
+      ].map((p, i) => (
+        <div key={i} className="bg-white border border-gray-200 rounded-xl p-2 hover:border-purple-200 transition-colors cursor-pointer">
+          <img src={p.img} alt={p.name} className="w-8 h-8 rounded-lg object-cover mb-1.5" />
+          <p className="text-[10px] font-semibold text-gray-900 leading-tight mb-1">{p.name}</p>
+          <span className="text-[9px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-medium">{p.match} Match</span>
+          <div className="flex flex-wrap gap-0.5 mt-1">{p.skills.map(s => <span key={s} className="text-[9px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded">{s}</span>)}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const HeroMyProjectsTab = () => (
+  <div className="space-y-2">
+    {/* Search */}
+    <div className="relative"><Search className="w-3 h-3 absolute left-2.5 top-2 text-gray-400" /><div className="w-full pl-7 pr-2 py-1.5 text-[10px] bg-gray-50 border border-gray-200 rounded-lg text-gray-400">Search your projects...</div></div>
+    {/* Tabs */}
+    <div className="grid grid-cols-3 gap-1 bg-gray-100 p-0.5 rounded-lg">
+      <div className="bg-white rounded-md py-1 text-center text-[10px] font-semibold text-gray-900 flex items-center justify-center gap-1"><Eye className="w-2.5 h-2.5" />Public <span className="text-gray-400">14</span></div>
+      <div className="py-1 text-center text-[10px] text-gray-500 flex items-center justify-center gap-1">Private <span className="text-gray-400">1</span></div>
+      <div className="py-1 text-center text-[10px] text-gray-500 flex items-center justify-center gap-1">Archived <span className="text-gray-400">8</span></div>
+    </div>
+    {/* Project cards */}
+    <div className="grid grid-cols-2 gap-1.5">
+      {[
+        { name: "Redapt Website Update", role: "Owner", status: "In Progress", statusColor: "border-blue-500", badgeColor: "text-blue-700 border border-blue-200", type: "Personal", img: "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=80&h=80&fit=crop", skills: ["Web Design", "UI/UX Design"] },
+        { name: "Velnor", role: "Collaborator", status: "Seeking Collaborators", statusColor: "border-orange-500", badgeColor: "text-orange-700 border border-orange-200", type: "Collaborative", img: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=80&h=80&fit=crop", skills: ["Marketing Strategy", "Branding"] },
+      ].map((p, i) => (
+        <div key={i} className={`bg-white rounded-xl border-t-2 ${p.statusColor} border border-gray-200 p-2 hover:shadow-sm transition-all cursor-pointer`}>
+          <div className="flex items-center justify-between mb-1.5">
+            <img src={p.img} alt={p.name} className="w-8 h-8 rounded-lg object-cover" />
+            <span className="text-[9px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">{p.role}</span>
+          </div>
+          <p className="text-[10px] font-bold text-gray-900 leading-tight mb-1">{p.name}</p>
+          <div className="flex gap-0.5 flex-wrap mb-1">
+            <span className={`text-[9px] ${p.badgeColor} rounded-full px-1.5 py-0.5`}>{p.status}</span>
+            <span className="text-[9px] bg-purple-50 text-purple-700 rounded-full px-1.5 py-0.5">{p.type}</span>
+          </div>
+          <div className="flex gap-0.5 flex-wrap">{p.skills.map(s => <span key={s} className="text-[9px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded">{s}</span>)}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const HeroChatTab = () => {
+  const [activeChat, setActiveChat] = useState(0);
+  const chats = [
+    { name: "daniel", msg: "Whenever you're back online...", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces", online: true },
+    { name: "Pablo Santana", msg: "Okay! Thanks for the suggestion!", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=faces", online: false },
+    { name: "asvaldez5", msg: "Hey, Asvaldez! What brings you...", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=faces", online: true },
+  ];
+  const messages = [
+    [
       { from: "them", text: "Hey! How's the project coming along?", time: "10:30 AM" },
-      { from: "me", text: "Great! Just finished the design mockups 🎨", time: "10:32 AM" },
+      { from: "me", text: "Great! Just finished the mockups 🎨", time: "10:32 AM" },
       { from: "them", text: "Awesome! Can't wait to see them 👀", time: "10:33 AM" },
     ],
-  },
-];
+    [
+      { from: "them", text: "Okay! Thanks for the suggestion!", time: "9:15 AM" },
+      { from: "me", text: "Happy to help anytime 👍", time: "9:20 AM" },
+    ],
+    [
+      { from: "them", text: "Hey, what brings you to Collab Unity?", time: "Yesterday" },
+      { from: "me", text: "Looking to collaborate on projects!", time: "Yesterday" },
+    ],
+  ];
+  return (
+    <div className="grid grid-cols-5 gap-2 h-full" style={{ minHeight: 240 }}>
+      {/* Conversation list */}
+      <div className="col-span-2 flex flex-col gap-1">
+        <div className="relative mb-1"><Search className="w-2.5 h-2.5 absolute left-2 top-1.5 text-gray-400" /><div className="w-full pl-6 pr-2 py-1 text-[10px] bg-gray-50 border border-gray-200 rounded-lg text-gray-400">Search conversations...</div></div>
+        {chats.map((c, i) => (
+          <button key={i} onClick={() => setActiveChat(i)} className={`flex items-center gap-2 p-2 rounded-xl text-left transition-colors w-full ${activeChat === i ? "bg-purple-50 border border-purple-100" : "hover:bg-gray-50"}`}>
+            <div className="relative flex-shrink-0">
+              <img src={c.avatar} alt={c.name} className="w-7 h-7 rounded-full object-cover" />
+              {c.online && <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-green-400 rounded-full border border-white" />}
+            </div>
+            <div className="min-w-0"><p className="text-[10px] font-semibold text-gray-900 truncate">{c.name}</p><p className="text-[9px] text-gray-400 truncate">{c.msg}</p></div>
+          </button>
+        ))}
+      </div>
+      {/* Active chat */}
+      <div className="col-span-3 flex flex-col bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+        <div className="flex items-center gap-2 px-2.5 py-1.5 border-b border-gray-200 bg-white">
+          <div className="relative flex-shrink-0">
+            <img src={chats[activeChat].avatar} alt="" className="w-6 h-6 rounded-full object-cover" />
+            {chats[activeChat].online && <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 bg-green-400 rounded-full border border-white" />}
+          </div>
+          <p className="text-[10px] font-semibold text-gray-900">{chats[activeChat].name}</p>
+          <span className={`text-[9px] ml-auto ${chats[activeChat].online ? "text-green-500" : "text-gray-400"}`}>● {chats[activeChat].online ? "Online" : "Offline"}</span>
+        </div>
+        <div className="flex-1 p-2 space-y-1.5 overflow-hidden">
+          {messages[activeChat].map((m, j) => (
+            <div key={j} className={`flex ${m.from === "me" ? "justify-end" : "justify-start"}`}>
+              <div className={`rounded-2xl px-2.5 py-1 text-[10px] max-w-[85%] ${m.from === "me" ? "bg-[#5B47DB] text-white rounded-tr-none" : "bg-white border border-gray-200 text-gray-700 rounded-tl-none"}`}>{m.text}</div>
+            </div>
+          ))}
+        </div>
+        <div className="px-2 py-1.5 bg-white border-t border-gray-200 flex items-center gap-1">
+          <div className="flex-1 bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1 text-[9px] text-gray-400">Type a message...</div>
+          <div className="w-5 h-5 bg-[#5B47DB] rounded-full flex items-center justify-center flex-shrink-0"><Send className="w-2.5 h-2.5 text-white" /></div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const HeroMockup = () => {
   const [activeTab, setActiveTab] = useState(0);
-  const tab = TABS[activeTab];
+  const tab = HERO_TABS[activeTab];
+
+  const tabContent = [<HeroFeedTab />, <HeroDiscoverTab />, <HeroMyProjectsTab />, <HeroChatTab />];
 
   return (
     <div className="mt-14 max-w-4xl mx-auto px-4">
@@ -464,10 +604,10 @@ const HeroMockup = () => {
           <div className="mx-auto bg-white rounded-full px-4 py-1 text-xs text-gray-400 border border-gray-200">{tab.url}</div>
         </div>
         {/* App shell */}
-        <div className="grid grid-cols-4 min-h-[280px]">
+        <div className="grid grid-cols-4" style={{ minHeight: 300 }}>
           {/* Sidebar */}
           <div className="col-span-1 border-r border-gray-100 bg-gray-50/60 p-3 flex flex-col gap-1">
-            {TABS.map((t, i) => {
+            {HERO_TABS.map((t, i) => {
               const Icon = t.icon;
               return (
                 <button
@@ -482,61 +622,8 @@ const HeroMockup = () => {
             })}
           </div>
           {/* Content */}
-          <div className="col-span-3 p-4">
-            {tab.isChat ? (
-              <div className="grid grid-cols-5 h-full gap-3">
-                <div className="col-span-2 space-y-1.5">
-                  <p className="text-xs font-bold text-gray-700 mb-2">Messages</p>
-                  {tab.chats.map((c, i) => (
-                    <div key={i} className={`flex items-center gap-2 p-2 rounded-xl cursor-pointer transition-colors ${i === 0 ? "bg-purple-50 border border-purple-100" : "hover:bg-gray-50"}`}>
-                      <div className="relative flex-shrink-0">
-                        <img src={c.avatar} alt={c.name} className="w-8 h-8 rounded-full object-cover" />
-                        {c.online && <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border border-white" />}
-                      </div>
-                      <div className="min-w-0"><p className="text-xs font-semibold text-gray-900 truncate">{c.name}</p><p className="text-[10px] text-gray-400 truncate">{c.msg}</p></div>
-                    </div>
-                  ))}
-                </div>
-                <div className="col-span-3 flex flex-col bg-gray-50 rounded-2xl overflow-hidden">
-                  <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 bg-white">
-                    <img src={tab.chats[0].avatar} alt="" className="w-6 h-6 rounded-full object-cover" />
-                    <p className="text-xs font-semibold text-gray-900">{tab.chats[0].name}</p>
-                    <span className="text-[10px] text-green-500 ml-auto">● Online</span>
-                  </div>
-                  <div className="flex-1 p-3 space-y-2 overflow-hidden">
-                    {tab.messages.map((m, j) => (
-                      <div key={j} className={`flex ${m.from === "me" ? "justify-end" : "justify-start"}`}>
-                        <div className={`rounded-2xl px-3 py-1.5 max-w-[85%] text-xs ${m.from === "me" ? "bg-[#5B47DB] text-white rounded-tr-none" : "bg-white border border-gray-200 text-gray-700 rounded-tl-none"}`}>
-                          {m.text}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="px-2 py-1.5 bg-white border-t border-gray-200 flex items-center gap-1.5">
-                    <div className="flex-1 bg-gray-50 border border-gray-200 rounded-full px-3 py-1 text-[11px] text-gray-400">Type a message...</div>
-                    <div className="w-6 h-6 bg-[#5B47DB] rounded-full flex items-center justify-center flex-shrink-0"><Send className="w-3 h-3 text-white" /></div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                <p className="text-xs font-bold text-gray-700 mb-3">{tab.label}</p>
-                {tab.content.map((p, i) => (
-                  <div key={i} className="bg-gray-50 hover:bg-white rounded-xl border border-gray-100 hover:border-purple-100 hover:shadow-sm p-3 flex items-center gap-3 transition-all">
-                    <img src={p.img} alt={p.title} className="w-11 h-11 rounded-xl object-cover flex-shrink-0 border border-gray-200" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{p.title}</p>
-                      <p className="text-[11px] text-gray-400 mb-1">{p.user}</p>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${p.statusColor}`}>{p.status}</span>
-                        {p.skills.map(s => <span key={s} className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{s}</span>)}
-                      </div>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
-                  </div>
-                ))}
-              </div>
-            )}
+          <div className="col-span-3 p-4 overflow-hidden">
+            {tabContent[activeTab]}
           </div>
         </div>
       </div>
