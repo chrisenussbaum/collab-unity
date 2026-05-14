@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, ExternalLink, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Download, ExternalLink, X, FileText, Clock, User } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 // Determine preview type from file_type, file_name extension, or URL
 const getPreviewType = (asset) => {
@@ -137,7 +139,42 @@ export default function AssetPreviewModal({ asset, onClose }) {
             </div>
           </div>
         </DialogHeader>
-        <div className="mt-2">
+
+        {/* Meta info row */}
+        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 border-b pb-3 -mt-1">
+          <Badge variant="secondary" className="text-xs">v{asset.version_number}</Badge>
+          {asset.category && asset.category !== "Uncategorized" && (
+            <Badge variant="outline" className="text-xs">{asset.category}</Badge>
+          )}
+          {asset.uploaded_by && (
+            <span className="flex items-center gap-1">
+              <User className="w-3 h-3" />
+              {asset.uploaded_by.split("@")[0]}
+            </span>
+          )}
+          {asset.created_date && (
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {formatDistanceToNow(new Date(asset.created_date), { addSuffix: true })}
+            </span>
+          )}
+          {asset.tags?.length > 0 && asset.tags.map(tag => (
+            <Badge key={tag} variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">{tag}</Badge>
+          ))}
+        </div>
+
+        {/* Version notes */}
+        {asset.version_notes && (
+          <div className="flex items-start gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900">
+            <FileText className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />
+            <div>
+              <span className="font-medium text-amber-700 text-xs uppercase tracking-wide block mb-0.5">Notes</span>
+              {asset.version_notes}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-1">
           {renderPreview()}
         </div>
       </DialogContent>

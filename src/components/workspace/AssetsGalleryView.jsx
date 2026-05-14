@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, ExternalLink, FileText, File, Music, Code, Link as LinkIcon, Play, Eye, CheckSquare, Square, Edit, Trash2, MoreVertical } from "lucide-react";
+import { Download, ExternalLink, FileText, File, Music, Code, Link as LinkIcon, Play, Eye, CheckSquare, Square, Edit, Trash2, MoreVertical, MessageSquare } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
 
@@ -122,9 +122,26 @@ export default function AssetsGalleryView({
 }) {
   if (assets.length === 0) return null;
 
+  // Show only the most recent version per asset_name
+  const latestByName = Object.values(
+    assets.reduce((acc, asset) => {
+      const key = asset.asset_name;
+      if (!acc[key] || asset.version_number > acc[key].version_number) {
+        acc[key] = asset;
+      }
+      return acc;
+    }, {})
+  );
+
+  // Count all versions per asset_name for the version badge
+  const versionCounts = assets.reduce((acc, asset) => {
+    acc[asset.asset_name] = (acc[asset.asset_name] || 0) + 1;
+    return acc;
+  }, {});
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-      {assets.map((asset) => {
+      {latestByName.map((asset) => {
         const isSelected = selectedAssetIds?.has(asset.id);
         const type = getPreviewType(asset);
         const isFile = asset.resource_type !== "link";
@@ -185,9 +202,23 @@ export default function AssetsGalleryView({
               <div className="flex items-start justify-between gap-1">
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold text-gray-800 truncate leading-tight">{asset.asset_name}</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">
-                    v{asset.version_number} · {formatDistanceToNow(new Date(asset.created_date), { addSuffix: true })}
-                  </p>
+                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                    <p className="text-[10px] text-gray-400">
+                      v{asset.version_number}
+                      {versionCounts[asset.asset_name] > 1 && (
+                        <span className="ml-1 text-purple-500">({versionCounts[asset.asset_name]} versions)</span>
+                      )}
+                    </p>
+                    {asset.version_notes && (
+                      <span
+                        className="inline-flex items-center gap-0.5 text-[10px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-1 py-0.5 cursor-pointer hover:bg-amber-100"
+                        onClick={(e) => { e.stopPropagation(); onPreview(asset); }}
+                        title={asset.version_notes}
+                      >
+                        <FileText className="w-2.5 h-2.5" /> Notes
+                      </span>
+                    )}
+                  </div>
                 </div>
                 {isCollaborator && (
                   <DropdownMenu>

@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { FileStack, Plus, Upload, Trash2, ExternalLink, Link as LinkIcon, Download, File, Clock, FileText, MoreVertical, Edit, User as UserIcon, User, Eye, CheckSquare, Square, Tag, X, LayoutGrid, List } from "lucide-react";
+import { FileStack, Plus, Upload, Trash2, ExternalLink, Link as LinkIcon, Download, File, Clock, FileText, MoreVertical, Edit, User as UserIcon, User, Eye, CheckSquare, Square, Tag, X, LayoutGrid, List, MessageSquare } from "lucide-react";
 import AssetPreviewModal from "./AssetPreviewModal";
 import AssetsGalleryView from "./AssetsGalleryView";
 import TagInput from "./TagInput";
@@ -464,60 +464,89 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
               <p className="text-gray-500">No assets have been uploaded yet.</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {assets.map(asset => {
-                const isFile = asset.resource_type === 'file';
-                return (
-                  <Card key={asset.id} className="cu-card">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          {asset.resource_type === 'link' ? (
-                            <LinkIcon className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                          ) : (
-                            <File className="w-5 h-5 text-purple-600 flex-shrink-0" />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-gray-900 truncate">{asset.asset_name}</h4>
-                            {asset.version_notes && (
-                              <p className="text-sm text-gray-600 mt-1">{asset.version_notes}</p>
-                            )}
-                            {asset.category && (
-                              <Badge variant="outline" className="mt-2 text-xs">
-                                {asset.category}
-                              </Badge>
-                            )}
-                            {asset.version_number && (
-                              <Badge variant="secondary" className="mt-2 text-xs ml-2">
-                                v{asset.version_number}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        <a
-                          href={asset.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="ml-3 flex-shrink-0"
-                        >
-                          {isFile ? (
-                            <Button size="sm" variant="outline">
-                              <Download className="w-4 h-4 mr-2" />
-                              <span>Download</span>
-                            </Button>
-                          ) : (
-                            <Button size="sm" variant="outline">
-                              <ExternalLink className="w-4 h-4 mr-2" />
-                              <span>View</span>
-                            </Button>
-                          )}
-                        </a>
-                      </div>
-                    </CardContent>
-                  </Card>
+            <>
+              {/* Show only latest version per asset_name */}
+              {(() => {
+                const latestAssets = Object.values(
+                  assets.reduce((acc, asset) => {
+                    const key = asset.asset_name;
+                    if (!acc[key] || asset.version_number > acc[key].version_number) acc[key] = asset;
+                    return acc;
+                  }, {})
                 );
-              })}
-            </div>
+                const versionCounts = assets.reduce((acc, a) => { acc[a.asset_name] = (acc[a.asset_name] || 0) + 1; return acc; }, {});
+
+                return (
+                  <div className="space-y-3">
+                    {latestAssets.map(asset => {
+                      const isFile = asset.resource_type === 'file';
+                      return (
+                        <Card key={asset.id} className="cu-card hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-start space-x-3 flex-1 min-w-0">
+                                {asset.resource_type === 'link' ? (
+                                  <LinkIcon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                                ) : (
+                                  <File className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-semibold text-gray-900 truncate">{asset.asset_name}</h4>
+                                  <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                    <Badge variant="secondary" className="text-xs">v{asset.version_number}</Badge>
+                                    {versionCounts[asset.asset_name] > 1 && (
+                                      <Badge variant="outline" className="text-xs text-purple-600 border-purple-200 bg-purple-50">
+                                        {versionCounts[asset.asset_name]} versions
+                                      </Badge>
+                                    )}
+                                    {asset.category && asset.category !== "Uncategorized" && (
+                                      <Badge variant="outline" className="text-xs">{asset.category}</Badge>
+                                    )}
+                                    {asset.tags?.length > 0 && asset.tags.map(tag => (
+                                      <Badge key={tag} variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">{tag}</Badge>
+                                    ))}
+                                  </div>
+                                  {asset.version_notes && (
+                                    <button
+                                      onClick={() => setPreviewAsset(asset)}
+                                      className="mt-2 flex items-start gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2.5 py-1.5 hover:bg-amber-100 transition-colors text-left w-full"
+                                    >
+                                      <FileText className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-amber-600" />
+                                      <span className="line-clamp-2">{asset.version_notes}</span>
+                                    </button>
+                                  )}
+                                  <p className="text-xs text-gray-400 mt-1.5">
+                                    {asset.uploaded_by?.split('@')[0]} · {formatDistanceToNow(new Date(asset.created_date), { addSuffix: true })}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                                <Button size="sm" variant="outline" onClick={() => setPreviewAsset(asset)}>
+                                  <Eye className="w-4 h-4 mr-1.5" />
+                                  Preview
+                                </Button>
+                                <a href={asset.file_url} target="_blank" rel="noopener noreferrer">
+                                  {isFile ? (
+                                    <Button size="sm" variant="ghost" className="text-xs">
+                                      <Download className="w-3.5 h-3.5 mr-1" /> Download
+                                    </Button>
+                                  ) : (
+                                    <Button size="sm" variant="ghost" className="text-xs">
+                                      <ExternalLink className="w-3.5 h-3.5 mr-1" /> Open
+                                    </Button>
+                                  )}
+                                </a>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+              <AssetPreviewModal asset={previewAsset} onClose={() => setPreviewAsset(null)} />
+            </>
           )}
         </CardContent>
       </Card>
