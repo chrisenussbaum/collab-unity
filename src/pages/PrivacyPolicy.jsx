@@ -22,9 +22,7 @@ export default function PrivacyPolicy() {
             <img src={LOGO_URL} alt="Collab Unity" className="w-7 h-7 rounded-lg object-cover" />
             <span className="text-sm font-semibold text-gray-900">Collab Unity</span>
           </Link>
-          <Link to={createPageUrl("Welcome")} className="flex items-center gap-1.5 text-[13px] text-[#5B47DB] font-medium hover:text-[#4A37C0] transition-colors">
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
-          </Link>
+
         </div>
       </header>
 

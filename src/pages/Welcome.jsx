@@ -47,7 +47,7 @@ const Nav = ({ onAuth }) => (
       <div className="flex items-center gap-3 text-[13px]">
         <button onClick={onAuth} className="text-gray-600 font-medium hover:text-[#5B47DB] transition-colors">Log in</button>
         <button onClick={onAuth} className="bg-[#5B47DB] text-white rounded-full px-4 py-2 text-[13px] font-medium hover:bg-[#4A37C0] transition-colors shadow-sm">
-          Sign up free
+          Sign up
         </button>
       </div>
     </div>
