@@ -642,9 +642,7 @@ const HeroMockup = () => {
             <button className="flex items-center gap-1 bg-[#5B47DB] text-white text-[10px] font-medium px-2.5 py-1.5 rounded-lg hover:bg-[#4A37C0] transition-colors">
               <span className="text-sm leading-none">+</span> Create Project
             </button>
-            <div className="w-6 h-6 rounded-full bg-purple-200 flex items-center justify-center flex-shrink-0">
-              <User className="w-3 h-3 text-purple-700" />
-            </div>
+            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&crop=faces" alt="User" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
           </div>
         </div>
         {/* Page content */}
