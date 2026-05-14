@@ -216,7 +216,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
       </Dialog>
 
       <motion.div id={`project-${project.id}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-        <Card className={`cu-card mb-6 overflow-hidden border-t-4 ${config.color} hover:shadow-lg transition-shadow duration-300`}>
+        <Card className={`bg-white mb-4 overflow-hidden rounded-2xl border border-gray-200 border-t-4 ${config.color} hover:shadow-md transition-shadow duration-200`}>
           <CardHeader className="px-3 sm:px-4 md:px-6 pb-3">
             <div className="flex items-start justify-between space-x-3">
               <div className="flex items-start space-x-3 flex-1 min-w-0">
@@ -344,7 +344,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
             <ProjectActivityFeed project={project} />
           </CardContent>
 
-          <CardFooter className="bg-gray-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-t border-gray-200">
+          <CardFooter className="bg-[#f5f5f7] px-3 sm:px-4 md:px-6 py-3 border-t border-gray-100">
             <div className="w-full">
               <div className="flex justify-around pb-4 border-b">
                 <Button variant="ghost" size="sm" className={`flex items-center space-x-2 transition-colors cu-text-responsive-sm ${isApplauded ? 'text-purple-600 hover:text-purple-700' : 'text-gray-600 hover:text-purple-600'}`} onClick={handleApplaud}>
@@ -604,26 +604,22 @@ export default function Feed({ currentUser, authIsLoading }) {
 
         {/* Mobile layout */}
         <div className="block md:hidden">
-          <div className="cu-content-grid pt-4">
+          <div className="space-y-3 pt-4">
             {currentUser && (
               <>
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                  <Button onClick={() => setShowCreatePostDialog(true)} className="cu-button w-full cu-gradient"><Plus className="w-5 h-5 mr-2" />Post</Button>
-                </motion.div>
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.05 }}>
-                  <Link to={createPageUrl("CreateProject")} className="block">
-                    <div className="cu-gradient rounded-xl p-4 sm:p-5 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0"><h3 className="font-bold text-base sm:text-lg mb-1">Got an idea?</h3><p className="text-purple-100 text-xs sm:text-sm">Create a project and find collaborators</p></div>
-                        <div className="flex-shrink-0 ml-3"><div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center"><Plus className="w-5 h-5 sm:w-6 sm:h-6" /></div></div>
-                      </div>
+                <Button onClick={() => setShowCreatePostDialog(true)} className="bg-[#5B47DB] hover:bg-[#4A37C0] text-white rounded-full w-full text-sm font-medium h-9 shadow-none"><Plus className="w-4 h-4 mr-1.5" />Post</Button>
+                <Link to={createPageUrl("CreateProject")} className="block">
+                  <div className="bg-[#5B47DB] hover:bg-[#4A37C0] transition-colors rounded-2xl p-4 text-white">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0"><h3 className="font-semibold text-sm mb-0.5">Got an idea?</h3><p className="text-purple-200 text-xs">Create a project and find collaborators</p></div>
+                      <div className="flex-shrink-0 ml-3"><div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"><Plus className="w-4 h-4" /></div></div>
                     </div>
-                  </Link>
-                </motion.div>
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }} className="relative">
-                  <Input type="text" placeholder="Search posts and projects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-white" />
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                </motion.div>
+                  </div>
+                </Link>
+                <div className="relative">
+                  <Input type="text" placeholder="Search posts and projects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 bg-white rounded-full border-gray-200 text-sm h-9" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                </div>
               </>
             )}
             <FeedList {...feedListProps} />
@@ -631,23 +627,23 @@ export default function Feed({ currentUser, authIsLoading }) {
         </div>
 
         {/* Desktop layout */}
-        <div className="hidden md:block pt-6 max-w-2xl mx-auto">
+        <div className="hidden md:block pt-5 max-w-2xl mx-auto">
           {currentUser && (
             <>
-              <Button onClick={() => setShowCreatePostDialog(true)} className="cu-button w-full cu-gradient mb-4"><Plus className="w-5 h-5 mr-2" />Post</Button>
-              <Link to={createPageUrl("CreateProject")} className="block mb-4">
-                <div className="cu-gradient rounded-xl p-4 sm:p-5 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+              <Button onClick={() => setShowCreatePostDialog(true)} className="bg-[#5B47DB] hover:bg-[#4A37C0] text-white rounded-full w-full text-sm font-medium h-9 shadow-none mb-3"><Plus className="w-4 h-4 mr-1.5" />Post</Button>
+              <Link to={createPageUrl("CreateProject")} className="block mb-3">
+                <div className="bg-[#5B47DB] hover:bg-[#4A37C0] transition-colors rounded-2xl p-4 text-white">
                   <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0"><h3 className="font-bold text-base sm:text-lg mb-1">Got an idea?</h3><p className="text-purple-100 text-xs sm:text-sm">Create a project and find collaborators</p></div>
-                    <div className="flex-shrink-0 ml-3"><div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center"><Plus className="w-5 h-5 sm:w-6 sm:h-6" /></div></div>
+                    <div className="flex-1 min-w-0"><h3 className="font-semibold text-sm mb-0.5">Got an idea?</h3><p className="text-purple-200 text-xs">Create a project and find collaborators</p></div>
+                    <div className="flex-shrink-0 ml-3"><div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"><Plus className="w-4 h-4" /></div></div>
                   </div>
                 </div>
               </Link>
             </>
           )}
           <div className="relative mb-3">
-            <Input type="text" placeholder="Search posts and projects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-white" />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Input type="text" placeholder="Search posts and projects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 bg-white rounded-full border-gray-200 text-sm h-9" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           </div>
           <FeedList {...feedListProps} />
         </div>
