@@ -385,7 +385,8 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
   const [slashFilter, setSlashFilter] = useState("");
   const [slashIndex, setSlashIndex] = useState(0);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [attachedFiles, setAttachedFiles] = useState([]);
+  const [stagedFiles, setStagedFiles] = useState([]); // files waiting for user context before sending
+  const [stagedFileMode, setStagedFileMode] = useState(null); // "asset" | "analyze"
   const [analyzingFiles, setAnalyzingFiles] = useState(false);
   // Tracks when we're awaiting a follow-up argument for a slash command
   const [pendingCommand, setPendingCommand] = useState(null); // e.g. "task" | "milestone" | "note"
@@ -542,19 +543,23 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
 
   const handleDragOver = (e) => e.preventDefault();
 
-  const handleDrop = async (e) => {
+  const handleDrop = (e) => {
     e.preventDefault();
     dragCounterRef.current = 0;
     setIsDragOver(false);
     if (!canEdit) return;
     const file = e.dataTransfer.files?.[0];
-    if (file) await uploadFileToAssets(file);
+    if (file) {
+      setStagedFiles([file]);
+      setStagedFileMode("asset");
+    }
   };
 
-  const handleFileSelect = async (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      await uploadFileToAssets(file);
+      setStagedFiles([file]);
+      setStagedFileMode("asset");
       e.target.value = "";
     }
   };
@@ -615,6 +620,13 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
   };
 
   const sendMessage = async (text) => {
+    // If there are staged files, send them with the current input as context
+    if (stagedFiles.length > 0) {
+      const contextText = (text || input).trim();
+      await sendWithStagedFiles(contextText);
+      return;
+    }
+
     const userText = (text || input).trim();
     if (!userText || isLoading) return;
 
@@ -853,51 +865,66 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
   };
 
   // ── File analysis (images, docs, video) ──
-  const handleAnalyzeFileSelect = async (e) => {
+  const handleAnalyzeFileSelect = (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     e.target.value = "";
-    setAnalyzingFiles(true);
-    const userText = input.trim() || "Please analyze these files and provide detailed feedback and suggestions to help move this project forward.";
-    const userMsg = { role: "user", content: `📎 ${files.map(f => f.name).join(", ")} — ${userText}`, sender_email: currentUser?.email, sender_name: currentUser?.full_name };
-    setMessages(prev => [...prev, userMsg]);
-    await persistMessage(userMsg);
-    setInput("");
+    setStagedFiles(files);
+    setStagedFileMode("analyze");
+  };
 
-    try {
-      // Upload all files and collect URLs
-      const uploadedUrls = await Promise.all(files.map(async (file) => {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        return file_url;
-      }));
+  // ── Execute staged file send (called when user hits send with staged files) ──
+  const sendWithStagedFiles = async (userText) => {
+    const files = stagedFiles;
+    const mode = stagedFileMode;
+    setStagedFiles([]);
+    setStagedFileMode(null);
 
-      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs });
-      const analysisPrompt = `${systemPrompt}
-
-The user has shared ${files.length} file(s) for analysis: ${files.map(f => f.name).join(", ")}.
-
-User's request: "${userText}"
-
-Please analyze the provided file(s) thoroughly. For images, compare visual designs, layouts, branding, and UX. For documents, review content, structure, and clarity. For videos, describe what you can observe. 
-
-Provide:
-1. **Detailed observations** about what you see in the file(s)
-2. **Specific actionable suggestions** to improve or move the project forward
-3. **Relevant tasks** the team should consider (format as bullet points starting with action verbs)
-4. **Any tools or resources** that could help
-
-Be specific, reference the actual content you observe, and tie your feedback to the project goals.`;
-
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: analysisPrompt,
-        file_urls: uploadedUrls,
-        model: "claude_sonnet_4_6"
-      });
-      await addAndPersist({ role: "assistant", content: result });
-    } catch (err) {
-      await addAndPersist({ role: "assistant", content: `❌ Failed to analyze the file(s). Please try again. (${err.message})`, isError: true });
-    } finally {
-      setAnalyzingFiles(false);
+    if (mode === "asset") {
+      // Upload to assets and optionally get AI feedback
+      const userMsg = { role: "user", content: `📎 Uploading **${files[0].name}** to assets${userText ? ` — ${userText}` : ""}`, sender_email: currentUser?.email, sender_name: currentUser?.full_name };
+      setMessages(prev => [...prev, userMsg]);
+      await persistMessage(userMsg);
+      setInput("");
+      await uploadFileToAssets(files[0]);
+      // If user added context, also run AI analysis
+      if (userText) {
+        setAnalyzingFiles(true);
+        try {
+          const { file_url } = await base44.integrations.Core.UploadFile({ file: files[0] });
+          const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs });
+          const analysisPrompt = `${systemPrompt}\n\nThe user uploaded a file "${files[0].name}" and said: "${userText}"\n\nRespond conversationally to their message and the file context. If the file is an image or doc, provide relevant feedback. Respond with valid JSON only.`;
+          const raw = await base44.integrations.Core.InvokeLLM({ prompt: analysisPrompt, file_urls: [file_url], model: "claude_sonnet_4_6" });
+          let parsed = null;
+          try { const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim(); parsed = JSON.parse(cleaned); } catch { parsed = { message: raw }; }
+          await addAndPersist({ role: "assistant", content: parsed?.message || raw });
+        } catch (err) {
+          // AI analysis failed but file was already saved, that's ok
+        } finally {
+          setAnalyzingFiles(false);
+        }
+      }
+    } else if (mode === "analyze") {
+      const userMsg = { role: "user", content: `📎 ${files.map(f => f.name).join(", ")}${userText ? ` — ${userText}` : ""}`, sender_email: currentUser?.email, sender_name: currentUser?.full_name };
+      setMessages(prev => [...prev, userMsg]);
+      await persistMessage(userMsg);
+      setInput("");
+      setAnalyzingFiles(true);
+      try {
+        const uploadedUrls = await Promise.all(files.map(async (file) => {
+          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          return file_url;
+        }));
+        const contextText = userText || "Please analyze these files and provide detailed feedback and suggestions to help move this project forward.";
+        const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs });
+        const analysisPrompt = `${systemPrompt}\n\nThe user has shared ${files.length} file(s) for analysis: ${files.map(f => f.name).join(", ")}.\n\nUser's request: "${contextText}"\n\nPlease analyze the provided file(s) thoroughly. Provide detailed observations, specific actionable suggestions, and relevant next steps for this project. Be specific and tie feedback to the project goals.`;
+        const result = await base44.integrations.Core.InvokeLLM({ prompt: analysisPrompt, file_urls: uploadedUrls, model: "claude_sonnet_4_6" });
+        await addAndPersist({ role: "assistant", content: result });
+      } catch (err) {
+        await addAndPersist({ role: "assistant", content: `❌ Failed to analyze the file(s). Please try again. (${err.message})`, isError: true });
+      } finally {
+        setAnalyzingFiles(false);
+      }
     }
   };
 
@@ -915,8 +942,8 @@ Be specific, reference the actual content you observe, and tie your feedback to 
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-purple-50/95 border-2 border-dashed border-purple-400 rounded-b-xl pointer-events-none">
           <div className="text-center">
             <Upload className="w-10 h-10 mx-auto text-purple-500 mb-2" />
-            <p className="text-purple-700 font-semibold">Drop to save to Assets</p>
-            <p className="text-purple-500 text-sm">File will be added to your project assets</p>
+            <p className="text-purple-700 font-semibold">Drop to attach file</p>
+            <p className="text-purple-500 text-sm">Add context in the input, then send</p>
           </div>
         </div>
       )}
@@ -1151,6 +1178,30 @@ Be specific, reference the actual content you observe, and tie your feedback to 
           </div>
         )}
 
+        {/* Staged files preview — shown when files are attached and waiting for context */}
+        {stagedFiles.length > 0 && (
+          <div className="mb-2 flex items-start gap-2 px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg">
+            <Paperclip className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-indigo-700">
+                {stagedFileMode === "analyze" ? "📎 Ready to analyze" : "📎 Ready to upload to Assets"}
+              </p>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {stagedFiles.map((f, i) => (
+                  <span key={i} className="text-[11px] bg-indigo-100 text-indigo-700 rounded px-1.5 py-0.5 truncate max-w-[180px]">{f.name}</span>
+                ))}
+              </div>
+              <p className="text-[11px] text-indigo-500 mt-1">Add context below (optional), then press Send ↵</p>
+            </div>
+            <button
+              onClick={() => { setStagedFiles([]); setStagedFileMode(null); }}
+              className="text-indigo-300 hover:text-indigo-600 flex-shrink-0"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* Pending command indicator */}
         {pendingCommand && (
           <div className="mb-2 flex items-center gap-2 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg text-xs text-purple-700 font-medium">
@@ -1202,7 +1253,7 @@ Be specific, reference the actual content you observe, and tie your feedback to 
           <div className="flex flex-col gap-1.5">
             <Button
               onClick={() => sendMessage()}
-              disabled={!input.trim() || isLoading || analyzingFiles}
+              disabled={(stagedFiles.length === 0 && !input.trim()) || isLoading || analyzingFiles}
               size="sm"
               className="cu-button h-9 w-9 p-0 flex-shrink-0"
             >
@@ -1219,10 +1270,10 @@ Be specific, reference the actual content you observe, and tie your feedback to 
             )}
           </div>
         </div>
-        {canEdit && (
+        {canEdit && stagedFiles.length === 0 && (
           <p className="text-xs text-gray-400 mt-1.5">
-            <Paperclip className="w-3 h-3 inline mr-0.5" /> Drop files to save to Assets &nbsp;·&nbsp;
-            <FileSearch className="w-3 h-3 inline mr-0.5" /> Click the scan icon to analyze images/docs/videos with AI
+            <Paperclip className="w-3 h-3 inline mr-0.5" /> Attach or drop a file, add context, then send &nbsp;·&nbsp;
+            <FileSearch className="w-3 h-3 inline mr-0.5" /> Scan icon to analyze with AI
           </p>
         )}
       </div>
