@@ -31,7 +31,7 @@ const PillButton = ({ children, primary, onClick, className = "" }) => (
 
 // ─── Nav (always solid, no fade) ──────────────────────────────────────────────
 const Nav = ({ onAuth }) => (
-  <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+  <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
     <div className="w-full px-6 flex items-center justify-between h-14">
       <a href="#" className="flex items-center gap-2 flex-shrink-0">
         <img src={LOGO_URL} alt="Collab Unity" className="w-7 h-7 rounded-lg object-cover" />

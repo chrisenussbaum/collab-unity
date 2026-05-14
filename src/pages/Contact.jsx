@@ -43,8 +43,8 @@ export default function Contact() {
   return (
     <div className="min-h-screen bg-[#f5f5f7] font-sans antialiased">
       {/* Nav */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl shadow-sm border-b border-gray-200">
-        <div className="max-w-[980px] mx-auto px-6 flex items-center justify-between h-14">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+        <div className="w-full px-6 flex items-center justify-between h-14">
           <Link to={createPageUrl("Welcome")} className="flex items-center gap-2">
             <img src={LOGO_URL} alt="Collab Unity" className="w-7 h-7 rounded-lg object-cover" />
             <span className="text-sm font-semibold text-gray-900">Collab Unity</span>
