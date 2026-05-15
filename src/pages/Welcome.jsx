@@ -30,60 +30,7 @@ const PillButton = ({ children, primary, onClick, className = "" }) => (
   </button>
 );
 
-// ─── Nav (always solid, no fade) ──────────────────────────────────────────────
-const Nav = ({ onAuth }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-      <div className="w-full px-4 sm:px-6 flex items-center justify-between h-14">
-        <a href="#" className="flex items-center gap-2 flex-shrink-0">
-          <img src={LOGO_URL} alt="Collab Unity" className="w-7 h-7 rounded-lg object-cover" />
-          <span className="text-sm font-semibold text-gray-900 hidden sm:inline">Collab Unity</span>
-        </a>
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-7 text-[13px] text-gray-600 font-medium">
-          <a href="#features" className="hover:text-[#5B47DB] transition-colors">Features</a>
-          <a href="#how-it-works" className="hover:text-[#5B47DB] transition-colors">How It Works</a>
-          <a href="#about" className="hover:text-[#5B47DB] transition-colors">About</a>
-          <a href="#faq" className="hover:text-[#5B47DB] transition-colors">FAQ</a>
-          <Link to={createPageUrl("Contact")} className="hover:text-[#5B47DB] transition-colors">Contact</Link>
-          <Link to={createPageUrl("Featured")} className="hover:text-[#5B47DB] transition-colors">Featured</Link>
-          <Link to={createPageUrl("Resources")} className="hover:text-[#5B47DB] transition-colors">Resources</Link>
-        </nav>
-        {/* Auth buttons always visible */}
-        <div className="flex items-center gap-2 text-[13px]">
-          <button onClick={onAuth} className="text-gray-600 font-medium hover:text-[#5B47DB] transition-colors px-2 py-1">Log in</button>
-          <button onClick={onAuth} className="bg-[#5B47DB] text-white rounded-full px-4 py-2 text-[13px] font-medium hover:bg-[#4A37C0] transition-colors shadow-sm">
-            Sign up
-          </button>
-          {/* Hamburger for mobile */}
-          <button
-            onClick={() => setMobileMenuOpen(v => !v)}
-            className="md:hidden flex flex-col gap-1.5 p-2 ml-1"
-            aria-label="Menu"
-          >
-            <span className={`block h-0.5 w-5 bg-gray-700 transition-all ${mobileMenuOpen ? "rotate-45 translate-y-2" : ""}`} />
-            <span className={`block h-0.5 w-5 bg-gray-700 transition-all ${mobileMenuOpen ? "opacity-0" : ""}`} />
-            <span className={`block h-0.5 w-5 bg-gray-700 transition-all ${mobileMenuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
-          </button>
-        </div>
-      </div>
-      {/* Mobile dropdown menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100 shadow-lg px-4 py-4 flex flex-col gap-4 text-sm text-gray-700 font-medium">
-          <a href="#features" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#5B47DB] transition-colors">Features</a>
-          <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#5B47DB] transition-colors">How It Works</a>
-          <a href="#about" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#5B47DB] transition-colors">About</a>
-          <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#5B47DB] transition-colors">FAQ</a>
-          <Link to={createPageUrl("Contact")} onClick={() => setMobileMenuOpen(false)} className="hover:text-[#5B47DB] transition-colors">Contact</Link>
-          <Link to={createPageUrl("Featured")} onClick={() => setMobileMenuOpen(false)} className="hover:text-[#5B47DB] transition-colors">Featured</Link>
-          <Link to={createPageUrl("Resources")} onClick={() => setMobileMenuOpen(false)} className="hover:text-[#5B47DB] transition-colors">Resources</Link>
-          <button onClick={() => { setMobileMenuOpen(false); onAuth(); }} className="text-left hover:text-[#5B47DB] transition-colors">Log in</button>
-        </div>
-      )}
-    </header>
-  );
-};
+
 
 // ─── Interactive Mockups (from old version, Apple-styled) ─────────────────────
 
@@ -984,5 +931,6 @@ export default function Welcome() {
       <FAQ />
       <PublicFooter />
     </div>
+
   );
 }
