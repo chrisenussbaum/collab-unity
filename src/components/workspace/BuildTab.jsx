@@ -252,7 +252,7 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `  "message": "Your conversational response here (use markdown for formatting)",`,
     `  "navigate_to": "tasks|milestones|assets|ideation|notes|tools|links|activity|null",`,
     `  "actions": [`,
-    `    {"type": "create_task", "title": "Task title", "description": "...", "priority": "medium|high|low|urgent", "assigned_to": "email@example.com or null", "due_date": "YYYY-MM-DD or null"},`,
+    `    {"type": "create_task", "title": "Short task title (no colon, no description in title)", "description": "Detailed description of what needs to be done", "priority": "medium|high|low|urgent", "assigned_to": "email@example.com or null", "due_date": "YYYY-MM-DD or null"},`,
     `    {"type": "create_milestone", "title": "Milestone name", "description": "...", "target_date": "YYYY-MM-DD or null"},`,
     `    {"type": "save_note", "title": "Note title", "content": "Note content"},`,
     `    {"type": "suggest_tool", "name": "Tool name", "url": "https://...", "icon": "emoji"}`,
@@ -261,6 +261,7 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `- "actions" can be an empty array [] if no direct actions are needed`,
     `- "navigate_to" should be null unless you want to redirect the user to a specific tab after your response`,
     `- Only include actions the user actually asked for, or that are obviously needed`,
+    `- For create_task: "title" must be SHORT (3-6 words max, no colons). Put details in "description". NEVER format title as "Name: description text"`,
     `- For assigned_to, use the exact email from the collaborators list above`,
     `- Keep "message" conversational, reference actual project details, and always suggest a clear next step`,
   ];
@@ -332,17 +333,26 @@ async function executeAction(action, project, currentUser, onProjectUpdate) {
   if (!project?.id || !currentUser) return null;
 
   if (action.type === "create_task") {
-    const created = await base44.entities.Task.create({
+    // If the AI baked "Title: description text" into a single title field, split it out
+    let taskTitle = (action.title || "").trim();
+    let taskDescription = (action.description || "").trim();
+    const colonIdx = taskTitle.indexOf(": ");
+    if (colonIdx > 0 && colonIdx < 60 && !taskDescription) {
+      // Only split if no separate description was provided and the colon looks like a separator
+      taskDescription = taskTitle.slice(colonIdx + 2).trim();
+      taskTitle = taskTitle.slice(0, colonIdx).trim();
+    }
+    await base44.entities.Task.create({
       project_id: project.id,
-      title: action.title,
-      description: action.description || "",
+      title: taskTitle,
+      description: taskDescription,
       priority: action.priority || "medium",
       status: "todo",
       assigned_to: action.assigned_to || undefined,
       due_date: action.due_date || undefined,
     });
     if (onProjectUpdate) onProjectUpdate();
-    return `✅ Task created: **${action.title}**${action.assigned_to ? ` → assigned to ${action.assigned_to.split("@")[0]}` : ""}`;
+    return `✅ Task created: **${taskTitle}**${action.assigned_to ? ` → assigned to ${action.assigned_to.split("@")[0]}` : ""}`;
   }
 
   if (action.type === "create_milestone") {
@@ -738,9 +748,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
             finalContent += `\n\n---\n**Actions taken:**\n${actionResults.join("\n")}`;
           }
           await addAndPersist({ role: "assistant", content: finalContent });
-          if (parsed?.navigate_to && parsed.navigate_to !== "null" && onNavigateTo) {
-            onNavigateTo(parsed.navigate_to);
-          }
+          // NOTE: Do NOT auto-navigate — let users read the response first
           if (actionResults.length > 0 || actions.length > 0) {
             const followUps = getContextualFollowUps(tasks, milestones, finalContent);
             setPendingFollowUp(followUps[0]?.label || "What else would you like to do?");
@@ -802,10 +810,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
       }
 
       await addAndPersist({ role: "assistant", content: finalContent });
-      // Navigate to a tab if the AI suggests it
-      if (parsed?.navigate_to && parsed.navigate_to !== "null" && onNavigateTo) {
-        onNavigateTo(parsed.navigate_to);
-      }
+      // NOTE: Do NOT auto-navigate — let users read the response first
       // After executing actions, prompt to continue
       if (actionResults.length > 0 || actions.length > 0) {
         const followUps = getContextualFollowUps(tasks, milestones, finalContent);
