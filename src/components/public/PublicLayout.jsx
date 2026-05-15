@@ -24,7 +24,8 @@ export function PublicNav({ currentPage }) {
 
   const handleAnchorClick = (hash) => {
     setMobileOpen(false);
-    const isOnWelcome = location.pathname === "/Welcome" || location.pathname === "/";
+    const path = location.pathname.toLowerCase();
+    const isOnWelcome = path === "/welcome" || path === "/";
     if (isOnWelcome) {
       const el = document.querySelector(hash);
       if (el) el.scrollIntoView({ behavior: "smooth" });
