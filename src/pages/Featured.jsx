@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { MapPin, Users, Lightbulb, ArrowRight, ChevronRight, Sparkles } from "lucide-react";
+import { MapPin, Users, Lightbulb, ArrowRight, ChevronRight, Sparkles, ArrowUpDown } from "lucide-react";
 import { PublicNav, PublicFooter } from "@/components/public/PublicLayout";
 
 const CU_PURPLE = "#5B47DB";
@@ -166,6 +166,7 @@ export default function Featured() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [industryFilter, setIndustryFilter] = useState("All");
   const [interestFilter, setInterestFilter] = useState("All");
+  const [sortOrder, setSortOrder] = useState("newest");
 
   const statusFilters = ["All", "Seeking Collaborators", "In Progress", "Completed"];
   const statusMap = { "Seeking Collaborators": "seeking_collaborators", "In Progress": "in_progress", "Completed": "completed" };
@@ -194,12 +195,18 @@ export default function Featured() {
   const industries = ["All", ...Array.from(new Set(projects.map(p => p.industry).filter(Boolean))).sort()];
   const interests = ["All", ...Array.from(new Set(projects.map(p => p.area_of_interest).filter(Boolean))).sort()];
 
-  const filtered = projects.filter(p => {
-    const matchStatus = statusFilter === "All" || p.status === statusMap[statusFilter];
-    const matchIndustry = industryFilter === "All" || p.industry === industryFilter;
-    const matchInterest = interestFilter === "All" || p.area_of_interest === interestFilter;
-    return matchStatus && matchIndustry && matchInterest;
-  });
+  const filtered = projects
+    .filter(p => {
+      const matchStatus = statusFilter === "All" || p.status === statusMap[statusFilter];
+      const matchIndustry = industryFilter === "All" || p.industry === industryFilter;
+      const matchInterest = interestFilter === "All" || p.area_of_interest === interestFilter;
+      return matchStatus && matchIndustry && matchInterest;
+    })
+    .sort((a, b) => {
+      if (sortOrder === "newest") return new Date(b.created_date || 0) - new Date(a.created_date || 0);
+      if (sortOrder === "popular") return (b.followers_count || 0) - (a.followers_count || 0);
+      return 0;
+    });
 
   const featuredProject = filtered[0];
   const gridProjects = filtered.slice(1, 7);
@@ -265,6 +272,14 @@ export default function Featured() {
                 className="text-xs border border-gray-200 rounded-full px-3 py-1.5 text-gray-600 bg-white focus:outline-none focus:border-[#5B47DB] cursor-pointer"
               >
                 {interests.map(i => <option key={i} value={i}>{i === "All" ? "All Areas of Interest" : i}</option>)}
+              </select>
+              <select
+                value={sortOrder}
+                onChange={e => setSortOrder(e.target.value)}
+                className="text-xs border border-gray-200 rounded-full px-3 py-1.5 text-gray-600 bg-white focus:outline-none focus:border-[#5B47DB] cursor-pointer"
+              >
+                <option value="newest">Newest First</option>
+                <option value="popular">Most Popular</option>
               </select>
               {(industryFilter !== "All" || interestFilter !== "All") && (
                 <button
