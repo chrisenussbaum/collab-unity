@@ -198,11 +198,11 @@ export default function MilestonesTab({ project, currentUser, isCollaborator, is
           {milestones.map((milestone) => (
             <Card key={milestone.id} className="cu-card hover:shadow-md transition-shadow">
               <CardContent className="p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start space-x-3 flex-1">
-                    <div className="mt-1">{getStatusIcon(milestone.status)}</div>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 flex-shrink-0">{getStatusIcon(milestone.status)}</div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
                         <h3 className="text-lg font-semibold text-gray-900">{milestone.title}</h3>
                         <Badge className={getStatusColor(milestone.status)}>
                           {milestone.status.replace(/_/g, " ")}
@@ -221,7 +221,7 @@ export default function MilestonesTab({ project, currentUser, isCollaborator, is
                   </div>
 
                   {hasWriteAccess && (
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {milestone.status !== "completed" && (
                         <Select 
                           value={milestone.status} 
