@@ -22,8 +22,7 @@ export function PublicNav({ currentPage }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleAnchorClick = (e, hash) => {
-    e.preventDefault();
+  const handleAnchorClick = (hash) => {
     setMobileOpen(false);
     const isOnWelcome = location.pathname === "/Welcome" || location.pathname === "/";
     if (isOnWelcome) {
@@ -31,11 +30,10 @@ export function PublicNav({ currentPage }) {
       if (el) el.scrollIntoView({ behavior: "smooth" });
     } else {
       navigate("/Welcome");
-      // After navigation, scroll once the page has rendered
       setTimeout(() => {
         const el = document.querySelector(hash);
         if (el) el.scrollIntoView({ behavior: "smooth" });
-      }, 500);
+      }, 800);
     }
   };
 
@@ -54,14 +52,13 @@ export function PublicNav({ currentPage }) {
             const isActive = item.page && currentPage === item.page;
             if (item.isAnchor) {
               return (
-                <a
+                <button
                   key={item.label}
-                  href={item.href}
-                  onClick={(e) => handleAnchorClick(e, item.hash)}
-                  className="hover:text-[#5B47DB] transition-colors cursor-pointer"
+                  onClick={() => handleAnchorClick(item.hash)}
+                  className="hover:text-[#5B47DB] transition-colors cursor-pointer text-[13px] text-gray-600 font-medium"
                 >
                   {item.label}
-                </a>
+                </button>
               );
             }
             return (
@@ -99,14 +96,13 @@ export function PublicNav({ currentPage }) {
             const isActive = item.page && currentPage === item.page;
             if (item.isAnchor) {
               return (
-                <a
+                <button
                   key={item.label}
-                  href={item.href}
-                  onClick={(e) => handleAnchorClick(e, item.hash)}
-                  className="hover:text-[#5B47DB] transition-colors cursor-pointer"
+                  onClick={() => handleAnchorClick(item.hash)}
+                  className="text-left hover:text-[#5B47DB] transition-colors cursor-pointer"
                 >
                   {item.label}
-                </a>
+                </button>
               );
             }
             return (
