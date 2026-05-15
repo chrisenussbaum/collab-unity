@@ -24,16 +24,8 @@ export function PublicNav({ currentPage }) {
 
   const handleAnchorClick = (hash) => {
     setMobileOpen(false);
-    const path = location.pathname.toLowerCase();
-    const isOnWelcome = path === "/welcome" || path === "/";
-    if (isOnWelcome) {
-      const el = document.querySelector(hash);
-      if (el) el.scrollIntoView({ behavior: "smooth" });
-    } else {
-      // Store the target hash and navigate; Welcome page will pick it up on mount
-      sessionStorage.setItem("scrollToHash", hash);
-      navigate("/Welcome");
-    }
+    sessionStorage.setItem("scrollToHash", hash);
+    navigate("/Welcome");
   };
 
   return (
