@@ -26,7 +26,7 @@ export function PublicNav({ currentPage }) {
         {/* Logo */}
         <Link to={createPageUrl("Welcome")} className="flex items-center gap-2 flex-shrink-0">
           <img src={LOGO_URL} alt="Collab Unity" className="w-7 h-7 rounded-lg object-cover" />
-          <span className="text-sm font-semibold text-gray-900 hidden sm:inline">Collab Unity</span>
+          <span className="text-sm font-semibold text-gray-900">Collab Unity</span>
         </Link>
 
         {/* Desktop nav */}
@@ -60,8 +60,8 @@ export function PublicNav({ currentPage }) {
 
         {/* Auth buttons + hamburger */}
         <div className="flex items-center gap-3">
-          <a href="https://collabunity.io/login" className="text-sm text-gray-600 font-medium hover:text-[#5B47DB] transition-colors hidden md:inline">Log in</a>
-          <a href="https://collabunity.io/login" className="bg-[#5B47DB] text-white rounded-full px-4 py-1.5 text-sm font-medium hover:bg-[#4A37C0] transition-colors">Sign up</a>
+          <a href="https://collabunity.io/login" className="text-[13px] text-gray-600 font-medium hover:text-[#5B47DB] transition-colors hidden md:inline px-2 py-1">Log in</a>
+          <a href="https://collabunity.io/login" className="bg-[#5B47DB] text-white rounded-full px-4 py-2 text-[13px] font-medium hover:bg-[#4A37C0] transition-colors shadow-sm">Sign up</a>
           {/* Hamburger — visible below lg */}
           <button
             onClick={() => setMobileOpen(v => !v)}
