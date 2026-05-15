@@ -40,23 +40,23 @@ import { base44 } from "@/api/base44Client";
 const POST_TYPES = [
   {
     type: "status_update",
-    title: "Project Status Update",
+    title: "Project Update",
     icon: TrendingUp,
-    description: "Share progress on a project you're working on",
+    description: "Share a milestone, progress, or status on a project",
     color: "text-blue-600"
   },
   {
     type: "narrative",
     title: "Story & Insights",
     icon: BookOpen,
-    description: "Share a personal story or lesson learned",
+    description: "Share a lesson learned, reflection, or personal experience",
     color: "text-purple-600"
   },
   {
     type: "collaboration_call",
-    title: "Call for Collaboration",
+    title: "Looking for Collaborators",
     icon: Users,
-    description: "Seek opinions, feedback, or collaborators",
+    description: "Find teammates, get feedback, or seek expertise",
     color: "text-green-600"
   }
 ];
@@ -274,11 +274,11 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
 
   const validateStatusUpdate = () => {
     if (!statusTitle.trim()) {
-      toast.error("Please enter a title for your status update");
+      toast.error("Please enter a title for your update");
       return false;
     }
     if (!statusContent.trim()) {
-      toast.error("Please enter a status description");
+      toast.error("Please describe your update");
       return false;
     }
     return true;
@@ -428,15 +428,16 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
       </div>
 
       <div>
-        <Label htmlFor="statusContent">Status Description * <span className="text-xs text-gray-500">(one sentence)</span></Label>
-        <Input
+        <Label htmlFor="statusContent">What's the update? *</Label>
+        <Textarea
           id="statusContent"
           value={statusContent}
           onChange={(e) => setStatusContent(e.target.value)}
-          placeholder="Summarize your project's current state in one sentence..."
-          maxLength={150}
+          placeholder="Share what you've accomplished, what you're working on, or what's changed..."
+          rows={5}
+          className="resize-none"
         />
-        <p className="text-xs text-gray-500 mt-1">{statusContent.length}/150</p>
+        <p className="text-xs text-gray-500 mt-1">{statusContent.length} characters</p>
       </div>
 
       <div>
@@ -608,23 +609,23 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
   const renderCollaborationForm = () => (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="collabTitle">What are you looking for? *</Label>
+        <Label htmlFor="collabTitle">Title *</Label>
         <Input
           id="collabTitle"
           value={collabTitle}
           onChange={(e) => setCollabTitle(e.target.value)}
-          placeholder="E.g., 'Seeking UX Designer for Mobile App Project'"
+          placeholder="E.g., 'Looking for a UX Designer for my Mobile App'"
           maxLength={100}
         />
       </div>
 
       <div>
-        <Label htmlFor="collabContent">Description *</Label>
+        <Label htmlFor="collabContent">Tell us more *</Label>
         <Textarea
           id="collabContent"
           value={collabContent}
           onChange={(e) => setCollabContent(e.target.value)}
-          placeholder="Describe what you're working on, what kind of collaboration you need, and what skills or expertise you're looking for..."
+          placeholder="Describe your project, what kind of help you need, and what skills or background you're looking for..."
           rows={6}
           className="resize-none"
         />

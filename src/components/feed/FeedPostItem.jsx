@@ -32,9 +32,9 @@ const statusConfig = {
 };
 
 const postTypeConfig = {
-  status_update: { icon: TrendingUp, label: "Project Status Update", color: "border-blue-500" },
+  status_update: { icon: TrendingUp, label: "Project Update", color: "border-blue-500" },
   narrative: { icon: BookOpen, label: "Story & Insights", color: "border-purple-500" },
-  collaboration_call: { icon: Users, label: "Call for Collaboration", color: "border-green-500" },
+  collaboration_call: { icon: Users, label: "Looking for Collaborators", color: "border-green-500" },
 };
 
 export default function FeedPostItem({ post, owner, currentUser, feedPostApplauds, onPostDeleted, onApplaudUpdate }) {
