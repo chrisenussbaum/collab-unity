@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
+import { PublicNav, PublicFooter } from "@/components/public/PublicLayout";
 import {
   Users, Rocket, Globe, Lightbulb, MessageCircle, CheckCircle,
   Sparkles, ArrowRight, Heart, LayoutGrid, Compass, Folder,
@@ -973,7 +974,7 @@ export default function Welcome() {
 
   return (
     <div className="min-h-screen font-sans antialiased" style={{ background: "linear-gradient(160deg, #f8f7ff 0%, #f3f0ff 40%, #f5f3ff 70%, #faf5ff 100%)" }}>
-      <Nav onAuth={handleAuth} />
+      <PublicNav currentPage="Welcome" />
       <HeroSection onAuth={handleAuth} />
       <StatsBanner />
       <FeaturesShowcase onAuth={handleAuth} />
@@ -981,7 +982,7 @@ export default function Welcome() {
       <AboutSection />
       <CTABanner onAuth={handleAuth} />
       <FAQ />
-      <Footer />
+      <PublicFooter />
     </div>
   );
 }
