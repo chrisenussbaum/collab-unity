@@ -75,6 +75,7 @@ const Nav = ({ onAuth }) => {
           <a href="#about" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#5B47DB] transition-colors">About</a>
           <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#5B47DB] transition-colors">FAQ</a>
           <Link to={createPageUrl("Contact")} onClick={() => setMobileMenuOpen(false)} className="hover:text-[#5B47DB] transition-colors">Contact</Link>
+          <Link to={createPageUrl("Featured")} onClick={() => setMobileMenuOpen(false)} className="hover:text-[#5B47DB] transition-colors">Featured</Link>
           <Link to={createPageUrl("Resources")} onClick={() => setMobileMenuOpen(false)} className="hover:text-[#5B47DB] transition-colors">Resources</Link>
         </div>
       )}
