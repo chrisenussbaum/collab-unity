@@ -163,10 +163,12 @@ function ProjectCard({ project, index }) {
 export default function Featured() {
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [industryFilter, setIndustryFilter] = useState("All");
+  const [interestFilter, setInterestFilter] = useState("All");
 
-  const filters = ["All", "Seeking Collaborators", "In Progress", "Completed"];
-  const filterMap = { "Seeking Collaborators": "seeking_collaborators", "In Progress": "in_progress", "Completed": "completed" };
+  const statusFilters = ["All", "Seeking Collaborators", "In Progress", "Completed"];
+  const statusMap = { "Seeking Collaborators": "seeking_collaborators", "In Progress": "in_progress", "Completed": "completed" };
 
   useEffect(() => {
     loadProjects();
@@ -175,12 +177,23 @@ export default function Featured() {
   const loadProjects = async () => {
     setIsLoading(true);
     try {
-      const data = await base44.entities.Project.filter(
-        { is_visible_on_feed: true, is_archived: false },
-        "-updated_date",
-        30
-      );
-      setProjects(data || []);
+      // Load all projects in batches
+      let allProjects = [];
+      let skip = 0;
+      const batchSize = 50;
+      while (true) {
+        const batch = await base44.entities.Project.filter(
+          { is_visible_on_feed: true, is_archived: false },
+          "-updated_date",
+          batchSize,
+          skip
+        );
+        if (!batch || batch.length === 0) break;
+        allProjects = [...allProjects, ...batch];
+        if (batch.length < batchSize) break;
+        skip += batchSize;
+      }
+      setProjects(allProjects);
     } catch (err) {
       console.error(err);
     } finally {
@@ -188,9 +201,16 @@ export default function Featured() {
     }
   };
 
-  const filtered = activeFilter === "All"
-    ? projects
-    : projects.filter(p => p.status === filterMap[activeFilter]);
+  // Derive unique industries and interests from loaded projects
+  const industries = ["All", ...Array.from(new Set(projects.map(p => p.industry).filter(Boolean))).sort()];
+  const interests = ["All", ...Array.from(new Set(projects.map(p => p.area_of_interest).filter(Boolean))).sort()];
+
+  const filtered = projects.filter(p => {
+    const matchStatus = statusFilter === "All" || p.status === statusMap[statusFilter];
+    const matchIndustry = industryFilter === "All" || p.industry === industryFilter;
+    const matchInterest = interestFilter === "All" || p.area_of_interest === interestFilter;
+    return matchStatus && matchIndustry && matchInterest;
+  });
 
   const featuredProject = filtered[0];
   const gridProjects = filtered.slice(1, 7);
@@ -223,22 +243,48 @@ export default function Featured() {
           </div>
         </div>
 
-        {/* Filter tabs */}
+        {/* Filter bar */}
         <div className="border-b border-gray-200 bg-white sticky top-14 z-40">
-          <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
-            <div className="flex items-center gap-1 py-3 overflow-x-auto scrollbar-hide">
-              {filters.map(f => (
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-3 space-y-2">
+            {/* Status filters */}
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+              {statusFilters.map(f => (
                 <button
                   key={f}
-                  onClick={() => setActiveFilter(f)}
+                  onClick={() => setStatusFilter(f)}
                   className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
-                    activeFilter === f ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
+                    statusFilter === f ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
                   }`}
                 >
                   {f}
                 </button>
               ))}
-              <span className="ml-auto text-xs text-gray-400 flex-shrink-0">{filtered.length} projects</span>
+              <span className="ml-auto text-xs text-gray-400 flex-shrink-0 pl-4">{filtered.length} projects</span>
+            </div>
+            {/* Industry + Interest dropdowns */}
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={industryFilter}
+                onChange={e => setIndustryFilter(e.target.value)}
+                className="text-xs border border-gray-200 rounded-full px-3 py-1.5 text-gray-600 bg-white focus:outline-none focus:border-[#5B47DB] cursor-pointer"
+              >
+                {industries.map(i => <option key={i} value={i}>{i === "All" ? "All Industries" : i}</option>)}
+              </select>
+              <select
+                value={interestFilter}
+                onChange={e => setInterestFilter(e.target.value)}
+                className="text-xs border border-gray-200 rounded-full px-3 py-1.5 text-gray-600 bg-white focus:outline-none focus:border-[#5B47DB] cursor-pointer"
+              >
+                {interests.map(i => <option key={i} value={i}>{i === "All" ? "All Areas of Interest" : i}</option>)}
+              </select>
+              {(industryFilter !== "All" || interestFilter !== "All") && (
+                <button
+                  onClick={() => { setIndustryFilter("All"); setInterestFilter("All"); }}
+                  className="text-xs text-[#5B47DB] hover:underline px-2"
+                >
+                  Clear filters
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -279,7 +325,7 @@ export default function Featured() {
                 {gridProjects.length > 0 && (
                   <div className="lg:col-span-2">
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
-                      {activeFilter === "All" ? "All Projects" : activeFilter}
+                      {statusFilter === "All" ? "All Projects" : statusFilter}
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {gridProjects.map((project, i) => (

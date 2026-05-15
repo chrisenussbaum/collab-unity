@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
-import { Clock, BookOpen, ArrowLeft, Tag, Eye, ChevronRight, Search } from "lucide-react";
+import { Clock, BookOpen, ArrowLeft, Tag, ChevronRight, Search } from "lucide-react";
 import { PublicNav, PublicFooter } from "@/components/public/PublicLayout";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg";
@@ -85,12 +85,7 @@ function ArticleDetail({ article, onBack }) {
         <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {article.read_time_minutes} min read</span>
         <span>·</span>
         <span>{article.published_at ? format(new Date(article.published_at), 'MMM d, yyyy') : ''}</span>
-        {article.view_count > 0 && (
-          <>
-            <span>·</span>
-            <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" /> {article.view_count} views</span>
-          </>
-        )}
+
       </div>
 
       {article.cover_image_url && (
@@ -153,11 +148,7 @@ function ArticleCard({ article, onClick }) {
           <span className="flex items-center gap-1 text-xs text-gray-400">
             <Clock className="w-3 h-3" /> {article.read_time_minutes} min read
           </span>
-          {article.view_count > 0 && (
-            <span className="flex items-center gap-1 text-xs text-gray-400">
-              <Eye className="w-3 h-3" /> {article.view_count}
-            </span>
-          )}
+
         </div>
       </div>
       {article.cover_image_url && (
