@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Menu, X } from "lucide-react";
 
@@ -8,10 +8,10 @@ const CU_PURPLE = "#5B47DB";
 
 // Nav items — anchor links go to /Welcome#section, page links go directly
 const NAV_ITEMS = [
-  { label: "Features", href: "/Welcome#features", isAnchor: true },
-  { label: "How It Works", href: "/Welcome#how-it-works", isAnchor: true },
-  { label: "About", href: "/Welcome#about", isAnchor: true },
-  { label: "FAQ", href: "/Welcome#faq", isAnchor: true },
+  { label: "Features", href: "/Welcome#features", hash: "#features", isAnchor: true },
+  { label: "How It Works", href: "/Welcome#how-it-works", hash: "#how-it-works", isAnchor: true },
+  { label: "About", href: "/Welcome#about", hash: "#about", isAnchor: true },
+  { label: "FAQ", href: "/Welcome#faq", hash: "#faq", isAnchor: true },
   { label: "Contact", page: "Contact" },
   { label: "Featured", page: "Featured" },
   { label: "Resources", page: "Resources" },
@@ -19,6 +19,25 @@ const NAV_ITEMS = [
 
 export function PublicNav({ currentPage }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleAnchorClick = (e, hash) => {
+    e.preventDefault();
+    setMobileOpen(false);
+    const isOnWelcome = location.pathname === "/Welcome" || location.pathname === "/";
+    if (isOnWelcome) {
+      const el = document.querySelector(hash);
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    } else {
+      navigate("/Welcome");
+      // After navigation, scroll once the page has rendered
+      setTimeout(() => {
+        const el = document.querySelector(hash);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 500);
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
@@ -38,8 +57,8 @@ export function PublicNav({ currentPage }) {
                 <a
                   key={item.label}
                   href={item.href}
-                  className={`hover:text-[${CU_PURPLE}] transition-colors`}
-                  style={{ color: isActive ? CU_PURPLE : undefined }}
+                  onClick={(e) => handleAnchorClick(e, item.hash)}
+                  className="hover:text-[#5B47DB] transition-colors cursor-pointer"
                 >
                   {item.label}
                 </a>
@@ -83,8 +102,8 @@ export function PublicNav({ currentPage }) {
                 <a
                   key={item.label}
                   href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="hover:text-[#5B47DB] transition-colors"
+                  onClick={(e) => handleAnchorClick(e, item.hash)}
+                  className="hover:text-[#5B47DB] transition-colors cursor-pointer"
                 >
                   {item.label}
                 </a>
