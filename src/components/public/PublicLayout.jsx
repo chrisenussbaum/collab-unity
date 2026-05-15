@@ -30,8 +30,11 @@ export function PublicNav({ currentPage }) {
       const el = document.querySelector(hash);
       if (el) el.scrollIntoView({ behavior: "smooth" });
     } else {
-      sessionStorage.setItem("welcomeScrollTarget", hash);
       navigate("/Welcome");
+      setTimeout(() => {
+        const el = document.querySelector(hash);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 800);
     }
   };
 

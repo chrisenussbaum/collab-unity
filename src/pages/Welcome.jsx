@@ -919,17 +919,6 @@ export default function Welcome() {
     window.location.href = "https://collabunity.io/login";
   };
 
-  React.useEffect(() => {
-    const target = sessionStorage.getItem("welcomeScrollTarget");
-    if (target) {
-      sessionStorage.removeItem("welcomeScrollTarget");
-      setTimeout(() => {
-        const el = document.querySelector(target);
-        if (el) el.scrollIntoView({ behavior: "smooth" });
-      }, 300);
-    }
-  }, []);
-
   return (
     <div className="min-h-screen font-sans antialiased" style={{ background: "linear-gradient(160deg, #f8f7ff 0%, #f3f0ff 40%, #f5f3ff 70%, #faf5ff 100%)" }}>
       <PublicNav currentPage="Welcome" />
