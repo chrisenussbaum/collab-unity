@@ -46,6 +46,7 @@ const Nav = ({ onAuth }) => {
           <a href="#about" className="hover:text-[#5B47DB] transition-colors">About</a>
           <a href="#faq" className="hover:text-[#5B47DB] transition-colors">FAQ</a>
           <Link to={createPageUrl("Contact")} className="hover:text-[#5B47DB] transition-colors">Contact</Link>
+          <Link to={createPageUrl("Featured")} className="hover:text-[#5B47DB] transition-colors">Featured</Link>
           <Link to={createPageUrl("Resources")} className="hover:text-[#5B47DB] transition-colors">Resources</Link>
         </nav>
         {/* Auth buttons always visible */}
@@ -935,6 +936,7 @@ const Footer = () => (
             <li><a href="#features" className="hover:text-gray-900 transition-colors">Features</a></li>
             <li><a href="#how-it-works" className="hover:text-gray-900 transition-colors">How It Works</a></li>
             <li><a href="#faq" className="hover:text-gray-900 transition-colors">FAQ</a></li>
+            <li><Link to={createPageUrl("Featured")} className="hover:text-gray-900 transition-colors">Featured</Link></li>
             <li><Link to={createPageUrl("Resources")} className="hover:text-gray-900 transition-colors">Resources</Link></li>
           </ul>
         </div>

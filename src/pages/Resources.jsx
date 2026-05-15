@@ -245,7 +245,7 @@ export default function Resources() {
             <span className="text-sm font-semibold text-gray-900 hidden sm:inline">Collab Unity</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-[13px] text-gray-600">
-            <Link to={createPageUrl("Welcome")} className="hover:text-[#5B47DB] transition-colors">Home</Link>
+            <Link to={createPageUrl("Featured")} className="hover:text-[#5B47DB] transition-colors">Featured</Link>
             <Link to={createPageUrl("Contact")} className="hover:text-[#5B47DB] transition-colors">Contact</Link>
             <Link to={createPageUrl("Resources")} className="text-[#5B47DB] font-semibold">Resources</Link>
           </nav>
@@ -432,7 +432,7 @@ export default function Resources() {
               <span className="font-medium text-gray-600">Collab Unity Resources</span>
             </div>
             <div className="flex items-center gap-4">
-              <Link to={createPageUrl("Welcome")} className="hover:text-gray-600 transition-colors">Home</Link>
+              <Link to={createPageUrl("Featured")} className="hover:text-gray-600 transition-colors">Featured</Link>
               <Link to={createPageUrl("PrivacyPolicy")} className="hover:text-gray-600 transition-colors">Privacy</Link>
               <Link to={createPageUrl("Contact")} className="hover:text-gray-600 transition-colors">Contact</Link>
             </div>
