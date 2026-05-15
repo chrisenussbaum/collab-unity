@@ -1,17 +1,12 @@
 import React, { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Menu, X } from "lucide-react";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg";
 const CU_PURPLE = "#5B47DB";
 
-// Nav items — anchor links go to /Welcome#section, page links go directly
 const NAV_ITEMS = [
-  { label: "Features", href: "/Welcome#features", hash: "#features", isAnchor: true },
-  { label: "How It Works", href: "/Welcome#how-it-works", hash: "#how-it-works", isAnchor: true },
-  { label: "About", href: "/Welcome#about", hash: "#about", isAnchor: true },
-  { label: "FAQ", href: "/Welcome#faq", hash: "#faq", isAnchor: true },
   { label: "Contact", page: "Contact" },
   { label: "Featured", page: "Featured" },
   { label: "Resources", page: "Resources" },
@@ -20,13 +15,6 @@ const NAV_ITEMS = [
 export function PublicNav({ currentPage }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
-
-  const handleAnchorClick = (hash) => {
-    setMobileOpen(false);
-    sessionStorage.setItem("scrollToHash", hash);
-    navigate("/Welcome");
-  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
@@ -40,18 +28,7 @@ export function PublicNav({ currentPage }) {
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-7 text-[13px] text-gray-600 font-medium">
           {NAV_ITEMS.map(item => {
-            const isActive = item.page && currentPage === item.page;
-            if (item.isAnchor) {
-              return (
-                <button
-                  key={item.label}
-                  onClick={() => handleAnchorClick(item.hash)}
-                  className="hover:text-[#5B47DB] transition-colors cursor-pointer text-[13px] text-gray-600 font-medium"
-                >
-                  {item.label}
-                </button>
-              );
-            }
+            const isActive = currentPage === item.page;
             return (
               <Link
                 key={item.label}
@@ -84,18 +61,7 @@ export function PublicNav({ currentPage }) {
       {mobileOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 shadow-lg px-4 py-4 flex flex-col gap-4 text-sm text-gray-700 font-medium">
           {NAV_ITEMS.map(item => {
-            const isActive = item.page && currentPage === item.page;
-            if (item.isAnchor) {
-              return (
-                <button
-                  key={item.label}
-                  onClick={() => handleAnchorClick(item.hash)}
-                  className="text-left hover:text-[#5B47DB] transition-colors cursor-pointer"
-                >
-                  {item.label}
-                </button>
-              );
-            }
+            const isActive = currentPage === item.page;
             return (
               <Link
                 key={item.label}
@@ -123,9 +89,7 @@ export function PublicFooter() {
           <div>
             <h5 className="font-semibold text-gray-900 mb-3">Platform</h5>
             <ul className="space-y-2">
-              <li><a href="/Welcome#features" className="hover:text-gray-900 transition-colors">Features</a></li>
-              <li><a href="/Welcome#how-it-works" className="hover:text-gray-900 transition-colors">How It Works</a></li>
-              <li><a href="/Welcome#faq" className="hover:text-gray-900 transition-colors">FAQ</a></li>
+              <li><Link to={createPageUrl("Contact")} className="hover:text-gray-900 transition-colors">Contact</Link></li>
               <li><Link to={createPageUrl("Featured")} className="hover:text-gray-900 transition-colors">Featured</Link></li>
               <li><Link to={createPageUrl("Resources")} className="hover:text-gray-900 transition-colors">Resources</Link></li>
             </ul>
