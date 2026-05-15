@@ -177,23 +177,12 @@ export default function Featured() {
   const loadProjects = async () => {
     setIsLoading(true);
     try {
-      // Load all projects in batches
-      let allProjects = [];
-      let skip = 0;
-      const batchSize = 50;
-      while (true) {
-        const batch = await base44.entities.Project.filter(
-          { is_visible_on_feed: true, is_archived: false },
-          "-updated_date",
-          batchSize,
-          skip
-        );
-        if (!batch || batch.length === 0) break;
-        allProjects = [...allProjects, ...batch];
-        if (batch.length < batchSize) break;
-        skip += batchSize;
-      }
-      setProjects(allProjects);
+      const allProjects = await base44.entities.Project.filter(
+        { is_visible_on_feed: true, is_archived: false },
+        "-updated_date",
+        500
+      );
+      setProjects(allProjects || []);
     } catch (err) {
       console.error(err);
     } finally {
