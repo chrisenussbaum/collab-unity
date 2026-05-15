@@ -30,7 +30,7 @@ export function PublicNav({ currentPage }) {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden lg:flex items-center gap-5 text-[13px] text-gray-600 font-medium">
+        <nav className="hidden md:flex items-center gap-7 text-[13px] text-gray-600 font-medium">
           {NAV_ITEMS.map(item => {
             const isActive = item.page && currentPage === item.page;
             if (item.isAnchor) {
@@ -60,12 +60,12 @@ export function PublicNav({ currentPage }) {
 
         {/* Auth buttons + hamburger */}
         <div className="flex items-center gap-3">
-          <a href="https://collabunity.io/login" className="text-sm text-gray-600 font-medium hover:text-[#5B47DB] transition-colors hidden sm:inline">Log in</a>
+          <a href="https://collabunity.io/login" className="text-sm text-gray-600 font-medium hover:text-[#5B47DB] transition-colors hidden md:inline">Log in</a>
           <a href="https://collabunity.io/login" className="bg-[#5B47DB] text-white rounded-full px-4 py-1.5 text-sm font-medium hover:bg-[#4A37C0] transition-colors">Sign up</a>
           {/* Hamburger — visible below lg */}
           <button
             onClick={() => setMobileOpen(v => !v)}
-            className="lg:hidden flex flex-col gap-1.5 p-2 ml-1"
+            className="md:hidden flex flex-col gap-1.5 p-2 ml-1"
             aria-label="Menu"
           >
             {mobileOpen ? <X className="w-5 h-5 text-gray-700" /> : <Menu className="w-5 h-5 text-gray-700" />}
@@ -75,7 +75,7 @@ export function PublicNav({ currentPage }) {
 
       {/* Mobile/Tablet dropdown */}
       {mobileOpen && (
-        <div className="lg:hidden bg-white border-t border-gray-100 shadow-lg px-4 py-4 flex flex-col gap-4 text-sm text-gray-700 font-medium">
+        <div className="md:hidden bg-white border-t border-gray-100 shadow-lg px-4 py-4 flex flex-col gap-4 text-sm text-gray-700 font-medium">
           {NAV_ITEMS.map(item => {
             const isActive = item.page && currentPage === item.page;
             if (item.isAnchor) {
