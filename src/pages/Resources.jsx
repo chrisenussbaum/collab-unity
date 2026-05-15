@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { formatDistanceToNow, format } from "date-fns";
+import { format } from "date-fns";
 import { Clock, BookOpen, ArrowLeft, Tag, Eye, ChevronRight, Search } from "lucide-react";
+import { PublicNav, PublicFooter } from "@/components/public/PublicLayout";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg";
 
@@ -216,18 +217,7 @@ export default function Resources() {
   if (selectedArticle) {
     return (
       <div className="min-h-screen bg-white font-sans antialiased">
-        {/* Nav */}
-        <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-          <div className="max-w-[1100px] mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
-            <Link to={createPageUrl("Welcome")} className="flex items-center gap-2">
-              <img src={LOGO_URL} alt="Collab Unity" className="w-7 h-7 rounded-lg object-cover" />
-              <span className="text-sm font-semibold text-gray-900 hidden sm:inline">Collab Unity</span>
-            </Link>
-            <Link to={createPageUrl("Resources")} className="text-sm text-gray-600 hover:text-[#5B47DB] font-medium transition-colors">
-              ← Resources
-            </Link>
-          </div>
-        </header>
+        <PublicNav currentPage="Resources" />
         <div className="pt-14">
           <ArticleDetail article={selectedArticle} onBack={() => setSelectedArticle(null)} />
         </div>
@@ -237,24 +227,7 @@ export default function Resources() {
 
   return (
     <div className="min-h-screen bg-white font-sans antialiased">
-      {/* Nav */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-        <div className="max-w-[1100px] mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
-          <Link to={createPageUrl("Welcome")} className="flex items-center gap-2">
-            <img src={LOGO_URL} alt="Collab Unity" className="w-7 h-7 rounded-lg object-cover" />
-            <span className="text-sm font-semibold text-gray-900 hidden sm:inline">Collab Unity</span>
-          </Link>
-          <nav className="hidden md:flex items-center gap-6 text-[13px] text-gray-600">
-            <Link to={createPageUrl("Featured")} className="hover:text-[#5B47DB] transition-colors">Featured</Link>
-            <Link to={createPageUrl("Contact")} className="hover:text-[#5B47DB] transition-colors">Contact</Link>
-            <Link to={createPageUrl("Resources")} className="text-[#5B47DB] font-semibold">Resources</Link>
-          </nav>
-          <div className="flex items-center gap-3">
-            <a href="https://collabunity.io/login" className="text-sm text-gray-600 font-medium hover:text-[#5B47DB] transition-colors">Log in</a>
-            <a href="https://collabunity.io/login" className="bg-[#5B47DB] text-white rounded-full px-4 py-1.5 text-sm font-medium hover:bg-[#4A37C0] transition-colors">Sign up</a>
-          </div>
-        </div>
-      </header>
+      <PublicNav currentPage="Resources" />
 
       <div className="pt-14">
         {/* Hero */}
@@ -424,20 +397,7 @@ export default function Resources() {
           )}
         </div>
 
-        {/* Footer */}
-        <footer className="border-t border-gray-200 py-8 px-4 mt-8">
-          <div className="max-w-[1100px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-400">
-            <div className="flex items-center gap-2">
-              <img src={LOGO_URL} alt="Collab Unity" className="w-5 h-5 rounded object-cover" />
-              <span className="font-medium text-gray-600">Collab Unity Resources</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link to={createPageUrl("Featured")} className="hover:text-gray-600 transition-colors">Featured</Link>
-              <Link to={createPageUrl("PrivacyPolicy")} className="hover:text-gray-600 transition-colors">Privacy</Link>
-              <Link to={createPageUrl("Contact")} className="hover:text-gray-600 transition-colors">Contact</Link>
-            </div>
-          </div>
-        </footer>
+        <PublicFooter />
       </div>
     </div>
   );

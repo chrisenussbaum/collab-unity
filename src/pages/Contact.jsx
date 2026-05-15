@@ -4,11 +4,10 @@ import { createPageUrl } from "@/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Mail, Send, CheckCircle, ArrowLeft } from "lucide-react";
+import { Send, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
-
-const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg";
+import { PublicNav, PublicFooter } from "@/components/public/PublicLayout";
 
 export default function Contact() {
   const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" });
@@ -42,16 +41,7 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] font-sans antialiased">
-      {/* Nav */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-        <div className="w-full px-6 flex items-center justify-between h-14">
-          <Link to={createPageUrl("Welcome")} className="flex items-center gap-2">
-            <img src={LOGO_URL} alt="Collab Unity" className="w-7 h-7 rounded-lg object-cover" />
-            <span className="text-sm font-semibold text-gray-900">Collab Unity</span>
-          </Link>
-
-        </div>
-      </header>
+      <PublicNav currentPage="Contact" />
 
       {/* Hero */}
       <div className="pt-28 pb-6 text-center px-4">
@@ -117,15 +107,7 @@ export default function Contact() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-200 py-6 px-4 text-center bg-white">
-        <div className="flex items-center justify-center gap-6 text-xs text-gray-400">
-          <Link to={createPageUrl("Welcome")} className="hover:text-gray-600 transition-colors">Home</Link>
-          <Link to={createPageUrl("TermsOfService")} className="hover:text-gray-600 transition-colors">Terms</Link>
-          <Link to={createPageUrl("PrivacyPolicy")} className="hover:text-gray-600 transition-colors">Privacy</Link>
-          <span>© 2025 Collab Unity</span>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }
