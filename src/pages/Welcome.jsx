@@ -919,6 +919,23 @@ export default function Welcome() {
     window.location.href = "https://collabunity.io/login";
   };
 
+  React.useEffect(() => {
+    const hash = sessionStorage.getItem("scrollToHash");
+    if (hash) {
+      sessionStorage.removeItem("scrollToHash");
+      // Wait for page to fully render before scrolling
+      const tryScroll = (attempts = 0) => {
+        const el = document.querySelector(hash);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+        } else if (attempts < 10) {
+          setTimeout(() => tryScroll(attempts + 1), 100);
+        }
+      };
+      setTimeout(() => tryScroll(), 100);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen font-sans antialiased" style={{ background: "linear-gradient(160deg, #f8f7ff 0%, #f3f0ff 40%, #f5f3ff 70%, #faf5ff 100%)" }}>
       <PublicNav currentPage="Welcome" />
