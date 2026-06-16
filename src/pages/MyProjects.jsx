@@ -33,6 +33,8 @@ import ProjectActivityIndicator, { isProjectActive } from "@/components/ProjectA
 import OptimizedImage from "@/components/OptimizedImage";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
+import MilestoneProgress from "@/components/myprojects/MilestoneProgress";
+import WhileYouWereAway from "@/components/myprojects/WhileYouWereAway";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -50,6 +52,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [collaboratorProfiles, setCollaboratorProfiles] = useState({});
   const [archivingId, setArchivingId] = useState(null);
+  const [milestonesMap, setMilestonesMap] = useState({});
 
   const queryClient = useQueryClient();
 
@@ -102,7 +105,22 @@ export default function MyProjects({ currentUser, authIsLoading }) {
         }
       }
 
-      return { projects: uniqueProjects, collaboratorProfiles: profilesMap };
+      // Fetch milestones for all projects in parallel
+      const projectIds = uniqueProjects.map(p => p.id);
+      let milestonesMap = {};
+      if (projectIds.length > 0) {
+        try {
+          const allMilestones = await base44.entities.ProjectMilestone.filter({}, "-created_date", 200);
+          allMilestones.forEach(m => {
+            if (!milestonesMap[m.project_id]) milestonesMap[m.project_id] = [];
+            milestonesMap[m.project_id].push(m);
+          });
+        } catch (e) {
+          console.error("Error fetching milestones:", e);
+        }
+      }
+
+      return { projects: uniqueProjects, collaboratorProfiles: profilesMap, milestonesMap };
     },
     enabled: !!currentUser && !authIsLoading,
     staleTime: 0,
@@ -115,6 +133,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
     if (projectsData && !isQueryLoading) {
       setProjects(projectsData.projects);
       setCollaboratorProfiles(projectsData.collaboratorProfiles);
+      setMilestonesMap(projectsData.milestonesMap || {});
     }
   }, [projectsData, isQueryLoading]);
 
@@ -450,6 +469,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                       </CardHeader>
 
                       <CardContent className="pt-0">
+                        <WhileYouWereAway projectId={project.id} />
                         <Link to={createPageUrl(`ProjectDetail?id=${project.id}`)}>
                           <p className="text-sm text-gray-600 line-clamp-3 mb-4 leading-relaxed">
                             {project.description}
@@ -512,9 +532,8 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                               )}
                             </div>
                           )}
+                          <MilestoneProgress milestones={milestonesMap[project.id] || []} />
                         </Link>
-
-
                       </CardContent>
                     </Card>
                   </motion.div>
