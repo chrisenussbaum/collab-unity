@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Clock, CheckCircle, MapPin, Building2, Tag, Eye, Plus, Briefcase, Lightbulb, Sparkles, Filter, X, Bookmark, BookmarkCheck, HandHeart, Camera, Play, ExternalLink, BookOpen, Tv, ChevronRight } from "lucide-react";
+import { Users, Clock, CheckCircle, MapPin, Building2, Tag, Eye, Plus, Briefcase, Lightbulb, Sparkles, Filter, X, Bookmark, BookmarkCheck, HandHeart, Camera, Play, ExternalLink, BookOpen, Tv, ChevronRight, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import ClickableImage from "../components/ClickableImage";
 import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
 import UserCardSkeleton from "@/components/skeletons/UserCardSkeleton";
+import ForYouSection from "@/components/discover/ForYouSection";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -703,20 +704,39 @@ export default function Discover({ currentUser: propCurrentUser }) {
   const recommendedProjects = useMemo(() => {
     if (!currentUser) return [];
     
-    // Show recommendations if user has ANY profile data (skills, tools, or interests)
     const hasSkills = currentUser.skills && currentUser.skills.length > 0;
     const hasTools = currentUser.tools_technologies && currentUser.tools_technologies.length > 0;
     const hasInterests = currentUser.interests && currentUser.interests.length > 0;
     
-    if (!hasSkills && !hasTools && !hasInterests) {
-      return [];
-    }
+    if (!hasSkills && !hasTools && !hasInterests) return [];
     
     return filteredProjects
       .filter(p => p.matchScore > 0)
       .sort((a, b) => b.matchScore - a.matchScore)
-      .slice(0, 4);
+      .slice(0, 6);
   }, [filteredProjects, currentUser]);
+
+  // Social proof: trending projects per industry (top by followers_count)
+  const trendingByIndustry = useMemo(() => {
+    const map = {};
+    const allP = projectsQueryData?.allProjects || [];
+    allP.forEach(p => {
+      if (!p.industry) return;
+      if (!map[p.industry] || (p.followers_count || 0) > (map[p.industry].followers_count || 0)) {
+        map[p.industry] = p;
+      }
+    });
+    return map; // { industry: project }
+  }, [projectsQueryData]);
+
+  // Social proof: collaborators with similar skills who joined a project
+  const similarCollaboratorCount = useCallback((project) => {
+    if (!currentUser || !project.collaboratorProfiles) return 0;
+    const userSkills = new Set((currentUser.skills || []).map(s => s.toLowerCase()));
+    return project.collaboratorProfiles.filter(c =>
+      (c.skills || []).some(s => userSkills.has(s.toLowerCase()))
+    ).length;
+  }, [currentUser]);
 
   // Removed followedProjectsList useMemo as the "Following" tab is removed.
 
@@ -980,94 +1000,12 @@ export default function Discover({ currentUser: propCurrentUser }) {
             </TabsList>
 
             <TabsContent value="projects">
-              {recommendedProjects.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mb-8"
-                >
-                  <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Sparkles className="w-5 h-5 text-purple-600" />
-                      <h2 className="text-xl font-bold text-gray-900">Recommended for You</h2>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">Projects that match your skills and interests</p>
-                    
-                    <HorizontalScrollContainer showArrows={recommendedProjects.length > 1}>
-                      {recommendedProjects.map((project) => {
-                        const config = statusConfig[project.status] || {};
-                        const isInterested = userInterests.has(project.id);
-                        const isOwnProject = currentUser && project.created_by === currentUser.email;
-
-                        return (
-                          <Link 
-                            key={project.id} 
-                            to={createPageUrl(`ProjectDetail?id=${project.id}`)}
-                            className="flex-shrink-0 w-[280px] sm:w-[320px] block"
-                          >
-                            <Card className={`cu-card h-full flex flex-col border-t-4 ${config.color} hover:shadow-lg transition-shadow`}>
-                              <CardHeader className="pb-3">
-                                <div className="flex items-start justify-between mb-2">
-                                  <div className="flex items-start space-x-2 flex-1 min-w-0">
-                                    <img 
-                                      src={project.logo_url} 
-                                      alt={project.title}
-                                      className="w-10 h-10 rounded-lg object-cover border-2 border-gray-100 shadow-sm flex-shrink-0"
-                                      loading="lazy"
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                      <h3 className="font-bold text-sm text-gray-900 hover:text-purple-600 transition-colors line-clamp-2">
-                                        {project.title}
-                                      </h3>
-                                      <Badge className="mt-1 text-xs bg-purple-600 text-white">
-                                        {project.matchScore}% Match
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                </div>
-                                <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
-                                  {project.description}
-                                </p>
-                              </CardHeader>
-                              
-                              <CardContent className="flex-grow pb-2">
-                                {project.skills_needed && project.skills_needed.length > 0 && (
-                                  <div className="flex flex-wrap gap-1">
-                                    {project.skills_needed.slice(0, 3).map(skill => (
-                                      <Badge key={skill} className="text-xs bg-purple-100 text-purple-700">
-                                        {skill}
-                                      </Badge>
-                                    ))}
-                                    {project.skills_needed.length > 3 && (
-                                      <Badge variant="outline" className="text-xs">
-                                        +{project.skills_needed.length - 3}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                )}
-                              </CardContent>
-                              
-                              <CardFooter className="bg-gray-50 border-t p-3">
-                                {currentUser && !isOwnProject && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={(e) => handleExpressInterest(project, e)}
-                                    className={`w-full ${isInterested ? 'bg-purple-50 border-purple-300' : ''}`}
-                                  >
-                                    <Briefcase className={`w-4 h-4 mr-2 ${isInterested ? 'fill-purple-600 text-purple-600' : ''}`} />
-                                    {isInterested ? 'Applied' : 'Apply'}
-                                  </Button>
-                                )}
-                              </CardFooter>
-                            </Card>
-                          </Link>
-                        );
-                      })}
-                    </HorizontalScrollContainer>
-                  </div>
-                </motion.div>
-              )}
+              <ForYouSection
+                projects={recommendedProjects}
+                currentUser={currentUser}
+                userInterests={userInterests}
+                onApply={handleExpressInterest}
+              />
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -1325,21 +1263,38 @@ export default function Discover({ currentUser: propCurrentUser }) {
                               </div>
 
                               <div className="flex flex-wrap items-center gap-2 mb-3">
-                                <Badge variant="outline" className={`text-xs ${config.color} border-current shadow-sm`}>
-                                  {config.icon}
-                                  <span className="ml-1">{formatEnumLabel(project.status)}</span>
-                                </Badge>
-                                {isHighMatch && (
-                                  <Badge className="text-xs bg-purple-600 text-white">
-                                    <Sparkles className="w-3 h-3 mr-1" />
-                                    {project.matchScore}% Match
-                                  </Badge>
-                                )}
-                                {project.classification && (
-                                  <Badge variant="outline" className="text-xs border-indigo-200 text-indigo-700 bg-indigo-50">
-                                    {formatEnumLabel(project.classification)}
-                                  </Badge>
-                                )}
+                               <Badge variant="outline" className={`text-xs ${config.color} border-current shadow-sm`}>
+                                 {config.icon}
+                                 <span className="ml-1">{formatEnumLabel(project.status)}</span>
+                               </Badge>
+                               {isHighMatch && (
+                                 <Badge className="text-xs bg-purple-600 text-white">
+                                   <Sparkles className="w-3 h-3 mr-1" />
+                                   {project.matchScore}pts Match
+                                 </Badge>
+                               )}
+                               {/* Social proof: Trending in industry */}
+                               {project.industry && trendingByIndustry[project.industry]?.id === project.id && (
+                                 <Badge className="text-xs bg-orange-500 text-white">
+                                   <TrendingUp className="w-3 h-3 mr-1" />
+                                   Trending in {formatEnumLabel(project.industry)}
+                                 </Badge>
+                               )}
+                               {/* Social proof: Similar collaborators */}
+                               {(() => {
+                                 const simCount = similarCollaboratorCount(project);
+                                 return simCount > 0 ? (
+                                   <Badge className="text-xs bg-teal-50 text-teal-700 border border-teal-200">
+                                     <Users className="w-3 h-3 mr-1" />
+                                     {simCount} with similar skills joined
+                                   </Badge>
+                                 ) : null;
+                               })()}
+                               {project.classification && (
+                                 <Badge variant="outline" className="text-xs border-indigo-200 text-indigo-700 bg-indigo-50">
+                                   {formatEnumLabel(project.classification)}
+                                 </Badge>
+                               )}
                               </div>
                             </CardHeader>
 
