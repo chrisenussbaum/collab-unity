@@ -1,0 +1,83 @@
+{
+  "name": "FeedPost",
+  "type": "object",
+  "properties": {
+    "post_type": {
+      "type": "string",
+      "enum": [
+        "status_update",
+        "narrative",
+        "collaboration_call"
+      ],
+      "description": "Type of feed post"
+    },
+    "title": {
+      "type": "string",
+      "description": "Post title (for narratives and collaboration calls)"
+    },
+    "content": {
+      "type": "string",
+      "description": "Main content of the post"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "on_track",
+        "at_risk",
+        "delayed",
+        "completed"
+      ],
+      "description": "Project status (for status_update posts)"
+    },
+    "media_attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "media_url": {
+            "type": "string",
+            "description": "URL of the media file (image or video)"
+          },
+          "media_type": {
+            "type": "string",
+            "enum": [
+              "image",
+              "video"
+            ],
+            "default": "image",
+            "description": "Type of media - image or video"
+          },
+          "thumbnail_url": {
+            "type": "string",
+            "description": "Thumbnail URL for videos"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Optional caption for the media"
+          }
+        }
+      },
+      "description": "Media attachments for status updates (images and videos)"
+    },
+    "related_project_id": {
+      "type": "string",
+      "description": "Optional related project ID"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for better discoverability"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this post is visible on the feed"
+    }
+  },
+  "required": [
+    "post_type",
+    "content"
+  ]
+}

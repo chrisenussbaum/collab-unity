@@ -1,0 +1,31 @@
+{
+  "name": "TaskComment",
+  "type": "object",
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "description": "ID of the task this comment belongs to"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who posted the comment"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Full name of the user who posted the comment"
+    },
+    "user_avatar": {
+      "type": "string",
+      "description": "Avatar URL of the user who posted the comment"
+    },
+    "content": {
+      "type": "string",
+      "description": "The content of the comment"
+    }
+  },
+  "required": [
+    "task_id",
+    "user_email",
+    "content"
+  ]
+}

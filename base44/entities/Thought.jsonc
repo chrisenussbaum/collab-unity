@@ -1,0 +1,48 @@
+{
+  "name": "Thought",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project this thought belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Thought title"
+    },
+    "content": {
+      "type": "string",
+      "description": "Thought content in markdown format"
+    },
+    "category": {
+      "type": "string",
+      "description": "Category for organizing thoughts"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for searchability"
+    },
+    "last_edited_by": {
+      "type": "string",
+      "description": "Email of the last user to edit this thought"
+    },
+    "is_pinned": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this thought should appear at the top of the list"
+    },
+    "order_index": {
+      "type": "number",
+      "default": 0,
+      "description": "Custom ordering for thoughts"
+    }
+  },
+  "required": [
+    "project_id",
+    "title",
+    "content"
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "name": "Bug",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Brief summary of the bug"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the bug"
+    },
+    "page_url": {
+      "type": "string",
+      "description": "URL where the bug occurred"
+    },
+    "browser_info": {
+      "type": "string",
+      "description": "Browser and version information"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "investigating",
+        "resolved",
+        "wont_fix"
+      ],
+      "default": "pending",
+      "description": "Current status of the bug report"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium",
+      "description": "Priority level of the bug"
+    },
+    "reporter_email": {
+      "type": "string",
+      "description": "Email of the user who reported the bug"
+    },
+    "reporter_name": {
+      "type": "string",
+      "description": "Name of the user who reported the bug"
+    },
+    "admin_notes": {
+      "type": "string",
+      "description": "Internal notes from admin about the bug"
+    }
+  },
+  "required": [
+    "title",
+    "description",
+    "reporter_email"
+  ]
+}

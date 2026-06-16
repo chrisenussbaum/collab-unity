@@ -1,0 +1,74 @@
+{
+  "name": "ResourceArticle",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Article title"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-friendly identifier"
+    },
+    "excerpt": {
+      "type": "string",
+      "description": "Short summary shown in article list (1-2 sentences)"
+    },
+    "content": {
+      "type": "string",
+      "description": "Full article content in markdown/plain text"
+    },
+    "cover_image_url": {
+      "type": "string",
+      "description": "Hero image URL for the article"
+    },
+    "topic": {
+      "type": "string",
+      "enum": [
+        "Collaboration",
+        "Remote Work",
+        "Productivity",
+        "Startups",
+        "Career Development",
+        "Leadership",
+        "Innovation",
+        "Design",
+        "Open Source",
+        "Community Building"
+      ],
+      "description": "Primary topic/category"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Additional tags"
+    },
+    "read_time_minutes": {
+      "type": "number",
+      "description": "Estimated read time in minutes"
+    },
+    "is_published": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the article is live"
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the article was published"
+    },
+    "view_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of article views"
+    }
+  },
+  "required": [
+    "title",
+    "excerpt",
+    "content",
+    "topic"
+  ]
+}

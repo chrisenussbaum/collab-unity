@@ -1,0 +1,48 @@
+{
+  "name": "FeatureRequest",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Feature request title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the feature request"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "ui_ux",
+        "new_feature",
+        "collaboration",
+        "performance",
+        "mobile",
+        "other"
+      ],
+      "description": "Category of the feature request"
+    },
+    "email": {
+      "type": "string",
+      "description": "Optional email for updates"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "under_review",
+        "planned",
+        "in_progress",
+        "completed",
+        "declined"
+      ],
+      "default": "pending",
+      "description": "Status of the feature request"
+    }
+  },
+  "required": [
+    "title",
+    "description",
+    "category"
+  ]
+}

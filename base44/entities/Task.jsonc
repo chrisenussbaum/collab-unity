@@ -1,0 +1,110 @@
+{
+  "name": "Task",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project this task belongs to"
+    },
+    "milestone_id": {
+      "type": "string",
+      "description": "ID of the milestone this task is associated with"
+    },
+    "title": {
+      "type": "string",
+      "description": "Task title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Task description"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "todo",
+        "in_progress",
+        "done"
+      ],
+      "default": "todo",
+      "description": "Current status of the task"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "urgent"
+      ],
+      "default": "medium",
+      "description": "Priority level of the task"
+    },
+    "assigned_to": {
+      "type": "string",
+      "description": "Email of the user this task is assigned to"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the task is due"
+    },
+    "progress": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 0,
+      "description": "Task completion progress percentage (0-100)"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "file",
+              "link"
+            ],
+            "description": "Type of attachment - uploaded file or external link"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name/title of the attachment or link"
+          },
+          "url": {
+            "type": "string",
+            "description": "URL of the file or external link"
+          },
+          "file_size": {
+            "type": "number",
+            "description": "Size of uploaded file in bytes"
+          },
+          "file_type": {
+            "type": "string",
+            "description": "MIME type of uploaded file"
+          },
+          "uploaded_by": {
+            "type": "string",
+            "description": "Email of user who added this attachment"
+          },
+          "uploaded_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the attachment was added"
+          }
+        },
+        "required": [
+          "type",
+          "name",
+          "url"
+        ]
+      },
+      "description": "Files and links attached to this task"
+    }
+  },
+  "required": [
+    "project_id",
+    "title"
+  ]
+}

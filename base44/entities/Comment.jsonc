@@ -1,0 +1,63 @@
+{
+  "name": "Comment",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project or feed post this comment belongs to"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who posted the comment"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Full name of the user who posted the comment"
+    },
+    "user_avatar": {
+      "type": "string",
+      "description": "Avatar URL of the user who posted the comment"
+    },
+    "content": {
+      "type": "string",
+      "description": "The content of the comment"
+    },
+    "context": {
+      "type": "string",
+      "enum": [
+        "feed",
+        "discussion",
+        "feed_post"
+      ],
+      "default": "feed",
+      "description": "The context where the comment was posted (e.g., public feed, private team discussion, or feed post)"
+    },
+    "mentions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of user emails mentioned in the comment"
+    },
+    "parent_comment_id": {
+      "type": "string",
+      "description": "ID of the parent comment if this is a reply"
+    },
+    "is_pinned": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this comment is pinned to the top"
+    },
+    "pinned_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this comment was pinned"
+    }
+  },
+  "required": [
+    "project_id",
+    "user_email",
+    "content",
+    "context"
+  ]
+}

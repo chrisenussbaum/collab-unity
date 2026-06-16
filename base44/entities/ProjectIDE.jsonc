@@ -1,0 +1,48 @@
+{
+  "name": "ProjectIDE",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project this IDE instance belongs to"
+    },
+    "ide_type": {
+      "type": "string",
+      "enum": [
+        "ideation_mindmap",
+        "ideation_whiteboard",
+        "ideation_kanban",
+        "spreadsheet",
+        "document",
+        "presentation"
+      ],
+      "description": "Type of IDE workspace"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title/name of this IDE instance"
+    },
+    "content": {
+      "type": "string",
+      "description": "JSON stringified content of the IDE workspace"
+    },
+    "last_modified_by": {
+      "type": "string",
+      "description": "Email of the user who last modified this"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this IDE instance is active"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata for the IDE instance"
+    }
+  },
+  "required": [
+    "project_id",
+    "ide_type",
+    "title"
+  ]
+}

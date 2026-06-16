@@ -1,0 +1,42 @@
+{
+  "name": "ProjectMilestone",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project this milestone belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Milestone title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the milestone"
+    },
+    "target_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Target completion date for this milestone"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "completed"
+      ],
+      "default": "not_started",
+      "description": "Current status of the milestone"
+    },
+    "order_index": {
+      "type": "number",
+      "default": 0,
+      "description": "Display order of milestones"
+    }
+  },
+  "required": [
+    "project_id",
+    "title"
+  ]
+}

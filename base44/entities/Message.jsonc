@@ -1,0 +1,60 @@
+{
+  "name": "Message",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string",
+      "description": "ID of the conversation this message belongs to"
+    },
+    "sender_email": {
+      "type": "string",
+      "description": "Email of the user who sent the message"
+    },
+    "content": {
+      "type": "string",
+      "description": "The message content"
+    },
+    "media_url": {
+      "type": "string",
+      "description": "URL of attached media (image, video, file)"
+    },
+    "media_type": {
+      "type": "string",
+      "enum": [
+        "image",
+        "video",
+        "file"
+      ],
+      "description": "Type of media attachment"
+    },
+    "media_name": {
+      "type": "string",
+      "description": "Original filename for file attachments"
+    },
+    "media_size": {
+      "type": "number",
+      "description": "Size of media file in bytes"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the message has been read by the recipient"
+    },
+    "read_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the message was read"
+    },
+    "read_by": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of emails who have read the message (for group chats)"
+    }
+  },
+  "required": [
+    "conversation_id",
+    "sender_email"
+  ]
+}
