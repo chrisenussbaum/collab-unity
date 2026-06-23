@@ -36,6 +36,7 @@ import OptimizedAvatar from "@/components/OptimizedAvatar";
 import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
 import FeedPostSkeleton from "@/components/skeletons/FeedPostSkeleton";
 import FeedPostItem from "@/components/feed/FeedPostItem";
+import UpdatesBar from "@/components/updates/UpdatesBar";
 import MicrolinkPreview from "@/components/MicrolinkPreview";
 
 const formatEnumLabel = (str) => {
@@ -605,6 +606,7 @@ export default function Feed({ currentUser, authIsLoading }) {
         {/* Mobile layout */}
         <div className="block md:hidden">
           <div className="cu-content-grid pt-4">
+            <UpdatesBar currentUser={currentUser} />
             {currentUser && (
               <>
                 <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -632,6 +634,7 @@ export default function Feed({ currentUser, authIsLoading }) {
 
         {/* Desktop layout */}
         <div className="hidden md:block pt-6 max-w-2xl mx-auto">
+          <UpdatesBar currentUser={currentUser} />
           {currentUser && (
             <>
               <Button onClick={() => setShowCreatePostDialog(true)} className="cu-button w-full cu-gradient mb-4"><Plus className="w-5 h-5 mr-2" />Post</Button>

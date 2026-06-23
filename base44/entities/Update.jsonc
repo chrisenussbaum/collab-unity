@@ -1,0 +1,47 @@
+{
+  "name": "Update",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who created this update"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Display name of the creator"
+    },
+    "user_avatar": {
+      "type": "string",
+      "description": "Profile image URL of the creator"
+    },
+    "media_url": {
+      "type": "string",
+      "description": "URL of the uploaded media (image or video)"
+    },
+    "media_type": {
+      "type": "string",
+      "enum": [
+        "image",
+        "video"
+      ],
+      "description": "Type of media"
+    },
+    "caption": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Optional caption text"
+    },
+    "viewers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of user emails who viewed this update"
+    }
+  },
+  "required": [
+    "user_email",
+    "media_url",
+    "media_type"
+  ]
+}
