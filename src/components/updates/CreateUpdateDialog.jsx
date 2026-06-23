@@ -88,14 +88,14 @@ export default function CreateUpdateDialog({ isOpen, onClose, currentUser, onCre
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-white/80 backdrop-blur-xl border border-white/40 shadow-2xl">
         <DialogHeader>
           <DialogTitle>Post Update</DialogTitle>
         </DialogHeader>
 
         {previewUrl ? (
-          <div className="py-2">
-            <div className="relative rounded-lg overflow-hidden bg-black aspect-[9/16] max-h-[420px] flex items-center justify-center">
+          <div className="py-2 flex flex-col items-center">
+            <div className="relative rounded-lg overflow-hidden bg-black aspect-[9/16] max-h-[420px] flex items-center justify-center mx-auto">
               {mediaType === 'video' ? (
                 <video src={previewUrl} className="max-w-full max-h-full object-contain" controls />
               ) : (
