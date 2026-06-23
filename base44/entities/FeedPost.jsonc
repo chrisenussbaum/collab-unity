@@ -7,13 +7,15 @@
       "enum": [
         "status_update",
         "narrative",
-        "collaboration_call"
+        "collaboration_call",
+        "poll",
+        "qa"
       ],
       "description": "Type of feed post"
     },
     "title": {
       "type": "string",
-      "description": "Post title (for narratives and collaboration calls)"
+      "description": "Post title (for narratives, collaboration calls, polls, and Q&A)"
     },
     "content": {
       "type": "string",
@@ -74,6 +76,68 @@
       "type": "boolean",
       "default": true,
       "description": "Whether this post is visible on the feed"
+    },
+    "poll_options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Poll option text"
+          },
+          "voter_emails": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Emails of users who voted for this option"
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "description": "Poll options with voter data (for poll posts)"
+    },
+    "is_poll_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the poll is still accepting votes"
+    },
+    "qa_answers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "Answer text"
+          },
+          "answered_by_email": {
+            "type": "string",
+            "description": "Email of the user who answered"
+          },
+          "answered_by_name": {
+            "type": "string",
+            "description": "Display name of the answerer"
+          },
+          "answered_by_profile_image": {
+            "type": "string",
+            "description": "Profile image URL of the answerer"
+          },
+          "created_date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the answer was posted"
+          }
+        },
+        "required": [
+          "content",
+          "answered_by_email"
+        ]
+      },
+      "description": "Community answers (for Q&A posts)"
     }
   },
   "required": [

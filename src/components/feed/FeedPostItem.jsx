@@ -14,7 +14,7 @@ import {
 import {
   MessageCircle, CheckCircle, Clock, AlertCircle, Users, TrendingUp, BookOpen,
   ChevronLeft, ChevronRight, Video, Lightbulb, Trash2, PartyPopper, HandHeart,
-  MoreVertical, X, ArrowRight,
+  MoreVertical, X, ArrowRight, BarChart3, HelpCircle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -23,6 +23,8 @@ import HorizontalScrollContainer from "@/components/HorizontalScrollContainer";
 import FeedComments from "@/components/FeedComments";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import MediaDisplay from "@/components/MediaDisplay";
+import PollWidget from "@/components/feed/PollWidget";
+import QAWidget from "@/components/feed/QAWidget";
 
 const statusConfig = {
   on_track: { label: "On Track", icon: CheckCircle, color: "bg-green-100 text-green-700 border-green-200" },
@@ -35,6 +37,8 @@ const postTypeConfig = {
   status_update: { icon: TrendingUp, label: "Project Update", color: "border-blue-500" },
   narrative: { icon: BookOpen, label: "Story & Insights", color: "border-purple-500" },
   collaboration_call: { icon: Users, label: "Looking for Collaborators", color: "border-green-500" },
+  poll: { icon: BarChart3, label: "Poll", color: "border-purple-500" },
+  qa: { icon: HelpCircle, label: "Q&A", color: "border-indigo-500" },
 };
 
 export default function FeedPostItem({ post, owner, currentUser, feedPostApplauds, onPostDeleted, onApplaudUpdate }) {
@@ -250,6 +254,20 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
                   {post.tags.map(tag => <Badge key={tag} className="bg-green-100 text-green-700 border border-green-200">{tag}</Badge>)}
                 </div>
               )}
+            </div>
+          )}
+
+          {post.post_type === "poll" && (
+            <div className="space-y-4">
+              <p className="text-gray-700 cu-text-responsive-sm leading-relaxed">{post.content}</p>
+              <PollWidget post={post} currentUser={currentUser} />
+            </div>
+          )}
+
+          {post.post_type === "qa" && (
+            <div className="space-y-4">
+              <p className="text-gray-700 cu-text-responsive-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
+              <QAWidget post={post} currentUser={currentUser} />
             </div>
           )}
 

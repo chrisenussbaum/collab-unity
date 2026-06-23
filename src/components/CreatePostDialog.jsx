@@ -31,7 +31,9 @@ import {
   PartyPopper,
   Upload,
   Image as ImageIcon,
-  Video
+  Video,
+  BarChart3,
+  HelpCircle
 } from "lucide-react";
 import { FeedPost, Project } from "@/entities/all";
 import { toast } from "sonner";
@@ -58,6 +60,20 @@ const POST_TYPES = [
     icon: Users,
     description: "Find teammates, get feedback, or seek expertise",
     color: "text-green-600"
+  },
+  {
+    type: "poll",
+    title: "Poll",
+    icon: BarChart3,
+    description: "Create a poll to gather opinions and drive engagement",
+    color: "text-purple-600"
+  },
+  {
+    type: "qa",
+    title: "Q&A",
+    icon: HelpCircle,
+    description: "Ask a question and let the community answer",
+    color: "text-indigo-600"
   }
 ];
 
@@ -95,6 +111,14 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
   const [collabProject, setCollabProject] = useState("");
   const [collabTags, setCollabTags] = useState([]);
   const [collabTagInput, setCollabTagInput] = useState("");
+  
+  // Poll fields
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+  
+  // Q&A fields
+  const [qaTitle, setQaTitle] = useState("");
+  const [qaContent, setQaContent] = useState("");
 
   useEffect(() => {
     const loadUserProjects = async () => {
@@ -130,6 +154,10 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
     setCollabProject("");
     setCollabTags([]);
     setCollabTagInput("");
+    setPollQuestion("");
+    setPollOptions(["", ""]);
+    setQaTitle("");
+    setQaContent("");
   };
 
   const handleClose = () => {
@@ -149,7 +177,6 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
       video.src = videoURL;
 
       video.addEventListener('loadeddata', () => {
-        // Seek to 1 second or 10% of video duration
         const seekTime = Math.min(1, video.duration * 0.1);
         video.currentTime = seekTime;
       });
@@ -165,7 +192,6 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
         canvas.toBlob((blob) => {
           URL.revokeObjectURL(videoURL);
           if (blob) {
-            // Create a File object from the blob
             const thumbnailFile = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' });
             resolve(thumbnailFile);
           } else {
@@ -179,7 +205,6 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
         reject(new Error('Failed to load video for thumbnail generation'));
       });
 
-      // Start loading the video
       video.load();
     });
   };
@@ -211,15 +236,13 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
 
         let thumbnailUrl = null;
         
-        // Generate thumbnail BEFORE uploading the video
         if (isVideo) {
           try {
             const thumbnailFile = await generateVideoThumbnailFromBlob(file);
             const { file_url: thumb_url } = await base44.integrations.Core.UploadFile({ file: thumbnailFile });
             thumbnailUrl = thumb_url;
           } catch (thumbError) {
-            console.warn("Could not generate thumbnail, video will show without thumbnail:", thumbError);
-            // Continue without thumbnail rather than failing the entire upload
+            console.warn("Could not generate thumbnail:", thumbError);
           }
         }
 
@@ -312,6 +335,31 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
     return true;
   };
 
+  const validatePoll = () => {
+    if (!pollQuestion.trim()) {
+      toast.error("Please enter a poll question");
+      return false;
+    }
+    const validOptions = pollOptions.filter(o => o.trim());
+    if (validOptions.length < 2) {
+      toast.error("Please provide at least 2 poll options");
+      return false;
+    }
+    return true;
+  };
+
+  const validateQA = () => {
+    if (!qaTitle.trim()) {
+      toast.error("Please enter a title for your question");
+      return false;
+    }
+    if (!qaContent.trim()) {
+      toast.error("Please enter your question");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
     if (!selectedType || !currentUser) return;
 
@@ -320,7 +368,6 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
       is_visible: true
     };
 
-    // Validate and prepare data based on post type
     if (selectedType === "status_update") {
       if (!validateStatusUpdate()) return;
       
@@ -349,6 +396,21 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
       if (collabProject) {
         postData.related_project_id = collabProject;
       }
+    } else if (selectedType === "poll") {
+      if (!validatePoll()) return;
+      
+      postData.title = pollQuestion.trim();
+      postData.content = pollQuestion.trim();
+      postData.poll_options = pollOptions
+        .filter(o => o.trim())
+        .map(o => ({ text: o.trim(), voter_emails: [] }));
+      postData.is_poll_active = true;
+    } else if (selectedType === "qa") {
+      if (!validateQA()) return;
+      
+      postData.title = qaTitle.trim();
+      postData.content = qaContent.trim();
+      postData.qa_answers = [];
     }
 
     setIsSubmitting(true);
@@ -511,7 +573,7 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
             <SelectValue placeholder="Select a project..." />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="null">None</SelectItem> {/* Changed to string "null" */}
+            <SelectItem value="null">None</SelectItem>
             {userProjects.map((project) => (
               <SelectItem key={project.id} value={project.id}>
                 {project.title}
@@ -556,7 +618,7 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
             <SelectValue placeholder="Select a project..." />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="null">None</SelectItem> {/* Changed to string "null" */}
+            <SelectItem value="null">None</SelectItem>
             {userProjects.map((project) => (
               <SelectItem key={project.id} value={project.id}>
                 {project.title}
@@ -638,7 +700,7 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
             <SelectValue placeholder="Select a project..." />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="null">None</SelectItem> {/* Changed to string "null" */}
+            <SelectItem value="null">None</SelectItem>
             {userProjects.map((project) => (
               <SelectItem key={project.id} value={project.id}>
                 {project.title}
@@ -688,6 +750,90 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
     </div>
   );
 
+  const renderPollForm = () => (
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="pollQuestion">Poll Question *</Label>
+        <Textarea
+          id="pollQuestion"
+          value={pollQuestion}
+          onChange={(e) => setPollQuestion(e.target.value)}
+          placeholder="Ask a question for the community to vote on..."
+          rows={3}
+          className="resize-none"
+        />
+      </div>
+
+      <div>
+        <Label>Options * <span className="text-xs text-gray-500">(2-5 options)</span></Label>
+        <div className="space-y-2">
+          {pollOptions.map((option, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <Input
+                value={option}
+                onChange={(e) => {
+                  const updated = [...pollOptions];
+                  updated[index] = e.target.value;
+                  setPollOptions(updated);
+                }}
+                placeholder={`Option ${index + 1}`}
+                maxLength={80}
+              />
+              {pollOptions.length > 2 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setPollOptions(pollOptions.filter((_, i) => i !== index))}
+                  className="flex-shrink-0 text-gray-400 hover:text-red-500"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+        {pollOptions.length < 5 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPollOptions([...pollOptions, ""])}
+            className="mt-2"
+          >
+            <Plus className="w-4 h-4 mr-1" /> Add Option
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderQAForm = () => (
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="qaTitle">Question Title *</Label>
+        <Input
+          id="qaTitle"
+          value={qaTitle}
+          onChange={(e) => setQaTitle(e.target.value)}
+          placeholder="Give your question a clear, concise title..."
+          maxLength={100}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="qaContent">Your Question * <span className="text-xs text-gray-500">(provide context for better answers)</span></Label>
+        <Textarea
+          id="qaContent"
+          value={qaContent}
+          onChange={(e) => setQaContent(e.target.value)}
+          placeholder="Ask your question and provide any relevant context..."
+          rows={6}
+          className="resize-none"
+        />
+        <p className="text-xs text-gray-500 mt-1">{qaContent.length} characters</p>
+      </div>
+    </div>
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -710,6 +856,8 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
               {selectedType === "status_update" && renderStatusUpdateForm()}
               {selectedType === "narrative" && renderNarrativeForm()}
               {selectedType === "collaboration_call" && renderCollaborationForm()}
+              {selectedType === "poll" && renderPollForm()}
+              {selectedType === "qa" && renderQAForm()}
             </>
           )}
         </div>
