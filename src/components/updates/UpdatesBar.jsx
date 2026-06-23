@@ -105,7 +105,7 @@ export default function UpdatesBar({ currentUser }) {
                 >
                   <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 transition-transform group-hover:scale-105 ${
                     myGroup
-                      ? 'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600'
+                      ? 'bg-gradient-to-tr from-violet-400 via-purple-500 to-purple-600'
                       : 'bg-gray-200'
                   }`}>
                     <Avatar className="w-full h-full rounded-full border-2 border-white">
@@ -143,7 +143,7 @@ export default function UpdatesBar({ currentUser }) {
               >
                 <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 transition-transform group-hover:scale-105 ${
                   unviewed
-                    ? 'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600'
+                    ? 'bg-gradient-to-tr from-violet-400 via-purple-500 to-purple-600'
                     : 'bg-gray-300'
                 }`}>
                   <Avatar className="w-full h-full rounded-full border-2 border-white">
