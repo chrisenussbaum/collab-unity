@@ -81,20 +81,20 @@ export default function UpdateViewer({ userGroup, allUserGroups, onClose, onNavi
   if (!currentUpdate) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: '#1A0B2E' }}>
+    <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: '#f3f0ff' }}>
       <style>{`@keyframes story-progress { from { width: 0%; } to { width: 100%; } }`}</style>
 
       {/* Progress bars */}
       <div className="flex gap-1 p-3 absolute top-0 left-0 right-0 z-20">
         {updates.map((_, idx) => (
-          <div key={idx} className="flex-1 h-0.5 bg-white/30 rounded-full overflow-hidden">
-            {idx < currentUpdateIndex && <div className="h-full bg-white w-full" />}
+          <div key={idx} className="flex-1 h-0.5 bg-purple-200 rounded-full overflow-hidden">
+            {idx < currentUpdateIndex && <div className="h-full bg-purple-500 w-full" />}
             {idx === currentUpdateIndex && (
               isVideo ? (
-                <div className="h-full bg-white transition-all duration-75" style={{ width: `${videoProgress}%` }} />
+                <div className="h-full bg-purple-500 transition-all duration-75" style={{ width: `${videoProgress}%` }} />
               ) : (
                 <div
-                  className="h-full bg-white"
+                  className="h-full bg-purple-500"
                   style={{ animation: `story-progress ${IMAGE_DURATION}ms linear forwards` }}
                 />
               )
@@ -109,13 +109,13 @@ export default function UpdateViewer({ userGroup, allUserGroups, onClose, onNavi
           {userGroup.user_avatar ? (
             <img src={userGroup.user_avatar} alt={userGroup.user_name} className="w-8 h-8 rounded-full object-cover" />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white text-sm font-medium">
+            <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center text-purple-700 text-sm font-medium">
               {userGroup.user_name?.[0] || 'U'}
             </div>
           )}
           <div>
-            <p className="text-white text-sm font-medium">{userGroup.user_name}</p>
-            <p className="text-white/60 text-xs">{formatDistanceToNow(new Date(currentUpdate.created_date))} ago</p>
+            <p className="text-gray-900 text-sm font-medium">{userGroup.user_name}</p>
+            <p className="text-gray-500 text-xs">{formatDistanceToNow(new Date(currentUpdate.created_date))} ago</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -123,7 +123,7 @@ export default function UpdateViewer({ userGroup, allUserGroups, onClose, onNavi
             <div className="relative">
               <button
                 onClick={() => setShowMenu(!showMenu)}
-                className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"
+                className="text-gray-700 p-2 hover:bg-purple-100 rounded-full transition-colors"
               >
                 <MoreVertical className="w-5 h-5" />
               </button>
@@ -144,21 +144,16 @@ export default function UpdateViewer({ userGroup, allUserGroups, onClose, onNavi
               )}
             </div>
           )}
-          <button onClick={onClose} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors">
+          <button onClick={onClose} className="text-gray-700 p-2 hover:bg-purple-100 rounded-full transition-colors">
             <X className="w-6 h-6" />
           </button>
         </div>
       </div>
 
-      {/* Media */}
+      {/* Media - clicking closes the viewer */}
       <div
         className="flex-1 flex items-center justify-center relative"
-        onClick={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          if (x < rect.width / 2) goToPrev();
-          else goToNext();
-        }}
+        onClick={onClose}
       >
         {isVideo ? (
           <video
@@ -187,7 +182,7 @@ export default function UpdateViewer({ userGroup, allUserGroups, onClose, onNavi
         )}
 
         {currentUpdate.caption && (
-          <div className="absolute bottom-8 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent pointer-events-none">
+          <div className="absolute bottom-8 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent pointer-events-none">
             <p className="text-white text-sm">{currentUpdate.caption}</p>
           </div>
         )}
@@ -196,13 +191,13 @@ export default function UpdateViewer({ userGroup, allUserGroups, onClose, onNavi
       {/* Navigation arrows (desktop) */}
       <button
         onClick={(e) => { e.stopPropagation(); goToPrev(); }}
-        className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+        className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center text-purple-400 hover:text-purple-600 hover:bg-purple-100 rounded-full transition-colors"
       >
         <ChevronLeft className="w-8 h-8" />
       </button>
       <button
         onClick={(e) => { e.stopPropagation(); goToNext(); }}
-        className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+        className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center text-purple-400 hover:text-purple-600 hover:bg-purple-100 rounded-full transition-colors"
       >
         <ChevronRight className="w-8 h-8" />
       </button>

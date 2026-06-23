@@ -1,26 +1,24 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus } from "lucide-react";
 import UpdateViewer from "./UpdateViewer";
 import CreateUpdateDialog from "./CreateUpdateDialog";
 
-const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
-
 export default function UpdatesBar({ currentUser }) {
   const [updates, setUpdates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [viewingUserEmail, setViewingUserEmail] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const fetchUpdates = async () => {
       try {
         const allUpdates = await base44.entities.Update.filter({}, "-created_date", 200);
-        const cutoff = new Date(Date.now() - TWENTY_FOUR_HOURS);
-        const active = allUpdates.filter(u => new Date(u.created_date) >= cutoff);
-        setUpdates(active);
+        setUpdates(allUpdates);
       } catch (error) {
         console.error("Error fetching updates:", error);
       } finally {
@@ -70,6 +68,14 @@ export default function UpdatesBar({ currentUser }) {
     }
   };
 
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedFile(file);
+    setShowCreateDialog(true);
+    e.target.value = '';
+  };
+
   const myGroup = currentUser ? groupedByUser.find(g => g.user_email === currentUser.email) : null;
   const otherGroups = groupedByUser.filter(g => g.user_email !== currentUser?.email);
 
@@ -80,6 +86,14 @@ export default function UpdatesBar({ currentUser }) {
 
   return (
     <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,video/*"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+
       <div className="flex gap-4 sm:gap-5 overflow-x-auto scrollbar-hide py-1">
           {/* Your Update */}
           {currentUser && (
@@ -87,7 +101,7 @@ export default function UpdatesBar({ currentUser }) {
               <div className="relative">
                 <button
                   className="block group"
-                  onClick={() => myGroup ? setViewingUserEmail(currentUser.email) : setShowCreateDialog(true)}
+                  onClick={() => myGroup ? setViewingUserEmail(currentUser.email) : fileInputRef.current?.click()}
                 >
                   <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 transition-transform group-hover:scale-105 ${
                     myGroup
@@ -103,7 +117,7 @@ export default function UpdatesBar({ currentUser }) {
                   </div>
                 </button>
                 <button
-                  onClick={() => setShowCreateDialog(true)}
+                  onClick={() => fileInputRef.current?.click()}
                   className="absolute bottom-0 right-0 w-5 h-5 sm:w-6 sm:h-6 bg-purple-600 rounded-full flex items-center justify-center border-2 border-white hover:bg-purple-700 transition-colors"
                 >
                   <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" strokeWidth={2.5} />
@@ -172,13 +186,14 @@ export default function UpdatesBar({ currentUser }) {
 
       <CreateUpdateDialog
         isOpen={showCreateDialog}
-        onClose={() => setShowCreateDialog(false)}
+        onClose={() => { setShowCreateDialog(false); setSelectedFile(null); }}
         currentUser={currentUser}
+        initialFile={selectedFile}
         onCreated={() => {
           setShowCreateDialog(false);
+          setSelectedFile(null);
           setRefreshKey(k => k + 1);
         }}
-        autoTriggerCamera
       />
     </>
   );

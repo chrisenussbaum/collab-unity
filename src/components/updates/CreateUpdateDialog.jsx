@@ -1,32 +1,52 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Camera, Upload, X, Loader2, Clock } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 
-export default function CreateUpdateDialog({ isOpen, onClose, currentUser, onCreated, autoTriggerCamera = false }) {
+export default function CreateUpdateDialog({ isOpen, onClose, currentUser, onCreated, initialFile }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [mediaType, setMediaType] = useState(null);
   const [caption, setCaption] = useState("");
   const [isUploading, setIsUploading] = useState(false);
-  const cameraInputRef = useRef(null);
-  const galleryInputRef = useRef(null);
 
-  // Auto-trigger camera when dialog opens from the "+" button
-  useEffect(() => {
-    if (isOpen && autoTriggerCamera && cameraInputRef.current) {
-      const timer = setTimeout(() => {
-        cameraInputRef.current?.click();
-      }, 100);
-      return () => clearTimeout(timer);
+  const processFile = (file) => {
+    if (file.type.startsWith('image/')) {
+      if (file.size > MAX_IMAGE_SIZE) {
+        toast.error("Image must be under 10MB");
+        return false;
+      }
+      setMediaType('image');
+    } else if (file.type.startsWith('video/')) {
+      if (file.size > MAX_VIDEO_SIZE) {
+        toast.error("Video must be under 50MB");
+        return false;
+      }
+      setMediaType('video');
+    } else {
+      toast.error("Please select an image or video file");
+      return false;
     }
-  }, [isOpen, autoTriggerCamera]);
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    return true;
+  };
+
+  // Process the file that was selected directly from the UpdatesBar plus button
+  useEffect(() => {
+    if (isOpen && initialFile) {
+      const success = processFile(initialFile);
+      if (!success) {
+        onClose();
+      }
+    }
+  }, [isOpen, initialFile]);
 
   const resetState = () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -34,33 +54,6 @@ export default function CreateUpdateDialog({ isOpen, onClose, currentUser, onCre
     setPreviewUrl(null);
     setMediaType(null);
     setCaption("");
-  };
-
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.type.startsWith('image/')) {
-      if (file.size > MAX_IMAGE_SIZE) {
-        toast.error("Image must be under 10MB");
-        return;
-      }
-      setMediaType('image');
-    } else if (file.type.startsWith('video/')) {
-      if (file.size > MAX_VIDEO_SIZE) {
-        toast.error("Video must be under 50MB");
-        return;
-      }
-      setMediaType('video');
-    } else {
-      toast.error("Please select an image or video file");
-      return;
-    }
-
-    setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-    // Reset input value so the same file can be selected again
-    e.target.value = '';
   };
 
   const handleUpload = async () => {
@@ -97,54 +90,10 @@ export default function CreateUpdateDialog({ isOpen, onClose, currentUser, onCre
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create Update</DialogTitle>
-          <DialogDescription className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5" />
-            Updates disappear after 24 hours
-          </DialogDescription>
+          <DialogTitle>Post Update</DialogTitle>
         </DialogHeader>
 
-        <input
-          ref={cameraInputRef}
-          type="file"
-          accept="image/*,video/*"
-          capture="environment"
-          onChange={handleFileSelect}
-          className="hidden"
-        />
-        <input
-          ref={galleryInputRef}
-          type="file"
-          accept="image/*,video/*"
-          onChange={handleFileSelect}
-          className="hidden"
-        />
-
-        {!previewUrl ? (
-          <div className="space-y-4 py-2">
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="flex-1 flex flex-col items-center gap-2 h-auto py-4"
-                onClick={() => cameraInputRef.current?.click()}
-              >
-                <Camera className="w-6 h-6 text-purple-600" />
-                <span className="text-sm">Take Photo/Video</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1 flex flex-col items-center gap-2 h-auto py-4"
-                onClick={() => galleryInputRef.current?.click()}
-              >
-                <Upload className="w-6 h-6 text-purple-600" />
-                <span className="text-sm">Upload from Device</span>
-              </Button>
-            </div>
-            <p className="text-xs text-gray-400 text-center">
-              Max 10MB for images, 50MB for videos
-            </p>
-          </div>
-        ) : (
+        {previewUrl ? (
           <div className="space-y-4 py-2">
             <div className="relative rounded-lg overflow-hidden bg-black aspect-[9/16] max-h-[400px] flex items-center justify-center">
               {mediaType === 'video' ? (
@@ -170,6 +119,8 @@ export default function CreateUpdateDialog({ isOpen, onClose, currentUser, onCre
               {isUploading ? "Posting..." : "Post Update"}
             </Button>
           </div>
+        ) : (
+          <p className="text-sm text-gray-500 text-center py-4">No file selected.</p>
         )}
       </DialogContent>
     </Dialog>
