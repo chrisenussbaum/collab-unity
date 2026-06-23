@@ -94,8 +94,8 @@ export default function CreateUpdateDialog({ isOpen, onClose, currentUser, onCre
         </DialogHeader>
 
         {previewUrl ? (
-          <div className="space-y-4 py-2">
-            <div className="relative rounded-lg overflow-hidden bg-black aspect-[9/16] max-h-[400px] flex items-center justify-center">
+          <div className="py-2">
+            <div className="relative rounded-lg overflow-hidden bg-black aspect-[9/16] max-h-[420px] flex items-center justify-center">
               {mediaType === 'video' ? (
                 <video src={previewUrl} className="max-w-full max-h-full object-contain" controls />
               ) : (
@@ -107,14 +107,19 @@ export default function CreateUpdateDialog({ isOpen, onClose, currentUser, onCre
               >
                 <X className="w-4 h-4" />
               </button>
+              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
+                <input
+                  type="text"
+                  placeholder="Add a caption..."
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  maxLength={200}
+                  autoFocus
+                  className="w-full bg-white/20 backdrop-blur-md text-white placeholder-white/70 rounded-full px-4 py-2 text-sm border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                />
+              </div>
             </div>
-            <Input
-              placeholder="Add a caption..."
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              maxLength={200}
-            />
-            <Button onClick={handleUpload} disabled={isUploading} className="w-full cu-button">
+            <Button onClick={handleUpload} disabled={isUploading} className="w-full cu-button mt-3">
               {isUploading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {isUploading ? "Posting..." : "Post Update"}
             </Button>
