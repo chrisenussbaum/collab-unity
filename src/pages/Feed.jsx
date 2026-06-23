@@ -353,19 +353,19 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
           <CardFooter className="bg-gray-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-t border-gray-200">
             <div className="w-full">
               <div className="flex items-center justify-around pb-4 border-b">
-                <Button variant="ghost" size="sm" className={`flex items-center space-x-2 transition-colors cu-text-responsive-sm ${isApplauded ? 'text-purple-600 hover:text-purple-700' : 'text-gray-600 hover:text-purple-600'}`} onClick={handleApplaud}>
+                <Button variant="ghost" size="sm" className={`flex items-center space-x-2 transition-colors cu-text-responsive-sm hover:bg-transparent ${isApplauded ? 'text-purple-600 hover:text-purple-700' : 'text-purple-950 hover:text-purple-600'}`} onClick={handleApplaud}>
                   <HandHeart className="cu-icon-sm" /><span className="hidden sm:inline">Applaud</span>
                   {applaudCount > 0 && <span className="cu-text-responsive-xs bg-gray-200 px-2 py-1 rounded-full ml-1">{applaudCount}</span>}
                 </Button>
-                <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-gray-600 cu-text-responsive-sm" onClick={() => commentsRef.current?.toggle()}>
+                <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-purple-950 hover:bg-transparent hover:text-purple-600 transition-colors cu-text-responsive-sm" onClick={() => commentsRef.current?.toggle()}>
                   <MessageCircle className="cu-icon-sm" /><span className="hidden sm:inline">Comment</span>
                 </Button>
                 {showJoinButton && (
-                  <Button variant="ghost" size="sm" className={`flex items-center space-x-2 transition-colors cu-text-responsive-sm ${isInterested ? 'text-purple-600 hover:text-purple-700' : 'text-gray-600 hover:text-purple-600'}`} onClick={(e) => onExpressInterest(project, e)} title={isInterested ? "Withdraw application" : "Apply to join"}>
+                  <Button variant="ghost" size="sm" className={`flex items-center space-x-2 transition-colors cu-text-responsive-sm hover:bg-transparent ${isInterested ? 'text-purple-600 hover:text-purple-700' : 'text-purple-950 hover:text-purple-600'}`} onClick={(e) => onExpressInterest(project, e)} title={isInterested ? "Withdraw application" : "Apply to join"}>
                     <Briefcase className={`cu-icon-sm ${isInterested ? 'fill-purple-600 text-purple-600' : ''}`} /><span className="hidden sm:inline">{isInterested ? "Applied" : "Join"}</span>
                   </Button>
                 )}
-                <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors cu-text-responsive-sm" onClick={handleFund} disabled={!project.paypal_link && !project.venmo_link && !project.cashapp_link}>
+                <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-purple-950 hover:bg-transparent hover:text-green-600 transition-colors cu-text-responsive-sm" onClick={handleFund} disabled={!project.paypal_link && !project.venmo_link && !project.cashapp_link}>
                   <DollarSign className="cu-icon-sm" /><span className="hidden sm:inline">Fund</span>
                 </Button>
               </div>

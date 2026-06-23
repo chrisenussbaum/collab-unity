@@ -263,12 +263,12 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
         <CardFooter className="bg-gray-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-t border-gray-200">
           <div className="w-full">
             <div className="flex justify-around pb-4 border-b">
-              <Button variant="ghost" size="sm" className={`flex items-center space-x-2 transition-colors cu-text-responsive-sm ${isApplauded ? 'text-blue-600 hover:text-blue-700' : 'text-gray-600 hover:text-blue-600'}`} onClick={handleApplaud}>
+              <Button variant="ghost" size="sm" className={`flex items-center space-x-2 transition-colors cu-text-responsive-sm hover:bg-transparent ${isApplauded ? 'text-blue-600 hover:text-blue-700' : 'text-purple-950 hover:text-blue-600'}`} onClick={handleApplaud}>
                 <HandHeart className={`cu-icon-sm ${isApplauded ? 'fill-current' : ''}`} />
                 <span className="hidden sm:inline">Applaud</span>
                 {applaudCount > 0 && <span className="text-xs font-semibold">{applaudCount}</span>}
               </Button>
-              <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors cu-text-responsive-sm" onClick={() => commentsRef.current?.toggle()}>
+              <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-purple-950 hover:bg-transparent hover:text-blue-600 transition-colors cu-text-responsive-sm" onClick={() => commentsRef.current?.toggle()}>
                 <MessageCircle className="cu-icon-sm" />
                 <span className="hidden sm:inline">Comment</span>
               </Button>
