@@ -365,9 +365,11 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
                     <Briefcase className={`cu-icon-sm ${isInterested ? 'fill-purple-600 text-purple-600' : ''}`} /><span className="hidden sm:inline">{isInterested ? "Applied" : "Join"}</span>
                   </Button>
                 )}
-                <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-purple-950 hover:bg-transparent hover:text-green-600 transition-colors cu-text-responsive-sm" onClick={handleFund} disabled={!project.paypal_link && !project.venmo_link && !project.cashapp_link}>
-                  <DollarSign className="cu-icon-sm" /><span className="hidden sm:inline">Fund</span>
-                </Button>
+                {(project.paypal_link || project.venmo_link || project.cashapp_link) && (
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-purple-950 hover:bg-transparent hover:text-green-600 transition-colors cu-text-responsive-sm" onClick={handleFund}>
+                    <DollarSign className="cu-icon-sm" /><span className="hidden sm:inline">Fund</span>
+                  </Button>
+                )}
               </div>
               <FeedComments ref={commentsRef} project={project} currentUser={currentUser} />
             </div>
