@@ -16,9 +16,11 @@ import {
 import {
   MessageCircle, Share2, Users, CheckCircle, Clock, Camera, Search, MapPin,
   Link as LinkIcon, Tag, Building2, ChevronLeft, ChevronRight, Sparkles, Plus,
-  Lightbulb, Bookmark, BookmarkCheck, ExternalLink, DollarSign, CreditCard, Wallet, HandHeart,
+  Lightbulb, Bookmark, BookmarkCheck, ExternalLink, DollarSign, CreditCard, Wallet, HandHeart, Briefcase,
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { base44 } from "@/api/base44Client";
@@ -59,7 +61,7 @@ const withRetry = async (fn, retries = 3, delay = 1000) => {
   }
 };
 
-const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProjectUpdate, onApplaudUpdate, collaboratorProfilesMap = {} }) => {
+const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProjectUpdate, onApplaudUpdate, collaboratorProfilesMap = {}, userInterests, onExpressInterest }) => {
   const [contentView, setContentView] = React.useState('link');
   const [isApplauded, setIsApplauded] = useState(false);
   const [applaudCount, setApplaudCount] = useState(0);
@@ -72,6 +74,9 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
   const [showFundingDialog, setShowFundingDialog] = useState(false);
 
   const isOwnProject = currentUser && project.created_by === currentUser.email;
+  const isCollaborator = currentUser && project.collaborator_emails?.includes(currentUser.email);
+  const isInterested = userInterests?.has(project.id);
+  const showJoinButton = currentUser && !isOwnProject && !isCollaborator;
 
   const statusConfig = {
     seeking_collaborators: { color: "border-orange-500", icon: <Users className="w-3 h-3 mr-1 text-orange-500" />, label: "Seeking Collaborators" },
@@ -357,9 +362,16 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
                     <MessageCircle className="cu-icon-sm" /><span className="hidden sm:inline">Comment</span>
                   </Button>
                 </div>
-                <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors cu-text-responsive-sm" onClick={handleFund} disabled={!project.paypal_link && !project.venmo_link && !project.cashapp_link}>
-                  <DollarSign className="cu-icon-sm" /><span className="hidden sm:inline">Fund</span>
-                </Button>
+                <div className="flex items-center gap-1">
+                  {showJoinButton && (
+                    <Button variant="ghost" size="sm" className={`flex items-center space-x-2 transition-colors cu-text-responsive-sm ${isInterested ? 'text-purple-600 hover:text-purple-700' : 'text-gray-600 hover:text-purple-600'}`} onClick={(e) => onExpressInterest(project, e)} title={isInterested ? "Withdraw application" : "Apply to join"}>
+                      <Briefcase className={`cu-icon-sm ${isInterested ? 'fill-purple-600 text-purple-600' : ''}`} /><span className="hidden sm:inline">{isInterested ? "Applied" : "Join"}</span>
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors cu-text-responsive-sm" onClick={handleFund} disabled={!project.paypal_link && !project.venmo_link && !project.cashapp_link}>
+                    <DollarSign className="cu-icon-sm" /><span className="hidden sm:inline">Fund</span>
+                  </Button>
+                </div>
               </div>
               <FeedComments ref={commentsRef} project={project} currentUser={currentUser} />
             </div>
@@ -370,7 +382,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
   );
 };
 
-const FeedList = ({ isLoading, displayedItems, isLoadingMore, currentUser, projectApplauds, feedPostApplauds, loadFeedData, handleApplaudUpdate, allCollaboratorProfiles, showCreatePostDialog, setShowCreatePostDialog }) => (
+const FeedList = ({ isLoading, displayedItems, isLoadingMore, currentUser, projectApplauds, feedPostApplauds, loadFeedData, handleApplaudUpdate, allCollaboratorProfiles, showCreatePostDialog, setShowCreatePostDialog, userInterests, onExpressInterest }) => (
   <div className="min-h-[800px]">
     {isLoading ? (
       <>
@@ -394,7 +406,7 @@ const FeedList = ({ isLoading, displayedItems, isLoadingMore, currentUser, proje
         <AnimatePresence>
           {displayedItems.map((item) => (
             item.itemType === 'project' ? (
-              <ProjectPost key={`project-${item.id}`} project={item} owner={item.owner} currentUser={currentUser} projectApplauds={projectApplauds} onProjectUpdate={loadFeedData} onApplaudUpdate={handleApplaudUpdate} collaboratorProfilesMap={allCollaboratorProfiles} />
+              <ProjectPost key={`project-${item.id}`} project={item} owner={item.owner} currentUser={currentUser} projectApplauds={projectApplauds} onProjectUpdate={loadFeedData} onApplaudUpdate={handleApplaudUpdate} collaboratorProfilesMap={allCollaboratorProfiles} userInterests={userInterests} onExpressInterest={onExpressInterest} />
             ) : (
               <FeedPostItem key={`feedpost-${item.id}`} post={item} owner={item.owner} currentUser={currentUser} feedPostApplauds={feedPostApplauds} onPostDeleted={loadFeedData} onApplaudUpdate={handleApplaudUpdate} />
             )
@@ -423,6 +435,11 @@ export default function Feed({ currentUser, authIsLoading }) {
   const [showFirstProjectPrompt, setShowFirstProjectPrompt] = useState(false);
   const [userProjectCount, setUserProjectCount] = useState(null);
   const [showCreatePostDialog, setShowCreatePostDialog] = useState(false);
+  const [userInterests, setUserInterests] = useState(new Set());
+  const [showApplicationDialog, setShowApplicationDialog] = useState(false);
+  const [selectedProjectForApplication, setSelectedProjectForApplication] = useState(null);
+  const [applicationMessage, setApplicationMessage] = useState("");
+  const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
 
 
   const location = useLocation();
@@ -538,6 +555,103 @@ export default function Feed({ currentUser, authIsLoading }) {
     }
   }, [isLoading]);
 
+  useEffect(() => {
+    if (currentUser?.interested_projects) {
+      setUserInterests(new Set(currentUser.interested_projects));
+    } else {
+      setUserInterests(new Set());
+    }
+  }, [currentUser]);
+
+  const handleExpressInterest = async (project, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!currentUser) return;
+    const isInterested = userInterests.has(project.id);
+    if (isInterested) {
+      try {
+        const updatedInterests = (currentUser.interested_projects || []).filter(id => id !== project.id);
+        await base44.auth.updateMe({ interested_projects: updatedInterests });
+        setUserInterests(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(project.id);
+          return newSet;
+        });
+        const existingApplications = await base44.entities.ProjectApplication.filter({
+          project_id: project.id,
+          applicant_email: currentUser.email,
+          status: 'pending'
+        });
+        if (existingApplications && existingApplications.length > 0) {
+          await base44.entities.ProjectApplication.update(existingApplications[0].id, { status: 'withdrawn' });
+        }
+        toast.success("Application withdrawn");
+      } catch (error) {
+        console.error("Error withdrawing application:", error);
+        toast.error("Failed to withdraw application.");
+      }
+    } else {
+      setSelectedProjectForApplication(project);
+      setApplicationMessage("");
+      setShowApplicationDialog(true);
+    }
+  };
+
+  const handleSubmitApplication = async () => {
+    if (!applicationMessage.trim()) {
+      toast.error("Please write a message to the project owner.");
+      return;
+    }
+    setIsSubmittingApplication(true);
+    try {
+      const project = selectedProjectForApplication;
+      const updatedInterests = [...(currentUser.interested_projects || []), project.id];
+      await base44.auth.updateMe({ interested_projects: updatedInterests });
+      setUserInterests(prev => new Set([...prev, project.id]));
+      const existingApplications = await base44.entities.ProjectApplication.filter({
+        project_id: project.id,
+        applicant_email: currentUser.email
+      });
+      if (existingApplications && existingApplications.length > 0) {
+        const existingApp = existingApplications[0];
+        if (existingApp.status === 'withdrawn' || existingApp.status === 'rejected') {
+          await base44.entities.ProjectApplication.update(existingApp.id, {
+            status: 'pending',
+            message: applicationMessage.trim()
+          });
+        }
+      } else {
+        await base44.entities.ProjectApplication.create({
+          project_id: project.id,
+          applicant_email: currentUser.email,
+          message: applicationMessage.trim(),
+          status: 'pending'
+        });
+      }
+      if (project.created_by !== currentUser.email) {
+        await base44.entities.Notification.create({
+          user_email: project.created_by,
+          title: `New application for "${project.title}"`,
+          message: `${currentUser.full_name || currentUser.email} has applied to join your project.`,
+          type: "project_application",
+          related_project_id: project.id,
+          actor_email: currentUser.email,
+          actor_name: currentUser.full_name || currentUser.email,
+          metadata: { project_title: project.title }
+        });
+      }
+      setShowApplicationDialog(false);
+      setApplicationMessage("");
+      setSelectedProjectForApplication(null);
+      toast.success("Application submitted!");
+    } catch (error) {
+      console.error("Error submitting application:", error);
+      toast.error("Failed to submit application. Please try again.");
+    } finally {
+      setIsSubmittingApplication(false);
+    }
+  };
+
   const handleApplaudUpdate = useCallback(async () => {
     const projectIds = projects.map(p => p.id);
     const postIds = feedPosts.map(fp => fp.id);
@@ -577,11 +691,50 @@ export default function Feed({ currentUser, authIsLoading }) {
 
   if (authIsLoading) return <div className="text-center py-16"><p className="cu-text-responsive-sm">Loading...</p></div>;
 
-  const feedListProps = { isLoading, displayedItems, isLoadingMore, currentUser, projectApplauds, feedPostApplauds, loadFeedData, handleApplaudUpdate, allCollaboratorProfiles, showCreatePostDialog, setShowCreatePostDialog };
+  const feedListProps = { isLoading, displayedItems, isLoadingMore, currentUser, projectApplauds, feedPostApplauds, loadFeedData, handleApplaudUpdate, allCollaboratorProfiles, showCreatePostDialog, setShowCreatePostDialog, userInterests, onExpressInterest: handleExpressInterest };
 
   return (
     <>
       <CreatePostDialog isOpen={showCreatePostDialog} onClose={() => setShowCreatePostDialog(false)} currentUser={currentUser} onPostCreated={loadFeedData} />
+
+      <Dialog open={showApplicationDialog} onOpenChange={setShowApplicationDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Apply to join "{selectedProjectForApplication?.title}"</DialogTitle>
+            <DialogDescription>
+              Send a message to the project owner explaining why you'd be a great collaborator.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-2">
+              <Label htmlFor="application-message">Your Message *</Label>
+              <Textarea
+                id="application-message"
+                value={applicationMessage}
+                onChange={(e) => setApplicationMessage(e.target.value)}
+                placeholder="Introduce yourself, mention relevant skills, and express your interest..."
+                rows={6}
+                className="resize-none"
+              />
+              <p className="text-xs text-gray-500">
+                {applicationMessage.length} characters
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowApplicationDialog(false);
+              setApplicationMessage("");
+              setSelectedProjectForApplication(null);
+            }} disabled={isSubmittingApplication}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitApplication} disabled={isSubmittingApplication || !applicationMessage.trim()} className="cu-button">
+              {isSubmittingApplication ? "Submitting..." : "Submit Application"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showFirstProjectPrompt} onOpenChange={setShowFirstProjectPrompt}>
         <DialogContent className="sm:max-w-md">
