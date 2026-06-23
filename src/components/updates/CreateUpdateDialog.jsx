@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { toast } from "sonner";
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 
-export default function CreateUpdateDialog({ isOpen, onClose, currentUser, onCreated }) {
+export default function CreateUpdateDialog({ isOpen, onClose, currentUser, onCreated, autoTriggerCamera = false }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [mediaType, setMediaType] = useState(null);
@@ -17,6 +17,16 @@ export default function CreateUpdateDialog({ isOpen, onClose, currentUser, onCre
   const [isUploading, setIsUploading] = useState(false);
   const cameraInputRef = useRef(null);
   const galleryInputRef = useRef(null);
+
+  // Auto-trigger camera when dialog opens from the "+" button
+  useEffect(() => {
+    if (isOpen && autoTriggerCamera && cameraInputRef.current) {
+      const timer = setTimeout(() => {
+        cameraInputRef.current?.click();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, autoTriggerCamera]);
 
   const resetState = () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);

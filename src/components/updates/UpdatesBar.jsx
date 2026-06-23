@@ -80,31 +80,39 @@ export default function UpdatesBar({ currentUser }) {
 
   return (
     <>
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 sm:p-4">
-        <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide">
+      <div className="flex gap-4 sm:gap-5 overflow-x-auto scrollbar-hide py-1">
           {/* Your Update */}
           {currentUser && (
-            <button
-              className="flex flex-col items-center flex-shrink-0 cursor-pointer group"
-              onClick={() => myGroup ? setViewingUserEmail(currentUser.email) : setShowCreateDialog(true)}
-            >
+            <div className="flex flex-col items-center flex-shrink-0">
               <div className="relative">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 bg-gray-200">
-                  <Avatar className="w-full h-full rounded-full border-2 border-white">
-                    <AvatarImage src={currentUser.profile_image} />
-                    <AvatarFallback className="bg-purple-100 text-purple-600 text-lg">
-                      {currentUser.full_name?.[0] || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-                <div className="absolute bottom-0 right-0 w-5 h-5 sm:w-6 sm:h-6 bg-purple-600 rounded-full flex items-center justify-center border-2 border-white group-hover:bg-purple-700 transition-colors">
+                <button
+                  className="block group"
+                  onClick={() => myGroup ? setViewingUserEmail(currentUser.email) : setShowCreateDialog(true)}
+                >
+                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 transition-transform group-hover:scale-105 ${
+                    myGroup
+                      ? 'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600'
+                      : 'bg-gray-200'
+                  }`}>
+                    <Avatar className="w-full h-full rounded-full border-2 border-white">
+                      <AvatarImage src={currentUser.profile_image} />
+                      <AvatarFallback className="bg-purple-100 text-purple-600 text-lg">
+                        {currentUser.full_name?.[0] || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setShowCreateDialog(true)}
+                  className="absolute bottom-0 right-0 w-5 h-5 sm:w-6 sm:h-6 bg-purple-600 rounded-full flex items-center justify-center border-2 border-white hover:bg-purple-700 transition-colors"
+                >
                   <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" strokeWidth={2.5} />
-                </div>
+                </button>
               </div>
               <span className="text-xs text-gray-700 mt-1.5 max-w-[60px] truncate">
                 {myGroup ? "Your Update" : "Add Update"}
               </span>
-            </button>
+            </div>
           )}
 
           {/* Other users' updates */}
@@ -145,7 +153,6 @@ export default function UpdatesBar({ currentUser }) {
               <div className="w-12 h-3 bg-gray-200 rounded mt-1.5 animate-pulse" />
             </div>
           ))}
-        </div>
       </div>
 
       {viewingGroup && (
@@ -169,6 +176,7 @@ export default function UpdatesBar({ currentUser }) {
           setShowCreateDialog(false);
           setRefreshKey(k => k + 1);
         }}
+        autoTriggerCamera
       />
     </>
   );
