@@ -165,6 +165,8 @@ export default function UpdatesBar({ currentUser }) {
             setViewingUserEmail(group.user_email);
             handleViewed(group);
           }}
+          currentUser={currentUser}
+          onDelete={() => setRefreshKey(k => k + 1)}
         />
       )}
 

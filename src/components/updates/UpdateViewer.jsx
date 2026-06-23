@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, MoreVertical, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 
 const IMAGE_DURATION = 5000; // 5 seconds per image
 
-export default function UpdateViewer({ userGroup, allUserGroups, onClose, onNavigate }) {
+export default function UpdateViewer({ userGroup, allUserGroups, onClose, onNavigate, currentUser, onDelete }) {
   const [currentUpdateIndex, setCurrentUpdateIndex] = useState(0);
   const [videoProgress, setVideoProgress] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const isOwner = currentUser?.email === userGroup.user_email;
 
   const updates = userGroup.updates;
   const currentUpdate = updates[currentUpdateIndex];
@@ -37,6 +43,23 @@ export default function UpdateViewer({ userGroup, allUserGroups, onClose, onNavi
     }
   };
 
+  const handleDelete = async () => {
+    if (!currentUpdate) return;
+    setIsDeleting(true);
+    try {
+      await base44.entities.Update.delete(currentUpdate.id);
+      toast.success("Update deleted");
+      setShowMenu(false);
+      if (onDelete) onDelete();
+      onClose();
+    } catch (error) {
+      console.error("Error deleting update:", error);
+      toast.error("Failed to delete update");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // Auto-advance for images
   useEffect(() => {
     if (!currentUpdate || isVideo) return;
@@ -58,7 +81,7 @@ export default function UpdateViewer({ userGroup, allUserGroups, onClose, onNavi
   if (!currentUpdate) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black flex flex-col">
+    <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: '#1A0B2E' }}>
       <style>{`@keyframes story-progress { from { width: 0%; } to { width: 100%; } }`}</style>
 
       {/* Progress bars */}
@@ -95,9 +118,36 @@ export default function UpdateViewer({ userGroup, allUserGroups, onClose, onNavi
             <p className="text-white/60 text-xs">{formatDistanceToNow(new Date(currentUpdate.created_date))} ago</p>
           </div>
         </div>
-        <button onClick={onClose} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors">
-          <X className="w-6 h-6" />
-        </button>
+        <div className="flex items-center gap-1">
+          {isOwner && (
+            <div className="relative">
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
+              {showMenu && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-40 bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden min-w-[160px]">
+                    <button
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {isDeleting ? "Deleting..." : "Delete Update"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          <button onClick={onClose} className="text-white p-2 hover:bg-white/10 rounded-full transition-colors">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
       </div>
 
       {/* Media */}
