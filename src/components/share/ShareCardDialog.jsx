@@ -199,10 +199,10 @@ const ProfileCard = React.forwardRef(({ data, shareUrl }, ref) => {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h2 className="text-base font-bold text-white truncate" style={{ lineHeight: "1.3" }}>{profileUser?.full_name || "Anonymous User"}</h2>
-            {profileUser?.username && <p className="text-xs text-white/80 truncate" style={{ lineHeight: "1.3" }}>@{profileUser.username}</p>}
+            <h2 className="text-sm font-bold text-white truncate" style={{ lineHeight: "1.5", paddingTop: "1px" }}>{profileUser?.full_name || "Anonymous User"}</h2>
+            {profileUser?.username && <p className="text-[11px] text-white/80 truncate" style={{ lineHeight: "1.5", marginTop: "1px" }}>@{profileUser.username}</p>}
             {profileUser?.location && (
-              <p className="text-[10px] text-white/70 truncate mt-0.5" style={{ lineHeight: "1.3" }}>📍 {profileUser.location}</p>
+              <p className="text-[10px] text-white/70 truncate mt-0.5" style={{ lineHeight: "1.5" }}>📍 {profileUser.location}</p>
             )}
           </div>
         </div>
@@ -211,7 +211,7 @@ const ProfileCard = React.forwardRef(({ data, shareUrl }, ref) => {
       {/* Body */}
       <div className="px-5 py-3">
         {profileUser?.bio && (
-          <p className="text-xs text-gray-600 mb-3" style={{ lineHeight: "1.4", maxHeight: "2.8em", overflow: "hidden" }}>
+          <p className="text-[11px] text-gray-600 mb-3 text-center" style={{ lineHeight: "1.5", maxHeight: "3em", overflow: "hidden" }}>
             {profileUser.bio}
           </p>
         )}
@@ -293,7 +293,7 @@ const ProjectCard = React.forwardRef(({ data, shareUrl }, ref) => {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h2 className="text-base font-bold text-white truncate" style={{ lineHeight: "1.3" }}>{project?.title || "Untitled Project"}</h2>
+            <h2 className="text-sm font-bold text-white truncate" style={{ lineHeight: "1.5", paddingTop: "1px" }}>{project?.title || "Untitled Project"}</h2>
             {project?.status && (
               <span className="inline-block text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 text-white mt-1">
                 {statusLabels[project.status] || project.status}
@@ -306,7 +306,7 @@ const ProjectCard = React.forwardRef(({ data, shareUrl }, ref) => {
       {/* Body */}
       <div className="px-5 py-3">
         {project?.description && (
-          <p className="text-xs text-gray-600 mb-3" style={{ lineHeight: "1.4", maxHeight: "2.8em", overflow: "hidden" }}>
+          <p className="text-[11px] text-gray-600 mb-3 text-center" style={{ lineHeight: "1.5", maxHeight: "3em", overflow: "hidden" }}>
             {project.description}
           </p>
         )}
@@ -359,8 +359,8 @@ const ProjectCard = React.forwardRef(({ data, shareUrl }, ref) => {
 
 const StatBox = ({ value, label, isText }) => (
   <div className="text-center py-1.5 px-1 rounded-lg flex flex-col items-center justify-center" style={{ background: "#F8F7FF" }}>
-    <p className={`font-bold leading-tight ${isText ? "text-[10px]" : "text-sm"}`} style={{ color: CU_PRIMARY }}>{value}</p>
-    <p className="text-[9px] text-gray-500 uppercase tracking-wide mt-0.5">{label}</p>
+    <p className={`font-bold ${isText ? "text-[9px]" : "text-sm"}`} style={{ color: CU_PRIMARY, lineHeight: "1.3" }}>{value}</p>
+    <p className="text-[9px] text-gray-500 uppercase tracking-wide mt-0.5" style={{ lineHeight: "1.3" }}>{label}</p>
   </div>
 );
 
