@@ -83,6 +83,7 @@ import {
 import ProjectLinksManager from "../components/ProjectLinksManager";
 import CollaboratorPresence from "../components/CollaboratorPresence";
 import MicrolinkPreview from "../components/MicrolinkPreview";
+import ShareCardDialog from "../components/share/ShareCardDialog";
 
 
 // Add Hat icon component after imports - LIGHTER VERSION
@@ -187,6 +188,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
 
   // New state for invitations
   const [pendingInvitation, setPendingInvitation] = useState(null);
+  const [showShareCard, setShowShareCard] = useState(false);
   const [isRespondingToInvite, setIsRespondingToInvite] = useState(false);
   
   // State for followers
@@ -459,13 +461,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
 
 
   const handleShare = () => {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
-      // Silent success - user sees the action completed
-    }).catch(err => {
-      toast.error("Failed to copy link.");
-      console.error('Failed to copy: ', err);
-    });
+    setShowShareCard(true);
   };
 
   const handleToggleVisibility = async () => {
@@ -929,6 +925,14 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         className="hidden"
       />
 
+      <ShareCardDialog
+        isOpen={showShareCard}
+        onClose={() => setShowShareCard(false)}
+        type="project"
+        data={{ project, owner: projectUsers.find(u => u.email === project?.created_by) }}
+        shareUrl={window.location.href}
+      />
+
       <Dialog open={showApplyModal} onOpenChange={setShowApplyModal}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -986,9 +990,9 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                 </Button>
             )}
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={handleShare}
-              className="flex items-center text-sm"
+              className="flex items-center text-sm hover:bg-transparent"
               size="sm"
             >
               <Share2 className="w-4 h-4 mr-1 sm:mr-2" />

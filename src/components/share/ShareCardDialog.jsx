@@ -1,0 +1,337 @@
+import React, { useRef, useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Download, Link2, Loader2, Share2 } from "lucide-react";
+import { toast } from "sonner";
+import html2canvas from "html2canvas";
+
+const CU_PRIMARY = "#5B47DB";
+const CU_PRIMARY_DARK = "#4A37C0";
+const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg";
+
+const statusLabels = {
+  seeking_collaborators: "Seeking Collaborators",
+  in_progress: "In Progress",
+  completed: "Completed",
+};
+
+const classificationLabels = {
+  educational: "Educational",
+  career_development: "Career Development",
+  hobby: "Hobby",
+  business: "Business",
+  nonprofit: "Nonprofit",
+  startup: "Startup",
+};
+
+export default function ShareCardDialog({ isOpen, onClose, type, data, shareUrl }) {
+  const cardRef = useRef(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!cardRef.current) return;
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(cardRef.current, {
+        scale: 2,
+        backgroundColor: null,
+        useCORS: true,
+        logging: false,
+      });
+      const link = document.createElement("a");
+      link.download = `collab-unity-${type}-${Date.now()}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      toast.success("Card downloaded!");
+    } catch (error) {
+      console.error("Error generating card:", error);
+      toast.error("Failed to generate card.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      toast.success("Link copied to clipboard!");
+    }).catch(() => {
+      toast.error("Failed to copy link.");
+    });
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: type === "profile" ? `${data?.profileUser?.full_name || "User"} on Collab Unity` : `${data?.project?.title || "Project"} on Collab Unity`,
+          text: type === "profile"
+            ? `Check out ${data?.profileUser?.full_name || "this user"}'s profile on Collab Unity!`
+            : `Check out "${data?.project?.title || "this project"}" on Collab Unity!`,
+          url: shareUrl,
+        });
+      } catch (err) {
+        // User cancelled - silent
+      }
+    } else {
+      handleCopyLink();
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md bg-white/90 backdrop-blur-xl border border-white/40 shadow-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Share2 className="w-5 h-5 text-purple-600" />
+            Share {type === "profile" ? "Profile" : "Project"} Card
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="flex justify-center py-2">
+          {type === "profile" ? (
+            <ProfileCard ref={cardRef} data={data} shareUrl={shareUrl} />
+          ) : (
+            <ProjectCard ref={cardRef} data={data} shareUrl={shareUrl} />
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2 mt-2">
+          <Button onClick={handleDownload} disabled={isDownloading} className="w-full cu-button">
+            {isDownloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+            {isDownloading ? "Generating..." : "Download Card"}
+          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleCopyLink} variant="outline" className="flex-1">
+              <Link2 className="w-4 h-4 mr-2" />
+              Copy Link
+            </Button>
+            <Button onClick={handleNativeShare} variant="outline" className="flex-1">
+              <Share2 className="w-4 h-4 mr-2" />
+              Share
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const ProfileCard = React.forwardRef(({ data, shareUrl }, ref) => {
+  const { profileUser, userProjects = [], skillEndorsements = [], collaboratorReviews = [], userGameStats } = data;
+  const skills = (profileUser?.skills || []).slice(0, 5);
+  const points = userGameStats?.total_points || 0;
+  const level = userGameStats?.level || 1;
+
+  return (
+    <div
+      ref={ref}
+      className="w-[340px] rounded-2xl overflow-hidden shadow-2xl"
+      style={{ background: "white", fontFamily: "Inter, system-ui, sans-serif" }}
+    >
+      {/* Header gradient */}
+      <div
+        className="px-6 pt-6 pb-4 relative"
+        style={{ background: `linear-gradient(135deg, ${CU_PRIMARY} 0%, ${CU_PRIMARY_DARK} 100%)` }}
+      >
+        <div className="flex items-center gap-3">
+          {profileUser?.profile_image ? (
+            <img
+              src={profileUser.profile_image}
+              alt={profileUser?.full_name}
+              crossOrigin="anonymous"
+              className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-white/30 flex items-center justify-center text-2xl font-bold text-white border-2 border-white">
+              {profileUser?.full_name?.[0] || "U"}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold text-white truncate">{profileUser?.full_name || "Anonymous User"}</h2>
+            {profileUser?.username && <p className="text-sm text-white/80 truncate">@{profileUser.username}</p>}
+            {profileUser?.location && (
+              <p className="text-xs text-white/70 truncate mt-0.5">📍 {profileUser.location}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="px-6 py-4">
+        {profileUser?.bio && (
+          <p className="text-sm text-gray-600 mb-4 line-clamp-3" style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+            {profileUser.bio}
+          </p>
+        )}
+
+        {/* Stats */}
+        <div className="grid grid-cols-4 gap-2 mb-4">
+          <StatBox value={userProjects.length} label="Projects" />
+          <StatBox value={skillEndorsements.length} label="Endorsements" />
+          <StatBox value={collaboratorReviews.length} label="Reviews" />
+          <StatBox value={points} label="Points" />
+        </div>
+
+        {/* Skills */}
+        {skills.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Skills</p>
+            <div className="flex flex-wrap gap-1.5">
+              {skills.map(skill => (
+                <span
+                  key={skill}
+                  className="text-xs px-2 py-1 rounded-full"
+                  style={{ background: "#F3F0FF", color: CU_PRIMARY, border: `1px solid #E0D9FF` }}
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Level badge */}
+        {userGameStats && (
+          <div className="flex items-center gap-2 mb-3">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+              style={{ background: `linear-gradient(135deg, ${CU_PRIMARY}, ${CU_PRIMARY_DARK})` }}
+            >
+              {level}
+            </div>
+            <span className="text-xs text-gray-500">Level {level} Member</span>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <CardFooter shareUrl={shareUrl} />
+    </div>
+  );
+});
+
+const ProjectCard = React.forwardRef(({ data, shareUrl }, ref) => {
+  const { project, owner } = data;
+  const skillsNeeded = (project?.skills_needed || []).slice(0, 5);
+  const collaboratorCount = project?.current_collaborators_count || (project?.collaborator_emails?.length || 0);
+  const followersCount = project?.followers_count || 0;
+
+  return (
+    <div
+      ref={ref}
+      className="w-[340px] rounded-2xl overflow-hidden shadow-2xl"
+      style={{ background: "white", fontFamily: "Inter, system-ui, sans-serif" }}
+    >
+      {/* Header gradient */}
+      <div
+        className="px-6 pt-6 pb-4 relative"
+        style={{ background: `linear-gradient(135deg, ${CU_PRIMARY} 0%, ${CU_PRIMARY_DARK} 100%)` }}
+      >
+        <div className="flex items-center gap-3">
+          {project?.logo_url ? (
+            <img
+              src={project.logo_url}
+              alt={project?.title}
+              crossOrigin="anonymous"
+              className="w-16 h-16 rounded-xl object-cover border-2 border-white shadow-md"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-xl bg-white/30 flex items-center justify-center border-2 border-white">
+              <span className="text-2xl">💡</span>
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold text-white truncate">{project?.title || "Untitled Project"}</h2>
+            {project?.status && (
+              <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-white/20 text-white mt-1">
+                {statusLabels[project.status] || project.status}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="px-6 py-4">
+        {project?.description && (
+          <p className="text-sm text-gray-600 mb-4" style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+            {project.description}
+          </p>
+        )}
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          <StatBox value={collaboratorCount} label="Collaborators" />
+          <StatBox value={followersCount} label="Followers" />
+          <StatBox value={classificationLabels[project?.classification] || "—"} label="Type" isText />
+        </div>
+
+        {/* Skills needed */}
+        {skillsNeeded.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Skills Needed</p>
+            <div className="flex flex-wrap gap-1.5">
+              {skillsNeeded.map(skill => (
+                <span
+                  key={skill}
+                  className="text-xs px-2 py-1 rounded-full"
+                  style={{ background: "#F3F0FF", color: CU_PRIMARY, border: `1px solid #E0D9FF` }}
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Owner */}
+        {owner && (
+          <div className="flex items-center gap-2 mb-3">
+            {owner.profile_image ? (
+              <img src={owner.profile_image} alt={owner.full_name} crossOrigin="anonymous" className="w-7 h-7 rounded-full object-cover" />
+            ) : (
+              <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-600">
+                {owner.full_name?.[0] || "U"}
+              </div>
+            )}
+            <span className="text-xs text-gray-500">by {owner.full_name || owner.email}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <CardFooter shareUrl={shareUrl} />
+    </div>
+  );
+});
+
+const StatBox = ({ value, label, isText }) => (
+  <div className="text-center py-2 px-1 rounded-lg flex flex-col items-center justify-center" style={{ background: "#F8F7FF" }}>
+    <p className={`font-bold leading-tight ${isText ? "text-[11px]" : "text-base"}`} style={{ color: CU_PRIMARY }}>{value}</p>
+    <p className="text-[10px] text-gray-500 uppercase tracking-wide mt-0.5">{label}</p>
+  </div>
+);
+
+const CardFooter = ({ shareUrl }) => {
+  // Extract a clean display path from the share URL
+  let displayPath = shareUrl || "";
+  try {
+    const url = new URL(shareUrl);
+    displayPath = url.pathname + url.search;
+  } catch (e) {
+    // keep original
+  }
+
+  return (
+    <div
+      className="px-6 py-3 flex items-center justify-between"
+      style={{ background: "#F8F7FF", borderTop: "1px solid #E0D9FF" }}
+    >
+      <div className="flex items-center gap-2">
+        <img src={LOGO_URL} alt="Collab Unity" crossOrigin="anonymous" className="w-6 h-6 rounded-md object-cover" />
+        <span className="text-xs font-bold" style={{ color: CU_PRIMARY }}>Collab Unity</span>
+      </div>
+      <span className="text-[10px] text-gray-400 truncate max-w-[160px]">{displayPath}</span>
+    </div>
+  );
+};

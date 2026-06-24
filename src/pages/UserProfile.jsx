@@ -35,6 +35,7 @@ import GenerateResumeDialog from "../components/GenerateResumeDialog";
 import BadgeDisplay, { LevelBadge } from "../components/gamification/BadgeDisplay";
 import SkillsSection from "../components/profile/SkillsSection";
 import { EditBioModal, EditEducationModal, EditAwardsModal, EditWebLinksModal } from "../components/profile/EditModals";
+import ShareCardDialog from "../components/share/ShareCardDialog";
 
 
 
@@ -105,6 +106,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
   const [selectedProjectForReview, setSelectedProjectForReview] = useState(null);
   const [showSyncDialog, setShowSyncDialog] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [showShareCard, setShowShareCard] = useState(false);
   const [userGameStats, setUserGameStats] = useState(null);
   const [isLoadingGameStats, setIsLoadingGameStats] = useState(false);
 
@@ -497,20 +499,15 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
 
   const handleShareProfile = () => {
     if (!profileUser) return;
+    setShowShareCard(true);
+  };
 
-    let url;
+  const getProfileShareUrl = () => {
+    if (!profileUser) return "";
     if (profileUser.username) {
-      url = `${window.location.origin}${createPageUrl(`UserProfile?username=${profileUser.username}`)}`;
-    } else {
-      url = `${window.location.origin}${createPageUrl(`UserProfile?email=${profileUser.email}`)}`;
+      return `${window.location.origin}${createPageUrl(`UserProfile?username=${profileUser.username}`)}`;
     }
-
-    navigator.clipboard.writeText(url).then(() => {
-      // Profile link copied
-    }).catch(err => {
-      toast.error("Failed to copy link.");
-      console.error('Failed to copy: ', err);
-    });
+    return `${window.location.origin}${createPageUrl(`UserProfile?email=${profileUser.email}`)}`;
   };
 
   const handleLogout = async () => {
@@ -1107,6 +1104,14 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
         username={username}
       />
 
+      <ShareCardDialog
+        isOpen={showShareCard}
+        onClose={() => setShowShareCard(false)}
+        type="profile"
+        data={{ profileUser, userProjects, skillEndorsements, collaboratorReviews, userGameStats }}
+        shareUrl={getProfileShareUrl()}
+      />
+
       <ImageModal
         isOpen={isAvatarModalOpen}
         onClose={() => setIsAvatarModalOpen(false)}
@@ -1357,6 +1362,10 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                                 <DropdownMenuItem onClick={() => setIsContactModalOpen(true)}>
                                   <Info className="w-4 h-4 mr-2" />
                                   Contact Info
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setShowShareCard(true)}>
+                                  <Share2 className="w-4 h-4 mr-2" />
+                                  Share Profile Card
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => navigate(createPageUrl("NotificationSettings"))}>
                                   <Bell className="w-4 h-4 mr-2" />
