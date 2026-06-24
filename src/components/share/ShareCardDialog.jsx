@@ -118,69 +118,69 @@ export default function ShareCardDialog({ isOpen, onClose, type, data, shareUrl 
 
 const ProfileCard = React.forwardRef(({ data, shareUrl }, ref) => {
   const { profileUser, userProjects = [], skillEndorsements = [], collaboratorReviews = [], userGameStats } = data;
-  const skills = (profileUser?.skills || []).slice(0, 5);
+  const skills = (profileUser?.skills || []).slice(0, 4);
   const points = userGameStats?.total_points || 0;
   const level = userGameStats?.level || 1;
 
   return (
     <div
       ref={ref}
-      className="w-[340px] rounded-2xl overflow-hidden shadow-2xl"
+      className="w-[300px] rounded-xl overflow-hidden shadow-2xl"
       style={{ background: "white", fontFamily: "Inter, system-ui, sans-serif" }}
     >
       {/* Header gradient */}
       <div
-        className="px-6 pt-6 pb-4 relative"
+        className="px-5 pt-4 pb-3 relative"
         style={{ background: `linear-gradient(135deg, ${CU_PRIMARY} 0%, ${CU_PRIMARY_DARK} 100%)` }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           {profileUser?.profile_image ? (
             <img
               src={profileUser.profile_image}
               alt={profileUser?.full_name}
               crossOrigin="anonymous"
-              className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
+              className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
             />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-white/30 flex items-center justify-center text-2xl font-bold text-white border-2 border-white">
+            <div className="w-12 h-12 rounded-full bg-white/30 flex items-center justify-center text-xl font-bold text-white border-2 border-white">
               {profileUser?.full_name?.[0] || "U"}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-white truncate">{profileUser?.full_name || "Anonymous User"}</h2>
-            {profileUser?.username && <p className="text-sm text-white/80 truncate">@{profileUser.username}</p>}
+            <h2 className="text-base font-bold text-white truncate leading-tight">{profileUser?.full_name || "Anonymous User"}</h2>
+            {profileUser?.username && <p className="text-xs text-white/80 truncate">@{profileUser.username}</p>}
             {profileUser?.location && (
-              <p className="text-xs text-white/70 truncate mt-0.5">📍 {profileUser.location}</p>
+              <p className="text-[10px] text-white/70 truncate mt-0.5">📍 {profileUser.location}</p>
             )}
           </div>
         </div>
       </div>
 
       {/* Body */}
-      <div className="px-6 py-4">
+      <div className="px-5 py-3">
         {profileUser?.bio && (
-          <p className="text-sm text-gray-600 mb-4 line-clamp-3" style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+          <p className="text-xs text-gray-600 mb-3" style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
             {profileUser.bio}
           </p>
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-2 mb-4">
+        <div className="grid grid-cols-4 gap-1.5 mb-3">
           <StatBox value={userProjects.length} label="Projects" />
-          <StatBox value={skillEndorsements.length} label="Endorsements" />
+          <StatBox value={skillEndorsements.length} label="Endorse" />
           <StatBox value={collaboratorReviews.length} label="Reviews" />
           <StatBox value={points} label="Points" />
         </div>
 
         {/* Skills */}
         {skills.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Skills</p>
-            <div className="flex flex-wrap gap-1.5">
+          <div className="mb-2.5">
+            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Skills</p>
+            <div className="flex flex-wrap gap-1">
               {skills.map(skill => (
                 <span
                   key={skill}
-                  className="text-xs px-2 py-1 rounded-full"
+                  className="text-[10px] px-1.5 py-0.5 rounded-full"
                   style={{ background: "#F3F0FF", color: CU_PRIMARY, border: `1px solid #E0D9FF` }}
                 >
                   {skill}
@@ -192,14 +192,14 @@ const ProfileCard = React.forwardRef(({ data, shareUrl }, ref) => {
 
         {/* Level badge */}
         {userGameStats && (
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-1.5">
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+              className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
               style={{ background: `linear-gradient(135deg, ${CU_PRIMARY}, ${CU_PRIMARY_DARK})` }}
             >
               {level}
             </div>
-            <span className="text-xs text-gray-500">Level {level} Member</span>
+            <span className="text-[10px] text-gray-500">Level {level} Member</span>
           </div>
         )}
       </div>
@@ -212,38 +212,38 @@ const ProfileCard = React.forwardRef(({ data, shareUrl }, ref) => {
 
 const ProjectCard = React.forwardRef(({ data, shareUrl }, ref) => {
   const { project, owner } = data;
-  const skillsNeeded = (project?.skills_needed || []).slice(0, 5);
+  const skillsNeeded = (project?.skills_needed || []).slice(0, 4);
   const collaboratorCount = project?.current_collaborators_count || (project?.collaborator_emails?.length || 0);
   const followersCount = project?.followers_count || 0;
 
   return (
     <div
       ref={ref}
-      className="w-[340px] rounded-2xl overflow-hidden shadow-2xl"
+      className="w-[300px] rounded-xl overflow-hidden shadow-2xl"
       style={{ background: "white", fontFamily: "Inter, system-ui, sans-serif" }}
     >
       {/* Header gradient */}
       <div
-        className="px-6 pt-6 pb-4 relative"
+        className="px-5 pt-4 pb-3 relative"
         style={{ background: `linear-gradient(135deg, ${CU_PRIMARY} 0%, ${CU_PRIMARY_DARK} 100%)` }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           {project?.logo_url ? (
             <img
               src={project.logo_url}
               alt={project?.title}
               crossOrigin="anonymous"
-              className="w-16 h-16 rounded-xl object-cover border-2 border-white shadow-md"
+              className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-md"
             />
           ) : (
-            <div className="w-16 h-16 rounded-xl bg-white/30 flex items-center justify-center border-2 border-white">
-              <span className="text-2xl">💡</span>
+            <div className="w-12 h-12 rounded-lg bg-white/30 flex items-center justify-center border-2 border-white">
+              <span className="text-xl">💡</span>
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-white truncate">{project?.title || "Untitled Project"}</h2>
+            <h2 className="text-base font-bold text-white truncate leading-tight">{project?.title || "Untitled Project"}</h2>
             {project?.status && (
-              <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-white/20 text-white mt-1">
+              <span className="inline-block text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 text-white mt-1">
                 {statusLabels[project.status] || project.status}
               </span>
             )}
@@ -252,29 +252,29 @@ const ProjectCard = React.forwardRef(({ data, shareUrl }, ref) => {
       </div>
 
       {/* Body */}
-      <div className="px-6 py-4">
+      <div className="px-5 py-3">
         {project?.description && (
-          <p className="text-sm text-gray-600 mb-4" style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+          <p className="text-xs text-gray-600 mb-3" style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
             {project.description}
           </p>
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          <StatBox value={collaboratorCount} label="Collaborators" />
+        <div className="grid grid-cols-3 gap-1.5 mb-3">
+          <StatBox value={collaboratorCount} label="Collabs" />
           <StatBox value={followersCount} label="Followers" />
           <StatBox value={classificationLabels[project?.classification] || "—"} label="Type" isText />
         </div>
 
         {/* Skills needed */}
         {skillsNeeded.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Skills Needed</p>
-            <div className="flex flex-wrap gap-1.5">
+          <div className="mb-2.5">
+            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Skills Needed</p>
+            <div className="flex flex-wrap gap-1">
               {skillsNeeded.map(skill => (
                 <span
                   key={skill}
-                  className="text-xs px-2 py-1 rounded-full"
+                  className="text-[10px] px-1.5 py-0.5 rounded-full"
                   style={{ background: "#F3F0FF", color: CU_PRIMARY, border: `1px solid #E0D9FF` }}
                 >
                   {skill}
@@ -286,15 +286,15 @@ const ProjectCard = React.forwardRef(({ data, shareUrl }, ref) => {
 
         {/* Owner */}
         {owner && (
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-1.5">
             {owner.profile_image ? (
-              <img src={owner.profile_image} alt={owner.full_name} crossOrigin="anonymous" className="w-7 h-7 rounded-full object-cover" />
+              <img src={owner.profile_image} alt={owner.full_name} crossOrigin="anonymous" className="w-5 h-5 rounded-full object-cover" />
             ) : (
-              <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-600">
+              <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center text-[10px] font-bold text-purple-600">
                 {owner.full_name?.[0] || "U"}
               </div>
             )}
-            <span className="text-xs text-gray-500">by {owner.full_name || owner.email}</span>
+            <span className="text-[10px] text-gray-500">by {owner.full_name || owner.email}</span>
           </div>
         )}
       </div>
@@ -306,14 +306,13 @@ const ProjectCard = React.forwardRef(({ data, shareUrl }, ref) => {
 });
 
 const StatBox = ({ value, label, isText }) => (
-  <div className="text-center py-2 px-1 rounded-lg flex flex-col items-center justify-center" style={{ background: "#F8F7FF" }}>
-    <p className={`font-bold leading-tight ${isText ? "text-[11px]" : "text-base"}`} style={{ color: CU_PRIMARY }}>{value}</p>
-    <p className="text-[10px] text-gray-500 uppercase tracking-wide mt-0.5">{label}</p>
+  <div className="text-center py-1.5 px-1 rounded-lg flex flex-col items-center justify-center" style={{ background: "#F8F7FF" }}>
+    <p className={`font-bold leading-tight ${isText ? "text-[10px]" : "text-sm"}`} style={{ color: CU_PRIMARY }}>{value}</p>
+    <p className="text-[9px] text-gray-500 uppercase tracking-wide mt-0.5">{label}</p>
   </div>
 );
 
 const CardFooter = ({ shareUrl }) => {
-  // Extract a clean display path from the share URL
   let displayPath = shareUrl || "";
   try {
     const url = new URL(shareUrl);
@@ -324,14 +323,14 @@ const CardFooter = ({ shareUrl }) => {
 
   return (
     <div
-      className="px-6 py-3 flex items-center justify-between"
+      className="px-5 py-2 flex items-center justify-between"
       style={{ background: "#F8F7FF", borderTop: "1px solid #E0D9FF" }}
     >
-      <div className="flex items-center gap-2">
-        <img src={LOGO_URL} alt="Collab Unity" crossOrigin="anonymous" className="w-6 h-6 rounded-md object-cover" />
-        <span className="text-xs font-bold" style={{ color: CU_PRIMARY }}>Collab Unity</span>
+      <div className="flex items-center gap-1.5">
+        <img src={LOGO_URL} alt="Collab Unity" crossOrigin="anonymous" className="w-5 h-5 rounded-md object-cover" />
+        <span className="text-[11px] font-bold" style={{ color: CU_PRIMARY }}>Collab Unity</span>
       </div>
-      <span className="text-[10px] text-gray-400 truncate max-w-[160px]">{displayPath}</span>
+      <span className="text-[9px] text-gray-400 truncate max-w-[140px]">{displayPath}</span>
     </div>
   );
 };

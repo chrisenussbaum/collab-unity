@@ -14,8 +14,10 @@ import {
 import {
   MessageCircle, CheckCircle, Clock, AlertCircle, Users, TrendingUp, BookOpen,
   ChevronLeft, ChevronRight, Video, Lightbulb, Trash2, PartyPopper, HandHeart,
-  MoreVertical, X, ArrowRight, BarChart3, HelpCircle,
+  MoreVertical, X, ArrowRight, BarChart3, HelpCircle, Share2,
 } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import ShareCardDialog from "@/components/share/ShareCardDialog";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
@@ -50,6 +52,7 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
   const commentsRef = useRef(null);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const [showMediaModal, setShowMediaModal] = useState(false);
+  const [showShareCard, setShowShareCard] = useState(false);
 
   const isOwner = currentUser && post.created_by === currentUser.email;
   const currentPostType = postTypeConfig[post.post_type] || postTypeConfig.narrative;
@@ -160,6 +163,16 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
           </div>
         </DialogContent>
       </Dialog>
+
+      {relatedProject && (
+        <ShareCardDialog
+          isOpen={showShareCard}
+          onClose={() => setShowShareCard(false)}
+          type="project"
+          data={{ project: relatedProject, owner: owner }}
+          shareUrl={`${window.location.origin}${createPageUrl(`ProjectDetail?id=${relatedProject.id}`)}`}
+        />
+      )}
 
       <Card className={`cu-card mb-6 overflow-hidden border-t-4 ${currentPostType.color} hover:shadow-lg transition-shadow duration-300`}>
         <CardHeader className="px-3 sm:px-4 md:px-6 pb-3">
@@ -290,6 +303,23 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
                 <MessageCircle className="cu-icon-sm" />
                 <span className="hidden sm:inline">Comment</span>
               </Button>
+              {relatedProject && (
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setShowShareCard(true)}
+                        className="flex items-center justify-center w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors flex-shrink-0"
+                      >
+                        <Share2 className="w-4 h-4 text-blue-600" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="bg-gray-200 text-black border border-gray-300 font-medium">
+                      Share project
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
             <FeedComments ref={commentsRef} project={post} currentUser={currentUser} context="feed_post" />
           </div>
