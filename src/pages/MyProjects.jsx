@@ -23,7 +23,8 @@ import {
   Search,
   Trash2,
   Archive,
-  ArchiveRestore
+  ArchiveRestore,
+  Share2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -35,6 +36,7 @@ import OptimizedAvatar from "@/components/OptimizedAvatar";
 import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
 import MilestoneProgress from "@/components/myprojects/MilestoneProgress";
 import WhileYouWereAway from "@/components/myprojects/WhileYouWereAway";
+import ShareCardDialog from "@/components/share/ShareCardDialog";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -53,6 +55,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
   const [collaboratorProfiles, setCollaboratorProfiles] = useState({});
   const [archivingId, setArchivingId] = useState(null);
   const [milestonesMap, setMilestonesMap] = useState({});
+  const [shareProject, setShareProject] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -386,6 +389,19 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                             )}
                           </Link>
                           <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShareProject(project);
+                              }}
+                              className="h-8 w-8 text-gray-400 hover:text-purple-600 hover:bg-purple-50"
+                              title="Share project"
+                            >
+                              <Share2 className="w-4 h-4" />
+                            </Button>
                             {isProjectOwner && (
                               <>
                                 <Badge className="bg-purple-100 text-purple-800 text-xs">
@@ -543,6 +559,14 @@ export default function MyProjects({ currentUser, authIsLoading }) {
           </div>
         )}
       </div>
+
+      <ShareCardDialog
+        isOpen={!!shareProject}
+        onClose={() => setShareProject(null)}
+        type="project"
+        data={{ project: shareProject, owner: currentUser }}
+        shareUrl={shareProject ? `${window.location.origin}${createPageUrl(`ProjectDetail?id=${shareProject.id}`)}` : ""}
+      />
     </>
   );
 }
