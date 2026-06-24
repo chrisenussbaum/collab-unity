@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Clock, CheckCircle, MapPin, Building2, Tag, Eye, Plus, Briefcase, Lightbulb, Sparkles, Filter, X, Bookmark, BookmarkCheck, HandHeart, Camera, Play, ExternalLink, BookOpen, Tv, ChevronRight, TrendingUp, Share2 } from "lucide-react";
+import { Users, Clock, CheckCircle, MapPin, Building2, Tag, Eye, Plus, Briefcase, Lightbulb, Sparkles, Filter, X, Bookmark, BookmarkCheck, HandHeart, Camera, Play, ExternalLink, BookOpen, Tv, ChevronRight, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,7 +33,6 @@ import ClickableImage from "../components/ClickableImage";
 import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
 import UserCardSkeleton from "@/components/skeletons/UserCardSkeleton";
 import ForYouSection from "@/components/discover/ForYouSection";
-import ShareCardDialog from "@/components/share/ShareCardDialog";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -91,7 +90,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
   const [selectedProjectForApplication, setSelectedProjectForApplication] = useState(null);
   const [applicationMessage, setApplicationMessage] = useState("");
   const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
-  const [shareProject, setShareProject] = useState(null);
 
 
 
@@ -1251,32 +1249,17 @@ export default function Discover({ currentUser: propCurrentUser }) {
                                   </div>
                                 </div>
                                 
-                                <div className="flex items-center gap-1">
+                                {currentUser && !isOwnProject && (
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 text-gray-400 hover:text-purple-600 hover:bg-purple-50"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setShareProject(project);
-                                    }}
-                                    title="Share project"
+                                    className={`h-8 w-8 ${isFollowing ? 'text-purple-600 hover:text-purple-700 bg-purple-50' : 'text-gray-400 hover:text-purple-600 hover:bg-purple-50'}`}
+                                    onClick={(e) => handleFollow(project.id, e)}
+                                    title={isFollowing ? "Unfollow" : "Follow for updates"}
                                   >
-                                    <Share2 className="w-4 h-4" />
+                                    {isFollowing ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
                                   </Button>
-                                  {currentUser && !isOwnProject && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className={`h-8 w-8 ${isFollowing ? 'text-purple-600 hover:text-purple-700 bg-purple-50' : 'text-gray-400 hover:text-purple-600 hover:bg-purple-50'}`}
-                                      onClick={(e) => handleFollow(project.id, e)}
-                                      title={isFollowing ? "Unfollow" : "Follow for updates"}
-                                    >
-                                      {isFollowing ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
-                                    </Button>
-                                  )}
-                                </div>
+                                )}
                               </div>
 
                               <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -1638,14 +1621,6 @@ export default function Discover({ currentUser: propCurrentUser }) {
           </Tabs>
         </div>
       </div>
-
-      <ShareCardDialog
-        isOpen={!!shareProject}
-        onClose={() => setShareProject(null)}
-        type="project"
-        data={{ project: shareProject, owner: shareProject?.owner }}
-        shareUrl={shareProject ? `${window.location.origin}${createPageUrl(`ProjectDetail?id=${shareProject.id}`)}` : ""}
-      />
     </div>
   );
 }
