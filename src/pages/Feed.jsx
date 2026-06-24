@@ -41,6 +41,7 @@ import FeedPostItem from "@/components/feed/FeedPostItem";
 import UpdatesBar from "@/components/updates/UpdatesBar";
 import MicrolinkPreview from "@/components/MicrolinkPreview";
 import ShareCardDialog from "@/components/share/ShareCardDialog";
+import { getShareBaseUrl } from "@/lib/shareUtils";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -190,7 +191,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
         onClose={() => setShowShareCard(false)}
         type="project"
         data={{ project, owner }}
-        shareUrl={`${window.location.origin}${createPageUrl(`ProjectDetail?id=${project.id}`)}`}
+        shareUrl={`${getShareBaseUrl()}${createPageUrl(`ProjectDetail?id=${project.id}`)}`}
       />
 
       <ProjectLinkPreviewDialog isOpen={showLinkPreview} onClose={() => setShowLinkPreview(false)} url={selectedProjectLink} projectTitle={project.title} />

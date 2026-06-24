@@ -84,6 +84,7 @@ import ProjectLinksManager from "../components/ProjectLinksManager";
 import CollaboratorPresence from "../components/CollaboratorPresence";
 import MicrolinkPreview from "../components/MicrolinkPreview";
 import ShareCardDialog from "../components/share/ShareCardDialog";
+import { getShareBaseUrl } from "@/lib/shareUtils";
 
 
 // Add Hat icon component after imports - LIGHTER VERSION
@@ -930,7 +931,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         onClose={() => setShowShareCard(false)}
         type="project"
         data={{ project, owner: projectUsers.find(u => u.email === project?.created_by) }}
-        shareUrl={window.location.href}
+        shareUrl={`${getShareBaseUrl()}${createPageUrl(`ProjectDetail?id=${project.id}`)}`}
       />
 
       <Dialog open={showApplyModal} onOpenChange={setShowApplyModal}>

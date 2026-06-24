@@ -36,6 +36,7 @@ import BadgeDisplay, { LevelBadge } from "../components/gamification/BadgeDispla
 import SkillsSection from "../components/profile/SkillsSection";
 import { EditBioModal, EditEducationModal, EditAwardsModal, EditWebLinksModal } from "../components/profile/EditModals";
 import ShareCardDialog from "../components/share/ShareCardDialog";
+import { getShareBaseUrl } from "@/lib/shareUtils";
 
 
 
@@ -505,9 +506,9 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
   const getProfileShareUrl = () => {
     if (!profileUser) return "";
     if (profileUser.username) {
-      return `${window.location.origin}${createPageUrl(`UserProfile?username=${profileUser.username}`)}`;
+      return `${getShareBaseUrl()}${createPageUrl(`UserProfile?username=${profileUser.username}`)}`;
     }
-    return `${window.location.origin}${createPageUrl(`UserProfile?email=${profileUser.email}`)}`;
+    return `${getShareBaseUrl()}${createPageUrl(`UserProfile?email=${profileUser.email}`)}`;
   };
 
   const handleLogout = async () => {
