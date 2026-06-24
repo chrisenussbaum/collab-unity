@@ -78,41 +78,52 @@ export default function ShareCardDialog({ isOpen, onClose, type, data, shareUrl 
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md bg-white/90 backdrop-blur-xl border border-white/40 shadow-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Share2 className="w-5 h-5 text-purple-600" />
-            Share {type === "profile" ? "Profile" : "Project"} Card
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      {/* Off-screen card for html2canvas capture — avoids dialog CSS transform clipping */}
+      <div style={{ position: "fixed", left: "-9999px", top: 0, zIndex: -1 }}>
+        {type === "profile" ? (
+          <ProfileCard ref={cardRef} data={data} shareUrl={shareUrl} />
+        ) : (
+          <ProjectCard ref={cardRef} data={data} shareUrl={shareUrl} />
+        )}
+      </div>
 
-        <div className="flex justify-center py-2">
-          {type === "profile" ? (
-            <ProfileCard ref={cardRef} data={data} shareUrl={shareUrl} />
-          ) : (
-            <ProjectCard ref={cardRef} data={data} shareUrl={shareUrl} />
-          )}
-        </div>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="sm:max-w-md bg-white/90 backdrop-blur-xl border border-white/40 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="w-5 h-5 text-purple-600" />
+              Share {type === "profile" ? "Profile" : "Project"} Card
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="flex flex-col gap-2 mt-2">
-          <Button onClick={handleDownload} disabled={isDownloading} className="w-full cu-button">
-            {isDownloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
-            {isDownloading ? "Generating..." : "Download Card"}
-          </Button>
-          <div className="flex gap-2">
-            <Button onClick={handleCopyLink} variant="outline" className="flex-1">
-              <Link2 className="w-4 h-4 mr-2" />
-              Copy Link
-            </Button>
-            <Button onClick={handleNativeShare} variant="outline" className="flex-1">
-              <Share2 className="w-4 h-4 mr-2" />
-              Share
-            </Button>
+          <div className="flex justify-center py-2">
+            {type === "profile" ? (
+              <ProfileCard data={data} shareUrl={shareUrl} />
+            ) : (
+              <ProjectCard data={data} shareUrl={shareUrl} />
+            )}
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+
+          <div className="flex flex-col gap-2 mt-2">
+            <Button onClick={handleDownload} disabled={isDownloading} className="w-full cu-button">
+              {isDownloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+              {isDownloading ? "Generating..." : "Download Card"}
+            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleCopyLink} variant="outline" className="flex-1">
+                <Link2 className="w-4 h-4 mr-2" />
+                Copy Link
+              </Button>
+              <Button onClick={handleNativeShare} variant="outline" className="flex-1">
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
