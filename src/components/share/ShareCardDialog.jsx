@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, Link2, Loader2, Share2 } from "lucide-react";
+import { Download, Link2, Loader2, Share2, Twitter, Facebook, Linkedin, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
 
@@ -59,14 +59,31 @@ export default function ShareCardDialog({ isOpen, onClose, type, data, shareUrl 
     });
   };
 
+  const shareText = type === "profile"
+    ? `Check out ${data?.profileUser?.full_name || "this user"}'s profile on Collab Unity!`
+    : `Check out "${data?.project?.title || "this project"}" on Collab Unity!`;
+  const encodedUrl = encodeURIComponent(shareUrl);
+  const encodedText = encodeURIComponent(shareText);
+
+  const socialPlatforms = [
+    { name: "X", icon: Twitter, color: "#000000", url: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}` },
+    { name: "Facebook", icon: Facebook, color: "#1877F2", url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}` },
+    { name: "LinkedIn", icon: Linkedin, color: "#0A66C2", url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
+    { name: "WhatsApp", icon: MessageCircle, color: "#25D366", url: `https://wa.me/?text=${encodedText}%20${encodedUrl}` },
+    { name: "Telegram", icon: Send, color: "#0088CC", url: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}` },
+  ];
+
+  const handleSocialShare = (url, name) => {
+    window.open(url, "_blank", "noopener,noreferrer,width=600,height=500");
+    toast.success(`Sharing to ${name}!`);
+  };
+
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
           title: type === "profile" ? `${data?.profileUser?.full_name || "User"} on Collab Unity` : `${data?.project?.title || "Project"} on Collab Unity`,
-          text: type === "profile"
-            ? `Check out ${data?.profileUser?.full_name || "this user"}'s profile on Collab Unity!`
-            : `Check out "${data?.project?.title || "this project"}" on Collab Unity!`,
+          text: shareText,
           url: shareUrl,
         });
       } catch (err) {
@@ -119,6 +136,30 @@ export default function ShareCardDialog({ isOpen, onClose, type, data, shareUrl 
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
               </Button>
+            </div>
+            <div className="pt-2">
+              <p className="text-xs text-gray-500 text-center mb-2 font-medium">Share on social media</p>
+              <div className="flex justify-center gap-2">
+                {socialPlatforms.map((platform) => {
+                  const Icon = platform.icon;
+                  return (
+                    <button
+                      key={platform.name}
+                      onClick={() => handleSocialShare(platform.url, platform.name)}
+                      className="flex flex-col items-center gap-1 group"
+                      title={`Share on ${platform.name}`}
+                    >
+                      <span
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-white transition-transform group-hover:scale-110 group-hover:shadow-md"
+                        style={{ backgroundColor: platform.color }}
+                      >
+                        <Icon className="w-5 h-5" />
+                      </span>
+                      <span className="text-[10px] text-gray-600 group-hover:text-gray-900">{platform.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </DialogContent>
