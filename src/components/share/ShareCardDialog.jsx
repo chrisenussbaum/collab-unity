@@ -97,7 +97,7 @@ export default function ShareCardDialog({ isOpen, onClose, type, data, shareUrl 
   return (
     <>
       {/* Off-screen card for html2canvas capture — avoids dialog CSS transform clipping */}
-      <div style={{ position: "fixed", left: "-9999px", top: 0, zIndex: -1 }}>
+      <div style={{ position: "fixed", left: "-9999px", top: 0, width: "300px", zIndex: -1, pointerEvents: "none" }}>
         {type === "profile" ? (
           <ProfileCard ref={cardRef} data={data} shareUrl={shareUrl} />
         ) : (
@@ -199,10 +199,10 @@ const ProfileCard = React.forwardRef(({ data, shareUrl }, ref) => {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h2 className="text-base font-bold text-white truncate leading-tight">{profileUser?.full_name || "Anonymous User"}</h2>
-            {profileUser?.username && <p className="text-xs text-white/80 truncate">@{profileUser.username}</p>}
+            <h2 className="text-base font-bold text-white truncate" style={{ lineHeight: "1.3" }}>{profileUser?.full_name || "Anonymous User"}</h2>
+            {profileUser?.username && <p className="text-xs text-white/80 truncate" style={{ lineHeight: "1.3" }}>@{profileUser.username}</p>}
             {profileUser?.location && (
-              <p className="text-[10px] text-white/70 truncate mt-0.5">📍 {profileUser.location}</p>
+              <p className="text-[10px] text-white/70 truncate mt-0.5" style={{ lineHeight: "1.3" }}>📍 {profileUser.location}</p>
             )}
           </div>
         </div>
@@ -211,7 +211,7 @@ const ProfileCard = React.forwardRef(({ data, shareUrl }, ref) => {
       {/* Body */}
       <div className="px-5 py-3">
         {profileUser?.bio && (
-          <p className="text-xs text-gray-600 mb-3" style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+          <p className="text-xs text-gray-600 mb-3" style={{ lineHeight: "1.4", maxHeight: "2.8em", overflow: "hidden" }}>
             {profileUser.bio}
           </p>
         )}
@@ -293,7 +293,7 @@ const ProjectCard = React.forwardRef(({ data, shareUrl }, ref) => {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h2 className="text-base font-bold text-white truncate leading-tight">{project?.title || "Untitled Project"}</h2>
+            <h2 className="text-base font-bold text-white truncate" style={{ lineHeight: "1.3" }}>{project?.title || "Untitled Project"}</h2>
             {project?.status && (
               <span className="inline-block text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 text-white mt-1">
                 {statusLabels[project.status] || project.status}
@@ -306,7 +306,7 @@ const ProjectCard = React.forwardRef(({ data, shareUrl }, ref) => {
       {/* Body */}
       <div className="px-5 py-3">
         {project?.description && (
-          <p className="text-xs text-gray-600 mb-3" style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+          <p className="text-xs text-gray-600 mb-3" style={{ lineHeight: "1.4", maxHeight: "2.8em", overflow: "hidden" }}>
             {project.description}
           </p>
         )}
@@ -382,7 +382,7 @@ const CardFooter = ({ shareUrl }) => {
         <img src={LOGO_URL} alt="Collab Unity" crossOrigin="anonymous" className="w-5 h-5 rounded-md object-cover" />
         <span className="text-[11px] font-bold" style={{ color: CU_PRIMARY }}>Collab Unity</span>
       </div>
-      <span className="text-[9px] text-gray-400 truncate max-w-[140px]">{displayPath}</span>
+      <span className="text-[9px] text-gray-400" style={{ maxWidth: "140px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{displayPath}</span>
     </div>
   );
 };
