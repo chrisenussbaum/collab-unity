@@ -40,6 +40,7 @@ import FeedPostSkeleton from "@/components/skeletons/FeedPostSkeleton";
 import FeedPostItem from "@/components/feed/FeedPostItem";
 import UpdatesBar from "@/components/updates/UpdatesBar";
 import MicrolinkPreview from "@/components/MicrolinkPreview";
+import ShareCardDialog from "@/components/share/ShareCardDialog";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -72,6 +73,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
   const [selectedProjectLink, setSelectedProjectLink] = useState(null);
   const [showLinkPreview, setShowLinkPreview] = useState(false);
   const [showFundingDialog, setShowFundingDialog] = useState(false);
+  const [showShareCard, setShowShareCard] = useState(false);
 
   const isOwnProject = currentUser && project.created_by === currentUser.email;
   const isCollaborator = currentUser && project.collaborator_emails?.includes(currentUser.email);
@@ -139,8 +141,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
 
   const handleShare = (e) => {
     e.preventDefault(); e.stopPropagation();
-    const projectUrl = `${window.location.origin}${createPageUrl(`ProjectDetail?id=${project.id}`)}`;
-    navigator.clipboard.writeText(projectUrl).catch(() => toast.error("Failed to copy link."));
+    setShowShareCard(true);
   };
 
   const handleFund = (e) => {
@@ -184,6 +185,14 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
 
   return (
     <>
+      <ShareCardDialog
+        isOpen={showShareCard}
+        onClose={() => setShowShareCard(false)}
+        type="project"
+        data={{ project, owner }}
+        shareUrl={`${window.location.origin}${createPageUrl(`ProjectDetail?id=${project.id}`)}`}
+      />
+
       <ProjectLinkPreviewDialog isOpen={showLinkPreview} onClose={() => setShowLinkPreview(false)} url={selectedProjectLink} projectTitle={project.title} />
 
       <Dialog open={showFundingDialog} onOpenChange={setShowFundingDialog}>
