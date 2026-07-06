@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Loader2, DollarSign, Trophy, Briefcase, ChevronRight, ChevronLeft, Check } from "lucide-react";
 import {
   Dialog,
@@ -50,39 +49,30 @@ export default function PostGigDialog({ open, onOpenChange, onPosted, currentUse
     return true;
   };
 
-  const buildDescription = () => {
-    let parts = [overview.trim()];
-    if (deliverables.trim()) parts.push(`\n Deliverables:\n${deliverables.trim()}`);
-    if (timeline.trim()) parts.push(`\n Timeline: ${timeline.trim()}`);
-    return parts.join("\n");
-  };
-
   const handleSubmit = async () => {
     setPosting(true);
     try {
       const skills = skillsInput.split(",").map((s) => s.trim()).filter(Boolean);
       const isChallenge = gigType === "challenge";
 
-      const projectData = {
+      await base44.entities.Gig.create({
         title: title.trim(),
-        description: buildDescription(),
-        project_type: "Collaborative",
-        classification: isChallenge ? "career_development" : "business",
-        status: "seeking_collaborators",
-        is_visible_on_feed: true,
-        is_career_challenge: isChallenge,
+        description: overview.trim(),
+        deliverables: deliverables.trim(),
+        timeline: timeline.trim(),
+        gig_type: gigType,
+        bounty_amount: gigType === "paid" ? parseFloat(bountyAmount) || 0 : 0,
+        bounty_currency: "USD",
         skills_needed: skills,
-        collaborator_emails: [currentUser.email],
-        current_collaborators_count: 1,
-      };
+        status: "open",
+        owner_email: currentUser.email,
+        owner_name: currentUser.full_name,
+        owner_avatar: currentUser.profile_image,
+        classification: isChallenge ? "career_development" : "business",
+        is_archived: false,
+      });
 
-      if (gigType === "paid" && bountyAmount) {
-        projectData.bounty_amount = parseFloat(bountyAmount);
-        projectData.bounty_currency = "USD";
-      }
-
-      await base44.entities.Project.create(projectData);
-      toast.success("Gig posted! It's now visible on the Gigs page and Feed.");
+      toast.success("Gig posted! It's now visible on the Gigs page.");
       reset();
       onOpenChange(false);
       onPosted?.();
@@ -98,7 +88,6 @@ export default function PostGigDialog({ open, onOpenChange, onPosted, currentUse
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
       <DialogContent className="max-w-lg">
-        {/* Progress Bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gray-100 rounded-t-lg overflow-hidden">
           <div className="h-full transition-all duration-300" style={{ width: `${progress}%`, background: "var(--cu-primary)" }} />
         </div>
@@ -109,7 +98,7 @@ export default function PostGigDialog({ open, onOpenChange, onPosted, currentUse
             {STEPS.map((s, i) => (
               <React.Fragment key={s.num}>
                 <div className={`flex items-center gap-1.5 text-xs font-medium ${step >= s.num ? "text-purple-600" : "text-gray-400"}`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step > s.num ? "text-white" : step === s.num ? "text-white" : "text-gray-400"}`} style={{ background: step >= s.num ? "var(--cu-primary)" : "#E5E7EB" }}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= s.num ? "text-white" : "text-gray-400"}`} style={{ background: step >= s.num ? "var(--cu-primary)" : "#E5E7EB" }}>
                     {step > s.num ? <Check className="w-3 h-3" /> : s.num}
                   </div>
                   <span className="hidden sm:inline">{s.label}</span>
@@ -120,7 +109,6 @@ export default function PostGigDialog({ open, onOpenChange, onPosted, currentUse
           </div>
         </DialogHeader>
 
-        {/* Step 1: Basics */}
         {step === 1 && (
           <div className="space-y-4">
             <div>
@@ -154,7 +142,6 @@ export default function PostGigDialog({ open, onOpenChange, onPosted, currentUse
           </div>
         )}
 
-        {/* Step 2: Details */}
         {step === 2 && (
           <div className="space-y-4">
             <div>
@@ -163,7 +150,7 @@ export default function PostGigDialog({ open, onOpenChange, onPosted, currentUse
             </div>
             <div>
               <Label htmlFor="gig-deliverables">Deliverables *</Label>
-              <Textarea id="gig-deliverables" placeholder="What should the worker produce? e.g.,&#10;• Responsive landing page&#10;• Figma design file&#10;• Source code on GitHub" value={deliverables} onChange={(e) => setDeliverables(e.target.value)} rows={3} />
+              <Textarea id="gig-deliverables" placeholder={"What should the worker produce? e.g.,\n• Responsive landing page\n• Figma design file\n• Source code on GitHub"} value={deliverables} onChange={(e) => setDeliverables(e.target.value)} rows={3} />
             </div>
             <div>
               <Label htmlFor="gig-timeline">Timeline</Label>
@@ -172,7 +159,6 @@ export default function PostGigDialog({ open, onOpenChange, onPosted, currentUse
           </div>
         )}
 
-        {/* Step 3: Skills */}
         {step === 3 && (
           <div className="space-y-4">
             <div>
@@ -190,7 +176,6 @@ export default function PostGigDialog({ open, onOpenChange, onPosted, currentUse
           </div>
         )}
 
-        {/* Step 4: Review */}
         {step === 4 && (
           <div className="space-y-3">
             <div className="p-4 rounded-lg border border-gray-200 bg-gray-50">
@@ -206,7 +191,9 @@ export default function PostGigDialog({ open, onOpenChange, onPosted, currentUse
                 )}
               </div>
               <h3 className="font-bold text-gray-900 text-sm">{title}</h3>
-              <p className="text-xs text-gray-600 mt-1 whitespace-pre-line">{buildDescription()}</p>
+              <p className="text-xs text-gray-600 mt-1">{overview}</p>
+              {deliverables && <p className="text-xs text-gray-500 mt-1"><span className="font-semibold">Deliverables:</span> {deliverables}</p>}
+              {timeline && <p className="text-xs text-gray-500 mt-1"><span className="font-semibold">Timeline:</span> {timeline}</p>}
               {skillsInput && (
                 <div className="flex flex-wrap gap-1 mt-2">
                   {skillsInput.split(",").map((s) => s.trim()).filter(Boolean).map((skill) => (

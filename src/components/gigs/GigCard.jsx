@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { DollarSign, Trophy, Clock, Users, ChevronRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GigApplyDialog from "@/components/gigs/GigApplyDialog";
-import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
 
 function timeAgo(dateStr) {
@@ -22,32 +20,28 @@ export default function GigCard({ gig, currentUser }) {
   const [hasApplied, setHasApplied] = useState(false);
 
   const isPaidGig = gig.bounty_amount > 0;
-  const isChallenge = gig.is_career_challenge;
-  const isOwner = currentUser && gig.collaborator_emails?.includes(currentUser.email);
+  const isChallenge = gig.gig_type === "challenge";
+  const isOwner = currentUser && gig.owner_email === currentUser.email;
 
   useEffect(() => {
     if (currentUser && !isOwner) {
-      base44.entities.ProjectApplication.filter({
-        project_id: gig.id,
+      base44.entities.GigApplication.filter({
+        gig_id: gig.id,
         applicant_email: currentUser.email,
       }).then((apps) => setHasApplied(apps.length > 0)).catch(() => {});
     }
   }, [currentUser, gig.id, isOwner]);
 
-  // Parse structured description
-  const descLines = (gig.description || "").split("\n");
-  const overview = descLines[0] || "";
-  const deliverablesMatch = (gig.description || "").match(/Deliverables:\s*([\s\S]*?)(?:\n\n Timeline:|$)/);
-  const deliverables = deliverablesMatch ? deliverablesMatch[1].trim() : "";
-  const timelineMatch = (gig.description || "").match(/Timeline:\s*(.+)/);
-  const timeline = timelineMatch ? timelineMatch[1].trim() : "";
-
-  const deliverableItems = deliverables.split("\n").map((l) => l.replace(/^[•\-*]\s*/, "").trim()).filter(Boolean).slice(0, 3);
+  const deliverableItems = (gig.deliverables || "")
+    .split("\n")
+    .map((l) => l.replace(/^[•\-*]\s*/, "").trim())
+    .filter(Boolean)
+    .slice(0, 3);
 
   return (
     <>
       <div className="cu-card p-4 flex flex-col h-full">
-        {/* Badges Row */}
+        {/* Badges */}
         <div className="flex items-center gap-1.5 mb-2 flex-wrap">
           {isPaidGig && (
             <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#DCFCE7", color: "#15803D" }}>
@@ -59,7 +53,7 @@ export default function GigCard({ gig, currentUser }) {
               <Trophy className="w-3 h-3" />Challenge
             </span>
           )}
-          {gig.status === "seeking_collaborators" && (
+          {gig.status === "open" && (
             <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: "#F3F0FF", color: "#5B47DB" }}>
               <Users className="w-3 h-3" />Accepting
             </span>
@@ -67,13 +61,13 @@ export default function GigCard({ gig, currentUser }) {
         </div>
 
         {/* Title */}
-        <h3 className="text-base font-bold text-gray-900 mb-1 hover:text-purple-600 cursor-pointer" style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-          <Link to={createPageUrl(`ProjectDetail?id=${gig.id}`)}>{gig.title}</Link>
+        <h3 className="text-base font-bold text-gray-900 mb-1" style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+          {gig.title}
         </h3>
 
         {/* Description */}
         <p className="text-sm text-gray-500 mb-2" style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-          {overview}
+          {gig.description}
         </p>
 
         {/* Deliverables Preview */}
@@ -91,9 +85,9 @@ export default function GigCard({ gig, currentUser }) {
         )}
 
         {/* Timeline */}
-        {timeline && (
+        {gig.timeline && (
           <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
-            <Clock className="w-3 h-3" /> {timeline}
+            <Clock className="w-3 h-3" /> {gig.timeline}
           </p>
         )}
 
@@ -116,29 +110,22 @@ export default function GigCard({ gig, currentUser }) {
           <span className="text-xs text-gray-400">{timeAgo(gig.created_date)}</span>
           <div className="flex gap-1.5">
             {isOwner ? (
-              <Link to={createPageUrl(`ProjectDetail?id=${gig.id}`)}>
-                <Button variant="outline" size="sm" className="text-xs">
-                  Manage <ChevronRight className="w-3 h-3 ml-0.5" />
-                </Button>
-              </Link>
+              <Button variant="outline" size="sm" className="text-xs" disabled>
+                Your Gig
+              </Button>
             ) : hasApplied ? (
               <Button variant="outline" size="sm" className="text-xs text-green-600 border-green-200" disabled>
                 <CheckCircle2 className="w-3 h-3 mr-1" /> Applied
               </Button>
-            ) : currentUser && gig.status === "seeking_collaborators" ? (
+            ) : currentUser && gig.status === "open" ? (
               <Button size="sm" className="text-xs text-white" style={{ background: "var(--cu-primary)" }} onClick={() => setShowApply(true)}>
                 Apply <ChevronRight className="w-3 h-3 ml-0.5" />
               </Button>
-            ) : (
-              <Link to={createPageUrl(`ProjectDetail?id=${gig.id}`)}>
-                <Button variant="ghost" size="sm" className="text-xs">Details</Button>
-              </Link>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
 
-      {/* Apply Dialog (multi-step) */}
       {currentUser && (
         <GigApplyDialog gig={gig} open={showApply} onOpenChange={setShowApply} currentUser={currentUser} />
       )}

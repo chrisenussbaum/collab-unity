@@ -28,7 +28,7 @@ export default function GigApplyDialog({ gig, open, onOpenChange, currentUser })
   const [applying, setApplying] = useState(false);
 
   const isPaidGig = gig?.bounty_amount > 0;
-  const isChallenge = gig?.is_career_challenge;
+  const isChallenge = gig?.gig_type === "challenge";
 
   const reset = () => {
     setStep(1);
@@ -51,20 +51,11 @@ export default function GigApplyDialog({ gig, open, onOpenChange, currentUser })
     return true;
   };
 
-  const buildMessage = () => {
-    let parts = [pitch.trim()];
-    if (validLinks.length > 0) {
-      parts.push("\nPortfolio Links:");
-      validLinks.forEach((l) => parts.push(`• ${l.name || "Link"}: ${l.url}`));
-    }
-    return parts.join("\n");
-  };
-
   const handleApply = async () => {
     setApplying(true);
     try {
-      const existing = await base44.entities.ProjectApplication.filter({
-        project_id: gig.id,
+      const existing = await base44.entities.GigApplication.filter({
+        gig_id: gig.id,
         applicant_email: currentUser.email,
       });
       if (existing.length > 0) {
@@ -74,10 +65,13 @@ export default function GigApplyDialog({ gig, open, onOpenChange, currentUser })
         return;
       }
 
-      await base44.entities.ProjectApplication.create({
-        project_id: gig.id,
+      await base44.entities.GigApplication.create({
+        gig_id: gig.id,
         applicant_email: currentUser.email,
-        message: buildMessage(),
+        applicant_name: currentUser.full_name,
+        applicant_avatar: currentUser.profile_image,
+        message: pitch.trim(),
+        portfolio_links: validLinks,
         status: "pending",
       });
 
@@ -96,7 +90,6 @@ export default function GigApplyDialog({ gig, open, onOpenChange, currentUser })
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
       <DialogContent className="max-w-lg">
-        {/* Progress Bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gray-100 rounded-t-lg overflow-hidden">
           <div className="h-full transition-all duration-300" style={{ width: `${progress}%`, background: "var(--cu-primary)" }} />
         </div>
@@ -118,7 +111,6 @@ export default function GigApplyDialog({ gig, open, onOpenChange, currentUser })
           </div>
         </DialogHeader>
 
-        {/* Step 1: Your Info (pre-filled) */}
         {step === 1 && (
           <div className="space-y-3">
             <p className="text-xs text-gray-400">Review your profile info — this will be shared with the gig owner.</p>
@@ -148,7 +140,6 @@ export default function GigApplyDialog({ gig, open, onOpenChange, currentUser })
           </div>
         )}
 
-        {/* Step 2: Pitch + Portfolio */}
         {step === 2 && (
           <div className="space-y-4">
             <div>
@@ -178,7 +169,6 @@ export default function GigApplyDialog({ gig, open, onOpenChange, currentUser })
           </div>
         )}
 
-        {/* Step 3: Review */}
         {step === 3 && (
           <div className="space-y-3">
             <div className="p-4 rounded-lg border border-gray-200 bg-gray-50">

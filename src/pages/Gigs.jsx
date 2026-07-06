@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Briefcase, Plus, Loader2, Search, Clock, Settings2, Compass } from "lucide-react";
+import { Briefcase, Plus, Loader2, Search, Clock, Settings2, Compass, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import GigCard from "@/components/gigs/GigCard";
 import PostGigDialog from "@/components/gigs/PostGigDialog";
 import MyGigsTracker from "@/components/gigs/MyGigsTracker";
 import GigApplicationManager from "@/components/gigs/GigApplicationManager";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export default function Gigs({ currentUser }) {
   const [gigs, setGigs] = useState([]);
@@ -17,6 +26,8 @@ export default function Gigs({ currentUser }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showPostDialog, setShowPostDialog] = useState(false);
   const [selectedGig, setSelectedGig] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadGigs();
@@ -25,26 +36,36 @@ export default function Gigs({ currentUser }) {
   const loadGigs = async () => {
     setLoading(true);
     try {
-      const projects = await base44.entities.Project.filter(
-        { is_visible_on_feed: true, is_archived: false },
+      const allGigs = await base44.entities.Gig.filter(
+        { is_archived: false },
         "-created_date",
         100
       );
-      const gigProjects = projects.filter(
-        (p) => (p.bounty_amount && p.bounty_amount > 0) || p.is_career_challenge
-      );
-      setGigs(gigProjects);
+      setGigs(allGigs);
 
       if (currentUser) {
-        const myGigs = gigProjects.filter(
-          (p) => p.collaborator_emails?.includes(currentUser.email)
-        );
-        setMyPostedGigs(myGigs);
+        setMyPostedGigs(allGigs.filter((g) => g.owner_email === currentUser.email));
       }
     } catch (error) {
       console.error("Failed to load gigs:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await base44.entities.Gig.update(deleteTarget.id, { is_archived: true });
+      toast.success("Gig removed.");
+      setDeleteTarget(null);
+      setSelectedGig(null);
+      loadGigs();
+    } catch (error) {
+      toast.error("Failed to remove gig.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -58,8 +79,8 @@ export default function Gigs({ currentUser }) {
 
     if (!matchesSearch) return false;
 
-    if (filter === "paid") return gig.bounty_amount > 0;
-    if (filter === "challenge") return gig.is_career_challenge;
+    if (filter === "paid") return gig.gig_type === "paid";
+    if (filter === "challenge") return gig.gig_type === "challenge";
     return true;
   });
 
@@ -87,11 +108,7 @@ export default function Gigs({ currentUser }) {
           </p>
         </div>
         {currentUser && (
-          <Button
-            onClick={() => setShowPostDialog(true)}
-            style={{ background: "var(--cu-primary)" }}
-            className="text-white"
-          >
+          <Button onClick={() => setShowPostDialog(true)} style={{ background: "var(--cu-primary)" }} className="text-white">
             <Plus className="w-4 h-4 mr-2" />
             Post a Gig
           </Button>
@@ -106,14 +123,9 @@ export default function Gigs({ currentUser }) {
           return (
             <button
               key={t.key}
-              onClick={() => {
-                setTab(t.key);
-                setSelectedGig(null);
-              }}
+              onClick={() => { setTab(t.key); setSelectedGig(null); }}
               className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
-                isActive
-                  ? "border-purple-600 text-purple-600"
-                  : "border-transparent text-gray-500 hover:text-purple-600"
+                isActive ? "border-purple-600 text-purple-600" : "border-transparent text-gray-500 hover:text-purple-600"
               }`}
               style={isActive ? { borderColor: "var(--cu-primary)" } : {}}
             >
@@ -138,9 +150,7 @@ export default function Gigs({ currentUser }) {
                   key={f.key}
                   onClick={() => setFilter(f.key)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    filter === f.key
-                      ? "text-white"
-                      : "bg-white text-gray-600 hover:text-purple-600 border border-gray-200"
+                    filter === f.key ? "text-white" : "bg-white text-gray-600 hover:text-purple-600 border border-gray-200"
                   }`}
                   style={filter === f.key ? { background: "var(--cu-primary)" } : {}}
                 >
@@ -150,12 +160,7 @@ export default function Gigs({ currentUser }) {
             </div>
             <div className="relative flex-1 max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Search gigs, skills..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
+              <Input placeholder="Search gigs, skills..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
             </div>
           </div>
 
@@ -167,9 +172,7 @@ export default function Gigs({ currentUser }) {
             <div className="text-center py-20">
               <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 font-medium">No gigs posted yet.</p>
-              <p className="text-gray-400 text-sm mt-1">
-                Be the first to post a gig and find collaborators.
-              </p>
+              <p className="text-gray-400 text-sm mt-1">Be the first to post a gig and find collaborators.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -189,19 +192,16 @@ export default function Gigs({ currentUser }) {
         <div>
           {selectedGig ? (
             <div>
-              <button
-                onClick={() => setSelectedGig(null)}
-                className="text-sm text-gray-500 hover:text-purple-600 mb-3"
-              >
-                ← Back to my gigs
-              </button>
-              <h2 className="text-lg font-bold text-gray-900 mb-4">
-                Applications: {selectedGig.title}
-              </h2>
-              <GigApplicationManager
-                project={selectedGig}
-                currentUser={currentUser}
-              />
+              <div className="flex items-center justify-between mb-3">
+                <button onClick={() => setSelectedGig(null)} className="text-sm text-gray-500 hover:text-purple-600">
+                  ← Back to my gigs
+                </button>
+                <Button variant="outline" size="sm" className="text-xs text-red-600 border-red-200 hover:bg-red-50" onClick={() => setDeleteTarget(selectedGig)}>
+                  <Trash2 className="w-3 h-3 mr-1" /> Remove Gig
+                </Button>
+              </div>
+              <h2 className="text-lg font-bold text-gray-900 mb-4">Applications: {selectedGig.title}</h2>
+              <GigApplicationManager gig={selectedGig} currentUser={currentUser} />
             </div>
           ) : myPostedGigs.length === 0 ? (
             <div className="text-center py-20">
@@ -211,46 +211,52 @@ export default function Gigs({ currentUser }) {
           ) : (
             <div className="space-y-3">
               {myPostedGigs.map((gig) => (
-                <button
-                  key={gig.id}
-                  onClick={() => setSelectedGig(gig)}
-                  className="cu-card p-4 w-full text-left hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 text-sm truncate">
-                        {gig.title}
-                      </h3>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {gig.status === "seeking_collaborators"
-                          ? "Accepting applications"
-                          : gig.status === "in_progress"
-                          ? "In progress"
-                          : "Completed"}
-                      </p>
-                    </div>
+                <div key={gig.id} className="cu-card p-4 flex items-center justify-between gap-3">
+                  <button onClick={() => setSelectedGig(gig)} className="flex-1 text-left min-w-0">
+                    <h3 className="font-semibold text-gray-900 text-sm truncate">{gig.title}</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {gig.status === "open" ? "Accepting applications" : gig.status === "in_progress" ? "In progress" : gig.status === "completed" ? "Completed" : "Cancelled"}
+                    </p>
+                  </button>
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     {gig.bounty_amount > 0 && (
-                      <span
-                        className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-                        style={{ background: "#DCFCE7", color: "#15803D" }}
-                      >
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#DCFCE7", color: "#15803D" }}>
                         ${gig.bounty_amount}
                       </span>
                     )}
+                    <Button size="sm" variant="outline" className="text-xs" onClick={() => setSelectedGig(gig)}>
+                      View Applications
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-xs text-red-600 hover:bg-red-50" onClick={() => setDeleteTarget(gig)}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           )}
         </div>
       )}
 
-      <PostGigDialog
-        open={showPostDialog}
-        onOpenChange={setShowPostDialog}
-        onPosted={loadGigs}
-        currentUser={currentUser}
-      />
+      <PostGigDialog open={showPostDialog} onOpenChange={setShowPostDialog} onPosted={loadGigs} currentUser={currentUser} />
+
+      {/* Delete Confirmation */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Remove this gig?</DialogTitle>
+            <DialogDescription>
+              "{deleteTarget?.title}" will be removed from the Gigs page. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? "Removing..." : "Remove Gig"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

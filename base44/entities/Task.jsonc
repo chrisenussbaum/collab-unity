@@ -4,7 +4,11 @@
   "properties": {
     "project_id": {
       "type": "string",
-      "description": "ID of the project this task belongs to"
+      "description": "ID of the project this task belongs to (for project tasks)"
+    },
+    "gig_id": {
+      "type": "string",
+      "description": "ID of the gig this task belongs to (for gig tasks)"
     },
     "milestone_id": {
       "type": "string",
@@ -104,12 +108,12 @@
     },
     "completion_verified_by": {
       "type": "string",
-      "description": "Email of the project owner who verified the completed work"
+      "description": "Email of the gig owner who verified the completed work"
     },
     "verified_at": {
       "type": "string",
       "format": "date-time",
-      "description": "When the task completion was verified by the project owner"
+      "description": "When the task completion was verified"
     },
     "skills_demonstrated": {
       "type": "array",
@@ -125,7 +129,6 @@
     }
   },
   "required": [
-    "project_id",
     "title"
   ]
 }
