@@ -273,6 +273,10 @@ export default function GenerateResumeDialog({
                     <CheckCircle2 className="w-3 h-3" />
                     <span>Certifications</span>
                   </div>
+                  <div className="flex items-center gap-2 text-xs text-purple-700">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>Collaborator Reviews</span>
+                  </div>
                 </div>
                 
                 {existingResume && (

@@ -133,6 +133,19 @@ Deno.serve(async (req) => {
       // Continue without projects
     }
 
+    // Fetch collaborator reviews (public ones where this user was reviewed)
+    let collaboratorReviews = [];
+    try {
+      const allReviews = await base44.asServiceRole.entities.CollaboratorReview.list();
+      collaboratorReviews = allReviews
+        .filter(r => r.reviewee_email === profileUser.email && r.is_public !== false)
+        .sort((a, b) => (b.overall_rating || 0) - (a.overall_rating || 0))
+        .slice(0, 6);
+      console.log('Found collaborator reviews:', collaboratorReviews.length);
+    } catch (error) {
+      console.error('Error fetching collaborator reviews:', error);
+    }
+
     // Deep scrape: Get comprehensive contribution data
     let completedTasks = [];
     let allToolsUsed = new Set();
@@ -594,6 +607,59 @@ Deno.serve(async (req) => {
         doc.setFont('helvetica', 'normal');
         doc.text(awardText, margin, yPos);
         yPos += 5;
+      }
+    }
+
+    // Collaborator Reviews
+    if (collaboratorReviews.length > 0) {
+      addSectionHeader('Collaborator Reviews');
+
+      for (const review of collaboratorReviews.slice(0, 5)) {
+        checkNewPage(25);
+
+        // Reviewer name and rating
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        const reviewerName = cleanTextForPDF(review.reviewer_name || 'Anonymous');
+        doc.text(reviewerName, margin, yPos);
+
+        // Star rating on the right
+        const rating = review.overall_rating || 5;
+        const stars = '*'.repeat(Math.round(rating)) + ' '.repeat(5 - Math.round(rating));
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(purpleColor[0], purpleColor[1], purpleColor[2]);
+        const ratingText = `${rating.toFixed(1)}/5`;
+        const ratingWidth = doc.getTextWidth(ratingText);
+        doc.text(ratingText, pageWidth - margin - ratingWidth, yPos);
+        doc.setTextColor(0);
+        yPos += 5;
+
+        // Project link
+        if (review.project_title) {
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'italic');
+          doc.setTextColor(100);
+          const projectLabel = cleanTextForPDF('Project: ' + review.project_title);
+          const projLines = doc.splitTextToSize(projectLabel, pageWidth - 2 * margin);
+          doc.text(projLines.slice(0, 1), margin, yPos);
+          doc.setTextColor(0);
+          yPos += 4;
+        }
+
+        // Review text
+        if (review.review_text) {
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+          const reviewLines = doc.splitTextToSize(
+            cleanTextForPDF('"' + review.review_text + '"'),
+            pageWidth - 2 * margin
+          );
+          doc.text(reviewLines.slice(0, 3), margin, yPos);
+          yPos += Math.min(reviewLines.length, 3) * 4 + 2;
+        }
+
+        yPos += 2;
       }
     }
 
