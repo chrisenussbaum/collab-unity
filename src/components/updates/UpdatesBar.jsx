@@ -56,15 +56,25 @@ export default function UpdatesBar({ currentUser }) {
     if (!currentUser) return;
     const unviewed = userGroup.updates.filter(u => !u.viewers?.includes(currentUser.email));
     if (unviewed.length === 0) return;
+
+    // Optimistic update: immediately mark as viewed in local state so the ring turns gray
+    const unviewedIds = new Set(unviewed.map(u => u.id));
+    setUpdates(prev => prev.map(u =>
+      unviewedIds.has(u.id)
+        ? { ...u, viewers: [...(u.viewers || []), currentUser.email] }
+        : u
+    ));
+
     try {
       await Promise.all(unviewed.map(u =>
         base44.entities.Update.update(u.id, {
           viewers: [...(u.viewers || []), currentUser.email]
         })
       ));
-      setRefreshKey(k => k + 1);
     } catch (error) {
       console.error("Error marking updates as viewed:", error);
+      // Revert on error by refetching from server
+      setRefreshKey(k => k + 1);
     }
   };
 
