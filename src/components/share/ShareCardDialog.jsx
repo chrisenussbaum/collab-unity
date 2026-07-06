@@ -133,6 +133,17 @@ export default function ShareCardDialog({ isOpen, onClose, type, data, shareUrl 
               {isDownloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
               {isDownloading ? "Generating..." : "Download Card"}
             </Button>
+            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+              <input
+                readOnly
+                value={socialShareUrl}
+                onClick={(e) => e.target.select()}
+                className="flex-1 text-xs text-gray-600 bg-transparent border-none outline-none cursor-pointer truncate"
+              />
+              <Button onClick={handleCopyLink} size="sm" variant="ghost" className="p-1 h-7 flex-shrink-0">
+                <Link2 className="w-3.5 h-3.5" />
+              </Button>
+            </div>
             <div className="flex gap-2">
               <Button onClick={handleCopyLink} variant="outline" className="flex-1">
                 <Link2 className="w-4 h-4 mr-2" />
