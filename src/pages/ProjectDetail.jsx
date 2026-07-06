@@ -85,6 +85,7 @@ import CollaboratorPresence from "../components/CollaboratorPresence";
 import MicrolinkPreview from "../components/MicrolinkPreview";
 import ShareCardDialog from "../components/share/ShareCardDialog";
 import { getShareBaseUrl } from "@/lib/shareUtils";
+import { updateMetaTags } from "@/lib/updateMetaTags";
 
 
 // Add Hat icon component after imports - LIGHTER VERSION
@@ -349,6 +350,15 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
       }
 
       setProject(projectData);
+
+      updateMetaTags({
+        title: `${projectData.title || 'Project'} | Collab Unity`,
+        description: projectData.description
+          ? projectData.description.slice(0, 200)
+          : `Check out "${projectData.title || 'this project'}" on Collab Unity`,
+        image: projectData.logo_url || projectData.background_image_url,
+        url: `${getShareBaseUrl()}/ProjectDetail?id=${encodeURIComponent(projectId)}`,
+      });
 
       // Track project view (non-owner only), fire-and-forget
       if (!isOwner) {

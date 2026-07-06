@@ -85,7 +85,9 @@ export default function Layout({ children, currentPageName }) {
     createPageUrl("Demos"),
     createPageUrl("AboutUs"),
     createPageUrl("FeatureRequest"),
-    createPageUrl("Testimonials")
+    createPageUrl("Testimonials"),
+    createPageUrl("UserProfile"),
+    createPageUrl("ProjectDetail")
   ];
 
   // Check for actual auth callback - only when there are auth params in URL

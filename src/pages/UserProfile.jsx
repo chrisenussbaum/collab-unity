@@ -37,6 +37,7 @@ import SkillsSection from "../components/profile/SkillsSection";
 import { EditBioModal, EditEducationModal, EditAwardsModal, EditWebLinksModal } from "../components/profile/EditModals";
 import ShareCardDialog from "../components/share/ShareCardDialog";
 import { getShareBaseUrl } from "@/lib/shareUtils";
+import { updateMetaTags } from "@/lib/updateMetaTags";
 
 
 
@@ -229,6 +230,15 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
       };
 
       setProfileUser(normalizedUser);
+
+      updateMetaTags({
+        title: `${normalizedUser.full_name || 'User'} | Collab Unity`,
+        description: normalizedUser.bio
+          ? normalizedUser.bio.slice(0, 200)
+          : `Check out ${normalizedUser.full_name || 'this user'}'s profile on Collab Unity`,
+        image: normalizedUser.profile_image,
+        url: `${getShareBaseUrl()}/UserProfile?username=${encodeURIComponent(username)}`,
+      });
 
       if (propCurrentUser && propCurrentUser.email === normalizedUser.email && setCurrentUser) {
         setCurrentUser(normalizedUser);
