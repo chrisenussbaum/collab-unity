@@ -40,6 +40,7 @@ import FeedPostSkeleton from "@/components/skeletons/FeedPostSkeleton";
 import FeedPostItem from "@/components/feed/FeedPostItem";
 import UpdatesBar from "@/components/updates/UpdatesBar";
 import FeedRecommendations from "@/components/feed/FeedRecommendations";
+import ContentDiscoveryWidget from "@/components/feed/ContentDiscoveryWidget";
 import MicrolinkPreview from "@/components/MicrolinkPreview";
 import ShareCardDialog from "@/components/share/ShareCardDialog";
 import { getShareBaseUrl } from "@/lib/shareUtils";
@@ -391,45 +392,62 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
   );
 };
 
-const FeedList = ({ isLoading, displayedItems, isLoadingMore, currentUser, projectApplauds, feedPostApplauds, loadFeedData, handleApplaudUpdate, allCollaboratorProfiles, showCreatePostDialog, setShowCreatePostDialog, userInterests, onExpressInterest }) => (
-  <div className="min-h-[800px]">
-    {isLoading ? (
-      <>
-        {[...Array(4)].map((_, i) => (
-          <React.Fragment key={i}>{i % 2 === 0 ? <ProjectCardSkeleton /> : <FeedPostSkeleton />}</React.Fragment>
-        ))}
-      </>
-    ) : displayedItems.length === 0 ? (
-      <div className="text-center py-16">
-        <h3 className="text-xl font-semibold">No posts found</h3>
-        <p className="text-gray-600 mt-2">Be the first to create a post!</p>
-        {currentUser && (
-          <div className="flex gap-3 justify-center mt-4">
-            <Button onClick={() => setShowCreatePostDialog(true)} className="cu-button">Post</Button>
-            <Link to={createPageUrl("CreateProject")}><Button className="cu-button">Create Project</Button></Link>
-          </div>
-        )}
-      </div>
-    ) : (
-      <>
-        <AnimatePresence>
-          {displayedItems.map((item) => (
-            item.itemType === 'project' ? (
-              <ProjectPost key={`project-${item.id}`} project={item} owner={item.owner} currentUser={currentUser} projectApplauds={projectApplauds} onProjectUpdate={loadFeedData} onApplaudUpdate={handleApplaudUpdate} collaboratorProfilesMap={allCollaboratorProfiles} userInterests={userInterests} onExpressInterest={onExpressInterest} />
-            ) : (
-              <FeedPostItem key={`feedpost-${item.id}`} post={item} owner={item.owner} currentUser={currentUser} feedPostApplauds={feedPostApplauds} onPostDeleted={loadFeedData} onApplaudUpdate={handleApplaudUpdate} />
-            )
+const FeedList = ({ isLoading, displayedItems, isLoadingMore, currentUser, projectApplauds, feedPostApplauds, loadFeedData, handleApplaudUpdate, allCollaboratorProfiles, showCreatePostDialog, setShowCreatePostDialog, userInterests, onExpressInterest }) => {
+  // Interleave ContentDiscoveryWidget every 5 items
+  const renderItemsWithWidgets = () => {
+    const result = [];
+    displayedItems.forEach((item, index) => {
+      if (item.itemType === 'project') {
+        result.push(
+          <ProjectPost key={`project-${item.id}`} project={item} owner={item.owner} currentUser={currentUser} projectApplauds={projectApplauds} onProjectUpdate={loadFeedData} onApplaudUpdate={handleApplaudUpdate} collaboratorProfilesMap={allCollaboratorProfiles} userInterests={userInterests} onExpressInterest={onExpressInterest} />
+        );
+      } else {
+        result.push(
+          <FeedPostItem key={`feedpost-${item.id}`} post={item} owner={item.owner} currentUser={currentUser} feedPostApplauds={feedPostApplauds} onPostDeleted={loadFeedData} onApplaudUpdate={handleApplaudUpdate} />
+        );
+      }
+      // Insert widget after every 5th item (but not after the last item)
+      if ((index + 1) % 5 === 0 && index < displayedItems.length - 1) {
+        result.push(<ContentDiscoveryWidget key={`content-widget-${index}`} />);
+      }
+    });
+    return result;
+  };
+
+  return (
+    <div className="min-h-[800px]">
+      {isLoading ? (
+        <>
+          {[...Array(4)].map((_, i) => (
+            <React.Fragment key={i}>{i % 2 === 0 ? <ProjectCardSkeleton /> : <FeedPostSkeleton />}</React.Fragment>
           ))}
-        </AnimatePresence>
-        {isLoadingMore && (
-          <div className="text-center py-8">
-            <div className="inline-flex items-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mr-3"></div><span className="text-gray-600">Loading more...</span></div>
-          </div>
-        )}
-      </>
-    )}
-  </div>
-);
+        </>
+      ) : displayedItems.length === 0 ? (
+        <div className="text-center py-16">
+          <h3 className="text-xl font-semibold">No posts found</h3>
+          <p className="text-gray-600 mt-2">Be the first to create a post!</p>
+          {currentUser && (
+            <div className="flex gap-3 justify-center mt-4">
+              <Button onClick={() => setShowCreatePostDialog(true)} className="cu-button">Post</Button>
+              <Link to={createPageUrl("CreateProject")}><Button className="cu-button">Create Project</Button></Link>
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          <AnimatePresence>
+            {renderItemsWithWidgets()}
+          </AnimatePresence>
+          {isLoadingMore && (
+            <div className="text-center py-8">
+              <div className="inline-flex items-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mr-3"></div><span className="text-gray-600">Loading more...</span></div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
 
 export default function Feed({ currentUser, authIsLoading }) {
   const [projects, setProjects] = useState([]);
