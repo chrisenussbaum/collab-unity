@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import {
   Clock,
@@ -21,6 +22,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
 
 const STATUS_STEPS = [
@@ -41,8 +43,8 @@ function getStepIndex(application, task) {
 
 export default function MyGigsTracker({ currentUser }) {
   const [applications, setApplications] = useState([]);
-  const [gigs, setGigs] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitDialog, setSubmitDialog] = useState(null);
   const [linkName, setLinkName] = useState("");
@@ -57,18 +59,20 @@ export default function MyGigsTracker({ currentUser }) {
     if (!currentUser) return;
     setLoading(true);
     try {
-      const apps = await base44.entities.GigApplication.filter(
+      const apps = await base44.entities.ProjectApplication.filter(
         { applicant_email: currentUser.email },
         "-created_date"
       );
 
-      const gigIds = [...new Set(apps.map((a) => a.gig_id))];
-      const gigPromises = gigIds.map((id) => base44.entities.Gig.get(id));
-      const gigResults = await Promise.all(gigPromises);
+      const projectIds = [...new Set(apps.map((a) => a.project_id))];
+      const projectPromises = projectIds.map((id) =>
+        base44.entities.Project.get(id)
+      );
+      const projectResults = await Promise.all(projectPromises);
 
-      const taskPromises = gigIds.map((gid) =>
+      const taskPromises = projectIds.map((pid) =>
         base44.entities.Task.filter({
-          gig_id: gid,
+          project_id: pid,
           assigned_to: currentUser.email,
           is_gig_task: true,
         })
@@ -77,7 +81,7 @@ export default function MyGigsTracker({ currentUser }) {
       const allTasks = taskResults.flat();
 
       setApplications(apps);
-      setGigs(gigResults);
+      setProjects(projectResults);
       setTasks(allTasks);
     } catch (error) {
       console.error("Failed to load gigs:", error);
@@ -94,7 +98,7 @@ export default function MyGigsTracker({ currentUser }) {
     setSubmitting(true);
     try {
       const task = tasks.find(
-        (t) => t.assigned_to === currentUser.email && t.gig_id === submitDialog.gig_id
+        (t) => t.assigned_to === currentUser.email && t.project_id === submitDialog.project_id
       );
       if (!task) {
         toast.error("Task not found.");
@@ -115,7 +119,7 @@ export default function MyGigsTracker({ currentUser }) {
         attachments: [...(task.attachments || []), newAttachment],
       });
 
-      toast.success("Work submitted! The gig owner will verify it.");
+      toast.success("Work submitted! The project owner will verify it.");
       setLinkName("");
       setLinkUrl("");
       setSubmitDialog(null);
@@ -140,6 +144,14 @@ export default function MyGigsTracker({ currentUser }) {
       <div className="text-center py-12">
         <Clock className="w-10 h-10 text-gray-300 mx-auto mb-3" />
         <p className="text-gray-500 font-medium">You haven't applied to any gigs yet.</p>
+        <Link to={createPageUrl("Gigs")}>
+          <Button
+            className="text-white mt-3"
+            style={{ background: "var(--cu-primary)" }}
+          >
+            Browse Gigs
+          </Button>
+        </Link>
       </div>
     );
   }
@@ -147,41 +159,58 @@ export default function MyGigsTracker({ currentUser }) {
   return (
     <div className="space-y-4">
       {applications.map((app) => {
-        const gig = gigs.find((g) => g.id === app.gig_id);
+        const project = projects.find((p) => p.id === app.project_id);
         const task = tasks.find(
-          (t) => t.gig_id === app.gig_id && t.assigned_to === currentUser.email
+          (t) => t.project_id === app.project_id && t.assigned_to === currentUser.email
         );
-        if (!gig) return null;
+        if (!project) return null;
         const stepIndex = getStepIndex(app, task);
-        const isPaid = gig.bounty_amount > 0;
-        const isChallenge = gig.gig_type === "challenge";
+        const isPaid = project.bounty_amount > 0;
+        const isChallenge = project.is_career_challenge;
 
         return (
           <div key={app.id} className="cu-card p-4">
             {/* Header */}
             <div className="flex items-start justify-between gap-3 mb-3">
-              <h3 className="font-semibold text-gray-900 text-sm flex-1 min-w-0">{gig.title}</h3>
+              <Link
+                to={createPageUrl(`ProjectDetail?id=${project.id}`)}
+                className="flex-1 min-w-0"
+              >
+                <h3 className="font-semibold text-gray-900 text-sm hover:text-purple-600 truncate">
+                  {project.title}
+                </h3>
+              </Link>
               <div className="flex gap-1 flex-shrink-0">
                 {isPaid && (
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: "#DCFCE7", color: "#15803D" }}>
-                    <DollarSign className="w-3 h-3" />${gig.bounty_amount}
+                  <span
+                    className="text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
+                    style={{ background: "#DCFCE7", color: "#15803D" }}
+                  >
+                    <DollarSign className="w-3 h-3" />${project.bounty_amount}
                   </span>
                 )}
                 {isChallenge && (
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: "#FEF3C7", color: "#B45309" }}>
-                    <Trophy className="w-3 h-3" />Challenge
+                  <span
+                    className="text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
+                    style={{ background: "#FEF3C7", color: "#B45309" }}
+                  >
+                    <Trophy className="w-3 h-3" /> Challenge
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Status */}
+            {/* Status badge */}
             <div className="mb-3">
               {app.status === "pending" && (
-                <span className="text-xs text-amber-600 font-medium">Waiting for approval</span>
+                <span className="text-xs text-amber-600 font-medium">
+                  Waiting for approval
+                </span>
               )}
               {app.status === "rejected" && (
-                <span className="text-xs text-red-600 font-medium">Application not accepted</span>
+                <span className="text-xs text-red-600 font-medium">
+                  Application not accepted
+                </span>
               )}
               {app.status === "accepted" && !task?.completion_verified_by && (
                 <span className="text-xs text-purple-600 font-medium">
@@ -204,13 +233,29 @@ export default function MyGigsTracker({ currentUser }) {
                   return (
                     <div key={step.key} className="flex items-center flex-1">
                       <div className="flex flex-col items-center flex-shrink-0">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: isDone ? "var(--cu-primary)" : "#E5E7EB", color: isDone ? "white" : "#9CA3AF" }}>
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center"
+                          style={{
+                            background: isDone ? "var(--cu-primary)" : "#E5E7EB",
+                            color: isDone ? "white" : "#9CA3AF",
+                          }}
+                        >
                           <StepIcon className="w-4 h-4" />
                         </div>
-                        <span className="text-[10px] mt-1 font-medium" style={{ color: isDone ? "#374151" : "#9CA3AF" }}>{step.label}</span>
+                        <span
+                          className="text-[10px] mt-1 font-medium"
+                          style={{ color: isDone ? "#374151" : "#9CA3AF" }}
+                        >
+                          {step.label}
+                        </span>
                       </div>
                       {i < STATUS_STEPS.length - 1 && (
-                        <div className="h-0.5 flex-1 mx-1" style={{ background: i < stepIndex ? "var(--cu-primary)" : "#E5E7EB" }} />
+                        <div
+                          className="h-0.5 flex-1 mx-1"
+                          style={{
+                            background: i < stepIndex ? "var(--cu-primary)" : "#E5E7EB",
+                          }}
+                        />
                       )}
                     </div>
                   );
@@ -218,11 +263,15 @@ export default function MyGigsTracker({ currentUser }) {
               </div>
             )}
 
-            {/* Verified Skills */}
+            {/* Verified skills */}
             {task?.completion_verified_by && task?.skills_demonstrated?.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-3">
                 {task.skills_demonstrated.map((skill) => (
-                  <span key={skill} className="text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: "#F0FDF4", color: "#15803D" }}>
+                  <span
+                    key={skill}
+                    className="text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1"
+                    style={{ background: "#F0FDF4", color: "#15803D" }}
+                  >
                     <Award className="w-2.5 h-2.5" /> {skill}
                   </span>
                 ))}
@@ -230,17 +279,30 @@ export default function MyGigsTracker({ currentUser }) {
             )}
 
             {/* Submit Work Button */}
-            {app.status === "accepted" && task && task.status !== "done" && !task.completion_verified_by && (
-              <Button className="text-white text-xs w-full" style={{ background: "var(--cu-primary)" }} onClick={() => setSubmitDialog({ gig_id: app.gig_id, title: gig.title })}>
-                <Upload className="w-3 h-3 mr-2" /> Submit Your Work
-              </Button>
-            )}
+            {app.status === "accepted" &&
+              task &&
+              task.status !== "done" &&
+              !task.completion_verified_by && (
+                <Button
+                  className="text-white text-xs w-full"
+                  style={{ background: "var(--cu-primary)" }}
+                  onClick={() => setSubmitDialog({ project_id: app.project_id, title: project.title })}
+                >
+                  <Upload className="w-3 h-3 mr-2" /> Submit Your Work
+                </Button>
+              )}
 
             {/* Submission link shown */}
             {task?.status === "done" && !task.completion_verified_by && task.attachments?.length > 0 && (
               <div className="mt-2">
                 {task.attachments.map((att, i) => (
-                  <a key={i} href={att.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                  <a
+                    key={i}
+                    href={att.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                  >
                     <LinkIcon className="w-3 h-3" /> {att.name}
                   </a>
                 ))}
@@ -262,16 +324,31 @@ export default function MyGigsTracker({ currentUser }) {
           <div className="space-y-3">
             <div>
               <Label>Link Name</Label>
-              <Input placeholder="e.g., GitHub Repo, Live Demo" value={linkName} onChange={(e) => setLinkName(e.target.value)} />
+              <Input
+                placeholder="e.g., GitHub Repo, Live Demo"
+                value={linkName}
+                onChange={(e) => setLinkName(e.target.value)}
+              />
             </div>
             <div>
               <Label>URL</Label>
-              <Input placeholder="https://..." value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} />
+              <Input
+                placeholder="https://..."
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSubmitDialog(null)}>Cancel</Button>
-            <Button className="text-white" style={{ background: "var(--cu-primary)" }} onClick={handleSubmitWork} disabled={submitting}>
+            <Button variant="outline" onClick={() => setSubmitDialog(null)}>
+              Cancel
+            </Button>
+            <Button
+              className="text-white"
+              style={{ background: "var(--cu-primary)" }}
+              onClick={handleSubmitWork}
+              disabled={submitting}
+            >
               {submitting ? "Submitting..." : "Submit for Verification"}
             </Button>
           </DialogFooter>
