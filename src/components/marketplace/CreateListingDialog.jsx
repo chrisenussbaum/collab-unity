@@ -26,7 +26,7 @@ export default function CreateListingDialog({ currentUser, defaultType = "gig", 
   const [compensationAmount, setCompensationAmount] = useState("");
   const [location, setLocation] = useState("");
   const [isRemote, setIsRemote] = useState(true);
-  const [externalUrl, setExternalUrl] = useState("");
+  const [externalUrl, setExternalUrl] = useState("https://");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const addSkill = () => {
@@ -67,7 +67,7 @@ export default function CreateListingDialog({ currentUser, defaultType = "gig", 
         compensation_amount: compensationAmount.trim(),
         location: location.trim(),
         is_remote: isRemote,
-        external_url: externalUrl.trim(),
+        external_url: externalUrl.trim() === "https://" ? "" : externalUrl.trim(),
         posted_by_email: currentUser.email,
         posted_by_name: currentUser.full_name,
         posted_by_avatar: currentUser.profile_image || "",
