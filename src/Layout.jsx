@@ -437,8 +437,8 @@ export default function Layout({ children, currentPageName }) {
   const navigationItems = [
     { name: "Feed", path: createPageUrl("Feed"), icon: LayoutGrid },
     { name: "Marketplace", path: createPageUrl("Marketplace"), icon: Users },
-      ...(currentUser ? [
-      { name: "My Projects", path: createPageUrl("MyProjects"), icon: Lightbulb },
+    ...(currentUser ? [
+      { name: "Projects", path: createPageUrl("MyProjects"), icon: Lightbulb },
       { name: "Chat", path: createPageUrl("Chat"), icon: MessageCircle },
     ] : []),
   ];
@@ -1067,7 +1067,7 @@ export default function Layout({ children, currentPageName }) {
               placeholder="Search..."
             />
 
-            <div className="flex items-center justify-center space-x-1">
+            <div className="flex items-center justify-center space-x-0.5">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
@@ -1075,13 +1075,13 @@ export default function Layout({ children, currentPageName }) {
                   <Link
                     key={item.name}
                     to={item.path}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors cu-text-responsive-sm ${
+                    className={`flex items-center space-x-1.5 px-2.5 lg:px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
                       isActive 
                         ? 'text-purple-600' 
                         : 'text-gray-600 hover:text-purple-600'
                     }`}
                   >
-                    <Icon className="cu-icon-sm" />
+                    <Icon className="w-4 h-4" />
                     <span>{item.name}</span>
                   </Link>
                 );
