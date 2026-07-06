@@ -101,27 +101,6 @@
         ]
       },
       "description": "Files and links attached to this task"
-    },
-    "completion_verified_by": {
-      "type": "string",
-      "description": "Email of the project owner who verified the completed work"
-    },
-    "verified_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "When the task completion was verified by the project owner"
-    },
-    "skills_demonstrated": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Skills proven by completing this task, feeds into the user's verified skills profile"
-    },
-    "is_gig_task": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether this task is the deliverable for a paid gig or career challenge"
     }
   },
   "required": [
