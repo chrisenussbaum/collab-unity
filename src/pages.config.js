@@ -51,7 +51,6 @@ import AboutUs from './pages/AboutUs';
 import Chat from './pages/Chat';
 import Contact from './pages/Contact';
 import CreateProject from './pages/CreateProject';
-import Discover from './pages/Discover';
 import EditProfile from './pages/EditProfile';
 import EditProject from './pages/EditProject';
 import Feed from './pages/Feed';
@@ -75,7 +74,6 @@ export const PAGES = {
     "Chat": Chat,
     "Contact": Contact,
     "CreateProject": CreateProject,
-    "Discover": Discover,
     "EditProfile": EditProfile,
     "EditProject": EditProject,
     "Feed": Feed,

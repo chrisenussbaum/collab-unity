@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, User as UserIcon, Lightbulb, Settings, Compass, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar } from "lucide-react";
+import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, User as UserIcon, Lightbulb, Settings, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import GlobalSearchBar from "./components/GlobalSearchBar";
 
@@ -435,7 +435,6 @@ export default function Layout({ children, currentPageName }) {
   }
 
   const navigationItems = [
-      { name: "Discover", path: createPageUrl("Discover"), icon: Compass },
     { name: "Feed", path: createPageUrl("Feed"), icon: LayoutGrid },
       ...(currentUser ? [
       { name: "My Projects", path: createPageUrl("MyProjects"), icon: Lightbulb },
@@ -444,7 +443,6 @@ export default function Layout({ children, currentPageName }) {
   ];
 
   const mobileNavItems = [
-      { name: "Discover", path: createPageUrl("Discover"), icon: Compass },
     { name: "Feed", path: createPageUrl("Feed"), icon: LayoutGrid },
       ...(currentUser ? [
       { name: "Create", path: createPageUrl("CreateProject"), icon: Plus, isCreateButton: true },

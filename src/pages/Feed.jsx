@@ -41,6 +41,8 @@ import FeedPostItem from "@/components/feed/FeedPostItem";
 import UpdatesBar from "@/components/updates/UpdatesBar";
 import FeedRecommendations from "@/components/feed/FeedRecommendations";
 import ContentDiscoveryWidget from "@/components/feed/ContentDiscoveryWidget";
+import FeedSidebar from "@/components/feed/FeedSidebar";
+import ForYouSection from "@/components/discover/ForYouSection";
 import MicrolinkPreview from "@/components/MicrolinkPreview";
 import ShareCardDialog from "@/components/share/ShareCardDialog";
 import { getShareBaseUrl } from "@/lib/shareUtils";
@@ -48,6 +50,31 @@ import { getShareBaseUrl } from "@/lib/shareUtils";
 const formatEnumLabel = (str) => {
   if (!str) return '';
   return String(str).split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+};
+
+const calculateProjectMatchScore = (project, currentUser) => {
+  let score = 0;
+  const userSkills = currentUser.skills || [];
+  const userInterests = currentUser.interests || [];
+  const userTools = currentUser.tools_technologies || [];
+  if (project.skills_needed && userSkills.length > 0) {
+    const matching = project.skills_needed.filter(s => userSkills.some(us => us.toLowerCase() === s.toLowerCase()));
+    score += matching.length * 3;
+  }
+  if (project.tools_needed && userTools.length > 0) {
+    const matching = project.tools_needed.filter(t => userTools.some(ut => ut.toLowerCase() === t.toLowerCase()));
+    score += matching.length * 2;
+  }
+  if (project.area_of_interest && userInterests.length > 0) {
+    const matching = userInterests.filter(i => project.area_of_interest.toLowerCase().includes(i.toLowerCase()) || i.toLowerCase().includes(project.area_of_interest.toLowerCase()));
+    score += matching.length * 2;
+  }
+  if (project.location && currentUser.location) {
+    if (project.location.toLowerCase().includes(currentUser.location.toLowerCase()) || currentUser.location.toLowerCase().includes(project.location.toLowerCase())) {
+      score += 1;
+    }
+  }
+  return score;
 };
 
 const withRetry = async (fn, retries = 3, delay = 1000) => {
@@ -701,6 +728,32 @@ export default function Feed({ currentUser, authIsLoading }) {
     return filtered.slice(0, displayedItemsCount);
   }, [allFeedItems, searchQuery, displayedItemsCount]);
 
+  const recommendedProjects = React.useMemo(() => {
+    if (!currentUser) return [];
+    const hasSkills = currentUser.skills?.length > 0;
+    const hasTools = currentUser.tools_technologies?.length > 0;
+    const hasInterests = currentUser.interests?.length > 0;
+    if (!hasSkills && !hasTools && !hasInterests) return [];
+
+    return projects
+      .filter((p) => {
+        if (p.created_by === currentUser.email) return false;
+        if (p.collaborator_emails?.includes(currentUser.email)) return false;
+        return true;
+      })
+      .map((p) => ({
+        ...p,
+        matchScore: calculateProjectMatchScore(p, currentUser),
+        collaboratorProfiles: (p.collaborator_emails || [])
+          .slice(0, 3)
+          .map((email) => allCollaboratorProfiles[email])
+          .filter(Boolean),
+      }))
+      .filter((p) => p.matchScore > 0)
+      .sort((a, b) => b.matchScore - a.matchScore)
+      .slice(0, 6);
+  }, [projects, currentUser, allCollaboratorProfiles]);
+
   useEffect(() => {
     const checkUserProjects = async () => {
       if (!currentUser || authIsLoading || userProjectCount !== null) return;
@@ -821,36 +874,49 @@ export default function Feed({ currentUser, authIsLoading }) {
           </div>
         </div>
 
-        {/* Desktop layout */}
-        <div className="hidden md:block pt-6 max-w-2xl mx-auto">
-          <UpdatesBar currentUser={currentUser} />
-          {currentUser && (
-            <>
-              <Button onClick={() => setShowCreatePostDialog(true)} className="cu-button w-full cu-gradient mb-4"><Plus className="w-5 h-5 mr-2" />Post</Button>
-              <Link to={createPageUrl("CreateProject")} className="block mb-4">
-                <div className="cu-gradient rounded-xl p-4 sm:p-5 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0"><h3 className="font-bold text-base sm:text-lg mb-1">Got an idea?</h3><p className="text-purple-100 text-xs sm:text-sm">Create a project and find collaborators</p></div>
-                    <div className="flex-shrink-0 ml-3"><div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center"><Plus className="w-5 h-5 sm:w-6 sm:h-6" /></div></div>
-                  </div>
+        {/* Desktop layout — 2-column with sidebar */}
+        <div className="hidden md:block pt-6">
+          <div className="max-w-6xl mx-auto flex gap-6">
+            {/* Main feed column */}
+            <div className="flex-1 max-w-2xl">
+              <UpdatesBar currentUser={currentUser} />
+              {currentUser && (
+                <>
+                  <Button onClick={() => setShowCreatePostDialog(true)} className="cu-button w-full cu-gradient mb-4"><Plus className="w-5 h-5 mr-2" />Post</Button>
+                  <Link to={createPageUrl("CreateProject")} className="block mb-4">
+                    <div className="cu-gradient rounded-xl p-4 sm:p-5 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0"><h3 className="font-bold text-base sm:text-lg mb-1">Got an idea?</h3><p className="text-purple-100 text-xs sm:text-sm">Create a project and find collaborators</p></div>
+                        <div className="flex-shrink-0 ml-3"><div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center"><Plus className="w-5 h-5 sm:w-6 sm:h-6" /></div></div>
+                      </div>
+                    </div>
+                  </Link>
+                </>
+              )}
+              <div className="relative mb-3">
+                <Input type="text" placeholder="Search posts and projects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-white" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              </div>
+              {currentUser && recommendedProjects.length > 0 && (
+                <ForYouSection
+                  projects={recommendedProjects}
+                  currentUser={currentUser}
+                  userInterests={userInterests}
+                  onApply={handleExpressInterest}
+                />
+              )}
+              <FeedList {...feedListProps} />
+            </div>
+
+            {/* Sticky sidebar */}
+            {currentUser && (
+              <aside className="hidden lg:block w-80 flex-shrink-0">
+                <div className="sticky top-20">
+                  <FeedSidebar currentUser={currentUser} />
                 </div>
-              </Link>
-            </>
-          )}
-          <div className="relative mb-3">
-            <Input type="text" placeholder="Search posts and projects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-white" />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              </aside>
+            )}
           </div>
-          {currentUser && (
-            <FeedRecommendations
-              projects={projects}
-              currentUser={currentUser}
-              userInterests={userInterests}
-              onApply={handleExpressInterest}
-              collaboratorProfilesMap={allCollaboratorProfiles}
-            />
-          )}
-          <FeedList {...feedListProps} />
         </div>
       </div>
     </>
