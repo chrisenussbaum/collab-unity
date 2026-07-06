@@ -1,0 +1,62 @@
+{
+  "name": "MarketplaceApplication",
+  "type": "object",
+  "properties": {
+    "listing_id": {
+      "type": "string",
+      "description": "ID of the listing being applied to"
+    },
+    "listing_title": {
+      "type": "string",
+      "description": "Title of the listing for context"
+    },
+    "listing_type": {
+      "type": "string",
+      "enum": [
+        "gig",
+        "service"
+      ],
+      "description": "Type of listing applied to"
+    },
+    "applicant_email": {
+      "type": "string",
+      "description": "Email of the applicant"
+    },
+    "applicant_name": {
+      "type": "string",
+      "description": "Display name of the applicant"
+    },
+    "applicant_avatar": {
+      "type": "string",
+      "description": "Avatar URL of the applicant"
+    },
+    "applicant_username": {
+      "type": "string",
+      "description": "Username of the applicant"
+    },
+    "message": {
+      "type": "string",
+      "description": "Application message or pitch"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Application status"
+    },
+    "poster_email": {
+      "type": "string",
+      "description": "Email of the listing poster for filtering"
+    }
+  },
+  "required": [
+    "listing_id",
+    "applicant_email",
+    "message",
+    "poster_email"
+  ]
+}

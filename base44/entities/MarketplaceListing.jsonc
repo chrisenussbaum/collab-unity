@@ -1,0 +1,112 @@
+{
+  "name": "MarketplaceListing",
+  "type": "object",
+  "properties": {
+    "listing_type": {
+      "type": "string",
+      "enum": [
+        "gig",
+        "service"
+      ],
+      "description": "Whether this is a gig posting or a service offering"
+    },
+    "title": {
+      "type": "string",
+      "description": "Listing title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Full description of the gig or service"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Design",
+        "Development",
+        "Marketing",
+        "Writing & Content",
+        "Video & Photo",
+        "Music & Audio",
+        "Business",
+        "Career Development",
+        "Resume Review",
+        "Coaching & Mentoring",
+        "Other"
+      ],
+      "description": "Listing category"
+    },
+    "skills_needed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Skills relevant to this listing"
+    },
+    "compensation_type": {
+      "type": "string",
+      "enum": [
+        "paid",
+        "unpaid",
+        "negotiable"
+      ],
+      "default": "negotiable",
+      "description": "Compensation type"
+    },
+    "compensation_amount": {
+      "type": "string",
+      "description": "Compensation details (e.g. '$500', '$25/hr', 'Equity only')"
+    },
+    "location": {
+      "type": "string",
+      "description": "Location for the gig or service"
+    },
+    "is_remote": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this can be done remotely"
+    },
+    "posted_by_email": {
+      "type": "string",
+      "description": "Email of the listing poster"
+    },
+    "posted_by_name": {
+      "type": "string",
+      "description": "Display name of the poster"
+    },
+    "posted_by_avatar": {
+      "type": "string",
+      "description": "Avatar URL of the poster"
+    },
+    "posted_by_username": {
+      "type": "string",
+      "description": "Username of the poster"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "closed",
+        "filled"
+      ],
+      "default": "open",
+      "description": "Current listing status"
+    },
+    "external_url": {
+      "type": "string",
+      "description": "Optional external URL for additional details"
+    },
+    "application_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of applications received"
+    }
+  },
+  "required": [
+    "listing_type",
+    "title",
+    "description",
+    "category",
+    "posted_by_email",
+    "posted_by_name"
+  ]
+}
