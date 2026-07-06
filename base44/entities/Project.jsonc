@@ -287,6 +287,21 @@
         }
       },
       "description": "Social media links for the project"
+    },
+    "bounty_amount": {
+      "type": "number",
+      "default": 0,
+      "description": "Payment amount offered for completing this gig (0 = not a paid gig)"
+    },
+    "bounty_currency": {
+      "type": "string",
+      "default": "USD",
+      "description": "Currency for the bounty amount"
+    },
+    "is_career_challenge": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this project is a career-readiness challenge with defined acceptance criteria"
     }
   },
   "required": [

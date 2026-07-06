@@ -11,6 +11,7 @@ import LearningHub from './pages/LearningHub';
 import NewsEntertainment from './pages/NewsEntertainment';
 import Resources from './pages/Resources';
 import Featured from './pages/Featured';
+import Gigs from './pages/Gigs';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
@@ -68,6 +69,7 @@ const AuthenticatedApp = () => {
       <Route path="/NewsEntertainment" element={<LayoutWrapper currentPageName="NewsEntertainment"><NewsEntertainment /></LayoutWrapper>} />
       <Route path="/Resources" element={<Resources />} />
       <Route path="/Featured" element={<Featured />} />
+      <Route path="/Gigs" element={<LayoutWrapper currentPageName="Gigs"><Gigs /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
