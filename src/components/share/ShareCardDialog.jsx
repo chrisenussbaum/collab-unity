@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Link2, Loader2, Share2, Twitter, Facebook, Linkedin, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
+import { buildSocialShareUrl } from "@/lib/shareUtils";
 
 const CU_PRIMARY = "#5B47DB";
 const CU_PRIMARY_DARK = "#4A37C0";
@@ -27,6 +28,11 @@ const classificationLabels = {
 export default function ShareCardDialog({ isOpen, onClose, type, data, shareUrl }) {
   const cardRef = useRef(null);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  // Build a social share URL that returns dynamic OG meta tags for social crawlers
+  const socialShareUrl = type === "profile"
+    ? buildSocialShareUrl("profile", { username: data?.profileUser?.username })
+    : buildSocialShareUrl("project", { id: data?.project?.id });
 
   const handleDownload = async () => {
     if (!cardRef.current) return;
@@ -52,7 +58,7 @@ export default function ShareCardDialog({ isOpen, onClose, type, data, shareUrl 
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareUrl).then(() => {
+    navigator.clipboard.writeText(socialShareUrl).then(() => {
       toast.success("Link copied to clipboard!");
     }).catch(() => {
       toast.error("Failed to copy link.");
@@ -62,7 +68,7 @@ export default function ShareCardDialog({ isOpen, onClose, type, data, shareUrl 
   const shareText = type === "profile"
     ? `Check out ${data?.profileUser?.full_name || "this user"}'s profile on Collab Unity!`
     : `Check out "${data?.project?.title || "this project"}" on Collab Unity!`;
-  const encodedUrl = encodeURIComponent(shareUrl);
+  const encodedUrl = encodeURIComponent(socialShareUrl);
   const encodedText = encodeURIComponent(shareText);
 
   const socialPlatforms = [
@@ -84,7 +90,7 @@ export default function ShareCardDialog({ isOpen, onClose, type, data, shareUrl 
         await navigator.share({
           title: type === "profile" ? `${data?.profileUser?.full_name || "User"} on Collab Unity` : `${data?.project?.title || "Project"} on Collab Unity`,
           text: shareText,
-          url: shareUrl,
+          url: socialShareUrl,
         });
       } catch (err) {
         // User cancelled - silent
