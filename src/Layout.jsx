@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, User as UserIcon, Lightbulb, Settings, Compass, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar, Briefcase } from "lucide-react";
+import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, User as UserIcon, Lightbulb, Settings, Compass, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar, Briefcase, ChevronDown } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import GlobalSearchBar from "./components/GlobalSearchBar";
 
@@ -435,9 +435,7 @@ export default function Layout({ children, currentPageName }) {
   const navigationItems = [
       { name: "Discover", path: createPageUrl("Discover"), icon: Compass },
     { name: "Feed", path: createPageUrl("Feed"), icon: LayoutGrid },
-    { name: "Gigs", path: createPageUrl("Gigs"), icon: Briefcase },
       ...(currentUser ? [
-      { name: "My Projects", path: createPageUrl("MyProjects"), icon: Lightbulb },
       { name: "Chat", path: createPageUrl("Chat"), icon: MessageCircle },
     ] : []),
   ];
@@ -447,7 +445,6 @@ export default function Layout({ children, currentPageName }) {
     { name: "Feed", path: createPageUrl("Feed"), icon: LayoutGrid },
       ...(currentUser ? [
       { name: "Create", path: createPageUrl("CreateProject"), icon: Plus, isCreateButton: true },
-      { name: "My Projects", path: createPageUrl("MyProjects"), icon: Lightbulb },
       { name: "Chat", path: createPageUrl("Chat"), icon: MessageCircle },
     ] : []),
   ];
@@ -1021,6 +1018,17 @@ export default function Layout({ children, currentPageName }) {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
+                    <Link to={createPageUrl("Gigs")} className="flex items-center cursor-pointer">
+                      <Briefcase className="cu-icon-sm mr-2" /> Browse Gigs
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={createPageUrl("MyProjects")} className="flex items-center cursor-pointer">
+                      <Lightbulb className="cu-icon-sm mr-2" /> My Projects
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
                     <Link to={createPageUrl("Leaderboard")} className="flex items-center cursor-pointer">
                       <Trophy className="cu-icon-sm mr-2" /> Leaderboard
                     </Link>
@@ -1085,18 +1093,41 @@ export default function Layout({ children, currentPageName }) {
                   </Link>
                 );
               })}
+
+              {currentUser && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors cu-text-responsive-sm text-gray-600 hover:text-purple-600 cursor-pointer">
+                      <Briefcase className="cu-icon-sm" />
+                      <span>Work</span>
+                      <ChevronDown className="cu-icon-sm" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center" className="w-48">
+                    <DropdownMenuItem asChild>
+                      <Link to={createPageUrl("Gigs")} className="flex items-center cursor-pointer">
+                        <Briefcase className="cu-icon-sm mr-2" /> Browse Gigs
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to={createPageUrl("MyProjects")} className="flex items-center cursor-pointer">
+                        <Lightbulb className="cu-icon-sm mr-2" /> My Projects
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to={createPageUrl("CreateProject")} className="flex items-center cursor-pointer">
+                        <Plus className="cu-icon-sm mr-2" /> Create Project
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
             
             <div className="flex items-center space-x-4 flex-shrink-0">
               {currentUser ? (
                 <>
-                  <Link to={createPageUrl("CreateProject")}>
-                    <Button style={{ background: 'var(--cu-primary)' }} className="text-white cu-text-responsive-sm hover:opacity-90">
-                      <Plus className="cu-icon-sm mr-2" />
-                      Create Project
-                    </Button>
-                  </Link>
-
                   <NotificationBell />
 
                   <DropdownMenu>
@@ -1115,6 +1146,17 @@ export default function Layout({ children, currentPageName }) {
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl(`UserProfile?username=${currentUser.username}`)} className="flex items-center cursor-pointer">
                           <Eye className="cu-icon-sm mr-2" /> View Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to={createPageUrl("Gigs")} className="flex items-center cursor-pointer">
+                          <Briefcase className="cu-icon-sm mr-2" /> Browse Gigs
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to={createPageUrl("MyProjects")} className="flex items-center cursor-pointer">
+                          <Lightbulb className="cu-icon-sm mr-2" /> My Projects
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -1160,7 +1202,7 @@ export default function Layout({ children, currentPageName }) {
       {/* Mobile/Tablet Bottom Navigation (visible on screens < 1024px) */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden z-50 safe-area-inset-bottom">
         <div className="relative pb-[18px] -mt-[5px]">
-          <div className={`grid h-[70px] ${currentUser ? 'grid-cols-5' : 'grid-cols-3'}`}>
+          <div className={`grid h-[70px] ${currentUser ? 'grid-cols-4' : 'grid-cols-3'}`}>
             {mobileNavItems.map((item, index) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
