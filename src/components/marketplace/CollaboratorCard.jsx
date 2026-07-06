@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, MessageCircle, MapPin, Briefcase, Eye, Volume2, Square, Award } from "lucide-react";
+import { Star, MessageCircle, MapPin, Briefcase, Eye, Volume2, Square } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
@@ -182,13 +182,6 @@ export default function CollaboratorCard({ user, currentUser, index = 0 }) {
               <span className="font-semibold">{user.project_count || 0}</span>
               <span className="text-gray-400">Projects</span>
             </div>
-            {user.bounty_project_count > 0 && (
-              <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                <Award className="w-3.5 h-3.5 text-amber-500" />
-                <span className="font-semibold">{user.bounty_project_count}</span>
-                <span className="text-gray-400">Gigs</span>
-              </div>
-            )}
             {user.review_count > 0 && (
               <div className="flex items-center gap-1.5 text-xs text-gray-600">
                 <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />

@@ -23,7 +23,6 @@ export default function Marketplace({ currentUser }) {
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [minRating, setMinRating] = useState(0);
   const [hasActiveProjects, setHasActiveProjects] = useState(false);
-  const [hasBountyProjects, setHasBountyProjects] = useState(false);
 
   const fetchProfiles = useCallback(async (pageNum = 1, append = false) => {
     if (pageNum === 1) {
@@ -37,7 +36,7 @@ export default function Marketplace({ currentUser }) {
         skills: selectedSkills,
         minRating,
         hasActiveProjects,
-        hasBountyProjects,
+        excludeEmail: currentUser?.email || '',
         page: pageNum,
         limit: 24,
       });
@@ -57,7 +56,7 @@ export default function Marketplace({ currentUser }) {
       setIsLoading(false);
       setLoadingMore(false);
     }
-  }, [search, selectedSkills, minRating, hasActiveProjects, hasBountyProjects]);
+  }, [search, selectedSkills, minRating, hasActiveProjects, currentUser]);
 
   // Debounced fetch on filter change
   useEffect(() => {
@@ -77,11 +76,10 @@ export default function Marketplace({ currentUser }) {
     setSelectedSkills([]);
     setMinRating(0);
     setHasActiveProjects(false);
-    setHasBountyProjects(false);
     setSearch("");
   };
 
-  const hasActiveFilters = selectedSkills.length > 0 || minRating > 0 || hasActiveProjects || hasBountyProjects || search;
+  const hasActiveFilters = selectedSkills.length > 0 || minRating > 0 || hasActiveProjects || search;
 
   return (
     <div className="cu-container cu-page">
@@ -92,7 +90,7 @@ export default function Marketplace({ currentUser }) {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Collaborator Marketplace</h1>
         </div>
         <p className="text-sm sm:text-base text-gray-500">
-          Find skilled professionals for your next project — browse by skills, ratings, and active gigs.
+          Find skilled professionals for your next project — browse by skills, ratings, and active projects.
         </p>
       </div>
 
@@ -128,8 +126,6 @@ export default function Marketplace({ currentUser }) {
               setMinRating={setMinRating}
               hasActiveProjects={hasActiveProjects}
               setHasActiveProjects={setHasActiveProjects}
-              hasBountyProjects={hasBountyProjects}
-              setHasBountyProjects={setHasBountyProjects}
               availableSkills={availableSkills}
               onClearAll={handleClearAll}
               totalCount={total}
@@ -148,8 +144,7 @@ export default function Marketplace({ currentUser }) {
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
                 {(selectedSkills.length > 0 ? 1 : 0) +
                   (minRating > 0 ? 1 : 0) +
-                  (hasActiveProjects ? 1 : 0) +
-                  (hasBountyProjects ? 1 : 0)}
+                  (hasActiveProjects ? 1 : 0)}
               </span>
             )}
           </Button>
@@ -177,8 +172,6 @@ export default function Marketplace({ currentUser }) {
                 setMinRating={setMinRating}
                 hasActiveProjects={hasActiveProjects}
                 setHasActiveProjects={setHasActiveProjects}
-                hasBountyProjects={hasBountyProjects}
-                setHasBountyProjects={setHasBountyProjects}
                 availableSkills={availableSkills}
                 onClearAll={handleClearAll}
                 totalCount={total}

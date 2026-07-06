@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
       skills = [],
       minRating = 0,
       hasActiveProjects = false,
-      hasBountyProjects = false,
+      excludeEmail = '',
       page = 1,
       limit = 24,
     } = body as any;
@@ -34,6 +34,7 @@ Deno.serve(async (req) => {
     const DEFAULT_COVER = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/cd4694e0a_purple-background.jpg';
 
     const publicUsers = (allUsers || []).filter(u => {
+      if (excludeEmail && u.email === excludeEmail) return false;
       return u.username && u.username.trim() !== ''
         && u.full_name && u.full_name.trim() !== ''
         && u.profile_image && u.profile_image.trim() !== '';
@@ -137,11 +138,6 @@ Deno.serve(async (req) => {
     // Has active projects filter
     if (hasActiveProjects) {
       profiles = profiles.filter(p => p.active_project_count > 0);
-    }
-
-    // Has bounty projects filter
-    if (hasBountyProjects) {
-      profiles = profiles.filter(p => p.bounty_project_count > 0);
     }
 
     // Sort: highest rated first, then most projects, then name

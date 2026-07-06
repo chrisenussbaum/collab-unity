@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Star, Search, X, SlidersHorizontal, Briefcase, Award } from "lucide-react";
+import { Star, Search, X, SlidersHorizontal, Briefcase } from "lucide-react";
 
 const RATING_OPTIONS = [
   { value: 0, label: "Any rating" },
@@ -20,8 +20,6 @@ export default function MarketplaceFilters({
   setMinRating,
   hasActiveProjects,
   setHasActiveProjects,
-  hasBountyProjects,
-  setHasBountyProjects,
   availableSkills,
   onClearAll,
   totalCount,
@@ -51,7 +49,7 @@ export default function MarketplaceFilters({
     .filter((s) => s.toLowerCase().includes(skillInput.toLowerCase()))
     .slice(0, 8);
 
-  const hasActiveFilters = selectedSkills.length > 0 || minRating > 0 || hasActiveProjects || hasBountyProjects;
+  const hasActiveFilters = selectedSkills.length > 0 || minRating > 0 || hasActiveProjects;
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-5">
@@ -158,19 +156,6 @@ export default function MarketplaceFilters({
           <Briefcase className="w-4 h-4" />
           Has active projects
           {hasActiveProjects && <X className="w-3 h-3 ml-auto" />}
-        </button>
-
-        <button
-          onClick={() => setHasBountyProjects(!hasBountyProjects)}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
-            hasBountyProjects
-              ? "bg-amber-50 border-amber-300 text-amber-700"
-              : "bg-white border-gray-200 text-gray-600 hover:border-amber-200"
-          }`}
-        >
-          <Award className="w-4 h-4" />
-          Has paid gigs
-          {hasBountyProjects && <X className="w-3 h-3 ml-auto" />}
         </button>
       </div>
     </div>
