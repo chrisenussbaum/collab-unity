@@ -5,8 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Loader2, Briefcase, HandHeart, Plus } from "lucide-react";
+import { X, Loader2, Briefcase, HandHeart, Plus, ChevronDown } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
@@ -159,16 +158,20 @@ export default function CreateListingDialog({ currentUser, defaultType = "gig", 
           {/* Category */}
           <div>
             <Label className="mb-1.5 block">Category *</Label>
-            <Select value={category} onValueChange={setCategory} required>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
+            <div className="relative">
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                required
+                className="w-full h-10 bg-white border border-gray-200 rounded-lg pl-3 pr-8 text-sm text-gray-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="">Select a category</option>
                 {CATEGORIES.map((cat) => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  <option key={cat} value={cat}>{cat}</option>
                 ))}
-              </SelectContent>
-            </Select>
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
           </div>
 
           {/* Skills */}
@@ -204,16 +207,18 @@ export default function CreateListingDialog({ currentUser, defaultType = "gig", 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="mb-1.5 block">Compensation</Label>
-              <Select value={compensationType} onValueChange={setCompensationType}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="unpaid">Unpaid</SelectItem>
-                  <SelectItem value="negotiable">Negotiable</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <select
+                  value={compensationType}
+                  onChange={(e) => setCompensationType(e.target.value)}
+                  className="w-full h-10 bg-white border border-gray-200 rounded-lg pl-3 pr-8 text-sm text-gray-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="paid">Paid</option>
+                  <option value="unpaid">Unpaid</option>
+                  <option value="negotiable">Negotiable</option>
+                </select>
+                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
             </div>
             <div>
               <Label className="mb-1.5 block">Amount (optional)</Label>

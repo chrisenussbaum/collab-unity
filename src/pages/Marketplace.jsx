@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChevronDown } from "lucide-react";
 import { Briefcase, HandHeart, Loader2, Plus, Search, X, LayoutList } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ListingCard from "@/components/marketplace/ListingCard";
@@ -165,28 +165,32 @@ export default function Marketplace({ currentUser }) {
                 </button>
               )}
             </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-[140px] sm:w-[180px] h-11 bg-white border-gray-200 rounded-xl shadow-sm">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+            <div className="relative">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-[140px] sm:w-[180px] h-11 bg-white border border-gray-200 rounded-xl shadow-sm pl-3 pr-8 text-sm font-medium text-gray-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="all">All Categories</option>
                 {CATEGORIES.map((cat) => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  <option key={cat} value={cat}>{cat}</option>
                 ))}
-              </SelectContent>
-            </Select>
-            <Select value={compensationFilter} onValueChange={setCompensationFilter}>
-              <SelectTrigger className="w-[120px] sm:w-[150px] h-11 bg-white border-gray-200 rounded-xl shadow-sm hidden sm:flex">
-                <SelectValue placeholder="Pay" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Pay Types</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="unpaid">Unpaid</SelectItem>
-                <SelectItem value="negotiable">Negotiable</SelectItem>
-              </SelectContent>
-            </Select>
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+            <div className="relative hidden sm:block">
+              <select
+                value={compensationFilter}
+                onChange={(e) => setCompensationFilter(e.target.value)}
+                className="w-[120px] sm:w-[150px] h-11 bg-white border border-gray-200 rounded-xl shadow-sm pl-3 pr-8 text-sm font-medium text-gray-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="all">All Pay Types</option>
+                <option value="paid">Paid</option>
+                <option value="unpaid">Unpaid</option>
+                <option value="negotiable">Negotiable</option>
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
           </div>
 
           {hasActiveFilters && (
