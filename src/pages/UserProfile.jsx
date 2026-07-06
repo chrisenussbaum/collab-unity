@@ -1319,6 +1319,12 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                         {profileUser?.username && (
                           <p className="text-sm sm:text-base text-gray-600 mb-2">@{profileUser.username}</p>
                         )}
+                        {(profileUser?.skills?.length > 0 && (collaboratorReviews.length > 0 || userProjects.length > 0)) && (
+                          <Link to={createPageUrl("Marketplace")} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-purple-100 to-indigo-100 border border-purple-200 text-xs font-semibold text-purple-700 hover:from-purple-200 hover:to-indigo-200 transition-all mb-2">
+                            <Sparkles className="w-3 h-3" />
+                            Marketplace Verified
+                          </Link>
+                        )}
                         {profileUser?.location && (
                           <div className="flex items-center justify-center md:justify-start text-gray-600 mb-2">
                             <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0" />
