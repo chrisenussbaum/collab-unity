@@ -42,11 +42,12 @@
       "type": "string",
       "enum": [
         "pending",
+        "interviewing",
         "accepted",
         "rejected"
       ],
       "default": "pending",
-      "description": "Application status"
+      "description": "Application status in the hiring pipeline"
     },
     "poster_email": {
       "type": "string",

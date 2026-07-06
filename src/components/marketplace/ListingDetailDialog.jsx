@@ -38,7 +38,7 @@ export default function ListingDetailDialog({ listing, currentUser, onClose, onL
   const [applications, setApplications] = useState([]);
   const [isLoadingApps, setIsLoadingApps] = useState(false);
   const [showAllDescription, setShowAllDescription] = useState(false);
-  const [appFilter, setAppFilter] = useState("all"); // all | pending | accepted | rejected
+  const [appFilter, setAppFilter] = useState("all"); // all | pending | interviewing | accepted | rejected
   const navigate = useNavigate();
 
   const isPoster = currentUser?.email === listing?.posted_by_email;
@@ -131,7 +131,17 @@ export default function ListingDetailDialog({ listing, currentUser, onClose, onL
     try {
       await base44.entities.MarketplaceApplication.update(appId, { status: newStatus });
       const app = applications.find((a) => a.id === appId);
-      if (app && newStatus === "accepted") {
+      if (app && newStatus === "interviewing") {
+        await base44.entities.Notification.create({
+          user_email: app.applicant_email,
+          title: `Interview started for "${listing.title}"`,
+          message: `${currentUser.full_name} moved your application to the interviewing stage.`,
+          type: "collaboration_request",
+          related_entity_id: listing.id,
+          actor_email: currentUser.email,
+          actor_name: currentUser.full_name,
+        });
+      } else if (app && newStatus === "accepted") {
         await base44.entities.Notification.create({
           user_email: app.applicant_email,
           title: `Application accepted for "${listing.title}"`,
@@ -153,7 +163,11 @@ export default function ListingDetailDialog({ listing, currentUser, onClose, onL
         });
       }
       setApplications(apps => apps.map(a => a.id === appId ? { ...a, status: newStatus } : a));
-      toast.success(newStatus === "accepted" ? "Application accepted" : "Application declined");
+      toast.success(
+        newStatus === "accepted" ? "Application accepted"
+          : newStatus === "interviewing" ? "Moved to interviewing"
+          : "Application declined"
+      );
     } catch (error) {
       console.error("Error updating application:", error);
       toast.error("Failed to update application status");
@@ -218,6 +232,7 @@ export default function ListingDetailDialog({ listing, currentUser, onClose, onL
 
   // Application filter counts
   const pendingCount = applications.filter(a => a.status === "pending").length;
+  const interviewingCount = applications.filter(a => a.status === "interviewing").length;
   const acceptedCount = applications.filter(a => a.status === "accepted").length;
   const rejectedCount = applications.filter(a => a.status === "rejected").length;
   const filteredApps = appFilter === "all"
@@ -399,6 +414,7 @@ export default function ListingDetailDialog({ listing, currentUser, onClose, onL
                 {[
                   { key: "all", label: "All", count: applications.length },
                   { key: "pending", label: "Pending", count: pendingCount },
+                  { key: "interviewing", label: "Interviewing", count: interviewingCount },
                   { key: "accepted", label: "Accepted", count: acceptedCount },
                   { key: "rejected", label: "Declined", count: rejectedCount },
                 ].map((tab) => (
@@ -442,6 +458,7 @@ export default function ListingDetailDialog({ listing, currentUser, onClose, onL
                     app={app}
                     onAccept={(id) => handleUpdateAppStatus(id, "accepted")}
                     onDecline={(id) => handleUpdateAppStatus(id, "rejected")}
+                    onAdvance={(id) => handleUpdateAppStatus(id, "interviewing")}
                     onMessage={(email) => handleStartChat(email)}
                   />
                 ))}

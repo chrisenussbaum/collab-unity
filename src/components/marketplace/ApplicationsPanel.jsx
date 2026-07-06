@@ -12,7 +12,7 @@ export default function ApplicationsPanel({ currentUser, onSelectListing }) {
   const [listings, setListings] = useState([]);
   const [applications, setApplications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState("all"); // all | pending | accepted | rejected
+  const [filter, setFilter] = useState("all"); // all | pending | interviewing | accepted | rejected
   const [listingFilter, setListingFilter] = useState("all"); // all | listingId
   const navigate = useNavigate();
 
@@ -60,7 +60,17 @@ export default function ApplicationsPanel({ currentUser, onSelectListing }) {
       await base44.entities.MarketplaceApplication.update(appId, { status: newStatus });
 
       if (app) {
-        if (newStatus === "accepted") {
+        if (newStatus === "interviewing") {
+          await base44.entities.Notification.create({
+            user_email: app.applicant_email,
+            title: `Interview started for "${app.listing_title}"`,
+            message: `${currentUser.full_name} moved your application to the interviewing stage.`,
+            type: "collaboration_request",
+            related_entity_id: app.listing_id,
+            actor_email: currentUser.email,
+            actor_name: currentUser.full_name,
+          });
+        } else if (newStatus === "accepted") {
           await base44.entities.Notification.create({
             user_email: app.applicant_email,
             title: `Application accepted for "${app.listing_title}"`,
@@ -84,7 +94,11 @@ export default function ApplicationsPanel({ currentUser, onSelectListing }) {
       }
 
       setApplications(apps => apps.map(a => a.id === appId ? { ...a, status: newStatus } : a));
-      toast.success(newStatus === "accepted" ? "Application accepted" : "Application declined");
+      toast.success(
+        newStatus === "accepted" ? "Application accepted"
+          : newStatus === "interviewing" ? "Moved to interviewing"
+          : "Application declined"
+      );
     } catch (error) {
       console.error("Error updating application:", error);
       toast.error("Failed to update application status");
@@ -124,6 +138,7 @@ export default function ApplicationsPanel({ currentUser, onSelectListing }) {
   };
 
   const pendingCount = applications.filter(a => a.status === "pending").length;
+  const interviewingCount = applications.filter(a => a.status === "interviewing").length;
   const acceptedCount = applications.filter(a => a.status === "accepted").length;
   const rejectedCount = applications.filter(a => a.status === "rejected").length;
 
@@ -173,6 +188,7 @@ export default function ApplicationsPanel({ currentUser, onSelectListing }) {
   const filterTabs = [
     { key: "all", label: "All", count: applications.length },
     { key: "pending", label: "Pending", count: pendingCount },
+    { key: "interviewing", label: "Interviewing", count: interviewingCount },
     { key: "accepted", label: "Accepted", count: acceptedCount },
     { key: "rejected", label: "Declined", count: rejectedCount },
   ];
@@ -236,7 +252,7 @@ export default function ApplicationsPanel({ currentUser, onSelectListing }) {
       {filteredApps.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <Inbox className="w-10 h-10 text-gray-300 mb-2" />
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 capitalize">
             No {filter !== "all" ? filter : ""} applications{listingFilter !== "all" ? " for this listing" : ""}.
           </p>
         </div>
@@ -264,6 +280,7 @@ export default function ApplicationsPanel({ currentUser, onSelectListing }) {
                   app={app}
                   onAccept={(id) => handleUpdateStatus(id, "accepted")}
                   onDecline={(id) => handleUpdateStatus(id, "rejected")}
+                  onAdvance={(id) => handleUpdateStatus(id, "interviewing")}
                   onMessage={(email) => handleStartChat(email)}
                 />
               </div>
