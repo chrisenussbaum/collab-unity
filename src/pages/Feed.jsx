@@ -39,6 +39,7 @@ import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
 import FeedPostSkeleton from "@/components/skeletons/FeedPostSkeleton";
 import FeedPostItem from "@/components/feed/FeedPostItem";
 import UpdatesBar from "@/components/updates/UpdatesBar";
+import FeedRecommendations from "@/components/feed/FeedRecommendations";
 import MicrolinkPreview from "@/components/MicrolinkPreview";
 import ShareCardDialog from "@/components/share/ShareCardDialog";
 import { getShareBaseUrl } from "@/lib/shareUtils";
@@ -789,6 +790,15 @@ export default function Feed({ currentUser, authIsLoading }) {
                 </motion.div>
               </>
             )}
+            {currentUser && (
+              <FeedRecommendations
+                projects={projects}
+                currentUser={currentUser}
+                userInterests={userInterests}
+                onApply={handleExpressInterest}
+                collaboratorProfilesMap={allCollaboratorProfiles}
+              />
+            )}
             <FeedList {...feedListProps} />
           </div>
         </div>
@@ -813,6 +823,15 @@ export default function Feed({ currentUser, authIsLoading }) {
             <Input type="text" placeholder="Search posts and projects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-white" />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           </div>
+          {currentUser && (
+            <FeedRecommendations
+              projects={projects}
+              currentUser={currentUser}
+              userInterests={userInterests}
+              onApply={handleExpressInterest}
+              collaboratorProfilesMap={allCollaboratorProfiles}
+            />
+          )}
           <FeedList {...feedListProps} />
         </div>
       </div>
