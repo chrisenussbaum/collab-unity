@@ -2,12 +2,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronDown } from "lucide-react";
-import { Briefcase, HandHeart, Loader2, Plus, Search, X, LayoutList } from "lucide-react";
+import { Briefcase, HandHeart, Loader2, Plus, Search, X, LayoutList, Inbox } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ListingCard from "@/components/marketplace/ListingCard";
 import CreateListingDialog from "@/components/marketplace/CreateListingDialog";
 import ListingDetailDialog from "@/components/marketplace/ListingDetailDialog";
 import MyListingsPanel from "@/components/marketplace/MyListingsPanel";
+import ApplicationsPanel from "@/components/marketplace/ApplicationsPanel";
 
 const CATEGORIES = [
   "Design", "Development", "Marketing", "Writing & Content",
@@ -44,7 +45,7 @@ export default function Marketplace({ currentUser }) {
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab !== "my_listings") {
+    if (activeTab !== "my_listings" && activeTab !== "applications") {
       fetchListings();
     }
   }, [fetchListings, activeTab, refreshKey]);
@@ -89,6 +90,7 @@ export default function Marketplace({ currentUser }) {
     { id: "gigs", label: "Gigs", icon: Briefcase },
     { id: "services", label: "Services", icon: HandHeart },
     { id: "my_listings", label: "My Listings", icon: LayoutList },
+    { id: "applications", label: "Applications", icon: Inbox },
   ];
 
   const defaultListingType = activeTab === "services" ? "service" : "gig";
@@ -143,6 +145,11 @@ export default function Marketplace({ currentUser }) {
           currentUser={currentUser}
           onSelectListing={setSelectedListing}
           onRefreshKey={refreshKey}
+        />
+      ) : activeTab === "applications" ? (
+        <ApplicationsPanel
+          currentUser={currentUser}
+          onSelectListing={setSelectedListing}
         />
       ) : (
         <>
