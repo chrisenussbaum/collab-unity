@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Check, Clock, XCircle, MessageCircle, ChevronDown, ChevronUp, Video
+  Check, Clock, XCircle, MessageCircle, ChevronDown, ChevronUp, Video, Paperclip, FileText
 } from "lucide-react";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 
@@ -148,6 +148,31 @@ export default function ApplicantCard({ app, onAccept, onDecline, onMessage, onA
             </button>
           )}
         </div>
+
+        {/* Attachments */}
+        {app.attachments?.length > 0 && (
+          <div className="mt-2.5">
+            <p className="text-xs text-gray-500 mb-1.5 flex items-center gap-1"><Paperclip className="w-3 h-3" /> Attachments ({app.attachments.length})</p>
+            <div className="flex flex-wrap gap-1.5">
+              {app.attachments.map((att, idx) => (
+                <a
+                  key={idx}
+                  href={att.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 border border-gray-200 rounded-lg hover:border-purple-200 hover:bg-purple-50/50 transition-colors"
+                >
+                  {att.file_type === "image" ? (
+                    <img src={att.file_url} alt={att.file_name} className="w-6 h-6 rounded object-cover" />
+                  ) : (
+                    <FileText className="w-3.5 h-3.5 text-gray-500" />
+                  )}
+                  <span className="text-[10px] text-gray-600 truncate max-w-[100px]">{att.file_name || att.file_type}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Status tracker */}
         <StatusTracker status={app.status} />

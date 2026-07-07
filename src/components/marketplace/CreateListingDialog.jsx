@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { X, Loader2, Briefcase, HandHeart, Plus, ChevronDown } from "lucide-react";
+import { X, Loader2, Briefcase, HandHeart, Plus, ChevronDown, Image as ImageIcon, Upload, Trash2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
@@ -27,6 +27,9 @@ export default function CreateListingDialog({ currentUser, defaultType = "gig", 
   const [location, setLocation] = useState("");
   const [isRemote, setIsRemote] = useState(true);
   const [externalUrl, setExternalUrl] = useState("https://");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [mediaAttachments, setMediaAttachments] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const addSkill = () => {
@@ -46,6 +49,62 @@ export default function CreateListingDialog({ currentUser, defaultType = "gig", 
       e.preventDefault();
       addSkill();
     }
+  };
+
+  const getMediaType = (file) => {
+    if (file.type.startsWith("video/")) return "video";
+    return "image";
+  };
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+    setIsUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setLogoUrl(file_url);
+      toast.success("Logo uploaded");
+    } catch (error) {
+      toast.error("Failed to upload logo");
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleMediaUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setIsUploading(true);
+    try {
+      const uploaded = [];
+      for (const file of files) {
+        if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+          toast.error(`${file.name} is not an image or video`);
+          continue;
+        }
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        uploaded.push({
+          media_url: file_url,
+          media_type: getMediaType(file),
+        });
+      }
+      setMediaAttachments([...mediaAttachments, ...uploaded]);
+      toast.success(`${uploaded.length} file(s) uploaded`);
+    } catch (error) {
+      toast.error("Failed to upload media");
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const removeMedia = (idx) => {
+    setMediaAttachments(mediaAttachments.filter((_, i) => i !== idx));
   };
 
   const handleSubmit = async (e) => {
@@ -68,6 +127,8 @@ export default function CreateListingDialog({ currentUser, defaultType = "gig", 
         location: location.trim(),
         is_remote: isRemote,
         external_url: externalUrl.trim() === "https://" ? "" : externalUrl.trim(),
+        logo_url: logoUrl,
+        media_attachments: mediaAttachments,
         posted_by_email: currentUser.email,
         posted_by_name: currentUser.full_name,
         posted_by_avatar: currentUser.profile_image || "",
@@ -258,6 +319,72 @@ export default function CreateListingDialog({ currentUser, defaultType = "gig", 
               placeholder="https://..."
               type="url"
             />
+          </div>
+
+          {/* Logo / Brand Image */}
+          <div>
+            <Label className="mb-1.5 block">Logo / Brand Image (optional)</Label>
+            {logoUrl ? (
+              <div className="relative inline-block">
+                <img src={logoUrl} alt="Logo" className="w-20 h-20 rounded-lg object-cover border border-gray-200" />
+                <button
+                  type="button"
+                  onClick={() => setLogoUrl("")}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-sm hover:bg-red-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-purple-300 hover:bg-purple-50/50 transition-colors">
+                {isUploading ? (
+                  <Loader2 className="w-5 h-5 text-purple-500 animate-spin" />
+                ) : (
+                  <>
+                    <ImageIcon className="w-5 h-5 text-gray-400 mb-1" />
+                    <span className="text-xs text-gray-500">Click to upload a logo</span>
+                  </>
+                )}
+                <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={isUploading} />
+              </label>
+            )}
+          </div>
+
+          {/* Media Gallery */}
+          <div>
+            <Label className="mb-1.5 block">Media Gallery (optional)</Label>
+            <p className="text-xs text-gray-400 mb-2">Add photos or short videos to showcase your brand</p>
+            {mediaAttachments.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                {mediaAttachments.map((media, idx) => (
+                  <div key={idx} className="relative group">
+                    {media.media_type === "video" ? (
+                      <video src={media.media_url} className="w-full h-20 rounded-lg object-cover border border-gray-200" />
+                    ) : (
+                      <img src={media.media_url} alt="" className="w-full h-20 rounded-lg object-cover border border-gray-200" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeMedia(idx)}
+                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <label className="flex items-center justify-center gap-2 w-full h-10 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-purple-300 hover:bg-purple-50/50 transition-colors">
+              {isUploading ? (
+                <Loader2 className="w-4 h-4 text-purple-500 animate-spin" />
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 text-gray-400" />
+                  <span className="text-xs text-gray-500">Add photos or videos</span>
+                </>
+              )}
+              <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleMediaUpload} disabled={isUploading} />
+            </label>
           </div>
 
           {/* Actions */}

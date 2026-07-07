@@ -99,6 +99,36 @@
       "type": "number",
       "default": 0,
       "description": "Number of applications received"
+    },
+    "logo_url": {
+      "type": "string",
+      "description": "Logo or brand image URL for the listing"
+    },
+    "media_attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "media_url": {
+            "type": "string",
+            "description": "URL of the media file (image or video)"
+          },
+          "media_type": {
+            "type": "string",
+            "enum": [
+              "image",
+              "video"
+            ],
+            "default": "image",
+            "description": "Type of media"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Optional caption for the media"
+          }
+        }
+      },
+      "description": "Media attachments to showcase the gig or service brand"
     }
   },
   "required": [

@@ -52,6 +52,34 @@
     "poster_email": {
       "type": "string",
       "description": "Email of the listing poster for filtering"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file_url": {
+            "type": "string",
+            "description": "URL of the uploaded file"
+          },
+          "file_type": {
+            "type": "string",
+            "enum": [
+              "image",
+              "video",
+              "pdf",
+              "file"
+            ],
+            "default": "file",
+            "description": "Type of attachment"
+          },
+          "file_name": {
+            "type": "string",
+            "description": "Original file name"
+          }
+        }
+      },
+      "description": "Documents and media attached to the application to showcase skills and expertise"
     }
   },
   "required": [

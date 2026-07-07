@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, HandHeart, MapPin, Users, DollarSign, Gift, CircleDollarSign } from "lucide-react";
+import { Briefcase, HandHeart, MapPin, Users, DollarSign, Gift, CircleDollarSign, ImageIcon } from "lucide-react";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 
 const COMPENSATION_STYLES = {
@@ -38,6 +38,13 @@ export default function ListingCard({ listing, onClick, index = 0 }) {
         <CardContent className="p-4 sm:p-5 flex flex-col flex-grow">
           {/* Badges row */}
           <div className="flex items-center gap-2 mb-3 flex-wrap">
+            {listing.logo_url && (
+              <img
+                src={listing.logo_url}
+                alt=""
+                className="w-10 h-10 rounded-lg object-cover border border-gray-200 flex-shrink-0"
+              />
+            )}
             <Badge className={`text-xs font-semibold ${isGig ? "bg-purple-100 text-purple-700 border-purple-200" : "bg-indigo-100 text-indigo-700 border-indigo-200"}`}>
               <TypeIcon className="w-3 h-3 mr-1" />
               {isGig ? "Gig" : "Service"}

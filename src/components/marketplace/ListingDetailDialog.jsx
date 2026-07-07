@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   X, Loader2, Briefcase, HandHeart, MapPin, Users, ExternalLink,
   Check, Clock, XCircle, MessageCircle, DollarSign, Gift, CircleDollarSign,
-  Calendar, Share2, ChevronDown, ChevronUp
+  Calendar, Share2, ChevronDown, ChevronUp, Paperclip, FileText, Image as ImageIcon, Upload, Trash2
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -39,6 +39,8 @@ export default function ListingDetailDialog({ listing, currentUser, onClose, onL
   const [isLoadingApps, setIsLoadingApps] = useState(false);
   const [showAllDescription, setShowAllDescription] = useState(false);
   const [appFilter, setAppFilter] = useState("all"); // all | pending | interviewing | accepted | rejected
+  const [attachments, setAttachments] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
   const navigate = useNavigate();
 
   const isPoster = currentUser?.email === listing?.posted_by_email;
@@ -84,6 +86,34 @@ export default function ListingDetailDialog({ listing, currentUser, onClose, onL
     }
   };
 
+  const handleAttachmentUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setIsUploading(true);
+    try {
+      const uploaded = [];
+      for (const file of files) {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        let fileType = "file";
+        if (file.type.startsWith("image/")) fileType = "image";
+        else if (file.type.startsWith("video/")) fileType = "video";
+        else if (file.type === "application/pdf") fileType = "pdf";
+        uploaded.push({ file_url, file_type: fileType, file_name: file.name });
+      }
+      setAttachments([...attachments, ...uploaded]);
+      toast.success(`${uploaded.length} file(s) uploaded`);
+    } catch (error) {
+      toast.error("Failed to upload file(s)");
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const removeAttachment = (idx) => {
+    setAttachments(attachments.filter((_, i) => i !== idx));
+  };
+
   const handleApply = async (e) => {
     e.preventDefault();
     if (!applyMessage.trim()) {
@@ -103,6 +133,7 @@ export default function ListingDetailDialog({ listing, currentUser, onClose, onL
         message: applyMessage.trim(),
         status: "pending",
         poster_email: listing.posted_by_email,
+        attachments: attachments,
       });
       await base44.entities.MarketplaceListing.update(listing.id, {
         application_count: (listing.application_count || 0) + 1,
@@ -322,6 +353,27 @@ export default function ListingDetailDialog({ listing, currentUser, onClose, onL
           )}
         </div>
 
+        {/* Logo & Media */}
+        {(listing.logo_url || listing.media_attachments?.length > 0) && (
+          <div className="px-5 sm:px-7 py-4 border-t border-gray-100">
+            <h2 className="text-base font-bold text-gray-900 mb-3">Brand Media</h2>
+            <div className="flex flex-wrap gap-3">
+              {listing.logo_url && (
+                <img src={listing.logo_url} alt="Logo" className="w-24 h-24 rounded-xl object-cover border border-gray-200" />
+              )}
+              {listing.media_attachments?.map((media, idx) => (
+                <div key={idx}>
+                  {media.media_type === "video" ? (
+                    <video src={media.media_url} controls className="w-24 h-24 rounded-xl object-cover border border-gray-200" />
+                  ) : (
+                    <img src={media.media_url} alt={media.caption || ""} className="w-24 h-24 rounded-xl object-cover border border-gray-200" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* About section */}
         <div className="px-5 sm:px-7 py-4 border-t border-gray-100">
           <h2 className="text-base font-bold text-gray-900 mb-2">
@@ -501,6 +553,49 @@ export default function ListingDetailDialog({ listing, currentUser, onClose, onL
                 required
                 className="resize-none"
               />
+              {/* Attachments */}
+              <div>
+                <p className="text-xs text-gray-500 mb-1.5">Attach documents, photos, or videos to showcase your expertise</p>
+                {attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {attachments.map((att, idx) => (
+                      <div key={idx} className="relative group">
+                        {att.file_type === "image" ? (
+                          <img src={att.file_url} alt={att.file_name} className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
+                        ) : att.file_type === "video" ? (
+                          <div className="w-16 h-16 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-gray-500" />
+                          </div>
+                        ) : (
+                          <div className="w-16 h-16 rounded-lg border border-gray-200 bg-red-50 flex flex-col items-center justify-center p-1">
+                            <FileText className="w-4 h-4 text-red-500" />
+                            <span className="text-[8px] text-red-600 truncate w-full text-center mt-0.5">{att.file_type === "pdf" ? "PDF" : "FILE"}</span>
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeAttachment(idx)}
+                          className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-sm"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                        <p className="text-[8px] text-gray-400 truncate w-16 mt-0.5 text-center">{att.file_name}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <label className="flex items-center justify-center gap-2 w-full h-9 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-purple-300 hover:bg-purple-50/50 transition-colors">
+                  {isUploading ? (
+                    <Loader2 className="w-4 h-4 text-purple-500 animate-spin" />
+                  ) : (
+                    <>
+                      <Paperclip className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="text-xs text-gray-500">Add files (PDF, images, videos)</span>
+                    </>
+                  )}
+                  <input type="file" accept="image/*,video/*,.pdf" multiple className="hidden" onChange={handleAttachmentUpload} disabled={isUploading} />
+                </label>
+              </div>
               <Button
                 type="submit"
                 disabled={isApplying}
