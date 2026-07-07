@@ -108,10 +108,10 @@ export default function Marketplace({ currentUser }) {
           {currentUser && (
             <Button
               onClick={() => setShowCreateDialog(true)}
-              className="bg-purple-600 hover:bg-purple-700 flex-shrink-0"
+              className="bg-[#5B47DB] hover:bg-[#4A37C0] flex-shrink-0 rounded-full"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Post Listing
+              {activeTab === "services" ? "Post a Service" : activeTab === "gigs" ? "Post a Gig" : "Post Listing"}
             </Button>
           )}
         </div>
@@ -144,11 +144,13 @@ export default function Marketplace({ currentUser }) {
           currentUser={currentUser}
           onSelectListing={setSelectedListing}
           onRefreshKey={refreshKey}
+          onCreateListing={() => setShowCreateDialog(true)}
         />
       ) : activeTab === "applications" ? (
         <ApplicationsPanel
           currentUser={currentUser}
           onSelectListing={setSelectedListing}
+          onCreateListing={() => setShowCreateDialog(true)}
         />
       ) : (
         <>

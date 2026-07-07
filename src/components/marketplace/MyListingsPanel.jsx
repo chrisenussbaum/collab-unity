@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Briefcase, HandHeart, Users, MoreVertical, Trash2, Ban, CheckCircle } from "lucide-react";
+import { Loader2, Briefcase, HandHeart, Users, MoreVertical, Trash2, Ban, CheckCircle, Plus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import ListingCard from "./ListingCard";
@@ -12,12 +12,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function MyListingsPanel({ currentUser, onSelectListing, onRefreshKey }) {
+export default function MyListingsPanel({ currentUser, onSelectListing, onRefreshKey, onCreateListing }) {
   const [listings, setListings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchListings = useCallback(async () => {
-    if (!currentUser?.email) return;
+    if (!currentUser?.email) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
       const results = await base44.entities.MarketplaceListing.filter(
@@ -73,9 +76,15 @@ export default function MyListingsPanel({ currentUser, onSelectListing, onRefres
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <Briefcase className="w-12 h-12 text-gray-300 mb-3" />
         <h3 className="font-semibold text-gray-900 mb-1">No listings yet</h3>
-        <p className="text-sm text-gray-500 max-w-sm">
+        <p className="text-sm text-gray-500 max-w-sm mb-4">
           Post a gig or list a service to start receiving applications.
         </p>
+        {onCreateListing && (
+          <Button onClick={onCreateListing} className="bg-[#5B47DB] hover:bg-[#4A37C0] rounded-full">
+            <Plus className="w-4 h-4 mr-2" />
+            Post a Listing
+          </Button>
+        )}
       </div>
     );
   }

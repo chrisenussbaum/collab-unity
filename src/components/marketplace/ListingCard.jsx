@@ -38,7 +38,14 @@ export default function ListingCard({ listing, onClick, index = 0 }) {
   const ThumbIcon = thumb.icon;
 
   // Display price: use compensation_amount if available, otherwise use the comp type label
-  const priceDisplay = listing.compensation_amount || comp.label;
+  // Prepend $ if the amount is numeric and doesn't already start with a currency symbol
+  const rawAmount = listing.compensation_amount;
+  let priceDisplay;
+  if (rawAmount) {
+    priceDisplay = /^\d/.test(rawAmount) ? `$${rawAmount}` : rawAmount;
+  } else {
+    priceDisplay = comp.label;
+  }
 
   return (
     <motion.div
