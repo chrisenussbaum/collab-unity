@@ -279,8 +279,8 @@ export default function ListingDetailDialog({ listing, currentUser, onClose, onL
               {compMeta.label}
             </span>
             {listing.compensation_amount && (
-              <span className="text-sm font-semibold text-gray-900">
-                {listing.compensation_amount}
+              <span className="text-sm font-semibold text-green-600 flex items-center gap-0.5">
+                <DollarSign className="w-3.5 h-3.5" />{listing.compensation_amount}
               </span>
             )}
             <span className="inline-flex items-center gap-1 text-xs text-gray-500">

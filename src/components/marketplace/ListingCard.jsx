@@ -89,7 +89,9 @@ export default function ListingCard({ listing, onClick, index = 0 }) {
               )
             )}
             {listing.compensation_amount && (
-              <span className="font-medium text-gray-700">{listing.compensation_amount}</span>
+              <span className="font-semibold text-green-600 flex items-center gap-0.5">
+                <DollarSign className="w-3 h-3" />{listing.compensation_amount}
+              </span>
             )}
             {listing.application_count > 0 && (
               <span className="flex items-center gap-1">
