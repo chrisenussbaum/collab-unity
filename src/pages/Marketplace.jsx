@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ChevronDown } from "lucide-react";
 import { Briefcase, HandHeart, Loader2, Plus, Search, X, LayoutList, Inbox } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ListingCard from "@/components/marketplace/ListingCard";
@@ -108,10 +109,10 @@ export default function Marketplace({ currentUser }) {
           {currentUser && (
             <Button
               onClick={() => setShowCreateDialog(true)}
-              className="bg-[#5B47DB] hover:bg-[#4A37C0] flex-shrink-0 rounded-full"
+              className="bg-purple-600 hover:bg-purple-700 flex-shrink-0"
             >
               <Plus className="w-4 h-4 mr-2" />
-              {activeTab === "services" ? "Post a Service" : activeTab === "gigs" ? "Post a Gig" : "Post Listing"}
+              Post Listing
             </Button>
           )}
         </div>
@@ -144,80 +145,59 @@ export default function Marketplace({ currentUser }) {
           currentUser={currentUser}
           onSelectListing={setSelectedListing}
           onRefreshKey={refreshKey}
-          onCreateListing={() => setShowCreateDialog(true)}
         />
       ) : activeTab === "applications" ? (
         <ApplicationsPanel
           currentUser={currentUser}
           onSelectListing={setSelectedListing}
-          onCreateListing={() => setShowCreateDialog(true)}
         />
       ) : (
         <>
-          {/* Search bar */}
-          <div className="relative mb-4">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search gigs and services..."
-              className="pl-10 h-12 text-base bg-white border-gray-200 rounded-full shadow-sm"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch("")}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          {/* Search + Filters bar */}
+          <div className="flex gap-2 mb-4 sm:mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={`Search ${activeTab}...`}
+                className="pl-10 h-11 text-base bg-white border-gray-200 rounded-xl shadow-sm"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <div className="relative">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-[140px] sm:w-[180px] h-11 bg-white border border-gray-200 rounded-xl shadow-sm pl-3 pr-8 text-sm font-medium text-gray-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          {/* Category filter chips */}
-          <div className="flex gap-1.5 mb-5 overflow-x-auto scrollbar-hide pb-1">
-            <button
-              onClick={() => setSelectedCategory("all")}
-              className={`text-xs font-medium px-3 py-1.5 rounded-full whitespace-nowrap transition-colors ${
-                selectedCategory === "all"
-                  ? "bg-[#5B47DB] text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              All
-            </button>
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(selectedCategory === cat ? "all" : cat)}
-                className={`text-xs font-medium px-3 py-1.5 rounded-full whitespace-nowrap transition-colors ${
-                  selectedCategory === cat
-                    ? "bg-[#5B47DB] text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                <option value="all">All Categories</option>
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+            <div className="relative hidden sm:block">
+              <select
+                value={compensationFilter}
+                onChange={(e) => setCompensationFilter(e.target.value)}
+                className="w-[120px] sm:w-[150px] h-11 bg-white border border-gray-200 rounded-xl shadow-sm pl-3 pr-8 text-sm font-medium text-gray-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
-                {cat}
-              </button>
-            ))}
-            <button
-              onClick={() => setCompensationFilter(compensationFilter === "paid" ? "all" : "paid")}
-              className={`text-xs font-medium px-3 py-1.5 rounded-full whitespace-nowrap transition-colors ${
-                compensationFilter === "paid"
-                  ? "bg-[#5B47DB] text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              Paid
-            </button>
-            <button
-              onClick={() => setCompensationFilter(compensationFilter === "negotiable" ? "all" : "negotiable")}
-              className={`text-xs font-medium px-3 py-1.5 rounded-full whitespace-nowrap transition-colors ${
-                compensationFilter === "negotiable"
-                  ? "bg-[#5B47DB] text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              Negotiable
-            </button>
+                <option value="all">All Pay Types</option>
+                <option value="paid">Paid</option>
+                <option value="unpaid">Unpaid</option>
+                <option value="negotiable">Negotiable</option>
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
           </div>
 
           {hasActiveFilters && (
@@ -258,7 +238,7 @@ export default function Marketplace({ currentUser }) {
               ) : null}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
               {filteredListings.map((listing, idx) => (
                 <ListingCard
                   key={listing.id}

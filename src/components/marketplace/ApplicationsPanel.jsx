@@ -8,7 +8,7 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import ApplicantCard from "./ApplicantCard";
 
-export default function ApplicationsPanel({ currentUser, onSelectListing, onCreateListing }) {
+export default function ApplicationsPanel({ currentUser, onSelectListing }) {
   const [listings, setListings] = useState([]);
   const [applications, setApplications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,10 +17,7 @@ export default function ApplicationsPanel({ currentUser, onSelectListing, onCrea
   const navigate = useNavigate();
 
   const fetchData = useCallback(async () => {
-    if (!currentUser?.email) {
-      setIsLoading(false);
-      return;
-    }
+    if (!currentUser?.email) return;
     setIsLoading(true);
     try {
       const userListings = await base44.entities.MarketplaceListing.filter(
@@ -167,15 +164,9 @@ export default function ApplicationsPanel({ currentUser, onSelectListing, onCrea
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <Inbox className="w-12 h-12 text-gray-300 mb-3" />
         <h3 className="font-semibold text-gray-900 mb-1">No listings yet</h3>
-        <p className="text-sm text-gray-500 max-w-sm mb-4">
+        <p className="text-sm text-gray-500 max-w-sm">
           Post a gig or service first — applications from interested users will appear here for you to review.
         </p>
-        {onCreateListing && (
-          <Button onClick={onCreateListing} className="bg-[#5B47DB] hover:bg-[#4A37C0] rounded-full">
-            <Briefcase className="w-4 h-4 mr-2" />
-            Post a Listing
-          </Button>
-        )}
       </div>
     );
   }
