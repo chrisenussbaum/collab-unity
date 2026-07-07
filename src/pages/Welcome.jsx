@@ -420,9 +420,9 @@ const HERO_TABS = [
 ];
 
 const HeroFeedTab = () => (
-  <div className="grid grid-cols-3 gap-3">
+  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
     {/* Left/center column */}
-    <div className="col-span-2 space-y-2">
+    <div className="col-span-1 sm:col-span-2 space-y-2">
       {/* Create post bar */}
       <div className="bg-[#5B47DB] text-white rounded-xl px-3 py-2 flex items-center justify-center gap-1.5 text-xs font-medium cursor-pointer hover:bg-[#4A37C0] transition-colors">
         <span className="text-base leading-none">+</span> Post
@@ -473,7 +473,7 @@ const HeroFeedTab = () => (
       ))}
     </div>
     {/* Right sidebar */}
-    <div className="col-span-1 space-y-3">
+    <div className="hidden sm:block col-span-1 space-y-3">
       {/* Explore */}
       <div>
         <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">Explore</p>
@@ -687,7 +687,7 @@ const HeroMockup = () => {
         <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-3">
           <img src={LOGO_URL} alt="CU" className="w-6 h-6 rounded-md object-cover flex-shrink-0" />
           {/* Search */}
-          <div className="relative flex-1 max-w-[160px]">
+          <div className="hidden md:block relative flex-1 max-w-[160px]">
             <Search className="w-2.5 h-2.5 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
             <div className="w-full pl-6 pr-2 py-1 text-[10px] bg-gray-50 border border-gray-200 rounded-lg text-gray-400">Search...</div>
           </div>
@@ -700,10 +700,10 @@ const HeroMockup = () => {
                 <button
                   key={t.label}
                   onClick={() => setActiveTab(i)}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors ${active ? "text-[#5B47DB]" : "text-gray-500 hover:text-gray-800"}`}
+                  className={`flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors ${active ? "text-[#5B47DB]" : "text-gray-500 hover:text-gray-800"}`}
                 >
                   <Icon className="w-3 h-3 flex-shrink-0" />
-                  <span>{t.label}</span>
+                  <span className="hidden sm:inline">{t.label}</span>
                 </button>
               );
             })}
@@ -711,7 +711,8 @@ const HeroMockup = () => {
           {/* Create + avatar */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <button className="flex items-center gap-1 bg-[#5B47DB] text-white text-[10px] font-medium px-2.5 py-1.5 rounded-lg hover:bg-[#4A37C0] transition-colors">
-              <span className="text-sm leading-none">+</span> Create Project
+              <span className="text-sm leading-none">+</span>
+              <span className="hidden sm:inline">Create Project</span>
             </button>
             <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&crop=faces" alt="User" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
           </div>
