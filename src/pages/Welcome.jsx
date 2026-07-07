@@ -93,41 +93,65 @@ const FeedMockup = () => {
   );
 };
 
-const DiscoverMockup = () => (
+const MarketplaceMockup = () => (
   <div className="space-y-3">
-    <div className="bg-purple-50 rounded-2xl p-4 border border-purple-100">
-      <div className="flex items-center gap-2 mb-2">
-        <Sparkles className="w-4 h-4 text-purple-600" />
-        <h4 className="font-semibold text-purple-900 text-sm">Recommended for You</h4>
+    {/* Search & filter bar */}
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3">
+      <div className="relative mb-2">
+        <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-gray-400" />
+        <div className="w-full pl-8 pr-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-lg text-gray-400">Search gigs and services...</div>
       </div>
-      <p className="text-xs text-purple-600 mb-3">Projects that match your skills and interests</p>
-      <div className="grid grid-cols-2 gap-2">
-        {[
-          { name: "Social Media Dashboard", match: "85%", img: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=80&h=80&fit=crop" },
-          { name: "E-commerce Platform", match: "78%", img: "https://images.unsplash.com/photo-1661956602116-aa6865609028?w=80&h=80&fit=crop" },
-        ].map((p, i) => (
-          <div key={i} className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <img src={p.img} alt={p.name} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
-              <div><p className="text-xs font-semibold text-gray-900 leading-tight">{p.name}</p><span className="bg-purple-100 text-purple-700 text-[10px] px-1.5 py-0.5 rounded-full font-medium">{p.match} Match</span></div>
-            </div>
-            <button className="w-full text-[10px] py-1 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-1"><Briefcase className="w-3 h-3" />Apply</button>
-          </div>
+      <div className="flex gap-1.5 overflow-hidden">
+        {["All", "Design", "Development", "Marketing", "Writing", "Video"].map((c, i) => (
+          <span key={c} className={`text-[10px] px-2.5 py-1 rounded-full whitespace-nowrap font-medium ${i === 0 ? "bg-[#5B47DB] text-white" : "bg-gray-100 text-gray-600"}`}>{c}</span>
         ))}
       </div>
     </div>
-    <div className="grid grid-cols-2 gap-2">
+    {/* Gig cards */}
+    <div className="grid grid-cols-2 gap-2.5">
       {[
-        { name: "Mobile Fitness App", type: "Seeking Collaborators", img: "https://images.unsplash.com/photo-1461773518188-b3e86f98242f?w=80&h=80&fit=crop", members: 2, skills: ["Flutter", "Firebase"] },
-        { name: "Podcast Platform", type: "In Progress", img: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=80&h=80&fit=crop", members: 7, skills: ["Adobe", "YouTube"] },
-      ].map((p, i) => (
-        <div key={i} className="bg-white rounded-xl border-t-2 border-[#5B47DB] p-3 shadow-sm">
-          <div className="flex items-center gap-2 mb-1.5">
-            <img src={p.img} alt={p.name} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
-            <div><p className="text-xs font-bold text-gray-900 leading-tight">{p.name}</p><span className="text-[10px] text-blue-600 border border-blue-200 px-1 py-0.5 rounded-full">{p.type}</span></div>
+        { title: "Logo & Brand Identity Design", type: "Service", comp: "$250", compType: "paid", poster: "Sarah K.", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=faces", skills: ["Branding", "Illustrator"], img: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=80&h=80&fit=crop" },
+        { title: "React Developer Needed", type: "Gig", comp: "$45/hr", compType: "paid", poster: "Mike R.", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces", skills: ["React", "Node.js"], img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=80&h=80&fit=crop" },
+      ].map((g, i) => (
+        <div key={i} className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-start gap-2 mb-2">
+            <img src={g.img} alt={g.title} className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${g.type === "Gig" ? "bg-purple-100 text-purple-700" : "bg-indigo-100 text-indigo-700"}`}>{g.type}</span>
+              <p className="text-xs font-bold text-gray-900 leading-tight mt-1 line-clamp-2">{g.title}</p>
+            </div>
           </div>
-          <div className="flex gap-1 mt-1.5 mb-2">{p.skills.map(s => <span key={s} className="bg-gray-100 text-gray-600 text-[10px] px-1.5 py-0.5 rounded">{s}</span>)}</div>
-          <button className="w-full text-[10px] py-1 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-1"><Briefcase className="w-3 h-3" />Apply</button>
+          <p className="text-sm font-semibold text-green-600 mb-2">{g.comp}</p>
+          <div className="flex flex-wrap gap-1 mb-2">{g.skills.map(s => <span key={s} className="bg-gray-100 text-gray-600 text-[10px] px-1.5 py-0.5 rounded">{s}</span>)}</div>
+          <div className="flex items-center gap-1.5 pt-2 border-t border-gray-100">
+            <img src={g.avatar} alt={g.poster} className="w-5 h-5 rounded-full object-cover" />
+            <span className="text-[10px] text-gray-500">{g.poster}</span>
+            <button className="ml-auto text-[10px] py-1 px-2.5 rounded-full bg-[#5B47DB] text-white font-medium flex items-center gap-0.5"><Briefcase className="w-2.5 h-2.5" />Apply</button>
+          </div>
+        </div>
+      ))}
+    </div>
+    {/* Bottom row */}
+    <div className="grid grid-cols-2 gap-2.5">
+      {[
+        { title: "Social Media Manager", type: "Gig", comp: "Negotiable", poster: "Jen L.", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=faces", skills: ["Marketing", "Content"], img: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=80&h=80&fit=crop" },
+        { title: "Video Editor for YouTube", type: "Service", comp: "$30/hr", poster: "Alex T.", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=faces", skills: ["Premiere", "After FX"], img: "https://images.unsplash.com/photo-1492619375914-88005aa9e8fb?w=80&h=80&fit=crop" },
+      ].map((g, i) => (
+        <div key={i} className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-start gap-2 mb-2">
+            <img src={g.img} alt={g.title} className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${g.type === "Gig" ? "bg-purple-100 text-purple-700" : "bg-indigo-100 text-indigo-700"}`}>{g.type}</span>
+              <p className="text-xs font-bold text-gray-900 leading-tight mt-1 line-clamp-2">{g.title}</p>
+            </div>
+          </div>
+          <p className="text-sm font-semibold text-green-600 mb-2">{g.comp}</p>
+          <div className="flex flex-wrap gap-1 mb-2">{g.skills.map(s => <span key={s} className="bg-gray-100 text-gray-600 text-[10px] px-1.5 py-0.5 rounded">{s}</span>)}</div>
+          <div className="flex items-center gap-1.5 pt-2 border-t border-gray-100">
+            <img src={g.avatar} alt={g.poster} className="w-5 h-5 rounded-full object-cover" />
+            <span className="text-[10px] text-gray-500">{g.poster}</span>
+            <button className="ml-auto text-[10px] py-1 px-2.5 rounded-full border border-gray-200 text-gray-600 font-medium flex items-center gap-0.5 hover:bg-gray-50"><Briefcase className="w-2.5 h-2.5" />Apply</button>
+          </div>
         </div>
       ))}
     </div>
@@ -390,91 +414,160 @@ const NewsEntertainmentMockup = () => (
 
 const HERO_TABS = [
   { label: "Feed", icon: LayoutGrid, url: "collabunity.io/feed" },
-  { label: "Discover", icon: Compass, url: "collabunity.io/discover" },
+  { label: "Marketplace", icon: Briefcase, url: "collabunity.io/marketplace" },
   { label: "My Projects", icon: Folder, url: "collabunity.io/myprojects" },
   { label: "Chat", icon: MessageCircle, url: "collabunity.io/chat" },
 ];
 
 const HeroFeedTab = () => (
-  <div className="space-y-2">
-    {/* Create post bar */}
-    <div className="bg-[#5B47DB] text-white rounded-xl px-3 py-2 flex items-center justify-center gap-1.5 text-xs font-medium cursor-pointer hover:bg-[#4A37C0] transition-colors">
-      <span className="text-base leading-none">+</span> Post
-    </div>
-    {/* Got an idea banner */}
-    <div className="bg-gradient-to-r from-[#5B47DB] to-indigo-600 rounded-xl p-3 flex items-center justify-between">
-      <div><p className="text-white text-xs font-semibold">Got an idea?</p><p className="text-purple-200 text-[10px]">Create a project and find collaborators</p></div>
-      <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0"><span className="text-white text-sm leading-none">+</span></div>
-    </div>
-    {/* Search */}
-    <div className="relative"><Search className="w-3 h-3 absolute left-2.5 top-2 text-gray-400" /><div className="w-full pl-7 pr-2 py-1.5 text-[10px] bg-gray-50 border border-gray-200 rounded-lg text-gray-400">Search posts and projects...</div></div>
-    {/* Feed card */}
-    <div className="border border-gray-200 rounded-xl p-3 bg-white">
-      <div className="flex items-start justify-between mb-1.5">
-        <div className="flex items-center gap-2">
-          <img src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=80&h=80&fit=crop" alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
-          <div>
-            <p className="text-xs font-bold text-gray-900">Community Garden App</p>
-            <p className="text-[10px] text-gray-400">Taylor Moss · 2 days ago</p>
+  <div className="grid grid-cols-3 gap-3">
+    {/* Left/center column */}
+    <div className="col-span-2 space-y-2">
+      {/* Create post bar */}
+      <div className="bg-[#5B47DB] text-white rounded-xl px-3 py-2 flex items-center justify-center gap-1.5 text-xs font-medium cursor-pointer hover:bg-[#4A37C0] transition-colors">
+        <span className="text-base leading-none">+</span> Post
+      </div>
+      {/* Got an idea banner */}
+      <div className="bg-gradient-to-r from-[#5B47DB] to-indigo-600 rounded-xl p-3 flex items-center justify-between">
+        <div><p className="text-white text-xs font-semibold">Got an idea?</p><p className="text-purple-200 text-[10px]">Create a project and find collaborators</p></div>
+        <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0"><span className="text-white text-sm leading-none">+</span></div>
+      </div>
+      {/* Search */}
+      <div className="relative"><Search className="w-3 h-3 absolute left-2.5 top-2 text-gray-400" /><div className="w-full pl-7 pr-2 py-1.5 text-[10px] bg-gray-50 border border-gray-200 rounded-lg text-gray-400">Search posts and projects...</div></div>
+      {/* For You section header */}
+      <div className="flex items-center justify-between mt-1">
+        <div className="flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-[#5B47DB]" />
+          <p className="text-xs font-bold text-gray-900">For You</p>
+        </div>
+        <p className="text-[10px] text-[#5B47DB] font-medium">Based on your profile</p>
+      </div>
+      <p className="text-[10px] text-gray-400 -mt-1">Projects matched to your skills & interests</p>
+      {/* For You project cards */}
+      {[
+        { name: "UW Masters Digital Media", match: "7 match pts", skills: ["Intercultural Communication", "Digital Media"], location: "Seattle, WA", collaborating: 1, applied: false, img: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=80&h=80&fit=crop" },
+        { name: "Screen Time Challenge App", match: "5 match pts", skills: ["Mobile Development", "UI/UX Design"], location: "Remote", collaborating: 1, applied: true, img: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=80&h=80&fit=crop" },
+      ].map((p, i) => (
+        <div key={i} className="border border-gray-200 rounded-xl p-2.5 bg-white flex items-start gap-2">
+          <img src={p.img} alt={p.name} className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-1">
+              <p className="text-[11px] font-bold text-gray-900 truncate">{p.name}</p>
+              <span className="text-[9px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-medium flex-shrink-0">{p.match}</span>
+            </div>
+            <p className="text-[9px] text-gray-400 mt-0.5">Needs: {p.skills.join(", ")}</p>
+            <div className="flex items-center justify-between mt-1.5">
+              <div className="flex items-center gap-1.5">
+                <div className="flex -space-x-1">
+                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces" alt="" className="w-4 h-4 rounded-full object-cover border border-white" />
+                </div>
+                <span className="text-[9px] text-gray-400">{p.collaborating} collaborating</span>
+                <span className="text-[9px] text-gray-400 flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{p.location}</span>
+              </div>
+              <button className={`text-[9px] py-0.5 px-2 rounded-full font-medium flex items-center gap-0.5 ${p.applied ? "bg-gray-100 text-gray-400" : "border border-[#5B47DB] text-[#5B47DB]"}`}>
+                {p.applied ? "Applied" : "Apply to Join"}
+              </button>
+            </div>
           </div>
         </div>
-        <Share2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
-      </div>
-      <div className="flex gap-1 flex-wrap mb-1.5">
-        <span className="text-[10px] border border-gray-300 text-gray-600 rounded-full px-2 py-0.5">Seeking Collaborators</span>
-        <span className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">Collaborative</span>
-        <span className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">Nonprofit</span>
-      </div>
-      <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">Building a mobile app to help neighborhoods organize shared garden spaces, track plant schedules, and coordinate volunteers. Need designers and mobile devs...</p>
-      {/* Collaborator avatars */}
-      <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-gray-100">
-        <div className="flex -space-x-1.5">
-          {[
-            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces",
-            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=faces",
-            "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=faces",
-          ].map((src, i) => (
-            <img key={i} src={src} alt="" className="w-5 h-5 rounded-full object-cover border border-white" />
+      ))}
+    </div>
+    {/* Right sidebar */}
+    <div className="col-span-1 space-y-3">
+      {/* Explore */}
+      <div>
+        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">Explore</p>
+        <div className="space-y-1.5">
+          {[{ label: "Learning Hub", sub: "Courses & videos", icon: GraduationCap }, { label: "News & Entertainment", sub: "Trending news", icon: Newspaper }].map((b, i) => (
+            <div key={i} className="bg-white rounded-lg p-1.5 border border-gray-100 flex items-center gap-1.5 cursor-pointer hover:border-purple-200 transition-colors">
+              <div className="w-5 h-5 bg-purple-100 rounded-md flex items-center justify-center flex-shrink-0"><b.icon className="w-2.5 h-2.5 text-[#5B47DB]" /></div>
+              <div className="min-w-0"><p className="text-[9px] font-semibold text-gray-900 truncate">{b.label}</p><p className="text-[8px] text-gray-400">{b.sub}</p></div>
+            </div>
           ))}
         </div>
-        <span className="text-[10px] text-gray-400">3 collaborators</span>
+      </div>
+      {/* Suggested Collaborators */}
+      <div>
+        <div className="flex items-center gap-1 mb-1.5">
+          <Users className="w-3 h-3 text-[#5B47DB]" />
+          <p className="text-[9px] font-bold text-gray-900">Suggested Collaborators</p>
+        </div>
+        <p className="text-[8px] text-gray-400 mb-1.5">Based on your skills & interests</p>
+        <div className="space-y-1.5">
+          {[
+            { name: "Chris Nussbaum", skills: ["Web Dev", "UI/UX"], pts: "30", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces" },
+            { name: "nussbaumpdx", skills: ["Digital Health"], pts: "7", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=faces" },
+            { name: "Kristen Gallo", skills: ["Intercultural"], pts: "6", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=faces" },
+          ].map((c, i) => (
+            <div key={i} className="flex items-center gap-1.5 p-1 bg-white rounded-lg border border-gray-100">
+              <img src={c.avatar} alt={c.name} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[9px] font-semibold text-gray-900 truncate">{c.name}</p>
+                <p className="text-[8px] text-gray-400 truncate">{c.skills.join(" · ")}</p>
+              </div>
+              <span className="text-[8px] bg-purple-100 text-purple-700 px-1 py-0.5 rounded-full font-medium flex-shrink-0">{c.pts}</span>
+              <MessageCircle className="w-3 h-3 text-gray-400 flex-shrink-0" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   </div>
 );
 
-const HeroDiscoverTab = () => (
+const HeroMarketplaceTab = () => (
   <div className="space-y-2">
-    {/* Hero banner */}
-    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-3 text-center border border-purple-100">
-      <h3 className="font-bold text-gray-900 text-sm mb-0.5">Where <span className="text-[#5B47DB]">Ideas</span> Happen</h3>
-      <p className="text-[10px] text-gray-500 mb-2">Connect with talented professionals and collaborate.</p>
-      <div className="grid grid-cols-2 gap-1.5">
-        {[{ label: "Learning Hub", sub: "Courses & videos", icon: GraduationCap }, { label: "News", sub: "Trending news", icon: Newspaper }].map((b, i) => (
-          <div key={i} className="bg-white rounded-lg p-2 border border-gray-100 flex items-center gap-1.5 cursor-pointer hover:border-purple-200 transition-colors">
-            <div className="w-6 h-6 bg-purple-100 rounded-md flex items-center justify-center flex-shrink-0"><b.icon className="w-3 h-3 text-[#5B47DB]" /></div>
-            <div><p className="text-[10px] font-semibold text-gray-900">{b.label}</p><p className="text-[9px] text-gray-400">{b.sub}</p></div>
-          </div>
-        ))}
-      </div>
+    {/* Search */}
+    <div className="relative"><Search className="w-3 h-3 absolute left-2.5 top-2 text-gray-400" /><div className="w-full pl-7 pr-2 py-1.5 text-[10px] bg-gray-50 border border-gray-200 rounded-lg text-gray-400">Search gigs and services...</div></div>
+    {/* Category pills */}
+    <div className="flex gap-1 overflow-hidden">
+      {["All", "Design", "Development", "Marketing", "Writing"].map((c, i) => (
+        <span key={c} className={`text-[9px] px-2 py-0.5 rounded-full whitespace-nowrap ${i === 0 ? "bg-[#5B47DB] text-white" : "bg-gray-100 text-gray-500"}`}>{c}</span>
+      ))}
     </div>
-    {/* Tabs */}
-    <div className="grid grid-cols-2 gap-1 bg-gray-100 p-0.5 rounded-lg">
-      <div className="bg-white rounded-md py-1 text-center text-[10px] font-semibold text-gray-900">📊 Projects</div>
-      <div className="py-1 text-center text-[10px] font-medium text-gray-500">👥 Collaborators</div>
-    </div>
-    {/* Recommended */}
-    <div className="flex items-center gap-1 mb-1"><Sparkles className="w-3 h-3 text-purple-600" /><p className="text-[10px] font-semibold text-gray-900">Recommended for You</p></div>
+    {/* Gig cards */}
     <div className="grid grid-cols-2 gap-1.5">
       {[
-        { name: "UW Masters Digital Media", match: "7%", img: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=80&h=80&fit=crop", skills: ["Intercultural Communication", "Digital Media"] },
-        { name: "Screen Time Challenge App", match: "5%", img: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=80&h=80&fit=crop", skills: ["Mobile Development", "UI/UX Design"] },
-      ].map((p, i) => (
+        { title: "Logo & Brand Identity Design", type: "Service", comp: "$250", poster: "Sarah K.", skills: ["Branding", "Illustrator"], img: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=80&h=80&fit=crop", remote: true },
+        { title: "React Developer Needed", type: "Gig", comp: "$45/hr", poster: "Mike R.", skills: ["React", "Node.js"], img: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=80&h=80&fit=crop", remote: true },
+      ].map((g, i) => (
         <div key={i} className="bg-white border border-gray-200 rounded-xl p-2 hover:border-purple-200 transition-colors cursor-pointer">
-          <img src={p.img} alt={p.name} className="w-8 h-8 rounded-lg object-cover mb-1.5" />
-          <p className="text-[10px] font-semibold text-gray-900 leading-tight mb-1">{p.name}</p>
-          <span className="text-[9px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-medium">{p.match} Match</span>
-          <div className="flex flex-wrap gap-0.5 mt-1">{p.skills.map(s => <span key={s} className="text-[9px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded">{s}</span>)}</div>
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <img src={g.img} alt={g.title} className="w-7 h-7 rounded-lg object-cover flex-shrink-0" />
+            <div className="min-w-0">
+              <span className={`text-[8px] px-1 py-0.5 rounded-full font-medium ${g.type === "Gig" ? "bg-purple-100 text-purple-700" : "bg-indigo-100 text-indigo-700"}`}>{g.type}</span>
+            </div>
+          </div>
+          <p className="text-[10px] font-bold text-gray-900 leading-tight mb-1 line-clamp-2">{g.title}</p>
+          <p className="text-[10px] font-semibold text-green-600 mb-1">{g.comp}</p>
+          <div className="flex flex-wrap gap-0.5 mb-1.5">{g.skills.map(s => <span key={s} className="text-[8px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded">{s}</span>)}</div>
+          <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+            <span className="text-[8px] text-gray-400 flex items-center gap-0.5"><MapPin className="w-2 h-2" />{g.remote ? "Remote" : "On-site"}</span>
+            <span className="text-[8px] text-gray-400">by {g.poster}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+    {/* Bottom row */}
+    <div className="grid grid-cols-2 gap-1.5">
+      {[
+        { title: "Social Media Manager", type: "Gig", comp: "Negotiable", poster: "Jen L.", skills: ["Marketing", "Content"], img: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=80&h=80&fit=crop" },
+        { title: "Video Editor for YouTube", type: "Service", comp: "$30/hr", poster: "Alex T.", skills: ["Premiere", "After FX"], img: "https://images.unsplash.com/photo-1492619375914-88005aa9e8fb?w=80&h=80&fit=crop" },
+      ].map((g, i) => (
+        <div key={i} className="bg-white border border-gray-200 rounded-xl p-2 hover:border-purple-200 transition-colors cursor-pointer">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <img src={g.img} alt={g.title} className="w-7 h-7 rounded-lg object-cover flex-shrink-0" />
+            <div className="min-w-0">
+              <span className={`text-[8px] px-1 py-0.5 rounded-full font-medium ${g.type === "Gig" ? "bg-purple-100 text-purple-700" : "bg-indigo-100 text-indigo-700"}`}>{g.type}</span>
+            </div>
+          </div>
+          <p className="text-[10px] font-bold text-gray-900 leading-tight mb-1 line-clamp-2">{g.title}</p>
+          <p className="text-[10px] font-semibold text-green-600 mb-1">{g.comp}</p>
+          <div className="flex flex-wrap gap-0.5 mb-1.5">{g.skills.map(s => <span key={s} className="text-[8px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded">{s}</span>)}</div>
+          <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+            <span className="text-[8px] text-gray-400">by {g.poster}</span>
+            <button className="text-[8px] py-0.5 px-1.5 rounded-full border border-[#5B47DB] text-[#5B47DB] font-medium">Apply</button>
+          </div>
         </div>
       ))}
     </div>
@@ -579,7 +672,7 @@ const HeroChatTab = () => {
 
 const HeroMockup = () => {
   const [activeTab, setActiveTab] = useState(0);
-  const tabContent = [<HeroFeedTab />, <HeroDiscoverTab />, <HeroMyProjectsTab />, <HeroChatTab />];
+  const tabContent = [<HeroFeedTab />, <HeroMarketplaceTab />, <HeroMyProjectsTab />, <HeroChatTab />];
 
   return (
     <div className="mt-14 max-w-4xl mx-auto px-4">
@@ -681,14 +774,14 @@ const FeaturesShowcase = ({ onAuth }) => {
       icon: LayoutGrid,
     },
     {
-      eyebrow: "Discover",
-      title: "Find your perfect collaborators.",
-      subtitle: "Browse projects seeking help, apply to join, and connect with talented people who share your skills and interests.",
+      eyebrow: "Marketplace",
+      title: "Find gigs, services, and talent.",
+      subtitle: "Browse paid gigs and professional services, post opportunities, and connect with talented people ready to collaborate.",
       bg: "bg-white",
-      accentBg: "bg-gradient-to-br from-blue-500 to-cyan-500",
-      items: ["Project & Collaborator recommendations", "Filter by skill & industry", "Apply for Projects", "Collaborator profiles"],
-      mockup: <DiscoverMockup />,
-      icon: Compass,
+      accentBg: "bg-gradient-to-br from-[#5B47DB] to-purple-700",
+      items: ["Post gigs & service offerings", "Filter by category & skills", "Apply with one click", "Track applicant pipeline"],
+      mockup: <MarketplaceMockup />,
+      icon: Briefcase,
     },
     {
       eyebrow: "Chat",
