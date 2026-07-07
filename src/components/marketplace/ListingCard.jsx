@@ -2,27 +2,43 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Briefcase, HandHeart, MapPin, Users, DollarSign, Gift, CircleDollarSign } from "lucide-react";
+import { Briefcase, HandHeart, MapPin, DollarSign, Gift, CircleDollarSign, Sparkles } from "lucide-react";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 
 const COMPENSATION_STYLES = {
-  paid: { icon: DollarSign, className: "bg-green-50 border-green-200 text-green-700", label: "Paid" },
-  unpaid: { icon: Gift, className: "bg-gray-50 border-gray-200 text-gray-600", label: "Unpaid" },
-  negotiable: { icon: CircleDollarSign, className: "bg-amber-50 border-amber-200 text-amber-700", label: "Negotiable" },
+  paid: { icon: DollarSign, label: "Paid" },
+  unpaid: { icon: Gift, label: "Unpaid" },
+  negotiable: { icon: CircleDollarSign, label: "Negotiable" },
+};
+
+// Category-based gradient thumbnails (since listings don't have images)
+const CATEGORY_THUMBNAILS = {
+  "Design": { gradient: "from-pink-500 to-rose-500", icon: Sparkles },
+  "Development": { gradient: "from-blue-500 to-indigo-500", icon: Briefcase },
+  "Marketing": { gradient: "from-orange-500 to-amber-500", icon: Briefcase },
+  "Writing & Content": { gradient: "from-emerald-500 to-teal-500", icon: Briefcase },
+  "Video & Photo": { gradient: "from-purple-500 to-fuchsia-500", icon: Briefcase },
+  "Music & Audio": { gradient: "from-violet-500 to-purple-500", icon: Briefcase },
+  "Business": { gradient: "from-slate-600 to-gray-700", icon: Briefcase },
+  "Career Development": { gradient: "from-cyan-500 to-blue-500", icon: Briefcase },
+  "Resume Review": { gradient: "from-green-500 to-emerald-500", icon: Briefcase },
+  "Coaching & Mentoring": { gradient: "from-indigo-500 to-violet-500", icon: Briefcase },
+  "Other": { gradient: "from-gray-500 to-slate-600", icon: Briefcase },
 };
 
 export default function ListingCard({ listing, onClick, index = 0 }) {
   const isGig = listing.listing_type === "gig";
-  const typeIcon = isGig ? Briefcase : HandHeart;
-  const TypeIcon = typeIcon;
   const comp = COMPENSATION_STYLES[listing.compensation_type] || COMPENSATION_STYLES.negotiable;
-  const CompIcon = comp.icon;
 
   const profileUrl = listing.posted_by_username
     ? createPageUrl(`UserProfile?username=${listing.posted_by_username}`)
     : null;
+
+  const thumb = CATEGORY_THUMBNAILS[listing.category] || CATEGORY_THUMBNAILS["Other"];
+  const ThumbIcon = thumb.icon;
+
+  // Display price: use compensation_amount if available, otherwise use the comp type label
+  const priceDisplay = listing.compensation_amount || comp.label;
 
   return (
     <motion.div
@@ -31,96 +47,82 @@ export default function ListingCard({ listing, onClick, index = 0 }) {
       transition={{ duration: 0.3, delay: Math.min(index * 0.05, 0.4) }}
       className="h-full"
     >
-      <Card
+      <div
         onClick={() => onClick?.(listing)}
-        className="cu-card h-full flex flex-col bg-white border border-gray-200 hover:shadow-xl hover:border-purple-200 transition-all duration-300 cursor-pointer overflow-hidden"
+        className="h-full bg-white rounded-xl border border-gray-200 hover:shadow-lg hover:border-purple-200 transition-all duration-300 cursor-pointer overflow-hidden p-3 sm:p-4 flex flex-col"
       >
-        <CardContent className="p-4 sm:p-5 flex flex-col flex-grow">
-          {/* Badges row */}
-          <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <Badge className={`text-xs font-semibold ${isGig ? "bg-purple-100 text-purple-700 border-purple-200" : "bg-indigo-100 text-indigo-700 border-indigo-200"}`}>
-              <TypeIcon className="w-3 h-3 mr-1" />
+        {/* Header: thumbnail + type badge + title */}
+        <div className="flex items-start gap-2.5 mb-2.5">
+          <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${thumb.gradient} flex items-center justify-center flex-shrink-0`}>
+            <ThumbIcon className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full font-semibold mb-1 ${isGig ? "bg-purple-100 text-purple-700" : "bg-indigo-100 text-indigo-700"}`}>
               {isGig ? "Gig" : "Service"}
-            </Badge>
-            <Badge variant="outline" className="text-xs bg-gray-50 border-gray-200 text-gray-600">
-              {listing.category}
-            </Badge>
-            <Badge variant="outline" className={`text-xs ${comp.className}`}>
-              <CompIcon className="w-3 h-3 mr-1" />
-              {comp.label}
-            </Badge>
+            </span>
+            <h3 className="font-bold text-sm text-gray-900 leading-tight line-clamp-2">
+              {listing.title}
+            </h3>
           </div>
+        </div>
 
-          {/* Title + description */}
-          <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-1 line-clamp-2">
-            {listing.title}
-          </h3>
-          <p className="text-sm text-gray-600 line-clamp-3 mb-3 flex-grow">
-            {listing.description}
-          </p>
+        {/* Price */}
+        <p className="text-base font-bold text-green-600 mb-2">{priceDisplay}</p>
 
-          {/* Skills */}
-          {listing.skills_needed?.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-3">
-              {listing.skills_needed.slice(0, 3).map((skill, idx) => (
-                <Badge key={idx} variant="outline" className="text-xs bg-purple-50 border-purple-200 text-purple-700">
-                  {skill}
-                </Badge>
-              ))}
-              {listing.skills_needed.length > 3 && (
-                <Badge variant="outline" className="text-xs text-gray-500">
-                  +{listing.skills_needed.length - 3}
-                </Badge>
-              )}
-            </div>
+        {/* Skill tags */}
+        {listing.skills_needed?.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2.5 flex-grow">
+            {listing.skills_needed.slice(0, 4).map((skill, idx) => (
+              <span key={idx} className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">
+                {skill}
+              </span>
+            ))}
+            {listing.skills_needed.length > 4 && (
+              <span className="text-[10px] text-gray-400 px-1 py-0.5">
+                +{listing.skills_needed.length - 4}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Location */}
+        <div className="flex items-center gap-1 text-[11px] text-gray-400 mb-2.5">
+          <MapPin className="w-3 h-3" />
+          {listing.is_remote ? "Remote" : (listing.location || "Location TBD")}
+        </div>
+
+        {/* Footer: poster + Apply button */}
+        <div className="flex items-center gap-2 pt-2.5 border-t border-gray-100">
+          <OptimizedAvatar
+            src={listing.posted_by_avatar}
+            alt={listing.posted_by_name}
+            fallback={listing.posted_by_name?.[0] || "U"}
+            size="xs"
+            className="w-6 h-6 flex-shrink-0"
+          />
+          {profileUrl ? (
+            <Link
+              to={profileUrl}
+              onClick={(e) => e.stopPropagation()}
+              className="text-xs font-medium text-gray-600 hover:text-purple-600 transition-colors truncate"
+            >
+              {listing.posted_by_name}
+            </Link>
+          ) : (
+            <span className="text-xs font-medium text-gray-600 truncate">{listing.posted_by_name}</span>
           )}
-
-          {/* Meta row */}
-          <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
-            {listing.is_remote ? (
-              <span className="flex items-center gap-1">
-                <MapPin className="w-3 h-3" /> Remote
-              </span>
-            ) : (
-              listing.location && (
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3" /> {listing.location}
-                </span>
-              )
-            )}
-            {listing.compensation_amount && (
-              <span className="font-medium text-gray-700">{listing.compensation_amount}</span>
-            )}
-            {listing.application_count > 0 && (
-              <span className="flex items-center gap-1">
-                <Users className="w-3 h-3" /> {listing.application_count}
-              </span>
-            )}
-          </div>
-
-          {/* Poster */}
-          <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-            <OptimizedAvatar
-              src={listing.posted_by_avatar}
-              alt={listing.posted_by_name}
-              fallback={listing.posted_by_name?.[0] || "U"}
-              size="xs"
-              className="w-7 h-7"
-            />
-            {profileUrl ? (
-              <Link
-                to={profileUrl}
-                onClick={(e) => e.stopPropagation()}
-                className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
-              >
-                {listing.posted_by_name}
-              </Link>
-            ) : (
-              <span className="text-sm font-medium text-gray-700">{listing.posted_by_name}</span>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick?.(listing);
+            }}
+            className="ml-auto flex items-center gap-1 text-[11px] font-medium text-white bg-[#5B47DB] hover:bg-[#4A37C0] px-2.5 py-1 rounded-full transition-colors flex-shrink-0"
+          >
+            <Briefcase className="w-3 h-3" />
+            Apply
+          </button>
+        </div>
+      </div>
     </motion.div>
   );
 }
