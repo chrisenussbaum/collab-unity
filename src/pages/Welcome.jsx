@@ -495,9 +495,9 @@ const HeroFeedTab = () => (
         <p className="text-[8px] text-gray-400 mb-1.5">Based on your skills & interests</p>
         <div className="space-y-1.5">
           {[
-            { name: "Chris Nussbaum", skills: ["Web Dev", "UI/UX"], pts: "30", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces" },
-            { name: "nussbaumpdx", skills: ["Digital Health"], pts: "7", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=faces" },
-            { name: "Kristen Gallo", skills: ["Intercultural"], pts: "6", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=faces" },
+            { name: "Ant Edwards", skills: ["Web Dev", "UI/UX"], pts: "30", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces" },
+            { name: "Kal-El", skills: ["Digital Health"], pts: "7", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=faces" },
+            { name: "Jane Goodwin", skills: ["Intercultural"], pts: "6", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=faces" },
           ].map((c, i) => (
             <div key={i} className="flex items-center gap-1.5 p-1 bg-white rounded-lg border border-gray-100">
               <img src={c.avatar} alt={c.name} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
