@@ -511,27 +511,105 @@ export default function CreateListingDialog({ currentUser, defaultType = "gig", 
           {step === 4 && (
             <div className="max-w-lg mx-auto">
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                {/* Preview media thumbnail */}
+                {(logoUrl || mediaAttachments.length > 0) && (
+                  <div className="relative w-full h-40 bg-gray-100 overflow-hidden">
+                    {mediaAttachments.length > 0 ? (
+                      mediaAttachments[0].media_type === "video" ? (
+                        <video src={mediaAttachments[0].media_url} className="w-full h-full object-cover" muted />
+                      ) : (
+                        <img src={mediaAttachments[0].media_url} alt="" className="w-full h-full object-cover" />
+                      )
+                    ) : (
+                      <img src={logoUrl} alt="" className="w-full h-full object-cover" />
+                    )}
+                    <div className="absolute top-2 left-2">
+                      <Badge className={listingType === "gig" ? "bg-purple-600 text-white" : "bg-indigo-600 text-white"}>
+                        {listingType === "gig" ? <Briefcase className="w-2.5 h-2.5 mr-1" /> : <HandHeart className="w-2.5 h-2.5 mr-1" />}
+                        {listingType === "gig" ? "Gig" : "Service"}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
                 {/* Preview header */}
-                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3">
-                  <p className="text-white text-xs font-medium uppercase tracking-wide">Preview</p>
-                  <h3 className="text-white font-bold text-lg mt-0.5">{title || "Untitled Listing"}</h3>
+                <div className={`px-4 py-3 ${!logoUrl && mediaAttachments.length === 0 ? "bg-gradient-to-r from-purple-600 to-indigo-600" : "border-b border-gray-100"}`}>
+                  <p className={`${!logoUrl && mediaAttachments.length === 0 ? "text-white/70" : "text-gray-400"} text-xs font-medium uppercase tracking-wide`}>Preview</p>
+                  <h3 className={`font-bold text-lg mt-0.5 ${!logoUrl && mediaAttachments.length === 0 ? "text-white" : "text-gray-900"}`}>{title || "Untitled Listing"}</h3>
                 </div>
                 <div className="p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Badge className={listingType === "gig" ? "bg-purple-100 text-purple-700" : "bg-indigo-100 text-indigo-700"}>
-                      {listingType === "gig" ? <Briefcase className="w-3 h-3 mr-1" /> : <HandHeart className="w-3 h-3 mr-1" />}
-                      {listingType === "gig" ? "Gig" : "Service"}
-                    </Badge>
-                    {category && <Badge variant="outline" className="text-gray-600">{category}</Badge>}
-                  </div>
-                  {description && <p className="text-sm text-gray-600 line-clamp-4">{description}</p>}
-                  {skillsNeeded.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {skillsNeeded.map((s) => (
-                        <span key={s} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{s}</span>
-                      ))}
+                  {/* Badges */}
+                  {(!logoUrl && mediaAttachments.length === 0) && (
+                    <div className="flex items-center gap-2">
+                      <Badge className={listingType === "gig" ? "bg-purple-100 text-purple-700" : "bg-indigo-100 text-indigo-700"}>
+                        {listingType === "gig" ? <Briefcase className="w-3 h-3 mr-1" /> : <HandHeart className="w-3 h-3 mr-1" />}
+                        {listingType === "gig" ? "Gig" : "Service"}
+                      </Badge>
+                      {category && <Badge variant="outline" className="text-gray-600">{category}</Badge>}
                     </div>
                   )}
+                  {category && logoUrl && mediaAttachments.length === 0 && (
+                    <Badge variant="outline" className="text-gray-600">{category}</Badge>
+                  )}
+                  {category && (logoUrl || mediaAttachments.length > 0) && (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-gray-600">{category}</Badge>
+                    </div>
+                  )}
+
+                  {/* Service type */}
+                  {serviceType && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-gray-400 text-xs font-medium uppercase tracking-wide">Service Type:</span>
+                      <span className="text-gray-700 font-medium">{serviceType}</span>
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  {description && <p className="text-sm text-gray-600 line-clamp-4">{description}</p>}
+
+                  {/* Skills */}
+                  {skillsNeeded.length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">
+                        {listingType === "gig" ? "Skills Needed" : "Skills Offered"}
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {skillsNeeded.map((s) => (
+                          <span key={s} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{s}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Media gallery thumbnails */}
+                  {mediaAttachments.length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Media Gallery</p>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {mediaAttachments.slice(0, 4).map((media, idx) => (
+                          <div key={idx} className="w-full h-14 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                            {media.media_type === "video" ? (
+                              <video src={media.media_url} className="w-full h-full object-cover" muted />
+                            ) : (
+                              <img src={media.media_url} alt="" className="w-full h-full object-cover" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* External URL */}
+                  {externalUrl && externalUrl !== "https://" && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-gray-400 text-xs font-medium uppercase tracking-wide">Link:</span>
+                      <a href={externalUrl} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-700 font-medium truncate">
+                        {externalUrl}
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Compensation + Location */}
                   <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                     <span className="text-sm font-bold text-gray-900">
                       {compensationType === "paid" && compensationAmount
