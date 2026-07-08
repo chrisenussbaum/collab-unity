@@ -108,8 +108,7 @@ export default function MarketplaceListingFeedCard({ listing, currentUser, owner
     }
   };
 
-  const heroMedia = listing.media_attachments?.[0];
-  const heroImage = heroMedia?.media_url || listing.logo_url;
+  const heroImage = listing.logo_url;
 
   return (
     <>
@@ -126,19 +125,11 @@ export default function MarketplaceListingFeedCard({ listing, currentUser, owner
                 {/* Logo / Brand Image */}
                 {heroImage && (
                   <div className="flex-shrink-0">
-                    {heroMedia?.media_type === "video" ? (
-                      <video
-                        src={heroImage}
-                        className="w-12 h-12 rounded-lg object-cover border-2 border-gray-100 shadow-sm"
-                        muted
-                      />
-                    ) : (
-                      <img
-                        src={heroImage}
-                        alt={listing.title}
-                        className="w-12 h-12 rounded-lg object-cover border-2 border-gray-100 shadow-sm"
-                      />
-                    )}
+                    <img
+                      src={heroImage}
+                      alt={listing.title}
+                      className="w-12 h-12 rounded-lg object-cover border-2 border-gray-100 shadow-sm"
+                    />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
@@ -182,8 +173,8 @@ export default function MarketplaceListingFeedCard({ listing, currentUser, owner
           </CardHeader>
 
           <CardContent className="px-3 sm:px-4 md:px-6 pt-0 pb-3">
-            {/* Media gallery (if multiple images) */}
-            {listing.media_attachments?.length > 1 && (
+            {/* Media gallery (shown separately from the brand logo) */}
+            {listing.media_attachments?.length > 0 && (
               <div className="flex gap-2 mb-3 overflow-x-auto scrollbar-hide">
                 {listing.media_attachments.map((media, idx) => (
                   <div key={idx} className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-gray-200">
