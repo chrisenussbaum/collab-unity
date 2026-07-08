@@ -128,6 +128,7 @@ export default function CreateListingDialog({ currentUser, defaultType = "gig", 
   const canProceed = () => {
     if (step === 0) return title.trim().length > 0 && category;
     if (step === 1) return description.trim().length > 0;
+    if (step === 3) return !!logoUrl;
     return true;
   };
 
@@ -144,6 +145,7 @@ export default function CreateListingDialog({ currentUser, defaultType = "gig", 
         title: title.trim(),
         description: description.trim(),
         category,
+        service_type: serviceType,
         skills_needed: skillsNeeded,
         compensation_type: compensationType,
         compensation_amount: compensationAmount.trim(),
@@ -358,6 +360,24 @@ export default function CreateListingDialog({ currentUser, defaultType = "gig", 
                 <p className="text-xs text-gray-400 mt-1">Add up to 5 tags to help people find your listing.</p>
               </div>
 
+              {/* Service type */}
+              <div>
+                <Label className="mb-1.5 block text-sm font-semibold text-gray-900">Service Type (optional)</Label>
+                <div className="relative">
+                  <select
+                    value={serviceType}
+                    onChange={(e) => setServiceType(e.target.value)}
+                    className="w-full h-10 bg-white border border-gray-200 rounded-lg pl-3 pr-8 text-sm text-gray-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">Select a service type</option>
+                    {SERVICE_TYPES[listingType].map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
               <div>
                 <Label className="mb-1.5 block text-sm font-semibold text-gray-900">External URL (optional)</Label>
                 <Input
@@ -441,8 +461,11 @@ export default function CreateListingDialog({ currentUser, defaultType = "gig", 
           {step === 3 && (
             <div className="space-y-5 max-w-lg mx-auto">
               <div>
-                <Label className="mb-1.5 block text-sm font-semibold text-gray-900">Logo / Brand Image</Label>
-                <p className="text-xs text-gray-400 mb-2">This appears as the main thumbnail for your listing.</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <Label className="block text-sm font-semibold text-gray-900">Logo / Brand Image</Label>
+                  <span className="text-xs text-red-500 font-medium">* Required</span>
+                </div>
+                <p className="text-xs text-gray-400 mb-2">This appears as the main thumbnail for your listing and is required so it can be shown on the Feed.</p>
                 {logoUrl ? (
                   <div className="relative inline-block">
                     <img src={logoUrl} alt="Logo" className="w-24 h-24 rounded-lg object-cover border border-gray-200" />

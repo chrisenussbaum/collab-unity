@@ -35,6 +35,10 @@
       ],
       "description": "Listing category"
     },
+    "service_type": {
+      "type": "string",
+      "description": "Sub-type of the gig or service (e.g. One-time project, Ongoing work, Package deal)"
+    },
     "skills_needed": {
       "type": "array",
       "items": {
@@ -102,7 +106,7 @@
     },
     "logo_url": {
       "type": "string",
-      "description": "Logo or brand image URL for the listing"
+      "description": "Logo or brand image URL for the listing (required)"
     },
     "media_attachments": {
       "type": "array",
@@ -137,6 +141,7 @@
     "description",
     "category",
     "posted_by_email",
-    "posted_by_name"
+    "posted_by_name",
+    "logo_url"
   ]
 }

@@ -46,6 +46,7 @@ import ForYouSection from "@/components/discover/ForYouSection";
 import MicrolinkPreview from "@/components/MicrolinkPreview";
 import ShareCardDialog from "@/components/share/ShareCardDialog";
 import { getShareBaseUrl } from "@/lib/shareUtils";
+import MarketplaceListingFeedCard from "@/components/marketplace/MarketplaceListingFeedCard";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -428,6 +429,10 @@ const FeedList = ({ isLoading, displayedItems, isLoadingMore, currentUser, proje
         result.push(
           <ProjectPost key={`project-${item.id}`} project={item} owner={item.owner} currentUser={currentUser} projectApplauds={projectApplauds} onProjectUpdate={loadFeedData} onApplaudUpdate={handleApplaudUpdate} collaboratorProfilesMap={allCollaboratorProfiles} userInterests={userInterests} onExpressInterest={onExpressInterest} />
         );
+      } else if (item.itemType === 'listing') {
+        result.push(
+          <MarketplaceListingFeedCard key={`listing-${item.id}`} listing={item} currentUser={currentUser} owner={item.owner} />
+        );
       } else {
         result.push(
           <FeedPostItem key={`feedpost-${item.id}`} post={item} owner={item.owner} currentUser={currentUser} feedPostApplauds={feedPostApplauds} onPostDeleted={loadFeedData} onApplaudUpdate={handleApplaudUpdate} />
@@ -479,6 +484,7 @@ const FeedList = ({ isLoading, displayedItems, isLoadingMore, currentUser, proje
 export default function Feed({ currentUser, authIsLoading }) {
   const [projects, setProjects] = useState([]);
   const [feedPosts, setFeedPosts] = useState([]);
+  const [marketplaceListings, setMarketplaceListings] = useState([]);
   const [projectApplauds, setProjectApplauds] = useState([]);
   const [feedPostApplauds, setFeedPostApplauds] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -505,12 +511,17 @@ export default function Feed({ currentUser, authIsLoading }) {
   const { data: cachedFeedData, isLoading: isQueryLoading } = useQuery({
     queryKey: ['feed-projects', currentUser?.email],
     queryFn: async () => {
-      const [visibleProjectsData, initialFeedPostsData] = await Promise.all([
+      const [visibleProjectsData, initialFeedPostsData, marketplaceListingsData] = await Promise.all([
         withRetry(() => Project.filter({ is_visible_on_feed: true }, "-created_date")),
-        withRetry(() => FeedPost.filter({ is_visible: true }, "-created_date"))
+        withRetry(() => FeedPost.filter({ is_visible: true }, "-created_date")),
+        withRetry(() => base44.entities.MarketplaceListing.filter({ status: "open" }, "-created_date", 20)),
       ]);
 
-      const allOwnerEmails = [...new Set([...visibleProjectsData.map(p => p.created_by), ...initialFeedPostsData.map(fp => fp.created_by)])];
+      const allOwnerEmails = [...new Set([
+        ...visibleProjectsData.map(p => p.created_by),
+        ...initialFeedPostsData.map(fp => fp.created_by),
+        ...marketplaceListingsData.map(l => l.posted_by_email).filter(Boolean),
+      ])];
       const projectIds = visibleProjectsData.map(p => p.id);
       const feedPostIds = initialFeedPostsData.map(fp => fp.id);
 
@@ -528,6 +539,12 @@ export default function Feed({ currentUser, authIsLoading }) {
       const fullyPopulatedFeedPosts = initialFeedPostsData.map(post => ({
         ...post, owner: profilesMap[post.created_by] || { email: post.created_by, full_name: post.created_by.split('@')[0], username: null, profile_image: null }
       }));
+      const fullyPopulatedListings = marketplaceListingsData
+        .filter(l => l.logo_url)
+        .map(listing => ({
+          ...listing,
+          owner: profilesMap[listing.posted_by_email] || { email: listing.posted_by_email, full_name: listing.posted_by_name, username: listing.posted_by_username, profile_image: listing.posted_by_avatar }
+        }));
 
       const allCollabEmails = new Set();
       visibleProjectsData.forEach(p => { if (p.collaborator_emails) p.collaborator_emails.forEach(e => allCollabEmails.add(e)); });
@@ -540,7 +557,7 @@ export default function Feed({ currentUser, authIsLoading }) {
         } catch (error) { console.error("Error fetching collaborator profiles:", error); }
       }
 
-      return { projects: fullyPopulatedProjects, feedPosts: fullyPopulatedFeedPosts, projectApplauds: fetchedProjectApplauds, feedPostApplauds: fetchedFeedPostApplauds, collaboratorProfiles: collabProfilesMap };
+      return { projects: fullyPopulatedProjects, feedPosts: fullyPopulatedFeedPosts, marketplaceListings: fullyPopulatedListings, projectApplauds: fetchedProjectApplauds, feedPostApplauds: fetchedFeedPostApplauds, collaboratorProfiles: collabProfilesMap };
     },
     enabled: !authIsLoading,
     staleTime: 0, gcTime: 0, refetchOnWindowFocus: true, refetchOnMount: 'always',
@@ -552,6 +569,7 @@ export default function Feed({ currentUser, authIsLoading }) {
     if (cachedFeedData && !isQueryLoading) {
       setProjects(cachedFeedData.projects);
       setFeedPosts(cachedFeedData.feedPosts);
+      setMarketplaceListings(cachedFeedData.marketplaceListings || []);
       setProjectApplauds(cachedFeedData.projectApplauds);
       setFeedPostApplauds(cachedFeedData.feedPostApplauds);
       setAllCollaboratorProfiles(cachedFeedData.collaboratorProfiles);
@@ -566,10 +584,11 @@ export default function Feed({ currentUser, authIsLoading }) {
   const allFeedItems = React.useMemo(() => {
     const combined = [
       ...projects.map(p => ({ ...p, itemType: 'project', sortDate: new Date(p.created_date) })),
-      ...feedPosts.map(fp => ({ ...fp, itemType: 'feedPost', sortDate: new Date(fp.created_date) }))
+      ...feedPosts.map(fp => ({ ...fp, itemType: 'feedPost', sortDate: new Date(fp.created_date) })),
+      ...marketplaceListings.map(l => ({ ...l, itemType: 'listing', sortDate: new Date(l.created_date) })),
     ];
     return combined.sort((a, b) => b.sortDate - a.sortDate);
-  }, [projects, feedPosts]);
+  }, [projects, feedPosts, marketplaceListings]);
 
   const loadMoreItems = useCallback(() => {
     if (isLoadingMore) return;
@@ -598,12 +617,13 @@ export default function Feed({ currentUser, authIsLoading }) {
   useEffect(() => {
     if (location.hash?.startsWith('#project-')) highlightedItemIdRef.current = location.hash.substring('#project-'.length);
     else if (location.hash?.startsWith('#feedpost-')) highlightedItemIdRef.current = location.hash.substring('#feedpost-'.length);
+    else if (location.hash?.startsWith('#listing-')) highlightedItemIdRef.current = location.hash.substring('#listing-'.length);
   }, [location.hash]);
 
   useEffect(() => {
     if (!isLoading && highlightedItemIdRef.current && !hasScrolledRef.current) {
       setTimeout(() => {
-        const el = document.getElementById(`project-${highlightedItemIdRef.current}`) || document.getElementById(`feedpost-${highlightedItemIdRef.current}`);
+        const el = document.getElementById(`project-${highlightedItemIdRef.current}`) || document.getElementById(`feedpost-${highlightedItemIdRef.current}`) || document.getElementById(`listing-${highlightedItemIdRef.current}`);
         if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('highlight-post'); setTimeout(() => el.classList.remove('highlight-post'), 3000); hasScrolledRef.current = true; }
       }, 500);
     }
@@ -720,6 +740,8 @@ export default function Feed({ currentUser, authIsLoading }) {
       filtered = filtered.filter(item => {
         if (item.itemType === 'project') {
           return item.title?.toLowerCase().includes(query) || item.description?.toLowerCase().includes(query) || item.location?.toLowerCase().includes(query) || item.industry?.toLowerCase().includes(query) || item.area_of_interest?.toLowerCase().includes(query) || item.skills_needed?.some(s => s.toLowerCase().includes(query));
+        } else if (item.itemType === 'listing') {
+          return item.title?.toLowerCase().includes(query) || item.description?.toLowerCase().includes(query) || item.category?.toLowerCase().includes(query) || item.skills_needed?.some(s => s.toLowerCase().includes(query));
         } else {
           return item.title?.toLowerCase().includes(query) || item.content?.toLowerCase().includes(query) || item.tags?.some(t => t.toLowerCase().includes(query));
         }
