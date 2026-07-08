@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronDown } from "lucide-react";
-import { Briefcase, HandHeart, Loader2, Plus, Search, X, LayoutList, Inbox } from "lucide-react";
+import { ChevronDown, Home } from "lucide-react";
+import { Briefcase, HandHeart, Loader2, Plus, Search, X, LayoutList, Inbox, SlidersHorizontal, Star } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ListingCard from "@/components/marketplace/ListingCard";
 import CreateListingDialog from "@/components/marketplace/CreateListingDialog";
 import ListingDetailDialog from "@/components/marketplace/ListingDetailDialog";
 import MyListingsPanel from "@/components/marketplace/MyListingsPanel";
 import ApplicationsPanel from "@/components/marketplace/ApplicationsPanel";
+import CategoryShowcase from "@/components/marketplace/CategoryShowcase";
+import PopularServices from "@/components/marketplace/PopularServices";
 
 const CATEGORIES = [
   "Design", "Development", "Marketing", "Writing & Content",
@@ -21,6 +23,7 @@ export default function Marketplace({ currentUser }) {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [compensationFilter, setCompensationFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
   const [listings, setListings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -59,6 +62,9 @@ export default function Marketplace({ currentUser }) {
     const matchesCategory = selectedCategory === "all" || listing.category === selectedCategory;
     const matchesComp = compensationFilter === "all" || listing.compensation_type === compensationFilter;
     return matchesSearch && matchesCategory && matchesComp;
+  }).sort((a, b) => {
+    if (sortBy === "popular") return (b.application_count || 0) - (a.application_count || 0);
+    return new Date(b.created_date) - new Date(a.created_date);
   });
 
   const handleClearFilters = () => {
@@ -95,9 +101,11 @@ export default function Marketplace({ currentUser }) {
 
   const defaultListingType = activeTab === "services" ? "service" : "gig";
 
+  const showBrowseContent = activeTab === "gigs" || activeTab === "services";
+
   return (
     <div className="cu-container cu-page">
-      {/* Header */}
+      {/* Hero header */}
       <div className="mb-5 sm:mb-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
@@ -112,14 +120,14 @@ export default function Marketplace({ currentUser }) {
               className="bg-purple-600 hover:bg-purple-700 flex-shrink-0"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Post Listing
+              {activeTab === "services" ? "List a Service" : "Post a Gig"}
             </Button>
           )}
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 mb-5 border-b border-gray-200">
+      <div className="flex items-center gap-1 mb-5 border-b border-gray-200 overflow-x-auto scrollbar-hide">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -127,7 +135,7 @@ export default function Marketplace({ currentUser }) {
             <button
               key={tab.id}
               onClick={() => { setActiveTab(tab.id); handleClearFilters(); }}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px ${
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px whitespace-nowrap ${
                 isActive
                   ? "border-purple-600 text-purple-600"
                   : "border-transparent text-gray-500 hover:text-gray-700"
@@ -153,8 +161,37 @@ export default function Marketplace({ currentUser }) {
         />
       ) : (
         <>
+          {/* Category showcase + Popular services (only when no active filters) */}
+          {!hasActiveFilters && (
+            <>
+              <CategoryShowcase
+                selectedCategory={selectedCategory}
+                onSelectCategory={setSelectedCategory}
+              />
+              {activeTab === "services" && (
+                <PopularServices onSelectService={(s) => setSelectedCategory(s.category)} />
+              )}
+            </>
+          )}
+
+          {/* Breadcrumb */}
+          {selectedCategory !== "all" && (
+            <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-3">
+              <Home className="w-3 h-3" />
+              <span>Marketplace</span>
+              <span className="text-gray-300">/</span>
+              <span className="text-gray-700 font-medium">{selectedCategory}</span>
+              <button
+                onClick={() => setSelectedCategory("all")}
+                className="ml-1 text-purple-600 hover:text-purple-700"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+
           {/* Search + Filters bar */}
-          <div className="flex gap-2 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row gap-2 mb-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
@@ -172,40 +209,58 @@ export default function Marketplace({ currentUser }) {
                 </button>
               )}
             </div>
-            <div className="relative">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-[140px] sm:w-[180px] h-11 bg-white border border-gray-200 rounded-xl shadow-sm pl-3 pr-8 text-sm font-medium text-gray-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
-              >
-                <option value="all">All Categories</option>
-                {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            </div>
-            <div className="relative hidden sm:block">
-              <select
-                value={compensationFilter}
-                onChange={(e) => setCompensationFilter(e.target.value)}
-                className="w-[120px] sm:w-[150px] h-11 bg-white border border-gray-200 rounded-xl shadow-sm pl-3 pr-8 text-sm font-medium text-gray-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
-              >
-                <option value="all">All Pay Types</option>
-                <option value="paid">Paid</option>
-                <option value="unpaid">Unpaid</option>
-                <option value="negotiable">Negotiable</option>
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <div className="flex gap-2">
+              <div className="relative">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full sm:w-[160px] h-11 bg-white border border-gray-200 rounded-xl shadow-sm pl-3 pr-8 text-sm font-medium text-gray-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="all">All Categories</option>
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+              <div className="relative hidden sm:block">
+                <select
+                  value={compensationFilter}
+                  onChange={(e) => setCompensationFilter(e.target.value)}
+                  className="w-[130px] h-11 bg-white border border-gray-200 rounded-xl shadow-sm pl-3 pr-8 text-sm font-medium text-gray-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="all">All Pay Types</option>
+                  <option value="paid">Paid</option>
+                  <option value="unpaid">Unpaid</option>
+                  <option value="negotiable">Negotiable</option>
+                </select>
+                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
             </div>
           </div>
 
-          {hasActiveFilters && (
-            <div className="mb-4 flex items-center gap-2">
-              <span className="text-xs text-gray-500">{filteredListings.length} result{filteredListings.length !== 1 ? "s" : ""}</span>
-              <button onClick={handleClearFilters} className="text-xs text-purple-600 hover:text-purple-700 font-medium">
-                Clear filters
-              </button>
+          {/* Results count + sort */}
+          {!isLoading && filteredListings.length > 0 && (
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs text-gray-500">
+                {filteredListings.length} result{filteredListings.length !== 1 ? "s" : ""}
+                {hasActiveFilters && (
+                  <button onClick={handleClearFilters} className="ml-2 text-purple-600 hover:text-purple-700 font-medium">
+                    Clear filters
+                  </button>
+                )}
+              </span>
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-gray-400" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="text-xs font-medium text-gray-600 bg-transparent border-0 cursor-pointer focus:outline-none"
+                >
+                  <option value="newest">Newest first</option>
+                  <option value="popular">Most popular</option>
+                </select>
+              </div>
             </div>
           )}
 
@@ -238,7 +293,7 @@ export default function Marketplace({ currentUser }) {
               ) : null}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredListings.map((listing, idx) => (
                 <ListingCard
                   key={listing.id}
