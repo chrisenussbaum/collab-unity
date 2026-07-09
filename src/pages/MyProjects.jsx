@@ -23,7 +23,8 @@ import {
   Search,
   Trash2,
   Archive,
-  ArchiveRestore
+  ArchiveRestore,
+  Send
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -35,6 +36,7 @@ import OptimizedAvatar from "@/components/OptimizedAvatar";
 import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
 import MilestoneProgress from "@/components/myprojects/MilestoneProgress";
 import WhileYouWereAway from "@/components/myprojects/WhileYouWereAway";
+import MyProjectApplicationsPanel from "@/components/myprojects/MyProjectApplicationsPanel";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -268,7 +270,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="public" className="flex items-center gap-1.5">
                 <Eye className="w-4 h-4" />
                 <span className="hidden sm:inline">Public</span>
@@ -284,11 +286,17 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                 <span className="hidden sm:inline">Archived</span>
                 <Badge variant="secondary" className="ml-1">{archivedProjectsCount}</Badge>
               </TabsTrigger>
+              <TabsTrigger value="my_applications" className="flex items-center gap-1.5">
+                <Send className="w-4 h-4" />
+                <span className="hidden sm:inline">Applied</span>
+              </TabsTrigger>
             </TabsList>
           </Tabs>
         </motion.div>
 
-        {activeTab === "archived" && archivedProjectsCount === 0 ? (
+        {activeTab === "my_applications" ? (
+          <MyProjectApplicationsPanel currentUser={currentUser} />
+        ) : activeTab === "archived" && archivedProjectsCount === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
