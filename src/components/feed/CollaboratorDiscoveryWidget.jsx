@@ -17,8 +17,8 @@ export default function CollaboratorDiscoveryWidget({ currentUser }) {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await base44.functions.invoke("getPublicUserProfilesForDiscovery");
-        const filtered = (response || []).filter((u) => u.email !== currentUser?.email);
+        const { data } = await base44.functions.invoke("getPublicUserProfilesForDiscovery");
+        const filtered = (data || []).filter((u) => u.email !== currentUser?.email);
         const shuffled = filtered.sort(() => Math.random() - 0.5);
         setUsers(shuffled.slice(0, 2));
       } catch (e) {

@@ -444,7 +444,7 @@ const FeedList = ({ isLoading, displayedItems, isLoadingMore, currentUser, proje
       if ((index + 1) % 5 === 0 && index < displayedItems.length - 1) {
         result.push(<ContentDiscoveryWidget key={`content-widget-${index}`} />);
       }
-      if ((index + 1) % 8 === 0 && index < displayedItems.length - 1) {
+      if ((index + 1) % 4 === 0 && index < displayedItems.length - 1 && index !== 4) {
         result.push(<CollaboratorDiscoveryWidget key={`collab-widget-${index}`} currentUser={currentUser} />);
       }
     });
