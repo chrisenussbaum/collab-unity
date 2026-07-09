@@ -13,6 +13,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
+// DialogFooter is used in the funding dialog below
 import {
   MessageCircle, Share2, Users, CheckCircle, Clock, Camera, Search, MapPin,
   Link as LinkIcon, Tag, Building2, ChevronLeft, ChevronRight, Sparkles, Plus,
