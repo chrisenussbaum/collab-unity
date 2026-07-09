@@ -5,13 +5,12 @@ import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import {
   MessageCircle, Briefcase, HandHeart, MapPin, DollarSign, Gift, CircleDollarSign,
-  ExternalLink, Users, Send, Loader2, CheckCircle,
+  ExternalLink, Users, Send, Loader2, CheckCircle, Paperclip, FileText, X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
@@ -32,6 +31,8 @@ export default function MarketplaceListingFeedCard({ listing, currentUser, owner
   const [applyMessage, setApplyMessage] = useState("");
   const [isApplying, setIsApplying] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
+  const [attachments, setAttachments] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
   const commentsRef = useRef(null);
 
   const isGig = listing.listing_type === "gig";
@@ -55,6 +56,34 @@ export default function MarketplaceListingFeedCard({ listing, currentUser, owner
     }).catch(() => {});
   }, [currentUser, listing.id, isOwner]);
 
+  const handleAttachmentUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setIsUploading(true);
+    try {
+      const uploaded = [];
+      for (const file of files) {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        let fileType = "file";
+        if (file.type.startsWith("image/")) fileType = "image";
+        else if (file.type.startsWith("video/")) fileType = "video";
+        else if (file.type === "application/pdf") fileType = "pdf";
+        uploaded.push({ file_url, file_type: fileType, file_name: file.name });
+      }
+      setAttachments([...attachments, ...uploaded]);
+      toast.success(`${uploaded.length} file(s) uploaded`);
+    } catch (error) {
+      toast.error("Failed to upload file(s)");
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const removeAttachment = (idx) => {
+    setAttachments(attachments.filter((_, i) => i !== idx));
+  };
+
   const handleApply = async () => {
     if (!currentUser || !applyMessage.trim()) return;
     setIsApplying(true);
@@ -70,6 +99,7 @@ export default function MarketplaceListingFeedCard({ listing, currentUser, owner
         message: applyMessage.trim(),
         status: "pending",
         poster_email: listing.posted_by_email,
+        attachments: attachments,
       });
 
       await base44.entities.MarketplaceListing.update(listing.id, {
@@ -92,6 +122,7 @@ export default function MarketplaceListingFeedCard({ listing, currentUser, owner
       setHasApplied(true);
       setShowApplyDialog(false);
       setApplyMessage("");
+      setAttachments([]);
       toast.success(`Application sent to ${listing.posted_by_name}!`);
     } catch (error) {
       console.error("Error applying:", error);
@@ -291,57 +322,85 @@ export default function MarketplaceListingFeedCard({ listing, currentUser, owner
       </motion.div>
 
       {/* Apply Dialog */}
-      <Dialog open={showApplyDialog} onOpenChange={setShowApplyDialog}>
+      <Dialog open={showApplyDialog} onOpenChange={(open) => { setShowApplyDialog(open); if (!open) { setApplyMessage(""); setAttachments([]); } }}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <TypeIcon className={`w-5 h-5 ${isGig ? "text-purple-600" : "text-indigo-600"}`} />
-              Apply to "{listing.title}"
+              Apply for this {isGig ? "gig" : "service"}
             </DialogTitle>
             <DialogDescription>
-              Send a message to {listing.posted_by_name} explaining why you'd be a great fit.
+              Write a brief message to {listing.posted_by_name} explaining why you're a great fit.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="space-y-2">
-              <Label htmlFor="apply-message">Your Message *</Label>
+            <form onSubmit={(e) => { e.preventDefault(); handleApply(); }} className="space-y-3">
               <Textarea
-                id="apply-message"
                 value={applyMessage}
                 onChange={(e) => setApplyMessage(e.target.value)}
-                placeholder="Introduce yourself, mention relevant skills, and express your interest..."
-                rows={6}
+                placeholder={`Introduce yourself and explain why you're a great fit for this ${isGig ? "gig" : "service"}...`}
+                rows={4}
+                required
                 className="resize-none"
               />
-              <p className="text-xs text-gray-500">{applyMessage.length} characters</p>
-            </div>
+              {/* Attachments */}
+              <div>
+                <p className="text-xs text-gray-500 mb-1.5">Attach documents, photos, or videos to showcase your expertise</p>
+                {attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {attachments.map((att, idx) => (
+                      <div key={idx} className="relative group">
+                        {att.file_type === "image" ? (
+                          <img src={att.file_url} alt={att.file_name} className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
+                        ) : att.file_type === "video" ? (
+                          <div className="w-16 h-16 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-gray-500" />
+                          </div>
+                        ) : (
+                          <div className="w-16 h-16 rounded-lg border border-gray-200 bg-red-50 flex flex-col items-center justify-center p-1">
+                            <FileText className="w-4 h-4 text-red-500" />
+                            <span className="text-[8px] text-red-600 truncate w-full text-center mt-0.5">{att.file_type === "pdf" ? "PDF" : "FILE"}</span>
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeAttachment(idx)}
+                          className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-sm"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                        <p className="text-[8px] text-gray-400 truncate w-16 mt-0.5 text-center">{att.file_name}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <label className="flex items-center justify-center gap-2 w-full h-9 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-purple-300 hover:bg-purple-50/50 transition-colors">
+                  {isUploading ? (
+                    <Loader2 className="w-4 h-4 text-purple-500 animate-spin" />
+                  ) : (
+                    <>
+                      <Paperclip className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="text-xs text-gray-500">Add files (PDF, images, videos)</span>
+                    </>
+                  )}
+                  <input type="file" accept="image/*,video/*,.pdf" multiple className="hidden" onChange={handleAttachmentUpload} disabled={isUploading} />
+                </label>
+              </div>
+              <Button
+                type="submit"
+                disabled={isApplying || !applyMessage.trim()}
+                className="w-full bg-purple-600 hover:bg-purple-700 rounded-full"
+              >
+                {isApplying ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...
+                  </>
+                ) : (
+                  <>Submit Application</>
+                )}
+              </Button>
+            </form>
           </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => { setShowApplyDialog(false); setApplyMessage(""); }}
-              disabled={isApplying}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleApply}
-              disabled={isApplying || !applyMessage.trim()}
-              className={isGig ? "bg-purple-600 hover:bg-purple-700" : "bg-indigo-600 hover:bg-indigo-700"}
-            >
-              {isApplying ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4 mr-2" />
-                  Send Application
-                </>
-              )}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
