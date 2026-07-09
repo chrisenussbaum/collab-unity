@@ -1,6 +1,43 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, BookOpen, Clock, ExternalLink, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Clock, ExternalLink, Loader2, Globe } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+
+const getFaviconUrl = (urlString) => {
+  try {
+    const hostname = new URL(urlString).hostname;
+    return `https://www.google.com/s2/favicons?sz=128&domain_url=${hostname}`;
+  } catch {
+    return null;
+  }
+};
+
+const ResourceImage = ({ url, title, source }) => {
+  const [imgError, setImgError] = useState(false);
+
+  if (imgError) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+        <img
+          src={getFaviconUrl(url)}
+          alt=""
+          className="w-12 h-12 mb-2 object-contain"
+          onError={(e) => { e.target.style.display = "none"; }}
+        />
+        <span className="text-xs font-semibold text-gray-500 truncate max-w-[80%]">{source}</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={`https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`}
+      alt={title}
+      className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+      loading="lazy"
+      onError={() => setImgError(true)}
+    />
+  );
+};
 
 export default function MarketplaceResources() {
   const scrollRef = useRef(null);
@@ -95,12 +132,7 @@ Only return resources you are confident actually exist. Use well-known sources l
               className="flex-shrink-0 w-[280px] sm:w-[320px] bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer group block"
             >
               <div className="relative h-36 overflow-hidden bg-gray-100">
-                <img
-                  src={`https://api.microlink.io/?url=${encodeURIComponent(resource.url)}&screenshot=true&meta=false&embed=screenshot.url`}
-                  alt={resource.title}
-                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                  onError={(e) => { e.target.style.display = "none"; }}
-                />
+                <ResourceImage url={resource.url} title={resource.title} source={resource.source} />
               </div>
               <div className="p-4">
                 <div className="flex items-center gap-1.5 mb-2">
