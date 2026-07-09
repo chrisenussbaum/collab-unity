@@ -167,44 +167,6 @@ export default function Marketplace({ currentUser }) {
         <MyApplicationsPanel currentUser={currentUser} />
       ) : (
         <>
-          {/* Gig vs Service distinction banner */}
-          {!hasActiveFilters && (
-            <div className={`mb-5 rounded-xl p-4 border ${activeTab === "gigs" ? "bg-purple-50 border-purple-200" : "bg-indigo-50 border-indigo-200"}`}>
-              <div className="flex items-start gap-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${activeTab === "gigs" ? "bg-purple-600" : "bg-indigo-600"}`}>
-                  {activeTab === "gigs" ? <Briefcase className="w-5 h-5 text-white" /> : <HandHeart className="w-5 h-5 text-white" />}
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm text-gray-900 mb-0.5">
-                    {activeTab === "gigs" ? "What is a Gig?" : "What is a Service?"}
-                  </h3>
-                  <p className="text-xs text-gray-600">
-                    {activeTab === "gigs"
-                      ? "Gigs are one-time or short-term tasks posted by people who need work done. Browse open gigs and apply directly to the poster."
-                      : "Services are ongoing offerings from professionals showcasing their expertise. Browse services and reach out to hire or collaborate."}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Category showcase + Popular sections (only when no active filters) */}
-          {!hasActiveFilters && (
-            <>
-              <CategoryShowcase
-                selectedCategory={selectedCategory}
-                onSelectCategory={setSelectedCategory}
-              />
-              {activeTab === "services" && (
-                <PopularServices onSelectService={(s) => setSelectedCategory(s.category)} />
-              )}
-              {activeTab === "gigs" && (
-                <PopularGigs onSelectGig={(g) => setSelectedCategory(g.category)} />
-              )}
-              <MarketplaceResources />
-            </>
-          )}
-
           {/* Breadcrumb */}
           {selectedCategory !== "all" && (
             <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-3">
@@ -335,6 +297,44 @@ export default function Marketplace({ currentUser }) {
                 />
               ))}
             </div>
+          )}
+
+          {/* Gig vs Service distinction banner */}
+          {!hasActiveFilters && (
+            <div className={`mt-8 mb-5 rounded-xl p-4 border ${activeTab === "gigs" ? "bg-purple-50 border-purple-200" : "bg-indigo-50 border-indigo-200"}`}>
+              <div className="flex items-start gap-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${activeTab === "gigs" ? "bg-purple-600" : "bg-indigo-600"}`}>
+                  {activeTab === "gigs" ? <Briefcase className="w-5 h-5 text-white" /> : <HandHeart className="w-5 h-5 text-white" />}
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-gray-900 mb-0.5">
+                    {activeTab === "gigs" ? "What is a Gig?" : "What is a Service?"}
+                  </h3>
+                  <p className="text-xs text-gray-600">
+                    {activeTab === "gigs"
+                      ? "Gigs are one-time or short-term tasks posted by people who need work done. Browse open gigs and apply directly to the poster."
+                      : "Services are ongoing offerings from professionals showcasing their expertise. Browse services and reach out to hire or collaborate."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Category showcase + Popular sections (only when no active filters) */}
+          {!hasActiveFilters && (
+            <>
+              <CategoryShowcase
+                selectedCategory={selectedCategory}
+                onSelectCategory={setSelectedCategory}
+              />
+              {activeTab === "services" && (
+                <PopularServices onSelectService={(s) => setSelectedCategory(s.category)} />
+              )}
+              {activeTab === "gigs" && (
+                <PopularGigs onSelectGig={(g) => setSelectedCategory(g.category)} />
+              )}
+              <MarketplaceResources />
+            </>
           )}
         </>
       )}

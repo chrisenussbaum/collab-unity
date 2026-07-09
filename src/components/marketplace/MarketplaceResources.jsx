@@ -1,47 +1,50 @@
-import React, { useRef } from "react";
-import { ChevronLeft, ChevronRight, BookOpen, Clock } from "lucide-react";
-
-const RESOURCES = [
-  {
-    title: "How to Write a Gig Title That Converts",
-    readTime: "5 MIN READ",
-    img: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=300&fit=crop",
-    description: "Learn the formula for crafting gig titles that attract the right applicants.",
-  },
-  {
-    title: "Setting the Right Price for Your Services",
-    readTime: "4 MIN READ",
-    img: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop",
-    description: "Pricing strategies to stay competitive while valuing your work.",
-  },
-  {
-    title: "Building a Portfolio That Stands Out",
-    readTime: "6 MIN READ",
-    img: "https://images.unsplash.com/photo-1492619375914-88005aa9e8fb?w=400&h=300&fit=crop",
-    description: "Showcase your best work with media galleries and brand images.",
-  },
-  {
-    title: "10 Skills That Employers Are Searching For",
-    readTime: "3 MIN READ",
-    img: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=300&fit=crop",
-    description: "Discover the most in-demand skills across categories right now.",
-  },
-  {
-    title: "How to Write a Winning Application",
-    readTime: "5 MIN READ",
-    img: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop",
-    description: "Tips for crafting applications that get noticed by gig posters.",
-  },
-  {
-    title: "Trust & Safety: Protecting Your Work",
-    readTime: "4 MIN READ",
-    img: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=300&fit=crop",
-    description: "Best practices for safe collaboration and payment protection.",
-  },
-];
+import React, { useState, useEffect, useRef } from "react";
+import { ChevronLeft, ChevronRight, BookOpen, Clock, ExternalLink, Loader2 } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 export default function MarketplaceResources() {
   const scrollRef = useRef(null);
+  const [resources, setResources] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        const result = await base44.integrations.Core.InvokeLLM({
+          prompt: `You are a content curator for a freelancer and gig marketplace platform.
+Find 6 real, helpful articles and resources for freelancers, gig workers, and service providers.
+Topics should cover: writing gig listings that convert, pricing your services competitively, building a standout portfolio, writing winning gig applications, in-demand skills for freelancers, client communication best practices, and protecting your work online.
+For each resource provide: title, url (a real existing URL to the article — not a homepage, the actual article), source (the website/publication name), summary (one sentence describing what the reader will learn), and readTime (e.g. "5 min read").
+Only return resources you are confident actually exist. Use well-known sources like Medium, Harvard Business Review, Upwork blog, Fiverr blog, Freelancers Union, Forbes, Inc, etc.`,
+          add_context_from_internet: true,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              resources: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string" },
+                    url: { type: "string" },
+                    source: { type: "string" },
+                    summary: { type: "string" },
+                    readTime: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+        });
+        setResources(result?.resources || []);
+      } catch (e) {
+        console.error("Error fetching marketplace resources:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchResources();
+  }, []);
 
   const scroll = (direction) => {
     if (!scrollRef.current) return;
@@ -56,55 +59,71 @@ export default function MarketplaceResources() {
           <h2 className="text-lg font-bold text-gray-900">Resources</h2>
           <p className="text-sm text-gray-500 mt-0.5">Insights, tips, and tools to help you create impactful gigs and services.</p>
         </div>
-        <div className="flex gap-2 flex-shrink-0">
-          <button
-            onClick={() => scroll(-1)}
-            className="w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4 text-gray-600" />
-          </button>
-          <button
-            onClick={() => scroll(1)}
-            className="w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors"
-          >
-            <ChevronRight className="w-4 h-4 text-gray-600" />
-          </button>
-        </div>
-      </div>
-      <div
-        ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1"
-      >
-        {RESOURCES.map((resource, i) => (
-          <div
-            key={i}
-            className="flex-shrink-0 w-[280px] sm:w-[320px] bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
-          >
-            <div className="relative h-36 overflow-hidden">
-              <img
-                src={resource.img}
-                alt={resource.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-            <div className="p-4">
-              <div className="flex items-center gap-1.5 mb-2">
-                <span className="w-1 h-1 rounded-full bg-gray-400" />
-                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1">
-                  <Clock className="w-2.5 h-2.5" />
-                  {resource.readTime}
-                </span>
-              </div>
-              <h3 className="font-bold text-sm text-gray-900 mb-1 leading-tight">{resource.title}</h3>
-              <p className="text-xs text-gray-500 line-clamp-2 mb-3">{resource.description}</p>
-              <div className="flex items-center gap-1 text-xs font-medium text-gray-900 group-hover:text-purple-600 transition-colors">
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>Read article</span>
-              </div>
-            </div>
+        {!isLoading && resources.length > 0 && (
+          <div className="flex gap-2 flex-shrink-0">
+            <button
+              onClick={() => scroll(-1)}
+              className="w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4 text-gray-600" />
+            </button>
+            <button
+              onClick={() => scroll(1)}
+              className="w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors"
+            >
+              <ChevronRight className="w-4 h-4 text-gray-600" />
+            </button>
           </div>
-        ))}
+        )}
       </div>
+
+      {isLoading ? (
+        <div className="flex items-center gap-3 py-8">
+          <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
+          <p className="text-sm text-gray-500">Curating fresh resources for you...</p>
+        </div>
+      ) : resources.length === 0 ? (
+        <p className="text-sm text-gray-400 py-8 text-center">No resources available right now. Check back later.</p>
+      ) : (
+        <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1">
+          {resources.map((resource, i) => (
+            <a
+              key={i}
+              href={resource.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0 w-[280px] sm:w-[320px] bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer group block"
+            >
+              <div className="relative h-36 overflow-hidden bg-gray-100">
+                <img
+                  src={`https://api.microlink.io/?url=${encodeURIComponent(resource.url)}&screenshot=true&meta=false&embed=screenshot.url`}
+                  alt={resource.title}
+                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => { e.target.style.display = "none"; }}
+                />
+              </div>
+              <div className="p-4">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="w-1 h-1 rounded-full bg-gray-400" />
+                  <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1">
+                    <Clock className="w-2.5 h-2.5" />
+                    {resource.readTime || "5 MIN READ"}
+                  </span>
+                </div>
+                <h3 className="font-bold text-sm text-gray-900 mb-1 leading-tight group-hover:text-purple-600 transition-colors line-clamp-2">{resource.title}</h3>
+                <p className="text-xs text-gray-500 line-clamp-2 mb-3">{resource.summary}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-gray-400 font-medium">{resource.source}</span>
+                  <div className="flex items-center gap-1 text-xs font-medium text-gray-900 group-hover:text-purple-600 transition-colors">
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>Read article</span>
+                  </div>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -42,6 +42,7 @@ import FeedPostItem from "@/components/feed/FeedPostItem";
 import UpdatesBar from "@/components/updates/UpdatesBar";
 import FeedRecommendations from "@/components/feed/FeedRecommendations";
 import ContentDiscoveryWidget from "@/components/feed/ContentDiscoveryWidget";
+import CollaboratorDiscoveryWidget from "@/components/feed/CollaboratorDiscoveryWidget";
 import FeedSidebar from "@/components/feed/FeedSidebar";
 import ForYouSection from "@/components/discover/ForYouSection";
 import MicrolinkPreview from "@/components/MicrolinkPreview";
@@ -442,6 +443,9 @@ const FeedList = ({ isLoading, displayedItems, isLoadingMore, currentUser, proje
       // Insert widget after every 5th item (but not after the last item)
       if ((index + 1) % 5 === 0 && index < displayedItems.length - 1) {
         result.push(<ContentDiscoveryWidget key={`content-widget-${index}`} />);
+      }
+      if ((index + 1) % 8 === 0 && index < displayedItems.length - 1) {
+        result.push(<CollaboratorDiscoveryWidget key={`collab-widget-${index}`} currentUser={currentUser} />);
       }
     });
     return result;
