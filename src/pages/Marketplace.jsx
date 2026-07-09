@@ -2,13 +2,14 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, Home } from "lucide-react";
-import { Briefcase, HandHeart, Loader2, Plus, Search, X, LayoutList, Inbox, SlidersHorizontal, Star } from "lucide-react";
+import { Briefcase, HandHeart, Loader2, Plus, Search, X, LayoutList, Inbox, SlidersHorizontal, Star, Send } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ListingCard from "@/components/marketplace/ListingCard";
 import CreateListingDialog from "@/components/marketplace/CreateListingDialog";
 import ListingDetailDialog from "@/components/marketplace/ListingDetailDialog";
 import MyListingsPanel from "@/components/marketplace/MyListingsPanel";
 import ApplicationsPanel from "@/components/marketplace/ApplicationsPanel";
+import MyApplicationsPanel from "@/components/marketplace/MyApplicationsPanel";
 import CategoryShowcase from "@/components/marketplace/CategoryShowcase";
 import PopularServices from "@/components/marketplace/PopularServices";
 import PopularGigs from "@/components/marketplace/PopularGigs";
@@ -50,7 +51,7 @@ export default function Marketplace({ currentUser }) {
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab !== "my_listings" && activeTab !== "applications") {
+    if (activeTab !== "my_listings" && activeTab !== "applications" && activeTab !== "my_applications") {
       fetchListings();
     }
   }, [fetchListings, activeTab, refreshKey]);
@@ -99,6 +100,7 @@ export default function Marketplace({ currentUser }) {
     { id: "services", label: "Services", icon: HandHeart },
     { id: "my_listings", label: "My Listings", icon: LayoutList },
     { id: "applications", label: "Applications", icon: Inbox },
+    { id: "my_applications", label: "My Applications", icon: Send },
   ];
 
   const defaultListingType = activeTab === "services" ? "service" : "gig";
@@ -161,6 +163,8 @@ export default function Marketplace({ currentUser }) {
           currentUser={currentUser}
           onSelectListing={setSelectedListing}
         />
+      ) : activeTab === "my_applications" ? (
+        <MyApplicationsPanel currentUser={currentUser} />
       ) : (
         <>
           {/* Gig vs Service distinction banner */}
