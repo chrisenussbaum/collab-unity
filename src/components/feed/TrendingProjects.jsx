@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Info, ArrowRight, Loader2, Flame } from "lucide-react";
+import { Info, Loader2, Flame } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import { getTrendingProjects } from "@/functions/getTrendingProjects";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
@@ -69,7 +69,7 @@ export default function TrendingProjects() {
               </button>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-[220px] text-xs">
-              Ranked by active tasks, applauds, comments, and recent engagement.
+              Work on projects, complete tasks, and engage with the community to get featured here!
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -124,15 +124,6 @@ export default function TrendingProjects() {
           );
         })}
       </div>
-
-      {/* Footer */}
-      <Link
-        to={createPageUrl("Feed")}
-        className="cu-gradient px-4 py-2.5 flex items-center justify-center hover:opacity-90 transition-opacity"
-      >
-        <span className="text-white text-xs font-medium">View more</span>
-        <ArrowRight className="w-3.5 h-3.5 text-white ml-1" />
-      </Link>
     </div>
   );
 }
