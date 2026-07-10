@@ -15,6 +15,7 @@ import { getPublicUserProfilesForDiscovery } from "@/functions/getPublicUserProf
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import UserProfileCard from "@/components/feed/UserProfileCard";
+import TrendingProjects from "@/components/feed/TrendingProjects";
 
 export default function FeedSidebar({ currentUser }) {
   const [suggestedUsers, setSuggestedUsers] = useState([]);
@@ -54,6 +55,9 @@ export default function FeedSidebar({ currentUser }) {
     <div className="space-y-5">
       {/* User Profile Card */}
       <UserProfileCard currentUser={currentUser} />
+
+      {/* Trending Projects */}
+      <TrendingProjects />
 
       {/* Quick Links */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
