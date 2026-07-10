@@ -14,6 +14,7 @@ import { createPageUrl } from "@/utils";
 import { getPublicUserProfilesForDiscovery } from "@/functions/getPublicUserProfilesForDiscovery";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import UserProfileCard from "@/components/feed/UserProfileCard";
 
 export default function FeedSidebar({ currentUser }) {
   const [suggestedUsers, setSuggestedUsers] = useState([]);
@@ -51,6 +52,9 @@ export default function FeedSidebar({ currentUser }) {
 
   return (
     <div className="space-y-5">
+      {/* User Profile Card */}
+      <UserProfileCard currentUser={currentUser} />
+
       {/* Quick Links */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">Explore</h3>
