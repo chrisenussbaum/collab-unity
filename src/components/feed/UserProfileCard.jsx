@@ -29,6 +29,12 @@ const SOCIAL_ICONS = {
   website: Globe,
 };
 
+function ensureProtocol(url) {
+  if (!url) return url;
+  if (/^https?:\/\//i.test(url) || /^mailto:/i.test(url) || /^tel:/i.test(url)) return url;
+  return `https://${url}`;
+}
+
 export default function UserProfileCard({ currentUser }) {
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const audioRef = useRef(null);
@@ -51,14 +57,15 @@ export default function UserProfileCard({ currentUser }) {
   // Social links from both social_links object and individual fields
   const socialLinks = currentUser.social_links || {};
   const allSocialLinks = [
-    ...Object.entries(socialLinks).filter(([, url]) => url).map(([platform, url]) => ({ platform, url })),
-    ...(currentUser.linkedin_url ? [{ platform: "linkedin", url: currentUser.linkedin_url }] : []),
-    ...(currentUser.website_url ? [{ platform: "website", url: currentUser.website_url }] : []),
+    ...Object.entries(socialLinks).filter(([, url]) => url).map(([platform, url]) => ({ platform, url: ensureProtocol(url) })),
+    ...(currentUser.linkedin_url ? [{ platform: "linkedin", url: ensureProtocol(currentUser.linkedin_url) }] : []),
+    ...(currentUser.website_url ? [{ platform: "website", url: ensureProtocol(currentUser.website_url) }] : []),
   ];
 
   // Web links (personal portfolio links)
   const webLinks = currentUser.web_links || {};
-  const webLinkEntries = Object.entries(webLinks).filter(([, url]) => url).slice(0, 3);
+  const webLinkEntries = Object.entries(webLinks).filter(([, url]) => url).slice(0, 3)
+    .map(([label, url]) => [label, ensureProtocol(url)]);
 
   const hasVoiceIntro = !!currentUser.voice_intro_url;
 
