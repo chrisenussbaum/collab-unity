@@ -62,6 +62,9 @@ export default function MyProjectApplicationsPanel({ currentUser }) {
         }
       }
       setProjectsMap(map);
+      // Remove applications for projects that no longer exist (deleted projects)
+      const validApps = myApps.filter(a => map[a.project_id]);
+      setApplications(validApps);
     } catch (error) {
       console.error("Error fetching my project applications:", error);
     } finally {

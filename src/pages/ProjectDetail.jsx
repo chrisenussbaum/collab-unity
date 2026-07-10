@@ -40,7 +40,10 @@ import {
   ExternalLink,
   Upload,
   Camera,
-  BookOpen
+  BookOpen,
+  Paperclip,
+  FileText,
+  Loader2
 } from "lucide-react";
 import { toast } from "sonner";
 import WorkspaceTabs from "@/components/workspace/WorkspaceTabs";
@@ -154,6 +157,8 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [applicationMessage, setApplicationMessage] = useState("");
   const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
+  const [applicationAttachments, setApplicationAttachments] = useState([]);
+  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
   
   const isMounted = useRef(true);
   const retryCountRef = useRef(0);
@@ -508,7 +513,36 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
     navigate(createPageUrl("Discover"));
   };
   
-  const handleApplyToProject = async () => {
+  const handleAttachmentUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setIsUploadingAttachment(true);
+    try {
+      const uploaded = [];
+      for (const file of files) {
+        const { file_url } = await withRetry(() => UploadFile({ file }));
+        let fileType = "file";
+        if (file.type.startsWith("image/")) fileType = "image";
+        else if (file.type.startsWith("video/")) fileType = "video";
+        else if (file.type === "application/pdf") fileType = "pdf";
+        uploaded.push({ file_url, file_type: fileType, file_name: file.name });
+      }
+      setApplicationAttachments([...applicationAttachments, ...uploaded]);
+      toast.success(`${uploaded.length} file(s) uploaded`);
+    } catch (error) {
+      toast.error("Failed to upload file(s)");
+    } finally {
+      setIsUploadingAttachment(false);
+      e.target.value = "";
+    }
+  };
+
+  const removeAttachment = (idx) => {
+    setApplicationAttachments(applicationAttachments.filter((_, i) => i !== idx));
+  };
+
+  const handleApplyToProject = async (e) => {
+    e?.preventDefault?.();
     if (!applicationMessage.trim()) {
         toast.error("Please provide a message for your application.");
         return;
@@ -520,6 +554,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
             applicant_email: currentUser.email,
             message: applicationMessage,
             status: 'pending',
+            attachments: applicationAttachments,
         }));
 
         await withRetry(() => Notification.create({
@@ -536,6 +571,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         setUserApplication(newApplication);
         setShowApplyModal(false);
         setApplicationMessage("");
+        setApplicationAttachments([]);
 
     } catch(error) {
         console.error("Failed to submit application:", error);
@@ -944,27 +980,88 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         shareUrl={`${getShareBaseUrl()}${createPageUrl(`ProjectDetail?id=${project.id}`)}`}
       />
 
-      <Dialog open={showApplyModal} onOpenChange={setShowApplyModal}>
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog open={showApplyModal} onOpenChange={(open) => { setShowApplyModal(open); if (!open) { setApplicationMessage(""); setApplicationAttachments([]); } }}>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Apply to join "{project.title}"</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-purple-600" />
+              Apply to join "{project.title}"
+            </DialogTitle>
             <DialogDescription>
-              Send a message to the project owner explaining why you'd be a great collaborator.
+              Write a brief message to {projectOwnerProfile?.full_name || 'the project owner'} explaining why you'd be a great collaborator.
             </DialogDescription>
           </DialogHeader>
-          <Textarea
-            placeholder="Introduce yourself, mention relevant skills, and express your interest..."
-            value={applicationMessage}
-            onChange={(e) => setApplicationMessage(e.target.value)}
-            rows={5}
-            className="mt-4"
-          />
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setShowApplyModal(false)}>Cancel</Button>
-            <Button onClick={handleApplyToProject} disabled={isSubmittingApplication || !applicationMessage.trim()}>
-              {isSubmittingApplication ? 'Submitting...' : 'Submit Application'}
-            </Button>
-          </DialogFooter>
+          <div className="py-4">
+            <form onSubmit={handleApplyToProject} className="space-y-3">
+              <Textarea
+                placeholder="Introduce yourself, mention relevant skills, and express your interest..."
+                value={applicationMessage}
+                onChange={(e) => setApplicationMessage(e.target.value)}
+                rows={4}
+                required
+                className="resize-none"
+              />
+              {/* Attachments */}
+              <div>
+                <p className="text-xs text-gray-500 mb-1.5">Attach documents, photos, or videos to showcase your expertise</p>
+                {applicationAttachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {applicationAttachments.map((att, idx) => (
+                      <div key={idx} className="relative group">
+                        {att.file_type === "image" ? (
+                          <img src={att.file_url} alt={att.file_name} className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
+                        ) : att.file_type === "video" ? (
+                          <div className="w-16 h-16 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-gray-500" />
+                          </div>
+                        ) : (
+                          <div className="w-16 h-16 rounded-lg border border-gray-200 bg-red-50 flex flex-col items-center justify-center p-1">
+                            <FileText className="w-4 h-4 text-red-500" />
+                            <span className="text-[8px] text-red-600 truncate w-full text-center mt-0.5">{att.file_type === "pdf" ? "PDF" : "FILE"}</span>
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeAttachment(idx)}
+                          className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-sm"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                        <p className="text-[8px] text-gray-400 truncate w-16 mt-0.5 text-center">{att.file_name}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <label className="flex items-center justify-center gap-2 w-full h-9 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-purple-300 hover:bg-purple-50/50 transition-colors">
+                  {isUploadingAttachment ? (
+                    <Loader2 className="w-4 h-4 text-purple-500 animate-spin" />
+                  ) : (
+                    <>
+                      <Paperclip className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="text-xs text-gray-500">Add files (PDF, images, videos)</span>
+                    </>
+                  )}
+                  <input type="file" accept="image/*,video/*,.pdf" multiple className="hidden" onChange={handleAttachmentUpload} disabled={isUploadingAttachment} />
+                </label>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <Button type="button" variant="outline" onClick={() => setShowApplyModal(false)} className="flex-1">Cancel</Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmittingApplication || !applicationMessage.trim()}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 rounded-full"
+                >
+                  {isSubmittingApplication ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...
+                    </>
+                  ) : (
+                    <>Submit Application</>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
         </DialogContent>
       </Dialog>
       
