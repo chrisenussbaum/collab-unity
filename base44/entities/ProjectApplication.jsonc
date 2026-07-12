@@ -51,6 +51,7 @@
       "type": "string",
       "enum": [
         "pending",
+        "interviewing",
         "accepted",
         "rejected",
         "withdrawn"

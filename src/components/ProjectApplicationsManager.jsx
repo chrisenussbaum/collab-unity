@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { getPublicUserProfiles } from '@/functions/getPublicUserProfiles';
-import { Check, X, Inbox } from 'lucide-react';
+import { Check, X, Inbox, Calendar } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import InterviewDialog from '@/components/InterviewDialog';
 
 // Utility function to handle rate limits with exponential backoff
 const withRetry = async (apiCall, maxRetries = 3, baseDelay = 1000) => {
@@ -33,6 +34,7 @@ export default function ProjectApplicationsManager({ project, onProjectUpdate })
   const [applicantProfiles, setApplicantProfiles] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(null); // Tracks ID of processing application
+  const [interviewApp, setInterviewApp] = useState(null); // Tracks application being moved to interview
 
   const fetchApplications = useCallback(async () => {
     setIsLoading(true);
@@ -177,6 +179,37 @@ export default function ProjectApplicationsManager({ project, onProjectUpdate })
     }
   };
   
+  const handleInterview = async (calendlyLink) => {
+    if (!interviewApp) return;
+    const application = interviewApp;
+    try {
+      // Save the Calendly link to the project
+      await withRetry(() => Project.update(project.id, { calendly_link: calendlyLink }));
+
+      // Update application status to interviewing
+      await withRetry(() => ProjectApplication.update(application.id, { status: 'interviewing' }));
+
+      // Notify the applicant
+      await withRetry(() => Notification.create({
+        user_email: application.applicant_email,
+        title: `Interview invitation for "${project.title}"`,
+        message: `You've been invited to interview for "${project.title}"! Book a time slot that works for you.`,
+        type: "project_application",
+        related_project_id: project.id,
+        related_entity_id: application.id,
+        actor_email: project.created_by,
+        actor_name: project.created_by,
+      }));
+
+      toast.success("Application moved to Interviewing");
+      setInterviewApp(null);
+      fetchApplications();
+    } catch (error) {
+      console.error("Error moving application to interviewing:", error);
+      toast.error("Failed to move application to Interviewing.");
+    }
+  };
+
   if (isLoading) {
       return <div className="text-center p-4">Loading applications...</div>
   }
@@ -217,6 +250,16 @@ export default function ProjectApplicationsManager({ project, onProjectUpdate })
                 <Button 
                     size="icon" 
                     variant="outline"
+                    className="h-8 w-8 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700"
+                    onClick={() => setInterviewApp(app)}
+                    disabled={isProcessing === app.id}
+                    title="Move to Interviewing"
+                >
+                  <Calendar className="h-4 w-4"/>
+                </Button>
+                <Button 
+                    size="icon" 
+                    variant="outline"
                     className="h-8 w-8 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700"
                     onClick={() => handleAcceptApplication(app.id)}
                     disabled={isProcessing === app.id}
@@ -228,6 +271,15 @@ export default function ProjectApplicationsManager({ project, onProjectUpdate })
           );
         })}
       </CardContent>
+      {interviewApp && (
+        <InterviewDialog
+          open={!!interviewApp}
+          onOpenChange={(open) => !open && setInterviewApp(null)}
+          application={interviewApp}
+          project={project}
+          onConfirm={handleInterview}
+        />
+      )}
     </Card>
   );
 }
