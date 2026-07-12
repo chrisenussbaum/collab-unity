@@ -337,11 +337,7 @@ export default function NotificationBell() {
                     return createPageUrl(`ProjectDetail?id=${notif.related_project_id}&tab=discussion`);
                 }
                 if (notif.related_project_id) {
-                    const url = createPageUrl(`ProjectDetail?id=${notif.related_project_id}`);
-                    if (notif.type === 'project_application' && notif.related_entity_id) {
-                        return `${url}&application=${notif.related_entity_id}`;
-                    }
-                    return url;
+                    return createPageUrl(`ProjectDetail?id=${notif.related_project_id}`);
                 }
                 return createPageUrl('Notifications');
               };
