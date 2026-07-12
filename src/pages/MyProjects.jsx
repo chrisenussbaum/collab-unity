@@ -36,7 +36,7 @@ import OptimizedAvatar from "@/components/OptimizedAvatar";
 import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
 import MilestoneProgress from "@/components/myprojects/MilestoneProgress";
 import WhileYouWereAway from "@/components/myprojects/WhileYouWereAway";
-import MyProjectApplicationsPanel from "@/components/myprojects/MyProjectApplicationsPanel";
+import ApplicationsView from "@/components/myprojects/ApplicationsView";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -286,16 +286,16 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                 <span className="hidden sm:inline">Archived</span>
                 <Badge variant="secondary" className="ml-1">{archivedProjectsCount}</Badge>
               </TabsTrigger>
-              <TabsTrigger value="my_applications" className="flex items-center gap-1.5">
+              <TabsTrigger value="applications" className="flex items-center gap-1.5">
                 <Send className="w-4 h-4" />
-                <span className="hidden sm:inline">Applied</span>
+                <span className="hidden sm:inline">Applications</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </motion.div>
 
-        {activeTab === "my_applications" ? (
-          <MyProjectApplicationsPanel currentUser={currentUser} />
+        {activeTab === "applications" ? (
+          <ApplicationsView currentUser={currentUser} />
         ) : activeTab === "archived" && archivedProjectsCount === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
