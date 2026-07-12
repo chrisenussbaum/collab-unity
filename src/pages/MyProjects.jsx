@@ -36,7 +36,7 @@ import OptimizedAvatar from "@/components/OptimizedAvatar";
 import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
 import MilestoneProgress from "@/components/myprojects/MilestoneProgress";
 import WhileYouWereAway from "@/components/myprojects/WhileYouWereAway";
-import MyProjectApplicationsPanel from "@/components/myprojects/MyProjectApplicationsPanel";
+import ApplicationsTab from "@/components/myprojects/ApplicationsTab";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -295,7 +295,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
         </motion.div>
 
         {activeTab === "my_applications" ? (
-          <MyProjectApplicationsPanel currentUser={currentUser} />
+          <ApplicationsTab currentUser={currentUser} />
         ) : activeTab === "archived" && archivedProjectsCount === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
