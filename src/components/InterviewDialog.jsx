@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Calendar as CalendarIcon } from "lucide-react";
 
 // Extracts the username from any stored Calendly link format
 // e.g. "https://calendly.com/johndoe/30min" -> "johndoe/30min"
@@ -45,11 +45,7 @@ export default function InterviewDialog({ open, onOpenChange, application, proje
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <img
-              src="https://assets.calendly.com/assets/external/favicon-32x32.png"
-              alt="Calendly"
-              className="w-5 h-5"
-            />
+            <CalendarIcon className="w-5 h-5" />
             Move to Interviewing
           </DialogTitle>
           <DialogDescription>
@@ -62,17 +58,12 @@ export default function InterviewDialog({ open, onOpenChange, application, proje
           <div>
             <Label htmlFor="calendly-username">Calendly Username</Label>
             <div className="flex items-center mt-1">
-              <span className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-100 border border-r-0 border-gray-300 rounded-l-md text-sm text-gray-500 whitespace-nowrap">
-                <img
-                  src="https://assets.calendly.com/assets/external/favicon-16x16.png"
-                  alt=""
-                  className="w-3.5 h-3.5"
-                />
+              <span className="inline-flex items-center px-3 py-2 bg-gray-100 border border-r-0 border-gray-300 rounded-l-md text-sm text-gray-500 whitespace-nowrap">
                 calendly.com/
               </span>
               <Input
                 id="calendly-username"
-                placeholder="your-username/30min"
+                placeholder="calendly-username"
                 value={calendlyUsername}
                 onChange={(e) => setCalendlyUsername(e.target.value)}
                 className="rounded-l-none"
