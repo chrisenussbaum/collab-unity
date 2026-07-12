@@ -288,7 +288,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
               </TabsTrigger>
               <TabsTrigger value="my_applications" className="flex items-center gap-1.5">
                 <Send className="w-4 h-4" />
-                <span className="hidden sm:inline">Applied</span>
+                <span className="hidden sm:inline">Applications</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>

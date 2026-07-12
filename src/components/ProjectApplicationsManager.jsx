@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { getPublicUserProfiles } from '@/functions/getPublicUserProfiles';
-import { Check, X, Inbox } from 'lucide-react';
+import { Check, X, Inbox, Paperclip, FileText, ChevronDown, ChevronUp, ExternalLink, User as UserIcon } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 // Utility function to handle rate limits with exponential backoff
 const withRetry = async (apiCall, maxRetries = 3, baseDelay = 1000) => {
@@ -14,15 +16,12 @@ const withRetry = async (apiCall, maxRetries = 3, baseDelay = 1000) => {
     try {
       return await apiCall();
     } catch (error) {
-      // Check if error has a response object and status property (typical for Axios errors)
-      // and if it's a 429 status code, and we haven't exhausted retries.
       if (error.response?.status === 429 && attempt < maxRetries - 1) {
         const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
         console.warn(`Rate limit hit, retrying in ${delay.toFixed(0)}ms (attempt ${attempt + 1}/${maxRetries})`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
-      // If it's not a 429, or max retries reached, re-throw the error
       throw error;
     }
   }
@@ -32,7 +31,8 @@ export default function ProjectApplicationsManager({ project, onProjectUpdate })
   const [applications, setApplications] = useState([]);
   const [applicantProfiles, setApplicantProfiles] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(null); // Tracks ID of processing application
+  const [isProcessing, setIsProcessing] = useState(null);
+  const [expandedApp, setExpandedApp] = useState(null);
 
   const fetchApplications = useCallback(async () => {
     setIsLoading(true);
@@ -73,11 +73,8 @@ export default function ProjectApplicationsManager({ project, onProjectUpdate })
     }
 
     try {
-      // 1. Update ProjectApplication status
       await withRetry(() => ProjectApplication.update(applicationId, { status: 'accepted' }));
 
-      // 2. Add applicant to project collaborators
-      // Using Set to ensure unique collaborators.
       const updatedCollaborators = [...new Set([...(project.collaborator_emails || []), application.applicant_email])];
       const newCollaboratorsCount = updatedCollaborators.length;
       
@@ -86,7 +83,6 @@ export default function ProjectApplicationsManager({ project, onProjectUpdate })
         current_collaborators_count: newCollaboratorsCount
       }));
 
-      // 2.5. Award points for joining collaboration
       try {
         await base44.functions.invoke('awardPoints', {
           action: 'project_collaboration',
@@ -96,7 +92,6 @@ export default function ProjectApplicationsManager({ project, onProjectUpdate })
         console.error("Error awarding points for collaboration:", error);
       }
 
-      // 3. Notify the applicant that they were accepted
       await withRetry(() => Notification.create({
         user_email: application.applicant_email,
         title: `Application accepted for "${project.title}"`,
@@ -104,18 +99,15 @@ export default function ProjectApplicationsManager({ project, onProjectUpdate })
         type: "project_application",
         related_project_id: project.id,
         related_entity_id: applicationId,
-        actor_email: project.created_by, // Project creator is the actor
-        actor_name: project.created_by, // Project creator's email/name for simplicity
+        actor_email: project.created_by,
+        actor_name: project.created_by,
       }));
 
-      // 4. Notify existing collaborators about the new member
       const existingCollaborators = project.collaborator_emails || [];
       const newApplicantProfile = applicantProfiles[application.applicant_email];
       const newApplicantName = newApplicantProfile?.full_name || application.applicant_email.split('@')[0];
 
       for (const collaboratorEmail of existingCollaborators) {
-        // Don't notify the project owner (they're the one accepting)
-        // Also don't notify the newly accepted collaborator again if they were already in the list
         if (collaboratorEmail !== project.created_by && collaboratorEmail !== application.applicant_email) {
           await withRetry(() => Notification.create({
             user_email: collaboratorEmail,
@@ -124,16 +116,14 @@ export default function ProjectApplicationsManager({ project, onProjectUpdate })
             type: "project_member_added",
             related_project_id: project.id,
             related_entity_id: applicationId,
-            actor_email: application.applicant_email, // New member is the "actor" of joining
+            actor_email: application.applicant_email,
             actor_name: newApplicantName,
           }));
         }
       }
 
-      // No success toast as per requirements.
-
-      if (onProjectUpdate) onProjectUpdate(); // Trigger parent component to refetch all project data
-      fetchApplications(); // Refetch applications list
+      if (onProjectUpdate) onProjectUpdate();
+      fetchApplications();
     } catch (error) {
       console.error(`Error accepting application:`, error);
       toast.error("Failed to accept application.");
@@ -151,10 +141,8 @@ export default function ProjectApplicationsManager({ project, onProjectUpdate })
     }
 
     try {
-      // 1. Update ProjectApplication status
       await withRetry(() => ProjectApplication.update(applicationId, { status: 'rejected' }));
       
-      // 2. Notify the applicant that they were rejected
       await withRetry(() => Notification.create({
         user_email: application.applicant_email,
         title: `Application update for "${project.title}"`,
@@ -162,13 +150,11 @@ export default function ProjectApplicationsManager({ project, onProjectUpdate })
         type: 'project_application',
         related_project_id: project.id,
         related_entity_id: applicationId,
-        actor_email: project.created_by, // Project creator is the actor
-        actor_name: project.created_by, // Project creator's email/name for simplicity
+        actor_email: project.created_by,
+        actor_name: project.created_by,
       }));
 
-      // No success toast as per requirements.
-
-      fetchApplications(); // Refetch applications list
+      fetchApplications();
     } catch (error) {
       console.error(`Error rejecting application:`, error);
       toast.error("Failed to reject application.");
@@ -182,48 +168,153 @@ export default function ProjectApplicationsManager({ project, onProjectUpdate })
   }
 
   if (applications.length === 0) {
-    return null; // Don't render the card if there are no pending applications
+    return null;
   }
 
   return (
     <Card className="cu-card mb-6">
       <CardHeader>
         <CardTitle>Pending Applications ({applications.length})</CardTitle>
-        <CardDescription>Review and respond to users who want to join your project.</CardDescription>
+        <CardDescription>Review applicant details, attachments, and respond to users who want to join your project.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {applications.map(app => {
           const profile = applicantProfiles[app.applicant_email] || {};
+          const isExpanded = expandedApp === app.id;
+          const hasAttachments = app.attachments && app.attachments.length > 0;
+          const hasDetails = profile.bio || (profile.skills && profile.skills.length > 0) || app.description;
+
           return (
-            <div key={app.id} className="flex items-start space-x-4 p-3 bg-gray-50 rounded-lg">
-              <Avatar>
-                <AvatarImage src={profile.profile_image} />
-                <AvatarFallback>{(profile.full_name || '?').charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <p className="font-semibold text-sm">{profile.full_name || app.applicant_email}</p>
-                <p className="text-sm text-gray-600 mt-1 italic">"{app.message}"</p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button 
+            <div key={app.id} className="border border-gray-200 rounded-lg overflow-hidden">
+              {/* Top row: avatar + name + message preview + accept/decline */}
+              <div className="flex items-start gap-3 p-3 bg-gray-50">
+                <Avatar className="flex-shrink-0">
+                  <AvatarImage src={profile.profile_image} />
+                  <AvatarFallback>{(profile.full_name || '?').charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-semibold text-sm">{profile.full_name || app.applicant_email}</p>
+                    {profile.username && (
+                      <span className="text-xs text-gray-400">@{profile.username}</span>
+                    )}
+                    {hasAttachments && (
+                      <span className="flex items-center gap-1 text-xs text-gray-500 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">
+                        <Paperclip className="w-3 h-3" /> {app.attachments.length}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1 line-clamp-2 italic">"{app.message}"</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Button 
                     size="icon" 
                     variant="outline" 
                     className="h-8 w-8 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
                     onClick={() => handleRejectApplication(app.id)}
                     disabled={isProcessing === app.id}
-                >
-                  <X className="h-4 w-4"/>
-                </Button>
-                <Button 
+                  >
+                    <X className="h-4 w-4"/>
+                  </Button>
+                  <Button 
                     size="icon" 
                     variant="outline"
                     className="h-8 w-8 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700"
                     onClick={() => handleAcceptApplication(app.id)}
                     disabled={isProcessing === app.id}
-                >
-                  <Check className="h-4 w-4"/>
-                </Button>
+                  >
+                    <Check className="h-4 w-4"/>
+                  </Button>
+                </div>
               </div>
+
+              {/* Expandable details section */}
+              {(hasAttachments || hasDetails) && (
+                <div className="border-t border-gray-100">
+                  <button
+                    onClick={() => setExpandedApp(isExpanded ? null : app.id)}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-500 hover:text-purple-600 hover:bg-purple-50/50 transition-colors"
+                  >
+                    {isExpanded ? (
+                      <><ChevronUp className="w-3.5 h-3.5" /> Hide details</>
+                    ) : (
+                      <><ChevronDown className="w-3.5 h-3.5" /> View full details{hasAttachments ? ` & attachments` : ''}</>
+                    )}
+                  </button>
+
+                  {isExpanded && (
+                    <div className="px-3 pb-3 space-y-3">
+                      {/* Applicant profile link */}
+                      {profile.username && (
+                        <Link
+                          to={createPageUrl(`UserProfile?username=${profile.username}`)}
+                          className="inline-flex items-center gap-1.5 text-xs text-purple-600 hover:text-purple-700 font-medium"
+                        >
+                          <UserIcon className="w-3.5 h-3.5" /> View full profile
+                        </Link>
+                      )}
+
+                      {/* Bio */}
+                      {profile.bio && (
+                        <div>
+                          <p className="text-xs text-gray-400 mb-0.5 font-medium">About</p>
+                          <p className="text-sm text-gray-700">{profile.bio}</p>
+                        </div>
+                      )}
+
+                      {/* Skills */}
+                      {profile.skills && profile.skills.length > 0 && (
+                        <div>
+                          <p className="text-xs text-gray-400 mb-1 font-medium">Skills</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {profile.skills.map((skill, idx) => (
+                              <span key={idx} className="text-xs px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full border border-purple-100">
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Additional description from application */}
+                      {app.description && (
+                        <div>
+                          <p className="text-xs text-gray-400 mb-0.5 font-medium">Additional context</p>
+                          <p className="text-sm text-gray-700">{app.description}</p>
+                        </div>
+                      )}
+
+                      {/* Attachments */}
+                      {hasAttachments && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1.5 flex items-center gap-1 font-medium">
+                            <Paperclip className="w-3 h-3" /> Attachments ({app.attachments.length})
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {app.attachments.map((att, idx) => (
+                              <a
+                                key={idx}
+                                href={att.file_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg hover:border-purple-200 hover:bg-purple-50/50 transition-colors"
+                              >
+                                {att.file_type === 'image' ? (
+                                  <img src={att.file_url} alt={att.file_name} className="w-8 h-8 rounded object-cover" />
+                                ) : (
+                                  <FileText className="w-4 h-4 text-gray-500" />
+                                )}
+                                <span className="text-xs text-gray-600 truncate max-w-[140px]">{att.file_name || att.file_type}</span>
+                                <ExternalLink className="w-3 h-3 text-gray-400" />
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
