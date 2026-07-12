@@ -3,13 +3,12 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Lightbulb, Clock, Check, XCircle, Paperclip, FileText, ExternalLink, MessageCircle, Send, Calendar } from "lucide-react";
+import { Loader2, Lightbulb, Clock, Check, XCircle, Paperclip, FileText, ExternalLink, MessageCircle, Send } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import OptimizedImage from "@/components/OptimizedImage";
 
 const STATUS_META = {
-  interviewing: { icon: Calendar, className: "bg-blue-50 border-blue-200 text-blue-700", label: "Interviewing" },
   pending: { icon: Clock, className: "bg-amber-50 border-amber-200 text-amber-700", label: "Pending" },
   accepted: { icon: Check, className: "bg-green-50 border-green-200 text-green-700", label: "Accepted" },
   rejected: { icon: XCircle, className: "bg-gray-100 border-gray-200 text-gray-500", label: "Declined" },
@@ -18,7 +17,6 @@ const STATUS_META = {
 
 const FILTER_TABS = [
   { key: "all", label: "All" },
-  { key: "interviewing", label: "Interviewing" },
   { key: "pending", label: "Pending" },
   { key: "accepted", label: "Accepted" },
   { key: "rejected", label: "Declined" },
@@ -212,7 +210,6 @@ export default function MyProjectApplicationsPanel({ currentUser }) {
               ? app.message
               : app.message.slice(0, 200) + "...";
             const isPending = app.status === "pending";
-            const isInterviewing = app.status === "interviewing";
             const isAccepted = app.status === "accepted";
             const projectOwnerEmail = project?.created_by;
 
@@ -305,13 +302,6 @@ export default function MyProjectApplicationsPanel({ currentUser }) {
                           <ExternalLink className="w-3.5 h-3.5 mr-1" /> View Project
                         </Button>
                       </Link>
-                      {isInterviewing && project?.calendly_link && (
-                        <a href={project.calendly_link} target="_blank" rel="noopener noreferrer">
-                          <Button size="sm" className="text-xs h-8 rounded-full px-4 text-white" style={{ background: "var(--cu-primary)" }}>
-                            <Calendar className="w-3.5 h-3.5 mr-1" /> Book a Time
-                          </Button>
-                        </a>
-                      )}
                       {isAccepted && projectOwnerEmail && (
                         <Button
                           size="sm"

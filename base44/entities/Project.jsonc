@@ -238,10 +238,6 @@
       "type": "string",
       "description": "Project's CashApp funding link"
     },
-    "calendly_link": {
-      "type": "string",
-      "description": "Calendly scheduling link for interview bookings"
-    },
     "project_ideation": {
       "type": "string",
       "description": "Rich text content for project planning and ideation"
