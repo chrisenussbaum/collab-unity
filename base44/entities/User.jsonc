@@ -139,6 +139,62 @@
       },
       "description": "Rolling list of dedup keys for project view tracking (viewer:projectId:date)"
     },
+    "profile_viewer_details": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "profile_image": {
+            "type": "string"
+          },
+          "viewed_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "description": "Rolling list of recent profile viewers with identity details (most recent first)"
+    },
+    "project_viewer_details": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "profile_image": {
+            "type": "string"
+          },
+          "viewed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "project_title": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Rolling list of recent project viewers with identity details (most recent first)"
+    },
     "last_active_at": {
       "type": "string",
       "format": "date-time",

@@ -7,6 +7,7 @@ import {
   Instagram, Facebook, Twitter, Youtube, Twitch, Linkedin, Globe,
   Pencil,
 } from "lucide-react";
+import ViewersDialog from "@/components/feed/ViewersDialog";
 
 const SKILL_BADGE_COLORS = [
   "bg-orange-100 text-orange-800 border-orange-300",
@@ -37,6 +38,7 @@ function ensureProtocol(url) {
 
 export default function UserProfileCard({ currentUser }) {
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
+  const [viewersDialog, setViewersDialog] = useState({ open: false, type: "profile" });
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -173,20 +175,26 @@ export default function UserProfileCard({ currentUser }) {
       <div className="px-4 py-3">
         {/* Analytics */}
         <div className="space-y-1.5 mb-3">
-          <div className="flex items-center justify-between text-xs">
+          <button
+            onClick={() => setViewersDialog({ open: true, type: "profile" })}
+            className="w-full flex items-center justify-between text-xs rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-50 transition-colors group"
+          >
             <span className="flex items-center gap-1.5 text-gray-600">
               <Eye className="w-3.5 h-3.5" />
               Profile Views
             </span>
-            <span className="font-bold text-blue-600">{profileViews}</span>
-          </div>
-          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-blue-600 group-hover:underline">{profileViews}</span>
+          </button>
+          <button
+            onClick={() => setViewersDialog({ open: true, type: "project" })}
+            className="w-full flex items-center justify-between text-xs rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-50 transition-colors group"
+          >
             <span className="flex items-center gap-1.5 text-gray-600">
               <FolderOpen className="w-3.5 h-3.5" />
               Project Views
             </span>
-            <span className="font-bold text-blue-600">{projectViews}</span>
-          </div>
+            <span className="font-bold text-blue-600 group-hover:underline">{projectViews}</span>
+          </button>
         </div>
 
         {/* Social links */}
@@ -228,6 +236,12 @@ export default function UserProfileCard({ currentUser }) {
           </div>
         )}
       </div>
+
+      <ViewersDialog
+        open={viewersDialog.open}
+        onOpenChange={(open) => setViewersDialog(prev => ({ ...prev, open }))}
+        type={viewersDialog.type}
+      />
     </div>
   );
 }

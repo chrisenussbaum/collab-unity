@@ -370,7 +370,8 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         base44.functions.invoke('trackView', {
           type: 'project',
           project_id: projectId,
-          owner_email: projectData.created_by
+          owner_email: projectData.created_by,
+          project_title: projectData.title
         }).catch(() => {});
       }
 
