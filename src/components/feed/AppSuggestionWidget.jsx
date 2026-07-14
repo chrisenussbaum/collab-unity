@@ -19,8 +19,9 @@ import {
 import { toast } from "sonner";
 import HorizontalScrollContainer from "@/components/HorizontalScrollContainer";
 import AppLogo from "@/components/feed/AppLogo";
+import { getAuthoritativeCategory } from "@/components/feed/knownAppCategories";
 
-const CACHE_KEY = (email) => `cu_app_library_v2_${email}`;
+const CACHE_KEY = (email) => `cu_app_library_v3_${email}`;
 const CACHE_TTL = 24 * 60 * 60 * 1000;
 
 function getFaviconUrl(url) {
@@ -93,7 +94,7 @@ export default function AppSuggestionWidget({ currentUser, instanceIndex = 0 }) 
           : "Recommend a broad mix of popular apps.";
 
         const result = await base44.integrations.Core.InvokeLLM({
-          prompt: `You are an app discovery curator for Collab Unity. ${profileClause} Return 24 real, well-known software apps or tools this user should test, learn about, or use. For each: name, category (one of: "Communication Tools", "Design Tools", "Development", "Productivity", "Project Management", "AI Tools", "Marketing", "Analytics", "File Storage", "No-Code", "Video Editing", "Social Media"), description (1-2 sentences), and website_url (official URL). Ensure each category has at least 2 apps.`,
+          prompt: `You are an app discovery curator for Collab Unity. ${profileClause} Return 24 real, well-known software apps or tools this user should test, learn about, or use. For each: name, category (one of: "Communication Tools", "Design Tools", "Development", "Productivity", "Project Management", "AI Tools", "Marketing", "Analytics", "File Storage", "No-Code", "Video Editing", "Social Media"), description (1-2 sentences), and website_url (official URL). Ensure each category has at least 2 apps. CRITICAL: Assign each app to its single most accurate primary category based on what the app is primarily known for. For example: Discord, Slack, and Zoom are "Communication Tools"; Figma and Canva are "Design Tools"; GitHub and Docker are "Development"; Google Analytics and Amplitude are "Analytics". Do NOT duplicate an app under multiple categories.`,
           add_context_from_internet: true,
           response_json_schema: {
             type: "object",
@@ -116,6 +117,7 @@ export default function AppSuggestionWidget({ currentUser, instanceIndex = 0 }) 
         if (cancelled) return;
         const fresh = (result?.apps || []).map((app, i) => ({
           ...app,
+          category: getAuthoritativeCategory(app),
           id: `app-${i}`,
           logo_url: getLogoUrl(app.website_url),
           favicon_url: getFaviconUrl(app.website_url),
@@ -142,8 +144,18 @@ export default function AppSuggestionWidget({ currentUser, instanceIndex = 0 }) 
   // Group apps by category; each widget instance shows a different category
   const { displayApps, categoryName } = useMemo(() => {
     if (apps.length === 0) return { displayApps: [], categoryName: "" };
-    const byCategory = {};
+    // Deduplicate by lowercased name so an app can't appear in multiple categories
+    const seen = new Set();
+    const unique = [];
     apps.forEach((app) => {
+      const key = (app.name || "").trim().toLowerCase();
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        unique.push(app);
+      }
+    });
+    const byCategory = {};
+    unique.forEach((app) => {
       const cat = app.category || "Other";
       if (!byCategory[cat]) byCategory[cat] = [];
       byCategory[cat].push(app);
@@ -156,7 +168,7 @@ export default function AppSuggestionWidget({ currentUser, instanceIndex = 0 }) 
     // If category has fewer than 7, top up from other categories
     let picked = [...pool];
     if (picked.length < 7) {
-      const others = apps.filter((a) => a.category !== selectedCategory);
+      const others = unique.filter((a) => a.category !== selectedCategory);
       picked = [...picked, ...others].slice(0, 7);
     } else {
       picked = picked.slice(0, 7);

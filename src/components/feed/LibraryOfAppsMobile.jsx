@@ -19,8 +19,9 @@ import {
 import { toast } from "sonner";
 import HorizontalScrollContainer from "@/components/HorizontalScrollContainer";
 import AppLogo from "@/components/feed/AppLogo";
+import { getAuthoritativeCategory } from "@/components/feed/knownAppCategories";
 
-const CACHE_KEY = (email) => `cu_app_library_v2_${email}`;
+const CACHE_KEY = (email) => `cu_app_library_v3_${email}`;
 const CACHE_TTL = 24 * 60 * 60 * 1000;
 
 function getFaviconUrl(url) {
@@ -88,7 +89,7 @@ export default function LibraryOfAppsMobile({ currentUser }) {
           : "Recommend a broad mix of popular apps.";
 
         const result = await base44.integrations.Core.InvokeLLM({
-          prompt: `You are an app discovery curator for Collab Unity. ${profileClause} Return 24 real, well-known software apps or tools this user should test, learn about, or use. For each: name, category (one of: "Communication Tools", "Design Tools", "Development", "Productivity", "Project Management", "AI Tools", "Marketing", "Analytics", "File Storage", "No-Code", "Video Editing", "Social Media"), description (1-2 sentences), and website_url (official URL). Ensure each category has at least 2 apps. Spread apps evenly across all categories.`,
+          prompt: `You are an app discovery curator for Collab Unity. ${profileClause} Return 24 real, well-known software apps or tools this user should test, learn about, or use. For each: name, category (one of: "Communication Tools", "Design Tools", "Development", "Productivity", "Project Management", "AI Tools", "Marketing", "Analytics", "File Storage", "No-Code", "Video Editing", "Social Media"), description (1-2 sentences), and website_url (official URL). Ensure each category has at least 2 apps. Spread apps evenly across all categories. CRITICAL: Assign each app to its single most accurate primary category based on what the app is primarily known for. For example: Discord, Slack, and Zoom are "Communication Tools"; Figma and Canva are "Design Tools"; GitHub and Docker are "Development"; Google Analytics and Amplitude are "Analytics". Do NOT duplicate an app under multiple categories.`,
           add_context_from_internet: true,
           response_json_schema: {
             type: "object",
@@ -111,6 +112,7 @@ export default function LibraryOfAppsMobile({ currentUser }) {
         if (cancelled) return;
         const fresh = (result?.apps || []).map((app, i) => ({
           ...app,
+          category: getAuthoritativeCategory(app),
           id: `app-${i}`,
           logo_url: getLogoUrl(app.website_url),
           favicon_url: getFaviconUrl(app.website_url),

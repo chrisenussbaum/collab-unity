@@ -18,8 +18,9 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import AppLogo from "@/components/feed/AppLogo";
+import { getAuthoritativeCategory } from "@/components/feed/knownAppCategories";
 
-const CACHE_KEY = (email) => `cu_app_library_v2_${email}`;
+const CACHE_KEY = (email) => `cu_app_library_v3_${email}`;
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 function getFaviconUrl(url) {
@@ -65,7 +66,7 @@ Return 24 real, well-known software apps, tools, or platforms that this user sho
 - description: a compelling 1-2 sentence description of what the app does and why the user should try it
 - website_url: the official website URL (e.g. https://slack.com)
 
-Make sure each category has at least 2 apps. Vary the selection so it's not just the most obvious choices — include some up-and-coming or lesser-known tools alongside mainstream ones. Spread apps evenly across all categories.`,
+Make sure each category has at least 2 apps. Vary the selection so it's not just the most obvious choices — include some up-and-coming or lesser-known tools alongside mainstream ones. Spread apps evenly across all categories. CRITICAL: Assign each app to its single most accurate primary category based on what the app is primarily known for. For example: Discord, Slack, and Zoom are "Communication Tools"; Figma and Canva are "Design Tools"; GitHub and Docker are "Development"; Google Analytics and Amplitude are "Analytics". Do NOT duplicate an app under multiple categories.`,
     add_context_from_internet: true,
     response_json_schema: {
       type: "object",
@@ -88,6 +89,7 @@ Make sure each category has at least 2 apps. Vary the selection so it's not just
 
   return (result?.apps || []).map((app, i) => ({
     ...app,
+    category: getAuthoritativeCategory(app),
     id: `app-${i}`,
     logo_url: getLogoUrl(app.website_url),
     favicon_url: getFaviconUrl(app.website_url),

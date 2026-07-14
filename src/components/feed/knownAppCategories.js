@@ -1,0 +1,202 @@
+/**
+ * Authoritative category mapping for well-known apps so the LLM can't
+ * misclassify them (e.g. Discord must always be "Communication Tools").
+ * Keyed by lowercased app name.
+ */
+export const KNOWN_APP_CATEGORIES = {
+  // Communication Tools
+  "discord": "Communication Tools",
+  "slack": "Communication Tools",
+  "microsoft teams": "Communication Tools",
+  "teams": "Communication Tools",
+  "zoom": "Communication Tools",
+  "google meet": "Communication Tools",
+  "skype": "Communication Tools",
+  "whatsapp": "Communication Tools",
+  "telegram": "Communication Tools",
+  "signal": "Communication Tools",
+  "webex": "Communication Tools",
+  "guilded": "Communication Tools",
+  "lark": "Communication Tools",
+
+  // Design Tools
+  "figma": "Design Tools",
+  "adobe photoshop": "Design Tools",
+  "photoshop": "Design Tools",
+  "adobe illustrator": "Design Tools",
+  "illustrator": "Design Tools",
+  "adobe xd": "Design Tools",
+  "canva": "Design Tools",
+  "sketch": "Design Tools",
+  "affinity designer": "Design Tools",
+  "affinity photo": "Design Tools",
+  "affinity publisher": "Design Tools",
+  "invision": "Design Tools",
+  "framer": "Design Tools",
+  "dribbble": "Design Tools",
+  "behance": "Design Tools",
+  "procreate": "Design Tools",
+  "gimp": "Design Tools",
+  "penpot": "Design Tools",
+
+  // Development
+  "github": "Development",
+  "gitlab": "Development",
+  "vs code": "Development",
+  "visual studio code": "Development",
+  "jetbrains": "Development",
+  "intellij idea": "Development",
+  "webstorm": "Development",
+  "pycharm": "Development",
+  "docker": "Development",
+  "stackoverflow": "Development",
+  "stack overflow": "Development",
+  "replit": "Development",
+  "vercel": "Development",
+  "netlify": "Development",
+  "postman": "Development",
+  "git": "Development",
+  "gitkraken": "Development",
+  "sourcetree": "Development",
+  "codepen": "Development",
+  "codesandbox": "Development",
+
+  // Productivity
+  "notion": "Productivity",
+  "evernote": "Productivity",
+  "todoist": "Productivity",
+  "things": "Productivity",
+  "things 3": "Productivity",
+  "ticktick": "Productivity",
+  "obsidian": "Productivity",
+  "roam research": "Productivity",
+  "grammarly": "Productivity",
+  "1password": "Productivity",
+  "lastpass": "Productivity",
+  "raycast": "Productivity",
+  "alfred": "Productivity",
+  "fantastical": "Productivity",
+
+  // Project Management
+  "trello": "Project Management",
+  "asana": "Project Management",
+  "clickup": "Project Management",
+  "monday.com": "Project Management",
+  "jira": "Project Management",
+  "linear": "Project Management",
+  "basecamp": "Project Management",
+  "airtable": "Project Management",
+  "smartsheet": "Project Management",
+  "wrike": "Project Management",
+  "height": "Project Management",
+  "shortcut": "Project Management",
+  " clubhouse": "Project Management",
+
+  // AI Tools
+  "chatgpt": "AI Tools",
+  "openai": "AI Tools",
+  "claude": "AI Tools",
+  "anthropic": "AI Tools",
+  "midjourney": "AI Tools",
+  "stable diffusion": "AI Tools",
+  "jasper": "AI Tools",
+  "copy.ai": "AI Tools",
+  "perplexity": "AI Tools",
+  "gemini": "AI Tools",
+  "hugging face": "AI Tools",
+  "huggingface": "AI Tools",
+  "replicate": "AI Tools",
+  "elevenlabs": "AI Tools",
+  "runway": "AI Tools",
+  "gamma": "AI Tools",
+  "tome": "AI Tools",
+
+  // Marketing
+  "mailchimp": "Marketing",
+  "hubspot": "Marketing",
+  "ahrefs": "Marketing",
+  "semrush": "Marketing",
+  "moz": "Marketing",
+  "buffer": "Marketing",
+  "hootsuite": "Marketing",
+  "unbounce": "Marketing",
+  "google ads": "Marketing",
+  "convertkit": "Marketing",
+  "brevo": "Marketing",
+  "sendinblue": "Marketing",
+  "klaviyo": "Marketing",
+
+  // Analytics
+  "google analytics": "Analytics",
+  "amplitude": "Analytics",
+  "mixpanel": "Analytics",
+  "hotjar": "Analytics",
+  "tableau": "Analytics",
+  "looker": "Analytics",
+  "power bi": "Analytics",
+  "segment": "Analytics",
+  "posthog": "Analytics",
+  "chartmogul": "Analytics",
+  "plausible": "Analytics",
+  "matomo": "Analytics",
+
+  // File Storage
+  "google drive": "File Storage",
+  "dropbox": "File Storage",
+  "onedrive": "File Storage",
+  "box": "File Storage",
+  "icloud": "File Storage",
+  "mega": "File Storage",
+  "pcloud": "File Storage",
+  "backblaze": "File Storage",
+
+  // No-Code
+  "bubble": "No-Code",
+  "webflow": "No-Code",
+  "zapier": "No-Code",
+  "make": "No-Code",
+  "integromat": "No-Code",
+  "softr": "No-Code",
+  "glide": "No-Code",
+  "adalo": "No-Code",
+  "flutterflow": "No-Code",
+  "retool": "No-Code",
+  "carrd": "No-Code",
+  "memberstack": "No-Code",
+
+  // Video Editing
+  "adobe premiere pro": "Video Editing",
+  "premiere pro": "Video Editing",
+  "final cut pro": "Video Editing",
+  "davinci resolve": "Video Editing",
+  "imovie": "Video Editing",
+  "capcut": "Video Editing",
+  "filmora": "Video Editing",
+  "after effects": "Video Editing",
+  "adobe after effects": "Video Editing",
+  "descript": "Video Editing",
+  "screenflow": "Video Editing",
+
+  // Social Media
+  "instagram": "Social Media",
+  "twitter": "Social Media",
+  "x": "Social Media",
+  "facebook": "Social Media",
+  "linkedin": "Social Media",
+  "tiktok": "Social Media",
+  "youtube": "Social Media",
+  "pinterest": "Social Media",
+  "reddit": "Social Media",
+  "snapchat": "Social Media",
+  "twitch": "Social Media",
+  "threads": "Social Media",
+};
+
+/**
+ * Returns the authoritative category for a known app, or the LLM-assigned
+ * category if the app is not in the known map.
+ */
+export function getAuthoritativeCategory(app) {
+  const key = (app.name || "").trim().toLowerCase();
+  return KNOWN_APP_CATEGORIES[key] || app.category;
+}
