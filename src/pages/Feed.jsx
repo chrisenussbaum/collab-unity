@@ -44,6 +44,7 @@ import FeedRecommendations from "@/components/feed/FeedRecommendations";
 import ContentDiscoveryWidget from "@/components/feed/ContentDiscoveryWidget";
 import CollaboratorDiscoveryWidget from "@/components/feed/CollaboratorDiscoveryWidget";
 import FeedSidebar from "@/components/feed/FeedSidebar";
+import LibraryOfAppsMobile from "@/components/feed/LibraryOfAppsMobile";
 import ForYouSection from "@/components/discover/ForYouSection";
 import MicrolinkPreview from "@/components/MicrolinkPreview";
 import ShareCardDialog from "@/components/share/ShareCardDialog";
@@ -963,6 +964,9 @@ export default function Feed({ currentUser, authIsLoading }) {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </motion.div>
               </>
+            )}
+            {currentUser && (
+              <LibraryOfAppsMobile currentUser={currentUser} />
             )}
             {currentUser && (
               <FeedRecommendations
