@@ -159,7 +159,7 @@ export default function AppSuggestionWidget({ currentUser }) {
 
   return (
     <>
-      <div className="md:hidden bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl border border-purple-200 shadow-sm overflow-hidden">
+      <div className="md:hidden mb-6 bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
         {/* Accent header */}
         <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-100">
           <div className="flex items-center gap-2">
