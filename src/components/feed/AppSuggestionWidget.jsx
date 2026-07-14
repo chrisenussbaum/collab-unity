@@ -57,7 +57,7 @@ function getCachedApps(email) {
  * CollaboratorDiscoveryWidget).  Reads from the same cache as the
  * sidebar Library of Apps so data is shared.
  */
-export default function AppSuggestionWidget({ currentUser }) {
+export default function AppSuggestionWidget({ currentUser, instanceIndex = 0 }) {
   const [apps, setApps] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState(null);
@@ -139,13 +139,30 @@ export default function AppSuggestionWidget({ currentUser }) {
     };
   }, [currentUser]);
 
-  // Pick a varied subset — rotate based on render so different widgets show different apps
-  const displayApps = useMemo(() => {
-    if (apps.length === 0) return [];
-    // Shuffle deterministically and take 8 (enough to fill wider desktop scroll)
-    const shuffled = [...apps].sort((a, b) => (a.id > b.id ? 1 : -1));
-    return shuffled.slice(0, 8);
-  }, [apps]);
+  // Group apps by category; each widget instance shows a different category
+  const { displayApps, categoryName } = useMemo(() => {
+    if (apps.length === 0) return { displayApps: [], categoryName: "" };
+    const byCategory = {};
+    apps.forEach((app) => {
+      const cat = app.category || "Other";
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push(app);
+    });
+    const categories = Object.keys(byCategory).sort();
+    if (categories.length === 0) return { displayApps: [], categoryName: "" };
+    // Pick category based on instanceIndex, cycling through
+    const selectedCategory = categories[instanceIndex % categories.length];
+    const pool = byCategory[selectedCategory];
+    // If category has fewer than 7, top up from other categories
+    let picked = [...pool];
+    if (picked.length < 7) {
+      const others = apps.filter((a) => a.category !== selectedCategory);
+      picked = [...picked, ...others].slice(0, 7);
+    } else {
+      picked = picked.slice(0, 7);
+    }
+    return { displayApps: picked, categoryName: selectedCategory };
+  }, [apps, instanceIndex]);
 
   const handleVisit = (app) => {
     if (app.website_url) {
@@ -167,7 +184,7 @@ export default function AppSuggestionWidget({ currentUser }) {
               <Grid3x3 className="w-3 h-3 text-white" />
             </div>
             <span className="text-[11px] font-bold uppercase tracking-wide text-purple-700">
-              Apps for You
+              Apps for You{categoryName ? ` · ${categoryName}` : ""}
             </span>
           </div>
           <TooltipProvider delayDuration={200}>

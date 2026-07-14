@@ -448,9 +448,9 @@ const FeedList = ({ isLoading, displayedItems, isLoadingMore, currentUser, proje
       if ((index + 1) % 4 === 0 && index < displayedItems.length - 1 && index !== 4) {
         result.push(<CollaboratorDiscoveryWidget key={`collab-widget-${index}`} currentUser={currentUser} />);
       }
-      // Insert app suggestions every 7 items (mobile only — widget hides on desktop)
+      // Insert app suggestions every 7 items — each instance shows a different category
       if (currentUser && (index + 1) % 7 === 0 && index < displayedItems.length - 1) {
-        result.push(<AppSuggestionWidget key={`app-widget-${index}`} currentUser={currentUser} />);
+        result.push(<AppSuggestionWidget key={`app-widget-${index}`} currentUser={currentUser} instanceIndex={Math.floor((index + 1) / 7) - 1} />);
       }
     });
     return result;
