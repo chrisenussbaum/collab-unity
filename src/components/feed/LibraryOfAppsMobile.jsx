@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Search, Info, ExternalLink, X, Loader2, Sparkles, ChevronRight } from "lucide-react";
+import { Search, Info, ExternalLink, X, Loader2, Sparkles, Grid3x3 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import {
@@ -74,8 +74,6 @@ export default function LibraryOfAppsMobile({ currentUser }) {
         setIsLoading(false);
         return;
       }
-      // If no cache, the desktop sidebar will fetch and cache.
-      // Show a loading state and try a lightweight fetch.
       try {
         const skills = currentUser?.skills || [];
         const interests = currentUser?.interests || [];
@@ -170,30 +168,35 @@ export default function LibraryOfAppsMobile({ currentUser }) {
     }
   };
 
+  if (!isLoading && apps.length === 0) return null;
+
   return (
     <>
-      <div className="rounded-xl overflow-hidden border-2 border-[#2E3A8C] shadow-md bg-white">
-        {/* Header */}
-        <div
-          className="flex items-center justify-between px-4 py-2.5"
-          style={{ background: "#2E3A8C" }}
-        >
-          <h3 className="text-white font-bold text-sm tracking-wide">
-            Library of Apps
-          </h3>
-          <div className="flex items-center gap-1.5">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-purple-100 p-4 shadow-sm">
+        {/* Compact header */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg cu-gradient flex items-center justify-center flex-shrink-0">
+              <Grid3x3 className="w-3.5 h-3.5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-gray-900 leading-tight">Library of Apps</h2>
+              <p className="text-[10px] text-gray-500 leading-tight">Tools tailored to you</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
             <button
               onClick={() => setShowSearch(!showSearch)}
-              className="w-6 h-6 rounded flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors"
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors"
               title="Search apps"
             >
-              <Search className="w-3.5 h-3.5 text-white" />
+              <Search className="w-4 h-4" />
             </button>
             <TooltipProvider delayDuration={200}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button className="w-6 h-6 rounded flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors">
-                    <Info className="w-3.5 h-3.5 text-white" />
+                  <button className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors">
+                    <Info className="w-4 h-4" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-[200px] text-xs">
@@ -206,7 +209,7 @@ export default function LibraryOfAppsMobile({ currentUser }) {
 
         {/* Expandable search */}
         {showSearch && (
-          <div className="px-3 py-2 bg-white border-b border-gray-100">
+          <div className="mb-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
               <input
@@ -215,7 +218,7 @@ export default function LibraryOfAppsMobile({ currentUser }) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoFocus
-                className="w-full pl-8 pr-7 py-1.5 rounded-full text-xs bg-gray-50 text-gray-700 placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#2E3A8C]/30"
+                className="w-full pl-8 pr-7 py-1.5 rounded-full text-xs bg-gray-50 border border-gray-200 text-gray-700 placeholder-gray-400 outline-none focus:ring-2 focus:ring-purple-200"
               />
               {searchQuery && (
                 <button
@@ -229,57 +232,46 @@ export default function LibraryOfAppsMobile({ currentUser }) {
           </div>
         )}
 
-        {/* Body */}
-        <div className="p-2.5">
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-6">
-              <Loader2 className="w-5 h-5 text-[#2E3A8C] animate-spin mb-1.5" />
-              <p className="text-[10px] text-gray-400">Finding apps for you...</p>
-            </div>
-          ) : apps.length === 0 ? (
-            <div className="text-center py-5">
-              <Sparkles className="w-7 h-7 text-gray-300 mx-auto mb-1.5" />
-              <p className="text-[11px] text-gray-400">Apps coming soon!</p>
-            </div>
-          ) : (
-            <>
-              {/* Category pills */}
-              {!searchQuery.trim() && categories.length > 0 && (
-                <div className="flex items-center gap-1.5 mb-2.5 overflow-x-auto scrollbar-hide">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setActiveCategory(cat)}
-                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap transition-colors ${
-                        activeCategory === cat
-                          ? "text-white"
-                          : "text-gray-600 bg-[#F0F2F5] hover:bg-gray-200"
-                      }`}
-                      style={
-                        activeCategory === cat
-                          ? { background: "#2E3A8C" }
-                          : undefined
-                      }
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              )}
+        {/* Category pills */}
+        {!searchQuery.trim() && categories.length > 0 && (
+          <div className="flex items-center gap-1.5 mb-3 overflow-x-auto scrollbar-hide">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`text-[10px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap transition-colors ${
+                  activeCategory === cat
+                    ? "text-white bg-purple-600"
+                    : "text-gray-600 bg-gray-100 hover:bg-gray-200"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
 
-              {/* Horizontal scrolling app cards */}
-              <HorizontalScrollContainer className="pb-1" showArrows={displayApps.length > 3}>
-                {displayApps.map((app) => (
-                  <MobileAppCard
-                    key={app.id}
-                    app={app}
-                    onClick={() => setSelectedApp(app)}
-                  />
-                ))}
-              </HorizontalScrollContainer>
-            </>
-          )}
-        </div>
+        {/* Horizontal scrolling app cards */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-6">
+            <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
+          </div>
+        ) : displayApps.length === 0 ? (
+          <div className="text-center py-5">
+            <Sparkles className="w-6 h-6 text-gray-300 mx-auto mb-1.5" />
+            <p className="text-[11px] text-gray-400">No apps found</p>
+          </div>
+        ) : (
+          <HorizontalScrollContainer className="pb-1" showArrows={false}>
+            {displayApps.map((app) => (
+              <MobileAppCard
+                key={app.id}
+                app={app}
+                onClick={() => setSelectedApp(app)}
+              />
+            ))}
+          </HorizontalScrollContainer>
+        )}
       </div>
 
       {/* App Detail Dialog */}
@@ -303,15 +295,15 @@ function MobileAppCard({ app, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg hover:bg-indigo-50 transition-colors group flex-shrink-0 w-[88px]"
+      className="flex flex-col items-center gap-1.5 p-2 rounded-lg hover:bg-purple-50 transition-colors group flex-shrink-0 w-[72px]"
       title={app.name}
     >
-      <div className="w-11 h-11 rounded-lg overflow-hidden flex items-center justify-center bg-gray-50 border border-gray-200 group-hover:scale-110 transition-transform">
+      <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center bg-gray-50 border border-gray-100 group-hover:scale-105 transition-transform shadow-sm">
         {showLogo ? (
           <img
             src={app.logo_url}
             alt={app.name}
-            className="w-full h-full object-contain p-1"
+            className="w-full h-full object-contain p-1.5"
             loading="lazy"
             onError={() => setLogoError(true)}
           />
@@ -319,19 +311,19 @@ function MobileAppCard({ app, onClick }) {
           <img
             src={app.favicon_url}
             alt={app.name}
-            className="w-full h-full object-contain p-1.5"
+            className="w-full h-full object-contain p-2"
             loading="lazy"
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-[#2E3A8C]">
+          <div className="w-full h-full flex items-center justify-center cu-gradient">
             <span className="text-white font-bold text-sm">
               {app.name?.charAt(0)?.toUpperCase() || "A"}
             </span>
           </div>
         )}
       </div>
-      <span className="text-[10px] font-medium text-gray-700 text-center truncate w-full group-hover:text-[#2E3A8C]">
+      <span className="text-[10px] font-medium text-gray-700 text-center truncate w-full group-hover:text-purple-600">
         {app.name}
       </span>
     </button>
@@ -355,7 +347,7 @@ function AppDetailDialog({ app, isOpen, onClose, onVisit }) {
                   className="w-full h-full object-contain p-2"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-[#2E3A8C]">
+                <div className="w-full h-full flex items-center justify-center cu-gradient">
                   <span className="text-white font-bold text-xl">
                     {app.name?.charAt(0)?.toUpperCase() || "A"}
                   </span>
@@ -369,7 +361,7 @@ function AppDetailDialog({ app, isOpen, onClose, onVisit }) {
               <div className="flex items-center gap-2 mt-1">
                 <Badge
                   variant="outline"
-                  className="text-[10px] border-indigo-200 text-indigo-700 bg-indigo-50"
+                  className="text-[10px] border-purple-200 text-purple-700 bg-purple-50"
                 >
                   {app.category}
                 </Badge>
@@ -386,8 +378,7 @@ function AppDetailDialog({ app, isOpen, onClose, onVisit }) {
           </Button>
           <Button
             onClick={() => onVisit(app)}
-            className="flex-1 text-white"
-            style={{ background: "#2E3A8C" }}
+            className="flex-1 text-white cu-gradient"
           >
             Visit Website
             <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
