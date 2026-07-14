@@ -142,9 +142,9 @@ export default function AppSuggestionWidget({ currentUser }) {
   // Pick a varied subset — rotate based on render so different widgets show different apps
   const displayApps = useMemo(() => {
     if (apps.length === 0) return [];
-    // Shuffle deterministically and take 6
+    // Shuffle deterministically and take 8 (enough to fill wider desktop scroll)
     const shuffled = [...apps].sort((a, b) => (a.id > b.id ? 1 : -1));
-    return shuffled.slice(0, 6);
+    return shuffled.slice(0, 8);
   }, [apps]);
 
   const handleVisit = (app) => {
@@ -159,7 +159,7 @@ export default function AppSuggestionWidget({ currentUser }) {
 
   return (
     <>
-      <div className="md:hidden mb-6 bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
+      <div className="mb-6 bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
         {/* Accent header */}
         <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-100">
           <div className="flex items-center gap-2">
@@ -190,7 +190,7 @@ export default function AppSuggestionWidget({ currentUser }) {
             <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
           </div>
         ) : (
-          <HorizontalScrollContainer className="py-3 px-3" showArrows={false}>
+          <HorizontalScrollContainer className="py-3 px-3" showArrows={true}>
             {displayApps.map((app) => (
               <button
                 key={app.id}
