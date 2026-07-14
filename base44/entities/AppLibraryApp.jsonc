@@ -1,0 +1,58 @@
+{
+  "name": "AppLibraryApp",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "App name"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Detailed description of what the app does and why users should try it"
+    },
+    "category": {
+      "type": "string",
+      "description": "App category (Communication Tools, Development, Design, Project Management, Productivity, etc.)"
+    },
+    "website_url": {
+      "type": "string",
+      "description": "Official website URL"
+    },
+    "logo_url": {
+      "type": "string",
+      "description": "URL to the app's logo image"
+    },
+    "icon_emoji": {
+      "type": "string",
+      "description": "Fallback emoji icon if no logo URL"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this app is featured in the Library of Apps widget"
+    },
+    "is_sponsored": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a sponsored or endorsed app placement"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Searchable tags for the app"
+    },
+    "display_order": {
+      "type": "number",
+      "default": 0,
+      "description": "Sort order for display in the widget"
+    }
+  },
+  "required": [
+    "name",
+    "website_url",
+    "category"
+  ]
+}

@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import UserProfileCard from "@/components/feed/UserProfileCard";
 import TrendingProjects from "@/components/feed/TrendingProjects";
+import LibraryOfApps from "@/components/feed/LibraryOfApps";
 
 export default function FeedSidebar({ currentUser }) {
   const [suggestedUsers, setSuggestedUsers] = useState([]);
@@ -58,6 +59,9 @@ export default function FeedSidebar({ currentUser }) {
 
       {/* Trending Projects */}
       <TrendingProjects />
+
+      {/* Library of Apps */}
+      <LibraryOfApps />
 
       {/* Quick Links */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
