@@ -19,38 +19,11 @@ import {
 import { toast } from "sonner";
 import HorizontalScrollContainer from "@/components/HorizontalScrollContainer";
 import AppLogo from "@/components/feed/AppLogo";
-import { deduplicateApps } from "@/components/feed/knownAppCategories";
-
-const CACHE_KEY = (email) => `cu_app_library_v4_${email}`;
-const CACHE_TTL = 24 * 60 * 60 * 1000;
-
-function getFaviconUrl(url) {
-  try {
-    return `https://www.google.com/s2/favicons?sz=128&domain_url=${new URL(url).hostname}`;
-  } catch {
-    return null;
-  }
-}
-
-function getLogoUrl(url) {
-  try {
-    return `https://logo.clearbit.com/${new URL(url).hostname.replace(/^www\./, "")}`;
-  } catch {
-    return null;
-  }
-}
-
-function getCachedApps(email) {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY(email));
-    if (!raw) return null;
-    const { timestamp, apps } = JSON.parse(raw);
-    if (Date.now() - timestamp > CACHE_TTL) return null;
-    return apps;
-  } catch {
-    return null;
-  }
-}
+import {
+  fetchTailoredApps,
+  getCachedApps,
+  setCachedApps,
+} from "@/components/feed/appLibraryService";
 
 /**
  * Compact horizontal-scrolling app suggestion strip designed to be
@@ -80,53 +53,12 @@ export default function AppSuggestionWidget({ currentUser, instanceIndex = 0 }) 
         return;
       }
 
-      // Fetch fresh — same logic as LibraryOfApps
+      // Fetch fresh — same shared service as LibraryOfApps / LibraryOfAppsMobile
       try {
-        const skills = currentUser?.skills || [];
-        const interests = currentUser?.interests || [];
-        const tools = currentUser?.tools_technologies || [];
-        const profileParts = [];
-        if (skills.length) profileParts.push(`Skills: ${skills.join(", ")}`);
-        if (interests.length) profileParts.push(`Interests: ${interests.join(", ")}`);
-        if (tools.length) profileParts.push(`Current tools: ${tools.join(", ")}`);
-        const profileClause = profileParts.length
-          ? `The user's profile: ${profileParts.join("; ")}.`
-          : "Recommend a broad mix of popular apps.";
-
-        const result = await base44.integrations.Core.InvokeLLM({
-          prompt: `You are an app discovery curator for Collab Unity. ${profileClause} Return 24 real, well-known software apps or tools this user should test, learn about, or use. For each: name, category (one of: "Communication Tools", "Design Tools", "Development", "Productivity", "Project Management", "AI Tools", "Marketing", "Analytics", "File Storage", "No-Code", "Video Editing", "Social Media"), description (1-2 sentences), and website_url (official URL). Ensure each category has at least 2 apps. CRITICAL: Assign each app to its single most accurate primary category based on what the app is primarily known for. For example: Discord, Slack, and Zoom are "Communication Tools"; Figma and Canva are "Design Tools"; GitHub and Docker are "Development"; Google Analytics and Amplitude are "Analytics". Do NOT duplicate an app under multiple categories.`,
-          add_context_from_internet: true,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              apps: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    name: { type: "string" },
-                    category: { type: "string" },
-                    description: { type: "string" },
-                    website_url: { type: "string" },
-                  },
-                },
-              },
-            },
-          },
-        });
+        const fresh = await fetchTailoredApps(currentUser);
         if (cancelled) return;
-        const fresh = deduplicateApps(result?.apps || []).map((app) => ({
-          ...app,
-          logo_url: getLogoUrl(app.website_url),
-          favicon_url: getFaviconUrl(app.website_url),
-        }));
         setApps(fresh);
-        try {
-          localStorage.setItem(
-            CACHE_KEY(currentUser.email),
-            JSON.stringify({ timestamp: Date.now(), apps: fresh })
-          );
-        } catch {}
+        setCachedApps(currentUser.email, fresh);
       } catch (e) {
         console.error("Error fetching apps for suggestion widget:", e);
       } finally {
