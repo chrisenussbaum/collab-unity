@@ -27,7 +27,7 @@ function timeAgo(dateStr) {
   return date.toLocaleDateString();
 }
 
-function ViewerRow({ viewer }) {
+function ViewerRow({ viewer, showProject }) {
   const profileUrl = viewer.username
     ? createPageUrl(`UserProfile?username=${viewer.username}`)
     : null;
@@ -40,6 +40,8 @@ function ViewerRow({ viewer }) {
       </AvatarFallback>
     </Avatar>
   );
+
+  const hasMultiple = viewer.view_count > 1;
 
   return (
     <div className="flex items-center gap-3 py-2 px-1 rounded-lg hover:bg-gray-50 transition-colors">
@@ -61,10 +63,67 @@ function ViewerRow({ viewer }) {
             {viewer.full_name || viewer.email || "Anonymous"}
           </p>
         )}
-        <p className="text-xs text-gray-400">{timeAgo(viewer.viewed_at)}</p>
+        {showProject && viewer.project_title ? (
+          <p className="text-xs text-gray-500 truncate flex items-center gap-1">
+            <FolderOpen className="w-3 h-3 flex-shrink-0" />
+            {viewer.project_title}
+          </p>
+        ) : null}
+        <p className="text-xs text-gray-400">
+          {hasMultiple
+            ? `Viewed ${viewer.view_count}× · ${timeAgo(viewer.viewed_at)}`
+            : timeAgo(viewer.viewed_at)}
+        </p>
       </div>
     </div>
   );
+}
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+function aggregateViewers(viewers, groupByProject = false) {
+  if (!viewers?.length) return [];
+
+  const sorted = [...viewers].sort(
+    (a, b) => new Date(b.viewed_at) - new Date(a.viewed_at)
+  );
+
+  const groups = {};
+  for (const v of sorted) {
+    const key = groupByProject ? `${v.email}:${v.project_id}` : v.email;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(v);
+  }
+
+  const aggregated = [];
+  for (const views of Object.values(groups)) {
+    let i = 0;
+    while (i < views.length) {
+      const mostRecent = views[i];
+      const windowStart = new Date(mostRecent.viewed_at).getTime() - WEEK_MS;
+      const inWindow = [];
+      while (
+        i < views.length &&
+        new Date(views[i].viewed_at).getTime() >= windowStart
+      ) {
+        inWindow.push(views[i]);
+        i++;
+      }
+      if (inWindow.length > 1) {
+        aggregated.push({
+          ...mostRecent,
+          view_count: inWindow.length,
+        });
+      } else {
+        aggregated.push(mostRecent);
+      }
+    }
+  }
+
+  aggregated.sort(
+    (a, b) => new Date(b.viewed_at) - new Date(a.viewed_at)
+  );
+  return aggregated;
 }
 
 export default function ViewersDialog({ open, onOpenChange, type }) {
@@ -82,9 +141,9 @@ export default function ViewersDialog({ open, onOpenChange, type }) {
         const data = res?.data || res;
         if (cancelled) return;
         if (type === "profile") {
-          setViewers(data.profile_viewers || []);
+          setViewers(aggregateViewers(data.profile_viewers || [], false));
         } else {
-          setViewers(data.project_viewers || []);
+          setViewers(aggregateViewers(data.project_viewers || [], true));
         }
       } catch (e) {
         console.error("Error fetching viewers:", e);
@@ -128,7 +187,11 @@ export default function ViewersDialog({ open, onOpenChange, type }) {
           ) : (
             <div className="space-y-0.5">
               {viewers.map((viewer, i) => (
-                <ViewerRow key={viewer.email + i} viewer={viewer} />
+                <ViewerRow
+                  key={viewer.email + (viewer.project_id || "") + i}
+                  viewer={viewer}
+                  showProject={type === "project"}
+                />
               ))}
             </div>
           )}
