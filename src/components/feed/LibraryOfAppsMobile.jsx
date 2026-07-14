@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import HorizontalScrollContainer from "@/components/HorizontalScrollContainer";
+import AppLogo from "@/components/feed/AppLogo";
 
 const CACHE_KEY = (email) => `cu_app_library_v2_${email}`;
 const CACHE_TTL = 24 * 60 * 60 * 1000;
@@ -332,28 +333,13 @@ function MobileAppCard({ app, onClick }) {
 
 function AppDetailDialog({ app, isOpen, onClose, onVisit }) {
   if (!app) return null;
-  const logo = app.logo_url || app.favicon_url;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center bg-gray-50 border border-gray-200 flex-shrink-0">
-              {logo ? (
-                <img
-                  src={logo}
-                  alt={app.name}
-                  className="w-full h-full object-contain p-2"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center cu-gradient">
-                  <span className="text-white font-bold text-xl">
-                    {app.name?.charAt(0)?.toUpperCase() || "A"}
-                  </span>
-                </div>
-              )}
-            </div>
+            <AppLogo app={app} size="lg" />
             <div className="flex-1 min-w-0">
               <DialogTitle className="text-lg font-bold text-gray-900">
                 {app.name}

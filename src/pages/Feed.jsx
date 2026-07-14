@@ -44,7 +44,7 @@ import FeedRecommendations from "@/components/feed/FeedRecommendations";
 import ContentDiscoveryWidget from "@/components/feed/ContentDiscoveryWidget";
 import CollaboratorDiscoveryWidget from "@/components/feed/CollaboratorDiscoveryWidget";
 import FeedSidebar from "@/components/feed/FeedSidebar";
-import LibraryOfAppsMobile from "@/components/feed/LibraryOfAppsMobile";
+import AppSuggestionWidget from "@/components/feed/AppSuggestionWidget";
 import ForYouSection from "@/components/discover/ForYouSection";
 import MicrolinkPreview from "@/components/MicrolinkPreview";
 import ShareCardDialog from "@/components/share/ShareCardDialog";
@@ -447,6 +447,10 @@ const FeedList = ({ isLoading, displayedItems, isLoadingMore, currentUser, proje
       }
       if ((index + 1) % 4 === 0 && index < displayedItems.length - 1 && index !== 4) {
         result.push(<CollaboratorDiscoveryWidget key={`collab-widget-${index}`} currentUser={currentUser} />);
+      }
+      // Insert app suggestions every 7 items (mobile only — widget hides on desktop)
+      if (currentUser && (index + 1) % 7 === 0 && index < displayedItems.length - 1) {
+        result.push(<AppSuggestionWidget key={`app-widget-${index}`} currentUser={currentUser} />);
       }
     });
     return result;
@@ -964,9 +968,6 @@ export default function Feed({ currentUser, authIsLoading }) {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </motion.div>
               </>
-            )}
-            {currentUser && (
-              <LibraryOfAppsMobile currentUser={currentUser} />
             )}
             {currentUser && (
               <FeedRecommendations
