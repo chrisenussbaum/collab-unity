@@ -18,9 +18,9 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import AppLogo from "@/components/feed/AppLogo";
-import { getAuthoritativeCategory } from "@/components/feed/knownAppCategories";
+import { deduplicateApps } from "@/components/feed/knownAppCategories";
 
-const CACHE_KEY = (email) => `cu_app_library_v3_${email}`;
+const CACHE_KEY = (email) => `cu_app_library_v4_${email}`;
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 function getFaviconUrl(url) {
@@ -87,10 +87,8 @@ Make sure each category has at least 2 apps. Vary the selection so it's not just
     },
   });
 
-  return (result?.apps || []).map((app, i) => ({
+  return deduplicateApps(result?.apps || []).map((app) => ({
     ...app,
-    category: getAuthoritativeCategory(app),
-    id: `app-${i}`,
     logo_url: getLogoUrl(app.website_url),
     favicon_url: getFaviconUrl(app.website_url),
   }));

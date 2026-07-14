@@ -190,6 +190,158 @@ export const KNOWN_APP_CATEGORIES = {
   "snapchat": "Social Media",
   "twitch": "Social Media",
   "threads": "Social Media",
+  "discord app": "Communication Tools",
+
+  // Adobe general entries (LLM may return "Adobe" or "Adobe Creative Cloud")
+  "adobe": "Design Tools",
+  "adobe creative cloud": "Design Tools",
+  "adobe express": "Design Tools",
+  "adobe indesign": "Design Tools",
+  "indesign": "Design Tools",
+  "adobe lightroom": "Design Tools",
+  "lightroom": "Design Tools",
+  "adobe firefly": "Design Tools",
+  "firefly": "Design Tools",
+  "adobe acrobat": "Design Tools",
+  "acrobat": "Design Tools",
+  "adobe portfolio": "Design Tools",
+  "adobe stock": "Design Tools",
+
+  // Additional Development tools
+  "bitbucket": "Development",
+  "heroku": "Development",
+  "digitalocean": "Development",
+  "aws": "Development",
+  "amazon web services": "Development",
+  "azure": "Development",
+  "microsoft azure": "Development",
+  "google cloud": "Development",
+  "google cloud platform": "Development",
+  "firebase": "Development",
+  "supabase": "Development",
+  "cloudflare": "Development",
+  "nginx": "Development",
+  "node.js": "Development",
+  "nodejs": "Development",
+  "npm": "Development",
+  "yarn": "Development",
+  "webpack": "Development",
+  "vite": "Development",
+  "tailwind css": "Development",
+  "tailwind": "Development",
+  "bootstrap": "Development",
+  "react": "Development",
+  "react.js": "Development",
+  "vue": "Development",
+  "vue.js": "Development",
+  "angular": "Development",
+  "svelte": "Development",
+  "next.js": "Development",
+  "nextjs": "Development",
+  "nuxt": "Development",
+  "express": "Development",
+  "django": "Development",
+  "flask": "Development",
+  "ruby on rails": "Development",
+  "rails": "Development",
+  "laravel": "Development",
+  "spring": "Development",
+  "flutter": "Development",
+  "react native": "Development",
+  "xcode": "Development",
+  "android studio": "Development",
+  "eclipse": "Development",
+  "vim": "Development",
+  "neovim": "Development",
+  "emacs": "Development",
+  "sublime text": "Development",
+  "atom": "Development",
+  "insomnia": "Development",
+  "swagger": "Development",
+  "graphql": "Development",
+  "prisma": "Development",
+  "mongodb": "Development",
+  "mysql": "Development",
+  "postgresql": "Development",
+  "redis": "Development",
+  "sqlite": "Development",
+  "supabase": "Development",
+  "kubernetes": "Development",
+  "terraform": "Development",
+  "ansible": "Development",
+  "jenkins": "Development",
+  "circleci": "Development",
+  "github actions": "Development",
+  "linode": "Development",
+  "vultr": "Development",
+  "render": "Development",
+  "fly.io": "Development",
+  "railway": "Development",
+  "glitch": "Development",
+  "stackblitz": "Development",
+
+  // Additional Productivity tools
+  "notion ai": "Productivity",
+  "google keep": "Productivity",
+  "microsoft onenote": "Productivity",
+  "onenote": "Productivity",
+  "apple notes": "Productivity",
+  "bear": "Productivity",
+  "ulysses": "Productivity",
+  "focusmate": "Productivity",
+  "rescue time": "Productivity",
+  "rescuetime": "Productivity",
+  "toggl": "Productivity",
+  "clockify": "Productivity",
+  "harvest": "Productivity",
+  "calendly": "Productivity",
+  "1password": "Productivity",
+  "bitwarden": "Productivity",
+  "dashlane": "Productivity",
+  "textexpander": "Productivity",
+  "rectangle": "Productivity",
+  "magnet": "Productivity",
+  "notion calendar": "Productivity",
+  "cron": "Productivity",
+  "amie": "Productivity",
+  "things 3": "Productivity",
+  "omnifocus": "Productivity",
+  "taskade": "Productivity",
+  "anytype": "Productivity",
+  "capacities": "Productivity",
+  "tana": "Productivity",
+  "heptabase": "Productivity",
+  "logseq": "Productivity",
+  "reflect": "Productivity",
+  "remnote": "Productivity",
+  "sunsama": "Productivity",
+  "motion": "Productivity",
+  "reclaim": "Productivity",
+  "akiflow": "Productivity",
+  "superhuman": "Productivity",
+
+  // Additional Project Management
+  "teamwork": "Project Management",
+  "proofhub": "Project Management",
+  "ganttpro": "Project Management",
+  "teamgantt": "Project Management",
+  "liquidplanner": "Project Management",
+  "forecast": "Project Management",
+  "hive": "Project Management",
+  "nutcache": "Project Management",
+  "backlog": "Project Management",
+  "zenhub": "Project Management",
+  "github projects": "Project Management",
+  "confluence": "Project Management",
+  "smartsheet": "Project Management",
+  "podio": "Project Management",
+  "freedcamp": "Project Management",
+  "clickup": "Project Management",
+  "flow": "Project Management",
+  "leankit": "Project Management",
+  "targetprocess": "Project Management",
+  "asana": "Project Management",
+  "trello": "Project Management",
 };
 
 /**
@@ -197,6 +349,43 @@ export const KNOWN_APP_CATEGORIES = {
  * category if the app is not in the known map.
  */
 export function getAuthoritativeCategory(app) {
-  const key = (app.name || "").trim().toLowerCase();
+  const key = normalizeName(app.name);
   return KNOWN_APP_CATEGORIES[key] || app.category;
+}
+
+/**
+ * Normalizes an app name for deduplication: lowercase, trim, remove common
+ * suffixes like "app", "tool", "software", "inc", "the".
+ */
+function normalizeName(name) {
+  return (name || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+(app|tool|tools|software|inc|the)\s*$/i, "")
+    .replace(/[^\w\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Takes a list of apps from the LLM, applies the authoritative category to
+ * each, and deduplicates by normalized name so no app appears more than once
+ * (preventing the same app from showing up under multiple categories).
+ * Keeps the first occurrence when duplicates are found.
+ */
+export function deduplicateApps(apps) {
+  const seen = new Set();
+  const result = [];
+  let id = 0;
+  for (const app of apps || []) {
+    const key = normalizeName(app.name);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    result.push({
+      ...app,
+      category: getAuthoritativeCategory(app),
+      id: `app-${id++}`,
+    });
+  }
+  return result;
 }
