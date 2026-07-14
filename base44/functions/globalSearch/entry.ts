@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
             query = searchParams.get('query') || '';
         }
         
-        if (!query || query.trim().length < 2) {
+        if (!query || query.trim().length < 1) {
             return Response.json({ 
                 results: {
                     projects: [],

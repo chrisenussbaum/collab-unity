@@ -10,9 +10,15 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
-const CACHE_KEY = (email) => `cu_app_library_${email}`;
+const CACHE_KEY = (email) => `cu_app_library_v2_${email}`;
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 function getFaviconUrl(url) {
@@ -52,13 +58,13 @@ async function fetchTailoredApps(currentUser) {
   const result = await base44.integrations.Core.InvokeLLM({
     prompt: `You are an app discovery curator for Collab Unity, a collaboration platform. ${profileClause}
 
-Return 12 real, well-known software apps, tools, or platforms that this user should test, learn about, or use. For each app provide:
+Return 24 real, well-known software apps, tools, or platforms that this user should test, learn about, or use. For each app provide:
 - name: the app's name
-- category: one of these exact categories: "Communication Tools", "Design Tools", "Development", "Productivity", "Project Management"
+- category: one of these exact categories: "Communication Tools", "Design Tools", "Development", "Productivity", "Project Management", "AI Tools", "Marketing", "Analytics", "File Storage", "No-Code", "Video Editing", "Social Media"
 - description: a compelling 1-2 sentence description of what the app does and why the user should try it
 - website_url: the official website URL (e.g. https://slack.com)
 
-Make sure each category has at least 2 apps. Vary the selection so it's not just the most obvious choices — include some up-and-coming or lesser-known tools alongside mainstream ones.`,
+Make sure each category has at least 2 apps. Vary the selection so it's not just the most obvious choices — include some up-and-coming or lesser-known tools alongside mainstream ones. Spread apps evenly across all categories.`,
     add_context_from_internet: true,
     response_json_schema: {
       type: "object",
@@ -160,17 +166,20 @@ export default function LibraryOfApps({ currentUser }) {
   );
 
   const filteredApps = useMemo(() => {
-    let result = apps;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(
+      // Prioritize apps whose name starts with the query, then fall back to includes
+      const startsWith = apps.filter((a) => a.name?.toLowerCase().startsWith(q));
+      const contains = apps.filter(
         (a) =>
-          a.name?.toLowerCase().includes(q) ||
-          a.description?.toLowerCase().includes(q) ||
-          a.category?.toLowerCase().includes(q)
+          !a.name?.toLowerCase().startsWith(q) &&
+          (a.name?.toLowerCase().includes(q) ||
+            a.description?.toLowerCase().includes(q) ||
+            a.category?.toLowerCase().includes(q))
       );
-      return result.slice(0, 4);
+      return [...startsWith, ...contains];
     }
+    let result = apps;
     if (activeCategory) {
       result = result.filter((a) => a.category === activeCategory);
     }
@@ -204,12 +213,18 @@ export default function LibraryOfApps({ currentUser }) {
           <h3 className="text-white font-bold text-base tracking-wide">
             Library of Apps
           </h3>
-          <div
-            className="w-6 h-6 rounded flex items-center justify-center bg-white/20"
-            title="Discover apps tailored to you — test, learn, and experiment"
-          >
-            <Info className="w-3.5 h-3.5 text-white" />
-          </div>
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="w-6 h-6 rounded flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors">
+                  <Info className="w-3.5 h-3.5 text-white" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-[220px] text-xs">
+                Discover apps tailored to your skills and interests — test, learn, and experiment with new tools!
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         {/* Body */}
@@ -251,7 +266,7 @@ export default function LibraryOfApps({ currentUser }) {
               )}
 
               {/* Responsive grid */}
-              <div className="border border-gray-300 rounded-lg overflow-hidden">
+              <div className={`border border-gray-300 rounded-lg overflow-hidden ${searchQuery.trim() && filteredApps.length > 4 ? 'max-h-[240px] overflow-y-auto' : ''}`}>
                 <div
                   className={`grid ${gridClass} divide-x divide-y divide-gray-200`}
                 >

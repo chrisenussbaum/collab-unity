@@ -76,7 +76,7 @@ export default function GlobalSearchBar({ className = "", placeholder = "Search.
 
   useEffect(() => {
     const searchTimeout = setTimeout(async () => {
-      if (query.trim().length < 2) {
+      if (query.trim().length < 1) {
         setResults({ projects: [], users: [], posts: [], templates: [] });
         setShowResults(false);
         return;

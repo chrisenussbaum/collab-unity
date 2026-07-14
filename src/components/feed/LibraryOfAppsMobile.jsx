@@ -10,10 +10,16 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import HorizontalScrollContainer from "@/components/HorizontalScrollContainer";
 
-const CACHE_KEY = (email) => `cu_app_library_${email}`;
+const CACHE_KEY = (email) => `cu_app_library_v2_${email}`;
 const CACHE_TTL = 24 * 60 * 60 * 1000;
 
 function getFaviconUrl(url) {
@@ -83,7 +89,7 @@ export default function LibraryOfAppsMobile({ currentUser }) {
           : "Recommend a broad mix of popular apps.";
 
         const result = await base44.integrations.Core.InvokeLLM({
-          prompt: `You are an app discovery curator for Collab Unity. ${profileClause} Return 12 real, well-known software apps or tools this user should test, learn about, or use. For each: name, category (one of: "Communication Tools", "Design Tools", "Development", "Productivity", "Project Management"), description (1-2 sentences), and website_url (official URL). Ensure each category has at least 2 apps.`,
+          prompt: `You are an app discovery curator for Collab Unity. ${profileClause} Return 24 real, well-known software apps or tools this user should test, learn about, or use. For each: name, category (one of: "Communication Tools", "Design Tools", "Development", "Productivity", "Project Management", "AI Tools", "Marketing", "Analytics", "File Storage", "No-Code", "Video Editing", "Social Media"), description (1-2 sentences), and website_url (official URL). Ensure each category has at least 2 apps. Spread apps evenly across all categories.`,
           add_context_from_internet: true,
           response_json_schema: {
             type: "object",
@@ -137,17 +143,19 @@ export default function LibraryOfAppsMobile({ currentUser }) {
   );
 
   const displayApps = useMemo(() => {
-    let result = apps;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(
+      const startsWith = apps.filter((a) => a.name?.toLowerCase().startsWith(q));
+      const contains = apps.filter(
         (a) =>
-          a.name?.toLowerCase().includes(q) ||
-          a.description?.toLowerCase().includes(q) ||
-          a.category?.toLowerCase().includes(q)
+          !a.name?.toLowerCase().startsWith(q) &&
+          (a.name?.toLowerCase().includes(q) ||
+            a.description?.toLowerCase().includes(q) ||
+            a.category?.toLowerCase().includes(q))
       );
-      return result;
+      return [...startsWith, ...contains];
     }
+    let result = apps;
     if (activeCategory) {
       result = result.filter((a) => a.category === activeCategory);
     }
@@ -176,17 +184,23 @@ export default function LibraryOfAppsMobile({ currentUser }) {
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setShowSearch(!showSearch)}
-              className="w-6 h-6 rounded flex items-center justify-center bg-white/20"
+              className="w-6 h-6 rounded flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors"
               title="Search apps"
             >
               <Search className="w-3.5 h-3.5 text-white" />
             </button>
-            <div
-              className="w-6 h-6 rounded flex items-center justify-center bg-white/20"
-              title="Apps tailored to your profile"
-            >
-              <Info className="w-3.5 h-3.5 text-white" />
-            </div>
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="w-6 h-6 rounded flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors">
+                    <Info className="w-3.5 h-3.5 text-white" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[200px] text-xs">
+                  Discover apps tailored to your skills and interests — test, learn, and experiment with new tools!
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
 
