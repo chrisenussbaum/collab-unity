@@ -159,7 +159,7 @@ export default function AppSuggestionWidget({ currentUser }) {
 
   return (
     <>
-      <div className="md:hidden bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
+      <div className="md:hidden bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl border border-purple-200 shadow-sm overflow-hidden">
         {/* Accent header */}
         <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-100">
           <div className="flex items-center gap-2">
@@ -190,12 +190,12 @@ export default function AppSuggestionWidget({ currentUser }) {
             <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
           </div>
         ) : (
-          <HorizontalScrollContainer className="py-3" showArrows={false}>
+          <HorizontalScrollContainer className="py-3 px-3" showArrows={false}>
             {displayApps.map((app) => (
               <button
                 key={app.id}
                 onClick={() => setSelectedApp(app)}
-                className="flex flex-col items-center gap-1.5 px-2 flex-shrink-0 w-[76px] group"
+                className="flex flex-col items-center gap-1.5 flex-shrink-0 w-[72px] group"
               >
                 <AppLogo
                   app={app}
