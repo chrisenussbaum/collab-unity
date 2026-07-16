@@ -499,6 +499,13 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
+  // Auto-scroll to bottom when messages change or history finishes loading
+  useEffect(() => {
+    if (historyLoaded) {
+      scrollToBottom();
+    }
+  }, [messages, historyLoaded, scrollToBottom]);
+
   const uploadFileToAssets = async (file) => {
     if (!canEdit || !project?.id || !currentUser) return;
     setUploadingFile(file.name);
