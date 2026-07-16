@@ -88,7 +88,7 @@ export default function Chat({ currentUser, authIsLoading }) {
     });
   };
 
-  // Scroll when new messages are added OR when explicitly triggered
+  // Scroll when new messages are added, history finishes loading, or when explicitly triggered
   useEffect(() => {
     if (messages.length > prevMessagesLengthRef.current || shouldScrollRef.current) {
       scrollToBottom();
@@ -96,7 +96,7 @@ export default function Chat({ currentUser, authIsLoading }) {
       setShowScrollButton(false);
     }
     prevMessagesLengthRef.current = messages.length;
-  }, [messages]);
+  }, [messages, isLoadingMessages]);
 
   // Detect scroll position to show/hide scroll button
   const handleScroll = (e) => {
