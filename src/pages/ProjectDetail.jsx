@@ -72,6 +72,7 @@ import ProjectFundingCard from "../components/ProjectFundingCard";
 import SocialsPanel from '../components/SocialsPanel';
 import ProjectLinkPreview from "../components/ProjectLinkPreview"; // New import
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer"; // New import
+import SkillMatchBadge from "../components/project/SkillMatchBadge";
 import { base44 } from "@/api/base44Client";
 
 
@@ -1323,6 +1324,9 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                           <UserPlus className="w-3 h-3 mr-1" />
                           Open for Collaboration
                         </Badge>
+                      )}
+                      {currentUser && !isOwner && !isExplicitCollaborator && (
+                        <SkillMatchBadge currentUser={currentUser} project={project} />
                       )}
                     </div>
                   </div>
