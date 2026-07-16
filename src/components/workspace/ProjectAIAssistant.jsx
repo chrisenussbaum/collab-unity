@@ -3,15 +3,10 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Send, Sparkles, Bot, User, RefreshCw, ChevronDown, ChevronUp, Lightbulb, Wrench, Flag, FileText } from "lucide-react";
+import { Send, Sparkles, Bot, User, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-
-const QUICK_PROMPTS = [
-  { label: "What should I build next?", icon: Lightbulb },
-  { label: "Suggest tools for this project", icon: Wrench },
-  { label: "Break this into milestones", icon: Flag },
-  { label: "Write a project brief", icon: FileText },
-];
+import QuickActionsBar, { getDynamicQuickPrompts } from "./QuickActionsBar";
+import AddToolDialog from "./AddToolDialog";
 
 function buildSystemPrompt(project, tasks, milestones) {
   const parts = [
@@ -41,8 +36,12 @@ export default function ProjectAIAssistant({ project, tasks = [], milestones = [
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [toolDialogOpen, setToolDialogOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+
+  // Compute dynamic quick prompts from project state
+  const dynamicPrompts = getDynamicQuickPrompts(project, tasks, milestones);
 
   useEffect(() => {
     if (isOpen && messagesEndRef.current) {
@@ -72,12 +71,14 @@ export default function ProjectAIAssistant({ project, tasks = [], milestones = [
       const result = await base44.integrations.Core.InvokeLLM({ prompt });
 
       setMessages(prev => [...prev, { role: "assistant", content: result }]);
+      return true;
     } catch (e) {
       setMessages(prev => [...prev, {
         role: "assistant",
         content: "Sorry, I ran into an issue. Please try again.",
         isError: true,
       }]);
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -175,27 +176,13 @@ export default function ProjectAIAssistant({ project, tasks = [], milestones = [
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Prompts */}
-          {messages.length <= 1 && (
-            <div className="px-3 py-2 bg-white border-t border-gray-100">
-              <p className="text-xs text-gray-400 mb-2 font-medium">Quick actions</p>
-              <div className="flex flex-wrap gap-1.5">
-                {QUICK_PROMPTS.map((qp) => {
-                  const Icon = qp.icon;
-                  return (
-                    <button
-                      key={qp.label}
-                      onClick={() => sendMessage(qp.label)}
-                      className="flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 rounded-full text-xs font-medium transition-colors"
-                    >
-                      <Icon className="w-3 h-3" />
-                      {qp.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          {/* Quick Actions Bar (dynamic pills + Cmd+K) */}
+          <QuickActionsBar
+            prompts={dynamicPrompts}
+            onSendPrompt={sendMessage}
+            onOpenToolDialog={() => setToolDialogOpen(true)}
+            isLoading={isLoading}
+          />
 
           {/* Input */}
           <div className="p-3 bg-white border-t border-gray-200">
@@ -230,6 +217,13 @@ export default function ProjectAIAssistant({ project, tasks = [], milestones = [
           </div>
         </div>
       )}
+
+      {/* Add Tool Dialog */}
+      <AddToolDialog
+        open={toolDialogOpen}
+        onOpenChange={setToolDialogOpen}
+        project={project}
+      />
     </div>
   );
 }
