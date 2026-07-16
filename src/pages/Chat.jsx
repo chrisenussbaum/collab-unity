@@ -90,12 +90,14 @@ export default function Chat({ currentUser, authIsLoading }) {
 
   // Scroll when new messages are added, history finishes loading, or when explicitly triggered
   useEffect(() => {
-    if (messages.length > prevMessagesLengthRef.current || shouldScrollRef.current) {
+    if (!isLoadingMessages && (messages.length > prevMessagesLengthRef.current || shouldScrollRef.current)) {
       scrollToBottom();
       shouldScrollRef.current = false;
       setShowScrollButton(false);
     }
-    prevMessagesLengthRef.current = messages.length;
+    if (!isLoadingMessages) {
+      prevMessagesLengthRef.current = messages.length;
+    }
   }, [messages, isLoadingMessages]);
 
   // Detect scroll position to show/hide scroll button
