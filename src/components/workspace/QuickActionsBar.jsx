@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,14 +21,14 @@ import {
 } from "lucide-react";
 
 // Master list of all pill actions with their styling (literal Tailwind classes)
+// isAction pills open the ProjectActionModal; prompt pills send a message to the agent.
 const PILL_ACTIONS = [
   {
     id: "brainstorm",
     label: "Brainstorm",
     icon: Lightbulb,
     prompt: "Let's brainstorm some fresh ideas and angles for this project.",
-    classes:
-      "bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100",
+    classes: "bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100",
   },
   {
     id: "plan",
@@ -50,37 +50,40 @@ const PILL_ACTIONS = [
     icon: AlertCircle,
     prompt: "Review the overdue tasks and suggest how to handle them.",
     classes: "bg-red-50 border-red-200 text-red-700 hover:bg-red-100",
+    isAction: true,
     isDynamic: true,
   },
   {
     id: "task",
     label: "Create Task",
     icon: PlusSquare,
-    prompt: "Help me create a new task for this project.",
+    prompt: "",
     classes: "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100",
+    isAction: true,
   },
   {
     id: "milestone",
     label: "Add Milestone",
     icon: Flag,
-    prompt: "Help me define a new milestone for this project.",
+    prompt: "",
     classes: "bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100",
+    isAction: true,
   },
   {
     id: "note",
     label: "Save Note",
     icon: BookOpen,
-    prompt: "Help me save an important note for this project.",
+    prompt: "",
     classes: "bg-green-50 border-green-200 text-green-700 hover:bg-green-100",
+    isAction: true,
   },
   {
     id: "tool",
     label: "Add Tool",
     icon: Wrench,
     prompt: "",
-    classes:
-      "bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100",
-    isToolAction: true,
+    classes: "bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100",
+    isAction: true,
   },
 ];
 
@@ -131,7 +134,12 @@ export function getDynamicQuickPrompts(project, tasks = [], milestones = []) {
   return prompts;
 }
 
-export default function QuickActionsBar({ prompts, onSendPrompt, onOpenToolDialog, isLoading }) {
+export default function QuickActionsBar({
+  prompts,
+  onSendPrompt,
+  onOpenAction,
+  isLoading,
+}) {
   const [activePill, setActivePill] = useState(null); // { id, status: 'loading' | 'success' }
   const [commandOpen, setCommandOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -159,8 +167,8 @@ export default function QuickActionsBar({ prompts, onSendPrompt, onOpenToolDialo
   }, [commandOpen]);
 
   const handlePillClick = async (pill) => {
-    if (pill.isToolAction) {
-      onOpenToolDialog();
+    if (pill.isAction) {
+      onOpenAction(pill.id);
       return;
     }
     if (isLoading) return;
@@ -180,7 +188,7 @@ export default function QuickActionsBar({ prompts, onSendPrompt, onOpenToolDialo
     return prompts.filter(
       (p) =>
         p.label.toLowerCase().includes(q) ||
-        p.prompt.toLowerCase().includes(q)
+        (p.prompt || "").toLowerCase().includes(q)
     );
   }, [prompts, searchQuery]);
 
@@ -233,11 +241,9 @@ export default function QuickActionsBar({ prompts, onSendPrompt, onOpenToolDialo
               <button
                 key={pill.id}
                 onClick={() => handlePillClick(pill)}
-                disabled={isLoading && !isActive}
+                disabled={isLoading && !isActive && !pill.isAction}
                 className={`flex items-center gap-1.5 px-2.5 py-1 border rounded-full text-xs font-medium transition-all ${pill.classes} ${
-                  isActive && activePill.status === "loading"
-                    ? "opacity-90"
-                    : ""
+                  isActive && activePill.status === "loading" ? "opacity-90" : ""
                 } ${isSuccess ? "ring-2 ring-green-300" : ""} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {renderPillContent(pill)}
