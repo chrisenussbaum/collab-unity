@@ -6,10 +6,39 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BookOpen, Plus, Pencil, Trash2, Pin, PinOff, Eye, Lock, Feather } from "lucide-react";
+import { BookOpen, Plus, Pencil, Trash2, Pin, PinOff, Eye, Lock, Feather, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import ReactMarkdown from "react-markdown";
+import RichLinkPreview from "@/components/workspace/RichLinkPreview";
+
+// Pull the first markdown link [text](url) out of content for card thumbnails
+function extractFirstLink(content) {
+  if (!content) return null;
+  const match = content.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/);
+  if (!match) return null;
+  return { title: match[1], url: match[2] };
+}
+
+const markdownComponents = {
+  a: ({ href, children }) => {
+    const text = Array.isArray(children) ? children.join("") : children;
+    const isDescriptiveTitle =
+      typeof text === "string" && text.trim().length > 0 && !text.trim().startsWith("http");
+    if (href && isDescriptiveTitle) {
+      return (
+        <span className="block my-3 not-prose">
+          <RichLinkPreview url={href} title={text} />
+        </span>
+      );
+    }
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline break-all">
+        {children}
+      </a>
+    );
+  },
+};
 
 export default function ThoughtsTab({ project, currentUser, isCollaborator, isProjectOwner, projectOwnerName }) {
   const [thoughts, setThoughts] = useState([]);
@@ -348,7 +377,7 @@ export default function ThoughtsTab({ project, currentUser, isCollaborator, isPr
                 </div>
               </div>
               <div className="prose prose-sm sm:prose-base max-w-none prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-relaxed">
-                <ReactMarkdown>{selectedThought.content}</ReactMarkdown>
+                <ReactMarkdown components={markdownComponents}>{selectedThought.content}</ReactMarkdown>
               </div>
             </div>
           </DialogContent>
@@ -390,10 +419,28 @@ function ThoughtCard({ thought, onEdit, onDelete, onPin, onView, hasWriteAccess 
             )}
           </div>
 
-          {/* Content preview */}
-          <p className="text-gray-600 leading-relaxed line-clamp-3">
-            {thought.content.substring(0, 200)}...
-          </p>
+          {/* Content preview — rich thumbnail for resource notes */}
+          {(() => {
+            const firstLink = extractFirstLink(thought.content);
+            const textOnly = thought.content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1").replace(/[#*>`_-]/g, "").trim();
+            return (
+              <div className="space-y-3">
+                {firstLink && (
+                  <div className="not-prose">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Link2 className="w-3.5 h-3.5 text-purple-500" />
+                      <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Resources</span>
+                    </div>
+                    <RichLinkPreview url={firstLink.url} title={firstLink.title} variant="compact" />
+                  </div>
+                )}
+                <p className="text-gray-600 leading-relaxed line-clamp-2">
+                  {textOnly.substring(0, 160)}
+                  {textOnly.length > 160 ? "..." : ""}
+                </p>
+              </div>
+            );
+          })()}
 
           {/* Footer */}
           <div className="flex items-center justify-between pt-4 border-t">
