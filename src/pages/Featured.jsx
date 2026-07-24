@@ -179,7 +179,7 @@ export default function Featured() {
     setIsLoading(true);
     try {
       const allProjects = await base44.entities.Project.filter(
-        { is_visible_on_feed: true, is_archived: false },
+        { is_visible_on_feed: true, $or: [{ is_archived: false }, { status: "completed" }] },
         "-updated_date",
         500
       );
