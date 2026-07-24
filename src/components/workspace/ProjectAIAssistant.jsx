@@ -18,6 +18,29 @@ import {
 import ReactMarkdown from "react-markdown";
 import QuickActionsBar, { getDynamicQuickPrompts } from "./QuickActionsBar";
 import ProjectActionModal from "./ProjectActionModal";
+import RichLinkPreview from "./RichLinkPreview";
+
+// Render descriptive markdown links [Title](url) as rich media preview cards
+// (articles/docs → screenshot thumbnails; videos → YouTube thumbnails) inline in chat.
+const chatMarkdownComponents = {
+  a: ({ href, children }) => {
+    const text = Array.isArray(children) ? children.join("") : children;
+    const isDescriptiveTitle =
+      typeof text === "string" && text.trim().length > 0 && !text.trim().startsWith("http");
+    if (href && isDescriptiveTitle) {
+      return (
+        <span className="block my-2 not-prose">
+          <RichLinkPreview url={href} title={text} />
+        </span>
+      );
+    }
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline break-all">
+        {children}
+      </a>
+    );
+  },
+};
 
 const GREETING = (title) =>
   `Hey! I'm your AI project assistant for **${title || "this project"}**. I can research tools, videos, and articles from the web, pull context from your tasks and milestones, and help you plan, build, and track progress. What do you want to work on?`;
@@ -362,7 +385,7 @@ export default function ProjectAIAssistant({
                   >
                     {msg.role === "assistant" ? (
                       <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-li:text-gray-800 prose-strong:text-gray-900">
-                        <ReactMarkdown>{msg.content || ""}</ReactMarkdown>
+                        <ReactMarkdown components={chatMarkdownComponents}>{msg.content || ""}</ReactMarkdown>
                       </div>
                     ) : (
                       <p>{msg.content}</p>
