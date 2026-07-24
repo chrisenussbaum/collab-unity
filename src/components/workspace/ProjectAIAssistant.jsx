@@ -20,17 +20,18 @@ import QuickActionsBar, { getDynamicQuickPrompts } from "./QuickActionsBar";
 import ProjectActionModal from "./ProjectActionModal";
 import RichLinkPreview from "./RichLinkPreview";
 
-// Render descriptive markdown links [Title](url) as rich media preview cards
+// Render EVERY external link in an assistant message as a rich media preview card
 // (articles/docs → screenshot thumbnails; videos → YouTube thumbnails) inline in chat.
+// If the link text is a bare URL, fall back to the URL itself as the card title.
 const chatMarkdownComponents = {
   a: ({ href, children }) => {
-    const text = Array.isArray(children) ? children.join("") : children;
-    const isDescriptiveTitle =
-      typeof text === "string" && text.trim().length > 0 && !text.trim().startsWith("http");
-    if (href && isDescriptiveTitle) {
+    const raw = Array.isArray(children) ? children.join("") : children;
+    const text = typeof raw === "string" ? raw.trim() : "";
+    const title = text && !text.startsWith("http") ? text : href;
+    if (href) {
       return (
         <span className="block my-2 not-prose">
-          <RichLinkPreview url={href} title={text} />
+          <RichLinkPreview url={href} title={title} />
         </span>
       );
     }
