@@ -19,29 +19,19 @@ import ReactMarkdown from "react-markdown";
 import QuickActionsBar, { getDynamicQuickPrompts } from "./QuickActionsBar";
 import ProjectActionModal from "./ProjectActionModal";
 import RichLinkPreview from "./RichLinkPreview";
+import ToolSuggestionCards from "./ToolSuggestionCards";
+import { toast } from "sonner";
 
-// Render EVERY external link in an assistant message as a rich media preview card
-// (articles/docs → screenshot thumbnails; videos → YouTube thumbnails) inline in chat.
-// If the link text is a bare URL, fall back to the URL itself as the card title.
-const chatMarkdownComponents = {
-  a: ({ href, children }) => {
-    const raw = Array.isArray(children) ? children.join("") : children;
-    const text = typeof raw === "string" ? raw.trim() : "";
-    const title = text && !text.startsWith("http") ? text : href;
-    if (href) {
-      return (
-        <span className="block my-2 not-prose">
-          <RichLinkPreview url={href} title={title} />
-        </span>
-      );
-    }
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline break-all">
-        {children}
-      </a>
-    );
-  },
-};
+// Parse a suggested-tool code block body ("Name | url | logoUrl") into tool objects.
+function parseTools(raw) {
+  return String(raw || "")
+    .split("\n")
+    .map((line) => {
+      const parts = line.split("|").map((s) => s.trim());
+      return { name: parts[0] || "", url: parts[1] || "", icon: parts[2] || "" };
+    })
+    .filter((t) => t.name && t.url);
+}
 
 const GREETING = (title) =>
   `Hey! I'm your AI project assistant for **${title || "this project"}**. I can research tools, videos, and articles from the web, pull context from your tasks and milestones, and help you plan, build, and track progress. What do you want to work on?`;
@@ -303,6 +293,62 @@ export default function ProjectAIAssistant({
       ensureConversation().catch(() => {});
     }
   };
+
+  // Add a suggested tool to the project's project_tools array
+  const handleAddTool = useCallback(async (tool) => {
+    if (!project?.id) return;
+    try {
+      const existing = Array.isArray(project.project_tools) ? project.project_tools : [];
+      if (existing.some((t) => t.url === tool.url)) {
+        toast(`${tool.name} is already in your project tools`);
+        return;
+      }
+      const updated = [...existing, { name: tool.name, url: tool.url, icon: tool.icon }];
+      await base44.entities.Project.update(project.id, { project_tools: updated });
+      toast.success(`${tool.name} added to your project`);
+    } catch (error) {
+      console.error("Error adding tool:", error);
+      toast.error("Failed to add tool");
+    }
+  }, [project]);
+
+  // Markdown renderers: links → rich preview cards; ```suggested-tool blocks → Add buttons
+  const chatMarkdownComponents = useMemo(() => ({
+    a: ({ href, children }) => {
+      const raw = Array.isArray(children) ? children.join("") : children;
+      const text = typeof raw === "string" ? raw.trim() : "";
+      const title = text && !text.startsWith("http") ? text : href;
+      if (href) {
+        return (
+          <span className="block my-2 not-prose">
+            <RichLinkPreview url={href} title={title} />
+          </span>
+        );
+      }
+      return (
+        <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline break-all">
+          {children}
+        </a>
+      );
+    },
+    code: ({ className, children }) => {
+      if (className?.includes("language-suggested-tool")) {
+        const tools = parseTools(children);
+        return <ToolSuggestionCards tools={tools} onAddTool={handleAddTool} />;
+      }
+      return <code className={className}>{children}</code>;
+    },
+    pre: ({ children }) => {
+      const child = Array.isArray(children) ? children[0] : children;
+      const isToolBlock =
+        child?.props?.className?.includes?.("language-suggested-tool") ||
+        child?.type === ToolSuggestionCards;
+      if (isToolBlock) {
+        return <div className="not-prose my-2">{children}</div>;
+      }
+      return <pre>{children}</pre>;
+    },
+  }), [handleAddTool]);
 
   const hasAgentMessages = messages.length > 0;
   const messageCount = messages.filter((m) => m.role === "user" && !m.content.startsWith("Project context:")).length;
