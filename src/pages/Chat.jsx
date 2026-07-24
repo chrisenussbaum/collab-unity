@@ -961,7 +961,7 @@ export default function Chat({ currentUser, authIsLoading }) {
     setIsLoadingUsers(true);
     try {
       const { data: users } = await getAllPublicUserProfiles();
-      const filteredUsers = users.filter(u => u.email !== currentUser.email);
+      const filteredUsers = users.filter(u => u.email !== currentUser.email && u.has_completed_onboarding && u.profile_image);
       setAllUsers(filteredUsers);
     } catch (error) {
       console.error("Error loading users:", error);
@@ -977,7 +977,7 @@ export default function Chat({ currentUser, authIsLoading }) {
       setIsLoadingUsers(true);
       try {
         const { data: users } = await getAllPublicUserProfiles();
-        const filteredUsers = users.filter(u => u.email !== currentUser.email);
+        const filteredUsers = users.filter(u => u.email !== currentUser.email && u.has_completed_onboarding && u.profile_image);
         setAllUsers(filteredUsers);
       } catch (error) {
         console.error("Error loading users:", error);

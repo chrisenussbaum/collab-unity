@@ -28,6 +28,7 @@ Deno.serve(async (req) => {
             awards_certifications: u.awards_certifications || [],
             website_url: u.website_url || '',
             linkedin_url: u.linkedin_url || '',
+            has_completed_onboarding: u.has_completed_onboarding || false,
         }));
 
         return new Response(
