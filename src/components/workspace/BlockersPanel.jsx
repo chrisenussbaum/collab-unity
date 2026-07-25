@@ -18,6 +18,7 @@ import {
   Flag,
   Sparkles,
   Loader2,
+  Bell,
 } from "lucide-react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
@@ -81,6 +82,35 @@ export default function BlockersPanel({
       onTaskUpdated?.();
     } catch {
       toast.error("Failed to update due date.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleNudge = async (task) => {
+    if (!task.assigned_to) {
+      toast.error("This task has no assignee to nudge.");
+      return;
+    }
+    setIsUpdating(true);
+    try {
+      const assigneeName =
+        collaborators.find((c) => c.email === task.assigned_to)?.full_name ||
+        task.assigned_to.split("@")[0];
+      await base44.functions.invoke("sendNotification", {
+        recipient_email: task.assigned_to,
+        title: "Friendly nudge",
+        message: `Just checking in on "${task.title}" — it's past due. Can you share an update or a new ETA?`,
+        type: "project_task_overdue",
+        related_project_id: task.project_id,
+        related_entity_id: task.id,
+        actor_email: "system@collabunity.io",
+        actor_name: "Collab Unity",
+        metadata: { task_title: task.title, nudge_type: "manual" },
+      });
+      toast.success(`Nudged ${assigneeName}`);
+    } catch {
+      toast.error("Failed to send nudge.");
     } finally {
       setIsUpdating(false);
     }
@@ -208,6 +238,17 @@ export default function BlockersPanel({
                 <span className="text-[10px] text-red-500 font-medium flex-shrink-0">
                   {daysLate}d late
                 </span>
+                {task.assigned_to && (
+                  <button
+                    onClick={() => handleNudge(task)}
+                    disabled={isUpdating}
+                    className="flex items-center gap-1 text-[10px] text-orange-600 hover:text-orange-700 font-medium px-1.5 py-0.5 rounded hover:bg-orange-50 flex-shrink-0 disabled:opacity-50"
+                    title="Send a friendly reminder to the assignee"
+                  >
+                    <Bell className="w-3 h-3" />
+                    Nudge
+                  </button>
+                )}
                 {renderRescheduleAction(task)}
               </div>
             );
