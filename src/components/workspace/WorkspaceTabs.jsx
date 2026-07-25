@@ -19,6 +19,16 @@ const WorkspaceTabs = ({ project, currentUser, projectUsers, onProjectUpdate, is
     base44.entities.AssetVersion.filter({ project_id: project.id }).then(setAssets).catch(() => {});
   }, [project?.id]);
 
+  // Refresh assets when a resource link is saved from the chat command bar
+  useEffect(() => {
+    if (!project?.id) return;
+    const handler = () => {
+      base44.entities.AssetVersion.filter({ project_id: project.id }).then(setAssets).catch(() => {});
+    };
+    window.addEventListener('assetsUpdated', handler);
+    return () => window.removeEventListener('assetsUpdated', handler);
+  }, [project?.id]);
+
   return (
     <div className="w-full">
       <BuildTab

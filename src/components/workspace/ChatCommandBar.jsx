@@ -11,36 +11,6 @@ import ResourceLinkDialog from "./ResourceLinkDialog";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-// Tool icon lookup (mirrors ToolsHub)
-function getToolIcon(toolName) {
-  const name = (toolName || "").toLowerCase();
-  const map = {
-    figma: "🎨", slack: "💬", trello: "📋", jira: "🔷", notion: "📝",
-    github: "🐙", gitlab: "🦊", "vs code": "💻", miro: "🖼️", discord: "🎮",
-    asana: "✅", zoom: "📹", canva: "🖌️", airtable: "📊", linear: "⚡",
-    clickup: "✓", dropbox: "📦", vercel: "▲", netlify: "🌐", firebase: "🔥",
-    supabase: "⚡", stripe: "💳", loom: "📹", calendly: "📅", typeform: "📝",
-    webflow: "🌊", shopify: "🛍️", aws: "☁️", google: "🔍", monday: "📆",
-  };
-  for (const [key, icon] of Object.entries(map)) {
-    if (name.includes(key)) return icon;
-  }
-  return "🔧";
-}
-
-// Tool URL lookup
-const TOOL_URLS = {
-  figma: "https://figma.com", notion: "https://notion.so", trello: "https://trello.com",
-  asana: "https://asana.com", jira: "https://atlassian.com/software/jira",
-  github: "https://github.com", gitlab: "https://gitlab.com", slack: "https://slack.com",
-  discord: "https://discord.com", linear: "https://linear.app", clickup: "https://clickup.com",
-  miro: "https://miro.com", canva: "https://canva.com", framer: "https://framer.com",
-  vercel: "https://vercel.com", netlify: "https://netlify.com", firebase: "https://firebase.google.com",
-  supabase: "https://supabase.com", airtable: "https://airtable.com", loom: "https://loom.com",
-  zoom: "https://zoom.us", typeform: "https://typeform.com", webflow: "https://webflow.com",
-  stripe: "https://stripe.com", zapier: "https://zapier.com", postman: "https://postman.com",
-};
-
 const COMMANDS = [
   { id: "task",       label: "Create Task",    icon: CheckSquare, color: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100" },
   { id: "milestone",  label: "Add Milestone",  icon: Flag,        color: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100" },
@@ -117,8 +87,6 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
   const [milestoneItems, setMilestoneItems] = useState([]);
   // For note form
   const [noteForm, setNoteForm] = useState({ title: "", content: "" });
-  // For tool form — list of tool items
-  const [toolItems, setToolItems] = useState([]);
 
   const collaboratorOptions = useMemo(() => (projectUsers || []).map(u => ({ email: u.email, name: u.full_name || u.email })), [projectUsers]);
 
@@ -149,10 +117,6 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
   const updateMilestone = (i, field, val) => setMilestoneItems(prev => prev.map((item, idx) => idx === i ? { ...item, [field]: val } : item));
   const removeMilestone = (i) => setMilestoneItems(prev => prev.filter((_, idx) => idx !== i));
   const addMilestone = () => setMilestoneItems(prev => [...prev, { title: "", description: "", target_date: "" }]);
-
-  const updateTool = (i, field, val) => setToolItems(prev => prev.map((item, idx) => idx === i ? { ...item, [field]: val } : item));
-  const removeTool = (i) => setToolItems(prev => prev.filter((_, idx) => idx !== i));
-  const addTool = () => setToolItems(prev => [...prev, { name: "", url: "" }]);
 
   // ── Execute ──
   const handleSave = async () => {

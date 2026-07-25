@@ -91,6 +91,7 @@ export default function ResourceLinkDialog({
         tags: [],
       });
       toast.success("Resource link saved to Assets!");
+      window.dispatchEvent(new CustomEvent('assetsUpdated', { detail: { projectId: project.id } }));
       onSaved?.();
       onOpenChange(false);
     } catch (e) {
