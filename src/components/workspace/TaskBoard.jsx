@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { UploadFile } from "@/integrations/Core";
-import { CheckSquare, Plus, Edit, Trash2, Calendar, User, AlertCircle, Circle, Clock, CheckCircle2, Flag, MessageSquare, TrendingUp, Upload, Link as LinkIcon, Paperclip, X as XIcon, Filter, Square, CheckSquare2 } from "lucide-react";
+import { CheckSquare, Plus, Edit, Trash2, Calendar, User, AlertCircle, Circle, Clock, CheckCircle2, Flag, MessageSquare, TrendingUp, Upload, Link as LinkIcon, Paperclip, X as XIcon, Filter, Square, CheckSquare2, Target } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Task, Notification, ActivityLog } from "@/entities/all";
 import { base44 } from "@/api/base44Client";
@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import TaskDetailModal from "./TaskDetailModal";
+import FocusModeCard from "./FocusModeCard";
 
 // Retry logic for rate limiting
 const withRetry = async (apiCall, maxRetries = 3, baseDelay = 1000) => {
@@ -86,6 +87,11 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
   const [milestones, setMilestones] = useState([]);
   const [groupByMilestone, setGroupByMilestone] = useState(false);
   const [sortBy, setSortBy] = useState("default"); // default | priority | status
+
+  // Focus mode state
+  const [focusMode, setFocusMode] = useState(false);
+  const [focusTask, setFocusTask] = useState(null);
+  const [skippedIds, setSkippedIds] = useState(new Set());
 
   const [newLinkName, setNewLinkName] = useState("");
   const [newLinkUrl, setNewLinkUrl] = useState("");
@@ -478,6 +484,91 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
   // Used for "select all" — defined after sortedTasks
   const sortedTasksForSelectAll = sortedTasks;
 
+  // ── Focus mode: pick the single highest-priority, unblocked task for the current user ──
+  const getRecommendedTask = (skipSet = skippedIds) => {
+    const myEmail = currentUser?.email;
+    if (!myEmail) return null;
+
+    const candidates = tasks.filter(
+      (t) =>
+        t.status !== "done" &&
+        !skipSet.has(t.id) &&
+        (t.assigned_to === myEmail || !t.assigned_to)
+    );
+    if (candidates.length === 0) return null;
+
+    candidates.sort((a, b) => {
+      // Prefer tasks assigned to me over unassigned
+      const aMine = a.assigned_to === myEmail ? 0 : 1;
+      const bMine = b.assigned_to === myEmail ? 0 : 1;
+      if (aMine !== bMine) return aMine - bMine;
+
+      // Then by priority
+      const pDiff =
+        (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2);
+      if (pDiff !== 0) return pDiff;
+
+      // Then overdue first
+      const aOverdue = a.due_date && new Date(a.due_date) < new Date() ? 0 : 1;
+      const bOverdue = b.due_date && new Date(b.due_date) < new Date() ? 0 : 1;
+      if (aOverdue !== bOverdue) return aOverdue - bOverdue;
+
+      // Then by earliest due date
+      if (a.due_date && b.due_date)
+        return new Date(a.due_date) - new Date(b.due_date);
+      if (a.due_date) return -1;
+      if (b.due_date) return 1;
+
+      return 0;
+    });
+
+    return candidates[0];
+  };
+
+  const enterFocusMode = () => {
+    setSkippedIds(new Set());
+    const task = getRecommendedTask(new Set());
+    setFocusTask(task);
+    setFocusMode(true);
+    if (!task) toast.info("No tasks assigned to you right now!");
+  };
+
+  const exitFocusMode = () => {
+    setFocusMode(false);
+    setFocusTask(null);
+    setSkippedIds(new Set());
+  };
+
+  const handleFocusStart = async () => {
+    if (!focusTask) return;
+    await handleStatusChange(focusTask, "in_progress");
+    setFocusTask((prev) =>
+      prev ? { ...prev, status: "in_progress" } : prev
+    );
+  };
+
+  const handleFocusComplete = async () => {
+    if (!focusTask) return;
+    const completedId = focusTask.id;
+    await handleStatusChange(focusTask, "done");
+    const newSkipped = new Set(skippedIds);
+    newSkipped.add(completedId);
+    setSkippedIds(newSkipped);
+    const next = getRecommendedTask(newSkipped);
+    setFocusTask(next);
+    if (!next) toast.success("All caught up! No more tasks for you.");
+  };
+
+  const handleFocusSkip = () => {
+    if (!focusTask) return;
+    const newSkipped = new Set(skippedIds);
+    newSkipped.add(focusTask.id);
+    setSkippedIds(newSkipped);
+    const next = getRecommendedTask(newSkipped);
+    setFocusTask(next);
+    if (!next) toast.info("No more tasks to focus on!");
+  };
+
   if (!project) {
     return (
       <Card className="cu-card">
@@ -610,6 +701,15 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                 {groupByMilestone ? "Show All" : "Group by Milestone"}
               </Button>
             )}
+            <Button
+              onClick={enterFocusMode}
+              variant="outline"
+              size="sm"
+              className="text-purple-600 border-purple-200 hover:bg-purple-50"
+            >
+              <Target className="w-4 h-4 mr-1.5" />
+              What should I work on?
+            </Button>
             <Button onClick={() => handleOpenDialog()} className="cu-button">
               <Plus className="w-4 h-4 mr-2" />
               Add Task
@@ -673,7 +773,17 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
         )}
       </Card>
 
-      {isLoading ? (
+      {focusMode ? (
+        <FocusModeCard
+          task={focusTask}
+          milestone={milestones.find((m) => m.id === focusTask?.milestone_id)}
+          assignedUser={collaborators?.find((c) => c.email === focusTask?.assigned_to)}
+          onExit={exitFocusMode}
+          onStart={handleFocusStart}
+          onComplete={handleFocusComplete}
+          onSkip={handleFocusSkip}
+        />
+      ) : isLoading ? (
         <div className="text-center py-8">
           <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-500">Loading tasks...</p>
