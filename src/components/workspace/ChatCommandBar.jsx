@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckSquare, Flag, BookOpen, Wrench, X, Check, Zap, ChevronDown, ChevronUp, Plus, Trash2, Lightbulb, Map, FileText } from "lucide-react";
+import { CheckSquare, Flag, BookOpen, Wrench, X, Check, Zap, ChevronDown, ChevronUp, Plus, Trash2, Lightbulb, Map, FileText, Link2 } from "lucide-react";
 import { toast } from "sonner";
+import ToolPickerDialog from "./ToolPickerDialog";
+import ResourceLinkDialog from "./ResourceLinkDialog";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -44,6 +46,7 @@ const COMMANDS = [
   { id: "milestone",  label: "Add Milestone",  icon: Flag,        color: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100" },
   { id: "note",       label: "Save Note",      icon: BookOpen,    color: "bg-green-50 text-green-700 border-green-200 hover:bg-green-100" },
   { id: "tool",       label: "Add Tool",       icon: Wrench,      color: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100" },
+  { id: "resource",   label: "Add Resource",   icon: Link2,       color: "bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100" },
 ];
 
 // Generate context-aware AI action prompts based on project state
@@ -105,6 +108,8 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
   const [activeCommand, setActiveCommand] = useState(null);
   const [saving, setSaving] = useState(false);
   const [savedCommands, setSavedCommands] = useState(new Set());
+  const [toolDialogOpen, setToolDialogOpen] = useState(false);
+  const [resourceDialogOpen, setResourceDialogOpen] = useState(false);
 
   // For task form — list of task items user can edit/remove
   const [taskItems, setTaskItems] = useState([]);
@@ -119,19 +124,18 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
 
   const openCommand = (id) => {
     if (savedCommands.has(id)) return;
+    if (id === "tool") { setToolDialogOpen(true); return; }
+    if (id === "resource") { setResourceDialogOpen(true); return; }
     if (activeCommand === id) { setActiveCommand(null); return; }
 
     if (id === "task") {
       setTaskItems([{ title: "", description: "", priority: "medium", due_date: "", assigned_to: "" }]);
     }
     if (id === "milestone") {
-      setMilestoneItems([{ title: "", description: "", due_date: "" }]);
+      setMilestoneItems([{ title: "", description: "", target_date: "" }]);
     }
     if (id === "note") {
       setNoteForm({ title: "", content: messageContent?.slice(0, 3000) || "" });
-    }
-    if (id === "tool") {
-      setToolItems([{ name: "", url: "" }]);
     }
 
     setActiveCommand(id);
@@ -144,7 +148,7 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
 
   const updateMilestone = (i, field, val) => setMilestoneItems(prev => prev.map((item, idx) => idx === i ? { ...item, [field]: val } : item));
   const removeMilestone = (i) => setMilestoneItems(prev => prev.filter((_, idx) => idx !== i));
-  const addMilestone = () => setMilestoneItems(prev => [...prev, { title: "", description: "", due_date: "" }]);
+  const addMilestone = () => setMilestoneItems(prev => [...prev, { title: "", description: "", target_date: "" }]);
 
   const updateTool = (i, field, val) => setToolItems(prev => prev.map((item, idx) => idx === i ? { ...item, [field]: val } : item));
   const removeTool = (i) => setToolItems(prev => prev.filter((_, idx) => idx !== i));
@@ -179,7 +183,7 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
           title: m.title.trim(),
           description: m.description?.trim() || "",
           status: "not_started",
-          due_date: m.due_date || undefined,
+          target_date: m.target_date || undefined,
         })));
         toast.success(`${valid.length} milestone${valid.length > 1 ? "s" : ""} created!`);
         if (onProjectUpdate) onProjectUpdate();
@@ -197,28 +201,33 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
         if (onProjectUpdate) onProjectUpdate();
       }
 
-      else if (activeCommand === "tool") {
-        const valid = toolItems.filter(t => t.name?.trim() && t.url?.trim());
-        if (!valid.length) { toast.error("Add at least one tool with name and URL"); setSaving(false); return; }
-        // Validate URLs
-        for (const t of valid) {
-          try { new URL(t.url); } catch { toast.error(`Invalid URL for "${t.name}"`); setSaving(false); return; }
-        }
-        const current = project.project_tools || [];
-        const newTools = valid.map(t => {
-          const icon = getToolIcon(t.name);
-          return { name: t.name.trim(), url: t.url.trim(), icon };
-        });
-        const updated = [...current, ...newTools];
-        await base44.entities.Project.update(project.id, { project_tools: updated });
-        toast.success(`${valid.length} tool${valid.length > 1 ? "s" : ""} added to Project Tools!`);
-        if (onProjectUpdate) onProjectUpdate();
-        if (onSaved) onSaved("tool", updated);
-      }
-
       setSavedCommands(prev => new Set([...prev, activeCommand]));
       setActiveCommand(null);
       if (onSaved && activeCommand !== "tool") onSaved(activeCommand);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Add tools via the ToolPickerDialog
+  const handleAddTools = async (tools) => {
+    if (!project?.id) return;
+    setSaving(true);
+    try {
+      const current = Array.isArray(project.project_tools) ? project.project_tools : [];
+      const existingUrls = new Set(current.map(t => t.url));
+      const newTools = tools.filter(t => !existingUrls.has(t.url));
+      if (newTools.length === 0) {
+        toast("Those tools are already in your project");
+        return;
+      }
+      const updated = [...current, ...newTools];
+      await base44.entities.Project.update(project.id, { project_tools: updated });
+      toast.success(`${newTools.length} tool${newTools.length > 1 ? "s" : ""} added to Project Tools!`);
+      if (onProjectUpdate) onProjectUpdate();
+      if (onSaved) onSaved("tool", updated);
+    } catch (e) {
+      toast.error("Failed to add tools");
     } finally {
       setSaving(false);
     }
@@ -371,9 +380,9 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
                   <div className="ml-5">
                     <Input
                       type="date"
-                      value={item.due_date}
-                      onChange={e => updateMilestone(i, "due_date", e.target.value)}
-                      placeholder="Due date"
+                      value={item.target_date}
+                      onChange={e => updateMilestone(i, "target_date", e.target.value)}
+                      placeholder="Target date"
                       className="h-6 text-xs"
                     />
                   </div>
@@ -407,44 +416,6 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
             </div>
           )}
 
-          {/* ─── TOOL form ─── */}
-          {activeCommand === "tool" && (
-            <div className="space-y-2">
-              {toolItems.map((item, i) => (
-                <div key={i} className="p-2.5 bg-gray-50 rounded-lg border border-gray-200 space-y-1.5">
-                  <div className="flex gap-1.5 items-center">
-                    <Wrench className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
-                    <Input
-                      value={item.name}
-                      onChange={e => updateTool(i, "name", e.target.value)}
-                      placeholder="Tool name..."
-                      className="text-xs h-7 flex-1"
-                    />
-                    {toolItems.length > 1 && (
-                      <button onClick={() => removeTool(i)} className="text-gray-300 hover:text-red-400 flex-shrink-0">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-                  <div className="ml-5">
-                    <Input
-                      value={item.url}
-                      onChange={e => updateTool(i, "url", e.target.value)}
-                      placeholder="URL (https://...)..."
-                      className="text-xs h-7"
-                    />
-                  </div>
-                </div>
-              ))}
-              <button
-                onClick={addTool}
-                className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 font-medium"
-              >
-                <Plus className="w-3 h-3" /> Add another tool
-              </button>
-            </div>
-          )}
-
           {/* Execute / Cancel */}
           <div className="flex gap-2 pt-1">
             <Button
@@ -462,6 +433,22 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
           </div>
         </div>
       )}
+
+      {/* Smart pop-up dialogs */}
+      <ToolPickerDialog
+        open={toolDialogOpen}
+        onOpenChange={setToolDialogOpen}
+        existingTools={project?.project_tools || []}
+        onAddTools={handleAddTools}
+        saving={saving}
+      />
+      <ResourceLinkDialog
+        open={resourceDialogOpen}
+        onOpenChange={setResourceDialogOpen}
+        project={project}
+        currentUser={currentUser}
+        onSaved={onProjectUpdate}
+      />
     </div>
   );
 }
