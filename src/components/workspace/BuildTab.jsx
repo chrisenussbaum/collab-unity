@@ -1556,6 +1556,14 @@ export default function BuildTab({
                 currentUser={currentUser}
                 isCollaborator={isCollaborator}
                 isProjectOwner={isProjectOwner}
+                projectUsers={projectUsers}
+                tasks={tasks}
+                onTasksCreated={async () => {
+                  try {
+                    const refreshed = await base44.entities.Task.filter({ project_id: project.id });
+                    setTasks(Array.isArray(refreshed) ? refreshed : []);
+                  } catch {}
+                }}
               />
             </div>
           )}

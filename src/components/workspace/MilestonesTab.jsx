@@ -7,16 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Flag, Plus, Edit, Trash2, CheckCircle, Circle, Clock, Calendar as CalendarIcon, Target } from "lucide-react";
+import { Flag, Plus, Edit, Trash2, CheckCircle, Circle, Clock, Calendar as CalendarIcon, Target, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
+import MilestoneTaskGeneratorDialog from "./MilestoneTaskGeneratorDialog";
 
-export default function MilestonesTab({ project, currentUser, isCollaborator, isProjectOwner }) {
+export default function MilestonesTab({ project, currentUser, isCollaborator, isProjectOwner, projectUsers, tasks, onTasksCreated }) {
   const [milestones, setMilestones] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState(null);
+  const [generatorMilestone, setGeneratorMilestone] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -238,6 +240,15 @@ export default function MilestonesTab({ project, currentUser, isCollaborator, is
                         </Select>
                       )}
                       <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setGeneratorMilestone(milestone)}
+                        className="h-9 text-purple-600 border-purple-200 hover:bg-purple-50 hover:text-purple-700"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                        Break into tasks
+                      </Button>
+                      <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleEdit(milestone)}
@@ -345,6 +356,17 @@ export default function MilestonesTab({ project, currentUser, isCollaborator, is
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Milestone → Tasks Generator */}
+      <MilestoneTaskGeneratorDialog
+        open={!!generatorMilestone}
+        onOpenChange={(v) => !v && setGeneratorMilestone(null)}
+        milestone={generatorMilestone}
+        project={project}
+        collaborators={projectUsers}
+        existingTasks={tasks}
+        onSaved={onTasksCreated}
+      />
     </div>
   );
 }
