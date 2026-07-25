@@ -4,6 +4,7 @@ import {
   CheckSquare, Flag, Activity, ChevronDown, ChevronUp,
   Circle, AlertTriangle, CheckCircle2, Clock, TrendingUp
 } from "lucide-react";
+import BlockersPanel from "./BlockersPanel";
 
 const STATUS_CONFIG = {
   seeking_collaborators: { label: "Seeking Collaborators", color: "text-blue-600",   bg: "bg-blue-50",   dot: "bg-blue-500" },
@@ -11,7 +12,7 @@ const STATUS_CONFIG = {
   completed:             { label: "Completed",              color: "text-green-600",  bg: "bg-green-50",  dot: "bg-green-500" },
 };
 
-export default function WorkspaceSummaryBar({ project, tasks = [], milestones = [], activityLogs = [], onSectionClick }) {
+export default function WorkspaceSummaryBar({ project, tasks = [], milestones = [], activityLogs = [], onSectionClick, collaborators, onTaskUpdated }) {
   const [collapsed, setCollapsed] = useState(false);
 
   // ── Task stats
@@ -56,6 +57,15 @@ export default function WorkspaceSummaryBar({ project, tasks = [], milestones = 
 
   return (
     <div className="border-b border-gray-100 bg-white">
+      {/* Blockers panel — promoted to top */}
+      <BlockersPanel
+        tasks={tasks}
+        milestones={milestones}
+        collaborators={collaborators}
+        onTaskUpdated={onTaskUpdated}
+        onSectionClick={onSectionClick}
+      />
+
       {/* Header row */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <div className="flex items-center gap-2">

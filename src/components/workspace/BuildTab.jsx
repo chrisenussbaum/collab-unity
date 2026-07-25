@@ -1371,6 +1371,14 @@ export default function BuildTab({
   const [activeSection, setActiveSection] = useState("chat");
   const [activityLogs, setActivityLogs] = useState([]);
 
+  const refreshTasks = useCallback(async () => {
+    if (!project?.id) return;
+    try {
+      const refreshed = await base44.entities.Task.filter({ project_id: project.id });
+      setTasks(Array.isArray(refreshed) ? refreshed : []);
+    } catch {}
+  }, [project?.id, setTasks]);
+
   useEffect(() => {
     if (!project?.id) return;
     base44.entities.ActivityLog.filter({ project_id: project.id }, "-created_date", 10)
@@ -1517,6 +1525,8 @@ export default function BuildTab({
             milestones={milestones}
             activityLogs={activityLogs}
             onSectionClick={setActiveSection}
+            collaborators={projectUsers}
+            onTaskUpdated={refreshTasks}
           />
 
           {/* Section header strip */}
@@ -1558,12 +1568,7 @@ export default function BuildTab({
                 isProjectOwner={isProjectOwner}
                 projectUsers={projectUsers}
                 tasks={tasks}
-                onTasksCreated={async () => {
-                  try {
-                    const refreshed = await base44.entities.Task.filter({ project_id: project.id });
-                    setTasks(Array.isArray(refreshed) ? refreshed : []);
-                  } catch {}
-                }}
+                onTasksCreated={refreshTasks}
               />
             </div>
           )}
