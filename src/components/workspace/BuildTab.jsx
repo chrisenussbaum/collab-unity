@@ -28,6 +28,8 @@ import {
 import { AssetVersion } from "@/entities/all";
 import ReactMarkdown from "react-markdown";
 import ChatCommandBar from "./ChatCommandBar";
+import RichLinkPreview from "./RichLinkPreview";
+import ToolSuggestionCards from "./ToolSuggestionCards";
 import { toast } from "sonner";
 import { differenceInDays, format, isPast, isValid, parseISO } from "date-fns";
 
@@ -263,6 +265,7 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `- Only include actions the user actually asked for, or that are obviously needed`,
     `- For create_task: "title" must be SHORT (3-6 words max, no colons). Put details in "description". NEVER format title as "Name: description text"`,
     `- For assigned_to, use the exact email from the collaborators list above`,
+    `- When you reference articles, videos, tutorials, or docs, include them as markdown links in "message" (e.g. [Title](https://url)) using the REAL page or video title as the link text — they render as visual preview cards`,
     `- Keep "message" conversational, reference actual project details, and always suggest a clear next step`,
   ];
   return parts.filter(Boolean).join("\n");
@@ -352,7 +355,7 @@ async function executeAction(action, project, currentUser, onProjectUpdate) {
       due_date: action.due_date || undefined,
     });
     if (onProjectUpdate) onProjectUpdate();
-    return `✅ Task created: **${taskTitle}**${action.assigned_to ? ` → assigned to ${action.assigned_to.split("@")[0]}` : ""}`;
+    return { text: `✅ Task created: **${taskTitle}**${action.assigned_to ? ` → assigned to ${action.assigned_to.split("@")[0]}` : ""}` };
   }
 
   if (action.type === "create_milestone") {
@@ -364,7 +367,7 @@ async function executeAction(action, project, currentUser, onProjectUpdate) {
       target_date: action.target_date || undefined,
     });
     if (onProjectUpdate) onProjectUpdate();
-    return `🏁 Milestone created: **${action.title}**`;
+    return { text: `🏁 Milestone created: **${action.title}**` };
   }
 
   if (action.type === "save_note") {
@@ -373,15 +376,36 @@ async function executeAction(action, project, currentUser, onProjectUpdate) {
       title: action.title || action.content?.slice(0, 60) || "Note",
       content: action.content || "",
     });
-    return `📝 Note saved: **${action.title || "Note"}**`;
+    return { text: `📝 Note saved: **${action.title || "Note"}**` };
   }
 
   if (action.type === "suggest_tool") {
-    return `🔧 Tool suggestion: **${action.name}**${action.url ? ` — [${action.url}](${action.url})` : ""}`;
+    return { tool: { name: action.name || "Tool", url: action.url || "", icon: action.icon || "" } };
   }
 
   return null;
 }
+
+// Markdown renderer: render every external link in an assistant message as a rich preview card
+const chatMarkdownComponents = {
+  a: ({ href, children }) => {
+    const raw = Array.isArray(children) ? children.join("") : children;
+    const text = typeof raw === "string" ? raw.trim() : "";
+    const title = text && !text.startsWith("http") ? text : href;
+    if (href) {
+      return (
+        <span className="block my-2 not-prose">
+          <RichLinkPreview url={href} title={title} />
+        </span>
+      );
+    }
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline break-all">
+        {children}
+      </a>
+    );
+  },
+};
 
 function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers, onProjectUpdate, onNavigateTo, buildLinks = [], activityLogs = [] }) {
   const [messages, setMessages] = useState([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0, assets)]);
@@ -587,6 +611,25 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
     setTimeout(scrollToBottom, 50);
   }, [persistMessage, scrollToBottom]);
 
+  // Add a suggested tool to the project's project_tools array
+  const handleAddTool = useCallback(async (tool) => {
+    if (!project?.id) return;
+    try {
+      const existing = Array.isArray(project.project_tools) ? project.project_tools : [];
+      if (existing.some((t) => t.url === tool.url)) {
+        toast(`${tool.name} is already in your project tools`);
+        return;
+      }
+      const updated = [...existing, { name: tool.name, url: tool.url, icon: tool.icon }];
+      await base44.entities.Project.update(project.id, { project_tools: updated });
+      toast.success(`${tool.name} added to your project`);
+      if (onProjectUpdate) onProjectUpdate();
+    } catch (error) {
+      console.error("Error adding tool:", error);
+      toast.error("Failed to add tool");
+    }
+  }, [project, onProjectUpdate]);
+
   // Build a task via /task command
   const handleSlashTask = async (taskTitle) => {
     if (!project?.id || !currentUser || !canEdit) {
@@ -743,20 +786,23 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
           }
           const message = parsed?.message || raw;
           const actions = Array.isArray(parsed?.actions) ? parsed.actions : [];
-          const actionResults = [];
+          const actionTexts = [];
+          const suggestedTools = [];
           if (canEdit && actions.length > 0) {
             for (const action of actions) {
               const result = await executeAction(action, project, currentUser, onProjectUpdate);
-              if (result) actionResults.push(result);
+              if (!result) continue;
+              if (result.text) actionTexts.push(result.text);
+              if (result.tool) suggestedTools.push(result.tool);
             }
           }
           let finalContent = message;
-          if (actionResults.length > 0) {
-            finalContent += `\n\n---\n**Actions taken:**\n${actionResults.join("\n")}`;
+          if (actionTexts.length > 0) {
+            finalContent += `\n\n---\n**Actions taken:**\n${actionTexts.join("\n")}`;
           }
-          await addAndPersist({ role: "assistant", content: finalContent });
+          await addAndPersist({ role: "assistant", content: finalContent, tools: suggestedTools });
           // NOTE: Do NOT auto-navigate — let users read the response first
-          if (actionResults.length > 0 || actions.length > 0) {
+          if (actionTexts.length > 0 || suggestedTools.length > 0 || actions.length > 0) {
             const followUps = getContextualFollowUps(tasks, milestones, finalContent);
             setPendingFollowUp(followUps[0]?.label || "What else would you like to do?");
             setAwaitingContinue(true);
@@ -802,24 +848,27 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
       const actions = Array.isArray(parsed?.actions) ? parsed.actions : [];
 
       // Execute actions if user can edit
-      const actionResults = [];
+      const actionTexts = [];
+      const suggestedTools = [];
       if (canEdit && actions.length > 0) {
         for (const action of actions) {
           const result = await executeAction(action, project, currentUser, onProjectUpdate);
-          if (result) actionResults.push(result);
+          if (!result) continue;
+          if (result.text) actionTexts.push(result.text);
+          if (result.tool) suggestedTools.push(result.tool);
         }
       }
 
       // Build final assistant message
       let finalContent = message;
-      if (actionResults.length > 0) {
-        finalContent += `\n\n---\n**Actions taken:**\n${actionResults.join("\n")}`;
+      if (actionTexts.length > 0) {
+        finalContent += `\n\n---\n**Actions taken:**\n${actionTexts.join("\n")}`;
       }
 
-      await addAndPersist({ role: "assistant", content: finalContent });
+      await addAndPersist({ role: "assistant", content: finalContent, tools: suggestedTools });
       // NOTE: Do NOT auto-navigate — let users read the response first
       // After executing actions, prompt to continue
-      if (actionResults.length > 0 || actions.length > 0) {
+      if (actionTexts.length > 0 || suggestedTools.length > 0 || actions.length > 0) {
         const followUps = getContextualFollowUps(tasks, milestones, finalContent);
         setPendingFollowUp(followUps[0]?.label || "What else would you like to do?");
         setAwaitingContinue(true);
@@ -1007,9 +1056,16 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
                     : "bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm"
               }`}>
                 {msg.role === "assistant" ? (
-                  <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-li:text-gray-800 prose-strong:text-gray-900 [&_a]:break-all [&_strong]:break-words break-words">
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
-                  </div>
+                  <>
+                    <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-li:text-gray-800 prose-strong:text-gray-900 [&_strong]:break-words break-words">
+                      <ReactMarkdown components={chatMarkdownComponents}>{msg.content}</ReactMarkdown>
+                    </div>
+                    {msg.tools && msg.tools.length > 0 && (
+                      <div className="not-prose mt-3">
+                        <ToolSuggestionCards tools={msg.tools} onAddTool={handleAddTool} />
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <p>{msg.content}</p>
                 )}
