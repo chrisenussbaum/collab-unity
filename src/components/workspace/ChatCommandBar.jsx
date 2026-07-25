@@ -9,104 +9,6 @@ import { toast } from "sonner";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/**
- * Parse an AI message to extract structured action items, tasks, milestones, tools.
- * Returns { tasks: string[], milestones: string[], tools: {name,url}[], noteTitle: string }
- */
-function parseAIMessage(content) {
-  if (!content) return { tasks: [], milestones: [], tools: [], noteTitle: "" };
-
-  const lines = content.split("\n").map(l => l.trim()).filter(Boolean);
-
-  const tasks = [];
-  const milestones = [];
-  const tools = [];
-
-  // Known tool names to detect
-  const knownTools = [
-    "figma", "notion", "trello", "asana", "jira", "github", "gitlab", "slack",
-    "discord", "linear", "clickup", "miro", "canva", "framer", "vercel",
-    "netlify", "heroku", "aws", "gcp", "google cloud", "firebase", "supabase",
-    "airtable", "loom", "zoom", "google meet", "google forms", "surveymonkey",
-    "typeform", "webflow", "wordpress", "shopify", "stripe", "zapier", "make",
-    "postman", "vs code", "cursor", "replit", "codepen", "tailwind", "next.js",
-    "react", "vue", "angular", "python", "nodejs", "deno", "docker", "kubernetes"
-  ];
-
-  // Milestone signal words
-  const milestoneSignals = [
-    "phase", "launch", "release", "milestone", "sprint", "deadline",
-    "v1", "v2", "beta", "mvp", "go-live", "deploy", "ship", "rollout"
-  ];
-
-  // Task signal words
-  const taskSignals = [
-    "implement", "create", "add", "build", "set up", "configure", "design",
-    "develop", "write", "test", "review", "update", "fix", "research",
-    "conduct", "analyze", "document", "integrate", "optimize", "refactor"
-  ];
-
-  for (const line of lines) {
-    // Strip markdown formatting
-    const clean = line
-      .replace(/^[-*>•\d]+[.)]\s*/, "")
-      .replace(/\*\*/g, "")
-      .replace(/\*/g, "")
-      .replace(/^#+\s*/, "")
-      .trim();
-
-    if (!clean || clean.length < 5 || clean.length > 150) continue;
-
-    // Skip headings/section titles (short, no verb)
-    const isHeading = /^\d+\.\s/.test(line) && clean.split(" ").length <= 5;
-
-    const lower = clean.toLowerCase();
-
-    // Detect tool mentions
-    const mentionedTool = knownTools.find(t => lower.includes(t));
-
-    // Is this line a numbered item or bullet?
-    const isBullet = /^[-*•\d]+[.)]\s/.test(line);
-
-    if (mentionedTool && isBullet) {
-      // Extract tool name and potential URL
-      const urlMatch = clean.match(/https?:\/\/[^\s)]+/);
-      tools.push({
-        name: clean.slice(0, 60),
-        detectedTool: mentionedTool,
-        url: urlMatch?.[0] || ""
-      });
-    }
-
-    if (isBullet && !isHeading) {
-      const isMilestone = milestoneSignals.some(s => lower.includes(s));
-      const isTask = taskSignals.some(s => lower.startsWith(s) || lower.includes(` ${s} `));
-
-      if (isMilestone) {
-        milestones.push(clean.slice(0, 100));
-      } else if (isTask || isBullet) {
-        tasks.push(clean.slice(0, 100));
-      }
-    }
-  }
-
-  // Deduplicate and cap
-  const uniqueTasks = [...new Set(tasks)].slice(0, 8);
-  const uniqueMilestones = [...new Set(milestones)].slice(0, 5);
-  const uniqueTools = tools
-    .filter((t, i, arr) => arr.findIndex(x => x.detectedTool === t.detectedTool) === i)
-    .slice(0, 5);
-
-  // Note title: first meaningful line
-  let noteTitle = "";
-  for (const line of lines) {
-    const clean = line.replace(/^[#*\->•\d.]+\s*/, "").replace(/\*\*/g, "").trim();
-    if (clean.length > 8 && clean.length < 100) { noteTitle = clean.slice(0, 80); break; }
-  }
-
-  return { tasks: uniqueTasks, milestones: uniqueMilestones, tools: uniqueTools, noteTitle };
-}
-
 // Tool icon lookup (mirrors ToolsHub)
 function getToolIcon(toolName) {
   const name = (toolName || "").toLowerCase();
@@ -204,9 +106,6 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
   const [saving, setSaving] = useState(false);
   const [savedCommands, setSavedCommands] = useState(new Set());
 
-  // Parsed data from AI message
-  const parsed = useMemo(() => parseAIMessage(messageContent), [messageContent]);
-
   // For task form — list of task items user can edit/remove
   const [taskItems, setTaskItems] = useState([]);
   // For milestone form
@@ -223,25 +122,16 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
     if (activeCommand === id) { setActiveCommand(null); return; }
 
     if (id === "task") {
-      const items = parsed.tasks.length > 0
-        ? parsed.tasks.map(t => ({ title: t, description: "", priority: "medium", due_date: "", assigned_to: "" }))
-        : [{ title: "", description: "", priority: "medium", due_date: "", assigned_to: "" }];
-      setTaskItems(items);
+      setTaskItems([{ title: "", description: "", priority: "medium", due_date: "", assigned_to: "" }]);
     }
     if (id === "milestone") {
-      const items = parsed.milestones.length > 0
-        ? parsed.milestones.map(m => ({ title: m, description: "", due_date: "" }))
-        : [{ title: "", description: "", due_date: "" }];
-      setMilestoneItems(items);
+      setMilestoneItems([{ title: "", description: "", due_date: "" }]);
     }
     if (id === "note") {
-      setNoteForm({ title: parsed.noteTitle, content: messageContent?.slice(0, 3000) || "" });
+      setNoteForm({ title: "", content: messageContent?.slice(0, 3000) || "" });
     }
     if (id === "tool") {
-      const items = parsed.tools.length > 0
-        ? parsed.tools.map(t => ({ name: t.detectedTool.charAt(0).toUpperCase() + t.detectedTool.slice(1), url: t.url || TOOL_URLS[t.detectedTool] || "" }))
-        : [{ name: "", url: "" }];
-      setToolItems(items);
+      setToolItems([{ name: "", url: "" }]);
     }
 
     setActiveCommand(id);
@@ -353,8 +243,6 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
           const Icon = cmd.icon;
           const saved = savedCommands.has(cmd.id);
           const active = activeCommand === cmd.id;
-          // Show a count badge if parsed data available
-          const count = cmd.id === "task" ? parsed.tasks.length : cmd.id === "milestone" ? parsed.milestones.length : cmd.id === "tool" ? parsed.tools.length : 0;
           return (
             <button
               key={cmd.id}
@@ -370,9 +258,6 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
             >
               {saved ? <Check className="w-3 h-3" /> : <Icon className="w-3 h-3" />}
               {saved ? "Done!" : cmd.label}
-              {count > 0 && !saved && (
-                <span className="ml-0.5 px-1 bg-white/60 rounded-full text-[10px] font-bold">{count}</span>
-              )}
               {active && !saved && (
                 <X className="w-3 h-3 ml-0.5 opacity-60" onClick={(e) => { e.stopPropagation(); setActiveCommand(null); }} />
               )}
