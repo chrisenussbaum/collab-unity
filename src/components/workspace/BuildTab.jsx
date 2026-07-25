@@ -1070,8 +1070,8 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
                   <p>{msg.content}</p>
                 )}
               </div>
-              {/* Action commands — only for non-first, non-error assistant messages when canEdit */}
-              {canEdit && msg.role === "assistant" && i > 0 && !msg.isError && (
+              {/* Action commands — only on the latest assistant message when canEdit and not loading */}
+              {canEdit && msg.role === "assistant" && i > 0 && !msg.isError && i === messages.length - 1 && !isLoading && (
                 <ChatCommandBar
                   project={project}
                   currentUser={currentUser}
