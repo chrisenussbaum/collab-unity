@@ -313,6 +313,15 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
                       </button>
                     )}
                   </div>
+                  <div className="ml-5">
+                    <Textarea
+                      value={item.description}
+                      onChange={e => updateTask(i, "description", e.target.value)}
+                      placeholder="Description (optional)..."
+                      rows={2}
+                      className="text-xs resize-none"
+                    />
+                  </div>
                   <div className="grid grid-cols-2 gap-1.5 ml-5">
                     <Select value={item.priority} onValueChange={v => updateTask(i, "priority", v)}>
                       <SelectTrigger className="h-6 text-xs">
@@ -376,6 +385,15 @@ export default function ChatCommandBar({ project, currentUser, messageContent, p
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
+                  </div>
+                  <div className="ml-5">
+                    <Textarea
+                      value={item.description}
+                      onChange={e => updateMilestone(i, "description", e.target.value)}
+                      placeholder="Description (optional)..."
+                      rows={2}
+                      className="text-xs resize-none"
+                    />
                   </div>
                   <div className="ml-5">
                     <Input
