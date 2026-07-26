@@ -267,11 +267,12 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `- For assigned_to, use the exact email from the collaborators list above`,
     `\n== RESOURCE & LINK HANDLING (CRITICAL) ==`,
     `When the user asks for videos, articles, research papers, tutorials, or ANY content that involves a URL:`,
-    `1. ALWAYS include every resource as a markdown link directly in the "message" field — e.g. [Real Video Title](https://youtube.com/watch?v=abc). These render as visual preview cards with screenshots in the chat. Every link in your message is AUTOMATICALLY saved to the Assets tab — you do NOT need a save_link action.`,
-    `2. ONLY suggest resources that are CURRENTLY AVAILABLE and ACCESSIBLE. Do NOT suggest deleted, private, or region-locked YouTube videos. Prefer well-known, widely-available videos and articles. If you are not confident a URL works, do not include it.`,
-    `3. NEVER use "save_note" to store URLs, videos, or articles. Notes are for text-only thoughts and ideas only. If you put a URL in a save_note, it is HIDDEN from the user — they cannot see it.`,
-    `4. Use the REAL page or video title as the link text — never a bare URL or generic label like "click here".`,
-    `5. Group resources under ## headings (e.g. ## Videos, ## Articles, ## Documentation).`,
+    `1. ALWAYS include every resource as a markdown link directly in the "message" field — e.g. [Real Title](https://example.com/resource). These render as visual preview cards with screenshots in the chat. Every link in your message is AUTOMATICALLY saved to the Assets tab — you do NOT need a save_link action.`,
+    `2. QUALITY OVER QUANTITY: Suggest only the 1-2 BEST resources — the most highly-rated, widely-used, and directly relevant to the user's request. Do NOT list 4+ resources. One excellent resource beats four mediocre ones.`,
+    `3. SEARCH THE WEB broadly for publicly available videos and resources — do NOT rely only on YouTube. Consider Vimeo, official course sites, university portals, reputable blogs, documentation sites, and other public platforms. Only suggest content that is CURRENTLY AVAILABLE and ACCESSIBLE (not deleted, private, paywalled, or region-locked).`,
+    `4. NEVER use "save_note" to store URLs, videos, or articles. Notes are for text-only thoughts and ideas only. If you put a URL in a save_note, it is HIDDEN from the user — they cannot see it.`,
+    `5. Use the REAL page or video title as the link text — never a bare URL or generic label like "click here".`,
+    `6. Group resources under ## headings (e.g. ## Top Video, ## Recommended Article, ## Documentation).`,
     `- Keep "message" conversational, reference actual project details, and always suggest a clear next step`,
   ];
   return parts.filter(Boolean).join("\n");
