@@ -41,6 +41,8 @@ export default function MusicPlayer({ isVisible, onClose }) {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   const playerRef = useRef(null);
   const playerHostRef = useRef(null);
@@ -49,7 +51,9 @@ export default function MusicPlayer({ isVisible, onClose }) {
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const queueRef = useRef(PLAYLIST);
   queueRef.current = queue;
-  const errorCountRef = useRef(0);
+  const failedIdsRef = useRef(new Set());
+  const currentIndexRef = useRef(0);
+  currentIndexRef.current = currentIndex;
 
   const currentTrack = queue[currentIndex] || PLAYLIST[0];
   const isRadioMode = queue === PLAYLIST;
@@ -86,20 +90,27 @@ export default function MusicPlayer({ isVisible, onClose }) {
             },
             onStateChange: (e) => {
               if (e.data === window.YT.PlayerState.PLAYING) {
-                errorCountRef.current = 0;
+                failedIdsRef.current.clear();
                 setIsPlaying(true);
               } else if (e.data === window.YT.PlayerState.PAUSED) {
                 setIsPlaying(false);
               } else if (e.data === window.YT.PlayerState.ENDED) {
-                errorCountRef.current = 0;
+                failedIdsRef.current.clear();
                 setCurrentIndex((prev) => (prev + 1) % queueRef.current.length);
               }
             },
             onError: () => {
-              if (errorCountRef.current < 3) {
-                errorCountRef.current++;
-                setCurrentIndex((prev) => (prev + 1) % queueRef.current.length);
-              }
+              const failedId = queueRef.current[currentIndexRef.current]?.videoId;
+              if (failedId) failedIdsRef.current.add(failedId);
+              setCurrentIndex((prev) => {
+                const len = queueRef.current.length;
+                for (let i = 1; i <= len; i++) {
+                  const nextIdx = (prev + i) % len;
+                  const nextId = queueRef.current[nextIdx]?.videoId;
+                  if (nextId && !failedIdsRef.current.has(nextId)) return nextIdx;
+                }
+                return prev;
+              });
             },
           },
         });
@@ -127,6 +138,8 @@ export default function MusicPlayer({ isVisible, onClose }) {
 
   useEffect(() => {
     if (playerRef.current && playerReady && queue[currentIndex]) {
+      setCurrentTime(0);
+      setDuration(0);
       try {
         playerRef.current.loadVideoById(queue[currentIndex].videoId);
       } catch (e) {}
@@ -141,12 +154,44 @@ export default function MusicPlayer({ isVisible, onClose }) {
     }
   }, [volume, playerReady]);
 
+  // Poll player for current time / duration
+  useEffect(() => {
+    if (!playerReady || !playerRef.current) return;
+    const interval = setInterval(() => {
+      try {
+        const t = playerRef.current.getCurrentTime();
+        const d = playerRef.current.getDuration();
+        if (typeof t === "number") setCurrentTime(t);
+        if (typeof d === "number" && d > 0) setDuration(d);
+      } catch (e) {}
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [playerReady]);
+
+  const formatTime = (s) => {
+    if (!s || isNaN(s)) return "0:00";
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const seek = (e) => {
+    if (!playerRef.current || !duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const newTime = ratio * duration;
+    try {
+      playerRef.current.seekTo(newTime, true);
+      setCurrentTime(newTime);
+    } catch (e) {}
+  };
+
   const playNext = () => {
-    errorCountRef.current = 0;
+    failedIdsRef.current.clear();
     setCurrentIndex((prev) => (prev + 1) % queue.length);
   };
   const playPrev = () => {
-    errorCountRef.current = 0;
+    failedIdsRef.current.clear();
     setCurrentIndex((prev) => (prev === 0 ? queue.length - 1 : prev - 1));
   };
 
@@ -199,12 +244,14 @@ export default function MusicPlayer({ isVisible, onClose }) {
   };
 
   const playSearchResult = (index) => {
+    failedIdsRef.current.clear();
     setQueue(searchResults);
     setCurrentIndex(index);
     setShowSearch(false);
   };
 
   const backToRadio = () => {
+    failedIdsRef.current.clear();
     setQueue(PLAYLIST);
     setCurrentIndex(0);
     setSearchResults([]);
@@ -383,7 +430,7 @@ export default function MusicPlayer({ isVisible, onClose }) {
                 </div>
               </div>
 
-              <div className="flex items-center justify-center gap-4 mb-3">
+              <div className="flex items-center justify-center gap-4 mb-2">
                 <button onClick={playPrev} className="text-gray-600 hover:text-purple-600 p-1 transition-colors">
                   <SkipBack className="w-5 h-5" />
                 </button>
@@ -396,6 +443,23 @@ export default function MusicPlayer({ isVisible, onClose }) {
                 <button onClick={playNext} className="text-gray-600 hover:text-purple-600 p-1 transition-colors">
                   <SkipForward className="w-5 h-5" />
                 </button>
+              </div>
+
+              {/* Progress bar */}
+              <div className="mb-3">
+                <div
+                  className="h-1.5 bg-gray-200 rounded-full cursor-pointer relative"
+                  onClick={seek}
+                >
+                  <div
+                    className="h-1.5 bg-purple-600 rounded-full transition-all"
+                    style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
+                  />
+                </div>
+                <div className="flex justify-between mt-1 text-[10px] text-gray-400 font-mono">
+                  <span>{formatTime(currentTime)}</span>
+                  <span>{formatTime(duration)}</span>
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
