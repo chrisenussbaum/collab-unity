@@ -45,6 +45,7 @@ import ContentDiscoveryWidget from "@/components/feed/ContentDiscoveryWidget";
 import CollaboratorDiscoveryWidget from "@/components/feed/CollaboratorDiscoveryWidget";
 import FeedSidebar from "@/components/feed/FeedSidebar";
 import AppSuggestionWidget from "@/components/feed/AppSuggestionWidget";
+import GamesFeedWidget from "@/components/feed/GamesFeedWidget";
 import ForYouSection from "@/components/discover/ForYouSection";
 import MicrolinkPreview from "@/components/MicrolinkPreview";
 import ShareCardDialog from "@/components/share/ShareCardDialog";
@@ -451,6 +452,10 @@ const FeedList = ({ isLoading, displayedItems, isLoadingMore, currentUser, proje
       // Insert app suggestions every 7 items — each instance shows a different category
       if (currentUser && (index + 1) % 7 === 0 && index < displayedItems.length - 1) {
         result.push(<AppSuggestionWidget key={`app-widget-${index}`} currentUser={currentUser} instanceIndex={Math.floor((index + 1) / 7) - 1} />);
+      }
+      // Insert games widget every 9 items — gives users a break from scrolling
+      if ((index + 1) % 9 === 0 && index < displayedItems.length - 1) {
+        result.push(<GamesFeedWidget key={`games-widget-${index}`} instanceIndex={Math.floor((index + 1) / 9) - 1} />);
       }
     });
     return result;

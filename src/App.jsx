@@ -12,6 +12,7 @@ import NewsEntertainment from './pages/NewsEntertainment';
 import Resources from './pages/Resources';
 import Featured from './pages/Featured';
 import Marketplace from './pages/Marketplace';
+import Games from './pages/Games';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
@@ -71,6 +72,7 @@ const AuthenticatedApp = () => {
       <Route path="/Resources" element={<Resources />} />
       <Route path="/Featured" element={<Featured />} />
       <Route path="/Marketplace" element={<LayoutWrapper currentPageName="Marketplace"><Marketplace /></LayoutWrapper>} />
+      <Route path="/Games" element={<LayoutWrapper currentPageName="Games"><Games /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

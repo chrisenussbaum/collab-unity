@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, BookOpen, Tv, ChevronRight, MessageCircle, Sparkles, Loader2 } from "lucide-react";
+import { Users, BookOpen, Tv, ChevronRight, MessageCircle, Sparkles, Loader2, Gamepad2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import UserProfileCard from "@/components/feed/UserProfileCard";
 import TrendingProjects from "@/components/feed/TrendingProjects";
 import LibraryOfApps from "@/components/feed/LibraryOfApps";
+import GamesWidget from "@/components/feed/GamesWidget";
 
 export default function FeedSidebar({ currentUser }) {
   const [suggestedUsers, setSuggestedUsers] = useState([]);
@@ -87,8 +88,21 @@ export default function FeedSidebar({ currentUser }) {
             </div>
             <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-600 flex-shrink-0 transition-colors" />
           </Link>
+          <Link to="/Games" className="flex items-center gap-3 p-2 rounded-lg hover:bg-purple-50 transition-colors group">
+            <div className="w-8 h-8 rounded-lg cu-gradient flex items-center justify-center flex-shrink-0">
+              <Gamepad2 className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm text-gray-900 group-hover:text-purple-700 transition-colors">Games</p>
+              <p className="text-[10px] text-gray-500">Play free online games</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-600 flex-shrink-0 transition-colors" />
+          </Link>
         </div>
       </div>
+
+      {/* Games Widget */}
+      <GamesWidget />
 
       {/* Suggested Collaborators */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">

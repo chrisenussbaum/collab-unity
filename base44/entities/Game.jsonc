@@ -1,0 +1,57 @@
+{
+  "name": "Game",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Game name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short description of the game"
+    },
+    "url": {
+      "type": "string",
+      "description": "URL where the game can be played"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Puzzle",
+        "Card",
+        "Board",
+        "Arcade",
+        "Word",
+        "Quiz",
+        "Sport",
+        "Strategy",
+        "Casino",
+        "Other"
+      ],
+      "description": "Game category"
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "description": "Thumbnail image URL for the game"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this game is featured in the sidebar widget"
+    },
+    "player_count": {
+      "type": "string",
+      "description": "Estimated player count label (e.g. '150M players')"
+    },
+    "display_order": {
+      "type": "number",
+      "default": 0,
+      "description": "Sort order for display"
+    }
+  },
+  "required": [
+    "title",
+    "url",
+    "category"
+  ]
+}
