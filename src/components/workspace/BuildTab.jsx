@@ -257,6 +257,7 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `    {"type": "create_task", "title": "Short task title (no colon, no description in title)", "description": "Detailed description of what needs to be done", "priority": "medium|high|low|urgent", "assigned_to": "email@example.com or null", "due_date": "YYYY-MM-DD or null"},`,
     `    {"type": "create_milestone", "title": "Milestone name", "description": "...", "target_date": "YYYY-MM-DD or null"},`,
     `    {"type": "save_note", "title": "Note title", "content": "Note content"},`,
+    `    {"type": "save_link", "title": "Resource title", "url": "https://...", "description": "What this resource covers", "category": "Videos|Articles|Docs|Resources"},`,
     `    {"type": "suggest_tool", "name": "Tool name", "url": "https://...", "icon": "emoji"}`,
     `  ]`,
     `}`,
@@ -265,7 +266,13 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `- Only include actions the user actually asked for, or that are obviously needed`,
     `- For create_task: "title" must be SHORT (3-6 words max, no colons). Put details in "description". NEVER format title as "Name: description text"`,
     `- For assigned_to, use the exact email from the collaborators list above`,
-    `- When you reference articles, videos, tutorials, or docs, include them as markdown links in "message" (e.g. [Title](https://url)) using the REAL page or video title as the link text — they render as visual preview cards`,
+    `\n== RESOURCE & LINK HANDLING (CRITICAL) ==`,
+    `When the user asks for videos, articles, research papers, tutorials, or ANY content that involves a URL:`,
+    `1. ALWAYS include every resource as a markdown link directly in the "message" field — e.g. [Real Video Title](https://youtube.com/watch?v=abc). These render as visual preview cards with thumbnails and screenshots in the chat.`,
+    `2. ALSO save each resource to the Assets tab using a "save_link" action so collaborators can access it later. Use the REAL title, not a generic label.`,
+    `3. NEVER use "save_note" to store URLs, videos, or articles. Notes are for text-only thoughts and ideas only. If you put a URL in a save_note, it is HIDDEN from the user — they cannot see it.`,
+    `4. Use the REAL page or video title as the link text — never a bare URL or generic label like "click here".`,
+    `5. Group resources under ## headings (e.g. ## Videos, ## Articles, ## Documentation).`,
     `- Keep "message" conversational, reference actual project details, and always suggest a clear next step`,
   ];
   return parts.filter(Boolean).join("\n");
@@ -377,6 +384,28 @@ async function executeAction(action, project, currentUser, onProjectUpdate) {
       content: action.content || "",
     });
     return { text: `📝 Note saved: **${action.title || "Note"}**` };
+  }
+
+  if (action.type === "save_link") {
+    const title = action.title || action.url || "Resource";
+    const existing = await AssetVersion.filter({ project_id: project.id, asset_name: title });
+    const versionNumber = existing?.length > 0 ? Math.max(...existing.map(a => a.version_number || 1)) + 1 : 1;
+    await AssetVersion.create({
+      project_id: project.id,
+      asset_name: title,
+      file_url: action.url,
+      file_name: title,
+      file_type: "text/uri-list",
+      version_number: versionNumber,
+      version_notes: action.description || "Saved by AI assistant",
+      uploaded_by: currentUser.email,
+      is_current: true,
+      category: action.category || "Resources",
+      tags: [],
+      resource_type: "link",
+    });
+    if (onProjectUpdate) onProjectUpdate();
+    return { text: `🔗 Saved to Assets: **${title}**` };
   }
 
   if (action.type === "suggest_tool") {
@@ -831,20 +860,35 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
       ).join("\n\n");
       const prompt = `${systemPrompt}\n\n--- CONVERSATION HISTORY ---\n${conversationHistory}\n\nRespond with valid JSON only (no markdown code blocks):`;
 
-      const raw = await base44.integrations.Core.InvokeLLM({ prompt });
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        add_context_from_internet: true,
+        model: "gemini_3_flash",
+        response_json_schema: {
+          type: "object",
+          properties: {
+            message: { type: "string" },
+            navigate_to: { type: "string" },
+            actions: { type: "array", items: { type: "object" } },
+          },
+          required: ["message"],
+        },
+      });
 
-      // Parse JSON response
-      let parsed = null;
-      try {
-        // Strip markdown code fences if present
-        const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
-        parsed = JSON.parse(cleaned);
-      } catch {
-        // If not valid JSON, treat the whole thing as a plain message
-        parsed = { message: raw, actions: [] };
+      // Handle both parsed object (response_json_schema) and string responses
+      let parsed;
+      if (typeof result === "string") {
+        try {
+          const cleaned = result.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+          parsed = JSON.parse(cleaned);
+        } catch {
+          parsed = { message: result, actions: [] };
+        }
+      } else {
+        parsed = result;
       }
 
-      const message = parsed?.message || raw;
+      const message = parsed?.message || (typeof result === "string" ? result : "");
       const actions = Array.isArray(parsed?.actions) ? parsed.actions : [];
 
       // Execute actions if user can edit
