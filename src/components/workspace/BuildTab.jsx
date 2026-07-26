@@ -257,7 +257,6 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `    {"type": "create_task", "title": "Short task title (no colon, no description in title)", "description": "Detailed description of what needs to be done", "priority": "medium|high|low|urgent", "assigned_to": "email@example.com or null", "due_date": "YYYY-MM-DD or null"},`,
     `    {"type": "create_milestone", "title": "Milestone name", "description": "...", "target_date": "YYYY-MM-DD or null"},`,
     `    {"type": "save_note", "title": "Note title", "content": "Note content"},`,
-    `    {"type": "save_link", "title": "Resource title", "url": "https://...", "description": "What this resource covers", "category": "Videos|Articles|Docs|Resources"},`,
     `    {"type": "suggest_tool", "name": "Tool name", "url": "https://...", "icon": "emoji"}`,
     `  ]`,
     `}`,
@@ -268,8 +267,8 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `- For assigned_to, use the exact email from the collaborators list above`,
     `\n== RESOURCE & LINK HANDLING (CRITICAL) ==`,
     `When the user asks for videos, articles, research papers, tutorials, or ANY content that involves a URL:`,
-    `1. ALWAYS include every resource as a markdown link directly in the "message" field — e.g. [Real Video Title](https://youtube.com/watch?v=abc). These render as visual preview cards with thumbnails and screenshots in the chat.`,
-    `2. ALSO save each resource to the Assets tab using a "save_link" action so collaborators can access it later. Use the REAL title, not a generic label.`,
+    `1. ALWAYS include every resource as a markdown link directly in the "message" field — e.g. [Real Video Title](https://youtube.com/watch?v=abc). These render as visual preview cards with screenshots in the chat. Every link in your message is AUTOMATICALLY saved to the Assets tab — you do NOT need a save_link action.`,
+    `2. ONLY suggest resources that are CURRENTLY AVAILABLE and ACCESSIBLE. Do NOT suggest deleted, private, or region-locked YouTube videos. Prefer well-known, widely-available videos and articles. If you are not confident a URL works, do not include it.`,
     `3. NEVER use "save_note" to store URLs, videos, or articles. Notes are for text-only thoughts and ideas only. If you put a URL in a save_note, it is HIDDEN from the user — they cannot see it.`,
     `4. Use the REAL page or video title as the link text — never a bare URL or generic label like "click here".`,
     `5. Group resources under ## headings (e.g. ## Videos, ## Articles, ## Documentation).`,
@@ -900,6 +899,27 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
           if (!result) continue;
           if (result.text) actionTexts.push(result.text);
           if (result.tool) suggestedTools.push(result.tool);
+        }
+      }
+
+      // Auto-extract markdown links from the message and save them as assets
+      if (canEdit) {
+        const linkRegex = /\[([?:[^\]\n]*)\]\((https?:\/\/[^\s)]+)\)/g;
+        let linkMatch;
+        const savedUrls = new Set((assets || []).map(a => a.file_url));
+        for (const action of actions) {
+          if (action.type === "save_link" && action.url) savedUrls.add(action.url);
+        }
+        while ((linkMatch = linkRegex.exec(message)) !== null) {
+          const linkTitle = linkMatch[1];
+          const linkUrl = linkMatch[2];
+          if (savedUrls.has(linkUrl)) continue;
+          savedUrls.add(linkUrl);
+          const linkResult = await executeAction(
+            { type: "save_link", title: linkTitle, url: linkUrl, description: "Saved from AI chat", category: "Resources" },
+            project, currentUser, onProjectUpdate
+          );
+          if (linkResult?.text) actionTexts.push(linkResult.text);
         }
       }
 

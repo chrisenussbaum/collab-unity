@@ -57,19 +57,19 @@ export default function RichLinkPreview({ url, title, variant = "card" }) {
       <div className="flex flex-col rounded-lg overflow-hidden border border-gray-200 hover:border-purple-300 transition-all hover:shadow-md bg-white">
         {/* Thumbnail */}
         <div className="relative aspect-video bg-gray-100 overflow-hidden">
-          {isVideo && youtubeId ? (
-            <img
-              src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`}
-              alt={title || "Video preview"}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-            />
-          ) : !screenshotFailed ? (
+          {!screenshotFailed ? (
             <img
               src={`https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`}
               alt={title || "Preview"}
               className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
               onError={() => setScreenshotFailed(true)}
+              loading="lazy"
+            />
+          ) : isVideo && youtubeId ? (
+            <img
+              src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`}
+              alt={title || "Video preview"}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
             />
           ) : (
