@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Music, Play, Pause, SkipForward, SkipBack, X, ChevronDown, ChevronUp, Volume2, Volume1, VolumeX, Search, Loader2, Radio } from "lucide-react";
+import { Music, Play, Pause, SkipForward, SkipBack, X, ChevronDown, ChevronUp, Volume2, Volume1, VolumeX } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { PLAYLIST } from "./playlist";
 
@@ -37,10 +37,6 @@ export default function MusicPlayer({ isVisible, onClose }) {
       y: Math.max(80, window.innerHeight - 260),
     };
   });
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
@@ -57,7 +53,6 @@ export default function MusicPlayer({ isVisible, onClose }) {
   const prevVolumeRef = useRef(60);
 
   const currentTrack = queue[currentIndex] || PLAYLIST[0];
-  const isRadioMode = queue === PLAYLIST;
 
   // Re-sync queue when PLAYLIST reference changes (HMR or module update)
   useEffect(() => {
@@ -222,62 +217,6 @@ export default function MusicPlayer({ isVisible, onClose }) {
 
   const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
 
-  const handleSearch = async (e) => {
-    e?.preventDefault();
-    if (!searchQuery.trim()) return;
-    setIsSearching(true);
-    setSearchResults([]);
-    try {
-      const res = await base44.integrations.Core.InvokeLLM({
-        prompt: `Search YouTube for music matching: "${searchQuery.trim()}". Find the top 10 most relevant official or popular YouTube videos for this query. For each result, provide the exact 11-character YouTube video ID (the part after "v=" in a youtube.com/watch?v= URL), the video title, and the channel name. Only include results you are confident are real, currently playable YouTube videos. Do not make up IDs — only return IDs you found from actual search results.`,
-        add_context_from_internet: true,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            results: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  videoId: { type: "string" },
-                  title: { type: "string" },
-                  channelTitle: { type: "string" },
-                },
-                required: ["videoId", "title", "channelTitle"],
-              },
-            },
-          },
-        },
-      });
-      const results = (res?.results || [])
-        .filter((r) => r.videoId && r.videoId.length >= 8 && r.videoId.length <= 12)
-        .map((r) => ({
-          ...r,
-          thumbnail: r.thumbnail || `https://img.youtube.com/vi/${r.videoId}/default.jpg`,
-        }));
-      setSearchResults(results);
-    } catch (err) {
-      setSearchResults([]);
-    }
-    setIsSearching(false);
-  };
-
-  const playSearchResult = (index) => {
-    failedIdsRef.current.clear();
-    setQueue(searchResults);
-    setCurrentIndex(index);
-    setShowSearch(false);
-  };
-
-  const backToRadio = () => {
-    failedIdsRef.current.clear();
-    setQueue(PLAYLIST);
-    setCurrentIndex(0);
-    setSearchResults([]);
-    setSearchQuery("");
-    setShowSearch(false);
-  };
-
   const handlePointerDown = (e) => {
     if (e.target.closest("button") || e.target.closest('input[type="range"]') || e.target.closest('input[type="text"]')) return;
     draggingRef.current = true;
@@ -314,8 +253,6 @@ export default function MusicPlayer({ isVisible, onClose }) {
 
   if (!isVisible) return null;
 
-  const showResultsPanel = showSearch && (searchResults.length > 0 || isSearching || (searchQuery && !isSearching));
-
   return (
     <div
       ref={containerRef}
@@ -340,22 +277,6 @@ export default function MusicPlayer({ isVisible, onClose }) {
           <span className="font-semibold text-sm">CU Radio</span>
         </div>
         <div className="flex items-center gap-0.5">
-          {!isRadioMode && (
-            <button
-              onClick={backToRadio}
-              className="text-white/80 hover:text-white p-1 rounded hover:bg-white/10 transition-colors"
-              title="Back to Radio"
-            >
-              <Radio className="w-4 h-4" />
-            </button>
-          )}
-          <button
-            onClick={() => setShowSearch(!showSearch)}
-            className={`text-white/80 hover:text-white p-1 rounded hover:bg-white/10 transition-colors ${showSearch ? "bg-white/20 text-white" : ""}`}
-            title="Search YouTube"
-          >
-            <Search className="w-4 h-4" />
-          </button>
           <button
             onClick={() => setIsMinimized(!isMinimized)}
             className="text-white/80 hover:text-white p-1 rounded hover:bg-white/10 transition-colors"
@@ -374,66 +295,7 @@ export default function MusicPlayer({ isVisible, onClose }) {
       {/* Body */}
       {!isMinimized && (
         <div className="bg-white">
-          {/* Search bar */}
-          {showSearch && (
-            <div className="p-3 border-b border-gray-100">
-              <form onSubmit={handleSearch} className="flex gap-2">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search YouTube for songs..."
-                  className="flex-1 text-sm px-3 py-1.5 rounded-lg border border-gray-200 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
-                  autoFocus
-                />
-                <button
-                  type="submit"
-                  disabled={isSearching}
-                  className="cu-gradient text-white px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50 flex items-center justify-center"
-                >
-                  {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* Search results */}
-          {showSearch && isSearching && (
-            <div className="p-4 flex items-center justify-center">
-              <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
-            </div>
-          )}
-          {showSearch && !isSearching && searchResults.length > 0 && (
-            <div className="max-h-64 overflow-y-auto p-2 space-y-1">
-              {searchResults.map((result, index) => (
-                <button
-                  key={result.videoId}
-                  onClick={() => playSearchResult(index)}
-                  className="w-full flex items-center gap-2 p-1.5 rounded-lg hover:bg-purple-50 transition-colors text-left"
-                >
-                  <img
-                    src={result.thumbnail}
-                    alt={result.title}
-                    className="w-10 h-10 rounded object-cover flex-shrink-0 bg-gray-100"
-                    onError={(e) => { e.target.style.opacity = "0"; }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-900 truncate">{result.title}</p>
-                    <p className="text-xs text-gray-500 truncate">{result.channelTitle}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-          {showSearch && !isSearching && searchResults.length === 0 && searchQuery && (
-            <div className="p-4 text-center text-xs text-gray-400">
-              No results found. Try a different search.
-            </div>
-          )}
-
-          {/* Current track + controls (hidden when search results are shown) */}
-          {!showResultsPanel && (
-            <div className="p-3">
+          <div className="p-3">
               <div className="flex items-center gap-3 mb-3">
                 <img
                   src={`https://img.youtube.com/vi/${currentTrack.videoId}/default.jpg`}
@@ -504,7 +366,6 @@ export default function MusicPlayer({ isVisible, onClose }) {
                 />
               </div>
             </div>
-          )}
         </div>
       )}
     </div>
