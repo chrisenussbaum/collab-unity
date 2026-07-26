@@ -58,6 +58,13 @@ export default function MusicPlayer({ isVisible, onClose }) {
   const currentTrack = queue[currentIndex] || PLAYLIST[0];
   const isRadioMode = queue === PLAYLIST;
 
+  // Re-sync queue when PLAYLIST reference changes (HMR or module update)
+  useEffect(() => {
+    setQueue(PLAYLIST);
+    setCurrentIndex(0);
+    failedIdsRef.current.clear();
+  }, [PLAYLIST]);
+
   useEffect(() => {
     loadYouTubeAPI();
   }, []);
@@ -308,7 +315,7 @@ export default function MusicPlayer({ isVisible, onClose }) {
       <div
         ref={playerHostRef}
         className="absolute pointer-events-none"
-        style={{ width: 1, height: 1, overflow: "hidden", bottom: 0, right: 0, opacity: 0 }}
+        style={{ width: 200, height: 200, overflow: "hidden", left: -9999, top: 0 }}
       />
 
       {/* Header */}
