@@ -48,6 +48,7 @@ export default function MusicPlayer({ isVisible, onClose }) {
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const queueRef = useRef(PLAYLIST);
   queueRef.current = queue;
+  const errorCountRef = useRef(0);
 
   const currentTrack = queue[currentIndex] || PLAYLIST[0];
   const isRadioMode = queue === PLAYLIST;
@@ -78,14 +79,21 @@ export default function MusicPlayer({ isVisible, onClose }) {
               e.target.setVolume(volume);
             },
             onStateChange: (e) => {
-              if (e.data === window.YT.PlayerState.PLAYING) setIsPlaying(true);
-              else if (e.data === window.YT.PlayerState.PAUSED) setIsPlaying(false);
-              else if (e.data === window.YT.PlayerState.ENDED) {
+              if (e.data === window.YT.PlayerState.PLAYING) {
+                errorCountRef.current = 0;
+                setIsPlaying(true);
+              } else if (e.data === window.YT.PlayerState.PAUSED) {
+                setIsPlaying(false);
+              } else if (e.data === window.YT.PlayerState.ENDED) {
+                errorCountRef.current = 0;
                 setCurrentIndex((prev) => (prev + 1) % queueRef.current.length);
               }
             },
             onError: () => {
-              setCurrentIndex((prev) => (prev + 1) % queueRef.current.length);
+              if (errorCountRef.current < 3) {
+                errorCountRef.current++;
+                setCurrentIndex((prev) => (prev + 1) % queueRef.current.length);
+              }
             },
           },
         });
@@ -124,9 +132,14 @@ export default function MusicPlayer({ isVisible, onClose }) {
     }
   }, [volume, playerReady]);
 
-  const playNext = () => setCurrentIndex((prev) => (prev + 1) % queue.length);
-  const playPrev = () =>
+  const playNext = () => {
+    errorCountRef.current = 0;
+    setCurrentIndex((prev) => (prev + 1) % queue.length);
+  };
+  const playPrev = () => {
+    errorCountRef.current = 0;
     setCurrentIndex((prev) => (prev === 0 ? queue.length - 1 : prev - 1));
+  };
 
   const togglePlay = () => {
     if (!playerRef.current || !playerReady) return;
