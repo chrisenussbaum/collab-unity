@@ -905,7 +905,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
 
       // Auto-extract markdown links from the message and save them as assets
       if (canEdit) {
-        const linkRegex = /\[([?:[^\]\n]*)\]\((https?:\/\/[^\s)]+)\)/g;
+        const linkRegex = /\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
         let linkMatch;
         const savedUrls = new Set((assets || []).map(a => a.file_url));
         for (const action of actions) {
