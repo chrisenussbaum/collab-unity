@@ -989,7 +989,7 @@ export default function Feed({ currentUser, authIsLoading }) {
 
         {/* Desktop layout — 2-column with sidebar */}
         <div className="hidden md:block pt-6">
-          <div className="max-w-6xl mx-auto flex gap-6">
+          <div className="max-w-6xl mx-auto flex gap-6 justify-center">
             {/* Main feed column */}
             <div className="flex-1 max-w-2xl">
               <UpdatesBar currentUser={currentUser} />

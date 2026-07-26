@@ -15,8 +15,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, User as UserIcon, Lightbulb, Settings, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar, Users, Briefcase } from "lucide-react";
+import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, User as UserIcon, Lightbulb, Settings, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar, Users, Briefcase, Music } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
+import MusicPlayer from "./components/music/MusicPlayer";
 import GlobalSearchBar from "./components/GlobalSearchBar";
 
 // Force logout timestamp - update this to force all users to re-authenticate
@@ -75,6 +76,7 @@ export default function Layout({ children, currentPageName }) {
   const [authChecked, setAuthChecked] = useState(false);
   const [hasNavigated, setHasNavigated] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showMusicPlayer, setShowMusicPlayer] = useState(false);
 
   const publicRoutes = [
     createPageUrl("Welcome"),
@@ -1037,6 +1039,10 @@ export default function Layout({ children, currentPageName }) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setShowMusicPlayer(!showMusicPlayer)} className="cursor-pointer focus:bg-purple-50 focus:text-purple-700">
+                    <Music className="cu-icon-sm mr-2" /> {showMusicPlayer ? "Turn Music Off" : "Turn Music On"}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700">
                     <LogOut className="cu-icon-sm mr-2" /> Sign Out
                   </DropdownMenuItem>
@@ -1212,6 +1218,8 @@ export default function Layout({ children, currentPageName }) {
           </div>
         </div>
       </nav>
+
+      <MusicPlayer isVisible={showMusicPlayer} onClose={() => setShowMusicPlayer(false)} />
     </div>
   );
 }
