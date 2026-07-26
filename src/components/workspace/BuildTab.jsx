@@ -267,7 +267,7 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `- For assigned_to, use the exact email from the collaborators list above`,
     `\n== RESOURCE & LINK HANDLING (CRITICAL) ==`,
     `When the user asks for videos, articles, research papers, tutorials, or ANY content that involves a URL:`,
-    `1. ALWAYS include every resource as a markdown link directly in the "message" field — e.g. [Real Title](https://example.com/resource). These render as visual preview cards with screenshots in the chat. Every link in your message is AUTOMATICALLY saved to the Assets tab — you do NOT need a save_link action.`,
+    `1. ALWAYS include every resource as a markdown link directly in the "message" field — e.g. [Real Title](https://example.com/resource). These render as visual preview cards with screenshots in the chat. Links in your message are automatically saved to the Assets tab — you do NOT need a save_link action, and you do NOT need to say "links have been saved to Assets" because the system adds a confirmation footer automatically.`,
     `2. QUALITY OVER QUANTITY: Suggest only the 1-2 BEST resources — the most highly-rated, widely-used, and directly relevant to the user's request. Do NOT list 4+ resources. One excellent resource beats four mediocre ones.`,
     `3. SEARCH THE WEB broadly for publicly available videos and resources — do NOT rely only on YouTube. Consider Vimeo, official course sites, university portals, reputable blogs, documentation sites, and other public platforms. Only suggest content that is CURRENTLY AVAILABLE and ACCESSIBLE (not deleted, private, paywalled, or region-locked).`,
     `4. NEVER use "save_note" to store URLs, videos, or articles. Notes are for text-only thoughts and ideas only. If you put a URL in a save_note, it is HIDDEN from the user — they cannot see it.`,
@@ -904,23 +904,25 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
       }
 
       // Auto-extract markdown links from the message and save them as assets
-      if (canEdit) {
-        const linkRegex = /\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
-        let linkMatch;
-        const savedUrls = new Set((assets || []).map(a => a.file_url));
-        for (const action of actions) {
-          if (action.type === "save_link" && action.url) savedUrls.add(action.url);
-        }
-        while ((linkMatch = linkRegex.exec(message)) !== null) {
-          const linkTitle = linkMatch[1];
-          const linkUrl = linkMatch[2];
-          if (savedUrls.has(linkUrl)) continue;
-          savedUrls.add(linkUrl);
+      const linkRegex = /\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
+      let linkMatch;
+      const savedUrls = new Set((assets || []).map(a => a.file_url));
+      for (const action of actions) {
+        if (action.type === "save_link" && action.url) savedUrls.add(action.url);
+      }
+      while ((linkMatch = linkRegex.exec(message)) !== null) {
+        const linkTitle = linkMatch[1];
+        const linkUrl = linkMatch[2];
+        if (savedUrls.has(linkUrl)) continue;
+        savedUrls.add(linkUrl);
+        try {
           const linkResult = await executeAction(
             { type: "save_link", title: linkTitle, url: linkUrl, description: "Saved from AI chat", category: "Resources" },
             project, currentUser, onProjectUpdate
           );
           if (linkResult?.text) actionTexts.push(linkResult.text);
+        } catch (e) {
+          console.error("Failed to auto-save link:", linkUrl, e);
         }
       }
 
