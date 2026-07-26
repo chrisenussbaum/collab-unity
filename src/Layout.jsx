@@ -1002,6 +1002,20 @@ export default function Layout({ children, currentPageName }) {
           />
 
           <div className="flex items-center space-x-2 flex-shrink-0">
+            {currentUser && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowMusicPlayer(!showMusicPlayer)}
+                className={`relative rounded-full h-9 w-9 ${showMusicPlayer ? 'text-purple-600 bg-purple-50' : 'text-gray-600'}`}
+                title={showMusicPlayer ? "Turn Music Off" : "Turn Music On"}
+              >
+                <Music className="w-5 h-5" />
+                {showMusicPlayer && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-purple-600 rounded-full border border-white" />
+                )}
+              </Button>
+            )}
             {currentUser && <NotificationBell />}
             {currentUser && (
               <DropdownMenu>
@@ -1104,6 +1118,19 @@ export default function Layout({ children, currentPageName }) {
                     </Button>
                   </Link>
 
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowMusicPlayer(!showMusicPlayer)}
+                    className={`relative rounded-full h-9 w-9 ${showMusicPlayer ? 'text-purple-600 bg-purple-50' : 'text-gray-600 hover:text-purple-600'}`}
+                    title={showMusicPlayer ? "Turn Music Off" : "Turn Music On"}
+                  >
+                    <Music className="w-5 h-5" />
+                    {showMusicPlayer && (
+                      <span className="absolute top-1 right-1 w-2 h-2 bg-purple-600 rounded-full border border-white" />
+                    )}
+                  </Button>
+
                   <NotificationBell />
 
                   <DropdownMenu>
@@ -1139,6 +1166,10 @@ export default function Layout({ children, currentPageName }) {
                         <Link to={createPageUrl("ReportBug")} className="flex items-center cursor-pointer">
                           <Bug className="cu-icon-sm mr-2" /> Report Bug
                         </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setShowMusicPlayer(!showMusicPlayer)} className="cursor-pointer focus:bg-purple-50 focus:text-purple-700">
+                        <Music className="cu-icon-sm mr-2" /> {showMusicPlayer ? "Turn Music Off" : "Turn Music On"}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700">
