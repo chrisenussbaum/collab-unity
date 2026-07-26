@@ -216,32 +216,14 @@ export default function MusicPlayer({ isVisible, onClose }) {
     setIsSearching(true);
     setSearchResults([]);
     try {
-      const res = await base44.integrations.Core.InvokeLLM({
-        prompt: `Search the web for YouTube music videos matching: "${searchQuery}". Find actual YouTube videos and extract their 11-character video IDs from the URLs. Return up to 15 results. Each result must include the videoId, title, and channelTitle. Only include real videos you found — do not fabricate video IDs.`,
-        add_context_from_internet: true,
-        model: "gemini_3_flash",
-        response_json_schema: {
-          type: "object",
-          properties: {
-            results: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  videoId: { type: "string" },
-                  title: { type: "string" },
-                  channelTitle: { type: "string" },
-                },
-              },
-            },
-          },
-        },
+      const res = await base44.functions.invoke("searchYouTubeMusic", {
+        query: searchQuery.trim(),
       });
       const results = (res?.results || [])
         .filter((r) => r.videoId && r.videoId.length >= 8)
         .map((r) => ({
           ...r,
-          thumbnail: `https://img.youtube.com/vi/${r.videoId}/default.jpg`,
+          thumbnail: r.thumbnail || `https://img.youtube.com/vi/${r.videoId}/default.jpg`,
         }));
       setSearchResults(results);
     } catch (err) {
