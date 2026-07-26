@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Music, Play, Pause, SkipForward, SkipBack, X, ChevronDown, ChevronUp, Volume2, Volume1, VolumeX } from "lucide-react";
-import { base44 } from "@/api/base44Client";
 import { PLAYLIST } from "./playlist";
 
 let apiLoaded = false;
@@ -28,7 +27,10 @@ export default function MusicPlayer({ isVisible, onClose }) {
   const [isMinimized, setIsMinimized] = useState(false);
   const [queue, setQueue] = useState(PLAYLIST);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedGenre, setSelectedGenre] = useState(null);
   const [volume, setVolume] = useState(60);
+
+  const availableGenres = [...new Set(PLAYLIST.map((t) => t.genre))].sort();
   const [playerReady, setPlayerReady] = useState(false);
   const [position, setPosition] = useState(() => {
     if (typeof window === "undefined") return { x: 20, y: 100 };
@@ -54,12 +56,15 @@ export default function MusicPlayer({ isVisible, onClose }) {
 
   const currentTrack = queue[currentIndex] || PLAYLIST[0];
 
-  // Re-sync queue when PLAYLIST reference changes (HMR or module update)
+  // Re-sync queue when PLAYLIST reference or selected genre changes
   useEffect(() => {
-    setQueue(PLAYLIST);
+    const filtered = selectedGenre
+      ? PLAYLIST.filter((t) => t.genre === selectedGenre)
+      : PLAYLIST;
+    setQueue(filtered);
     setCurrentIndex(0);
     failedIdsRef.current.clear();
-  }, [PLAYLIST]);
+  }, [PLAYLIST, selectedGenre]);
 
   useEffect(() => {
     loadYouTubeAPI();
@@ -295,6 +300,32 @@ export default function MusicPlayer({ isVisible, onClose }) {
       {/* Body */}
       {!isMinimized && (
         <div className="bg-white">
+          {/* Genre filter */}
+          <div className="px-3 pt-3 pb-2 flex gap-1.5 overflow-x-auto scrollbar-hide border-b border-gray-100">
+            <button
+              onClick={() => setSelectedGenre(null)}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                selectedGenre === null
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-purple-100 hover:text-purple-600"
+              }`}
+            >
+              All
+            </button>
+            {availableGenres.map((genre) => (
+              <button
+                key={genre}
+                onClick={() => setSelectedGenre(genre)}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                  selectedGenre === genre
+                    ? "bg-purple-600 text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-purple-100 hover:text-purple-600"
+                }`}
+              >
+                {genre}
+              </button>
+            ))}
+          </div>
           <div className="p-3">
               <div className="flex items-center gap-3 mb-3">
                 <img
