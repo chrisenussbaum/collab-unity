@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Music, Play, Pause, SkipForward, SkipBack, X, ChevronDown, ChevronUp, Volume2, Search, Loader2, Radio } from "lucide-react";
+import { Music, Play, Pause, SkipForward, SkipBack, X, ChevronDown, ChevronUp, Volume2, Volume1, VolumeX, Search, Loader2, Radio } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { PLAYLIST } from "./playlist";
 
@@ -54,6 +54,7 @@ export default function MusicPlayer({ isVisible, onClose }) {
   const failedIdsRef = useRef(new Set());
   const currentIndexRef = useRef(0);
   currentIndexRef.current = currentIndex;
+  const prevVolumeRef = useRef(60);
 
   const currentTrack = queue[currentIndex] || PLAYLIST[0];
   const isRadioMode = queue === PLAYLIST;
@@ -209,6 +210,17 @@ export default function MusicPlayer({ isVisible, onClose }) {
       else playerRef.current.playVideo();
     } catch (e) {}
   };
+
+  const toggleMute = () => {
+    if (volume > 0) {
+      prevVolumeRef.current = volume;
+      setVolume(0);
+    } else {
+      setVolume(prevVolumeRef.current || 60);
+    }
+  };
+
+  const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
 
   const handleSearch = async (e) => {
     e?.preventDefault();
@@ -452,14 +464,21 @@ export default function MusicPlayer({ isVisible, onClose }) {
               </div>
 
               <div className="flex items-center gap-2">
-                <Volume2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <button
+                  onClick={toggleMute}
+                  className="text-gray-400 hover:text-purple-600 flex-shrink-0 transition-colors"
+                  title={volume === 0 ? "Unmute" : "Mute"}
+                >
+                  <VolumeIcon className="w-4 h-4" />
+                </button>
                 <input
                   type="range"
                   min="0"
                   max="100"
                   value={volume}
                   onChange={(e) => setVolume(Number(e.target.value))}
-                  className="flex-1 h-1 accent-purple-600 cursor-pointer"
+                  className="cu-volume-slider flex-1 cursor-pointer"
+                  style={{ "--vol": `${volume}%` }}
                 />
               </div>
             </div>

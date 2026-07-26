@@ -980,6 +980,40 @@ export default function Layout({ children, currentPageName }) {
             min-height: -webkit-fill-available;
           }
         }
+
+        /* CU Radio volume slider */
+        .cu-volume-slider {
+          -webkit-appearance: none;
+          appearance: none;
+          height: 6px;
+          border-radius: 9999px;
+          background: linear-gradient(to right, #8a2be2 0%, #8a2be2 var(--vol, 60%), #e0e0e0 var(--vol, 60%), #e0e0e0 100%);
+          outline: none;
+        }
+        .cu-volume-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: #8a2be2;
+          cursor: pointer;
+          border: none;
+          margin-top: 0;
+        }
+        .cu-volume-slider::-moz-range-thumb {
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: #8a2be2;
+          cursor: pointer;
+          border: none;
+        }
+        .cu-volume-slider::-moz-range-track {
+          height: 6px;
+          border-radius: 9999px;
+          background: transparent;
+        }
       `}</style>
 
       {/* Mobile/Tablet Header (visible on screens < 1024px) */}
