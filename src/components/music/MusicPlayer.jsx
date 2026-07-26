@@ -476,7 +476,11 @@ export default function MusicPlayer({ isVisible, onClose }) {
                   min="0"
                   max="100"
                   value={volume}
-                  onChange={(e) => setVolume(Number(e.target.value))}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (v > 0) prevVolumeRef.current = v;
+                    setVolume(v);
+                  }}
                   className="cu-volume-slider flex-1 cursor-pointer"
                   style={{ "--vol": `${volume}%` }}
                 />
