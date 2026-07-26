@@ -43,6 +43,7 @@ export default function MusicPlayer({ isVisible, onClose }) {
   const [showSearch, setShowSearch] = useState(false);
 
   const playerRef = useRef(null);
+  const playerHostRef = useRef(null);
   const containerRef = useRef(null);
   const draggingRef = useRef(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
@@ -61,10 +62,15 @@ export default function MusicPlayer({ isVisible, onClose }) {
     if (!isVisible) return;
 
     let checkInterval;
+    let playerDiv;
     const initPlayer = () => {
-      const playerDiv = document.getElementById("cu-yt-player");
-      if (apiReady && window.YT && window.YT.Player && playerDiv) {
-        playerRef.current = new window.YT.Player("cu-yt-player", {
+      const host = playerHostRef.current;
+      if (apiReady && window.YT && window.YT.Player && host) {
+        // Create player div programmatically so React never reconciles/destroys it
+        playerDiv = document.createElement("div");
+        playerDiv.id = "cu-yt-player";
+        host.appendChild(playerDiv);
+        playerRef.current = new window.YT.Player(playerDiv, {
           playerVars: {
             autoplay: 1,
             controls: 0,
@@ -110,6 +116,9 @@ export default function MusicPlayer({ isVisible, onClose }) {
           playerRef.current.destroy();
         } catch (e) {}
         playerRef.current = null;
+      }
+      if (playerDiv && playerDiv.parentNode) {
+        playerDiv.parentNode.removeChild(playerDiv);
       }
       setPlayerReady(false);
       setIsPlaying(false);
@@ -247,13 +256,13 @@ export default function MusicPlayer({ isVisible, onClose }) {
       className="fixed z-[70] shadow-2xl rounded-xl overflow-hidden select-none border border-purple-200"
       style={{ left: position.x, top: position.y, width: isMinimized ? 180 : 320 }}
     >
-      {/* Hidden YouTube player */}
+      {/* Hidden YouTube player host — the actual player div is created
+          programmatically so React re-renders don't destroy the iframe */}
       <div
+        ref={playerHostRef}
         className="absolute pointer-events-none"
         style={{ width: 1, height: 1, overflow: "hidden", bottom: 0, right: 0, opacity: 0 }}
-      >
-        <div id="cu-yt-player"></div>
-      </div>
+      />
 
       {/* Header */}
       <div
