@@ -228,11 +228,29 @@ export default function MusicPlayer({ isVisible, onClose }) {
     setIsSearching(true);
     setSearchResults([]);
     try {
-      const res = await base44.functions.invoke("searchYouTubeMusic", {
-        query: searchQuery.trim(),
+      const res = await base44.integrations.Core.InvokeLLM({
+        prompt: `Search YouTube for music matching: "${searchQuery.trim()}". Find the top 10 most relevant official or popular YouTube videos for this query. For each result, provide the exact 11-character YouTube video ID (the part after "v=" in a youtube.com/watch?v= URL), the video title, and the channel name. Only include results you are confident are real, currently playable YouTube videos. Do not make up IDs — only return IDs you found from actual search results.`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            results: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  videoId: { type: "string" },
+                  title: { type: "string" },
+                  channelTitle: { type: "string" },
+                },
+                required: ["videoId", "title", "channelTitle"],
+              },
+            },
+          },
+        },
       });
       const results = (res?.results || [])
-        .filter((r) => r.videoId && r.videoId.length >= 8)
+        .filter((r) => r.videoId && r.videoId.length >= 8 && r.videoId.length <= 12)
         .map((r) => ({
           ...r,
           thumbnail: r.thumbnail || `https://img.youtube.com/vi/${r.videoId}/default.jpg`,
