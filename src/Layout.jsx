@@ -1053,10 +1053,6 @@ export default function Layout({ children, currentPageName }) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setShowMusicPlayer(!showMusicPlayer)} className="cursor-pointer focus:bg-purple-50 focus:text-purple-700">
-                    <Music className="cu-icon-sm mr-2" /> {showMusicPlayer ? "Turn Music Off" : "Turn Music On"}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700">
                     <LogOut className="cu-icon-sm mr-2" /> Sign Out
                   </DropdownMenuItem>
@@ -1166,10 +1162,6 @@ export default function Layout({ children, currentPageName }) {
                         <Link to={createPageUrl("ReportBug")} className="flex items-center cursor-pointer">
                           <Bug className="cu-icon-sm mr-2" /> Report Bug
                         </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setShowMusicPlayer(!showMusicPlayer)} className="cursor-pointer focus:bg-purple-50 focus:text-purple-700">
-                        <Music className="cu-icon-sm mr-2" /> {showMusicPlayer ? "Turn Music Off" : "Turn Music On"}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700">
