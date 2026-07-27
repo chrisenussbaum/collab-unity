@@ -49,13 +49,13 @@ const FeatureRow = ({ eyebrow, title, subtitle, visual, buttonLabel, reverse, on
 export default function FeaturesShowcase({ onAuth }) {
   const features = [
     { type: "feed", eyebrow: "Feed", title: "Share your journey with the world.", subtitle: "Post progress updates, showcase live links, and celebrate milestones with a community that cheers you on.", buttonLabel: "Explore Feed" },
-    { type: "create", eyebrow: "Create Project", title: "Start building in seconds.", subtitle: "Describe your idea in plain text and let AI help you bring it to life with a structured project plan, milestones, and tasks.", buttonLabel: "Explore Create" },
+    { type: "create", eyebrow: "Create Project", title: "Start building in seconds.", subtitle: "Describe your idea in plain text and bring it to life with a structured project plan, milestones, and tasks.", buttonLabel: "Explore Create" },
     { type: "marketplace", eyebrow: "Marketplace", title: "Find gigs, services, and talent.", subtitle: "Browse paid gigs and professional services, post opportunities, and connect with talented people ready to collaborate.", buttonLabel: "Explore Marketplace" },
     { type: "myprojects", eyebrow: "My Projects", title: "All your projects in one place.", subtitle: "Track progress, manage milestones, and switch between personal and collaborative projects from a single dashboard.", buttonLabel: "Explore Projects" },
-    { type: "workspace", eyebrow: "Build Workspace", title: "Your collaborative project workspace.", subtitle: "An AI project assistant, tasks, milestones, assets, and activity logs all unified in one workspace built for shipping.", buttonLabel: "Explore Workspace" },
+    { type: "workspace", eyebrow: "Build Workspace", title: "Your collaborative project workspace.", subtitle: "A project assistant, tasks, milestones, assets, and activity logs all unified in one workspace built for shipping.", buttonLabel: "Explore Workspace" },
     { type: "chat", eyebrow: "Chat", title: "Message your team in real-time.", subtitle: "Stay connected with 1-on-1 and group chats, with your project context always accessible right alongside your work.", buttonLabel: "Explore Chat" },
-    { type: "profile", eyebrow: "Profile", title: "Build a portfolio that speaks for itself.", subtitle: "Showcase projects, collect peer endorsements, gather reviews, and generate an AI-powered resume in seconds.", buttonLabel: "Explore Profiles" },
-    { type: "resume", eyebrow: "Generate Resume", title: "Generate a professional resume instantly.", subtitle: "Turn your profile, projects, and contributions into a polished resume in one click. Upload your existing resume to enhance it with AI.", buttonLabel: "Explore Resume" },
+    { type: "profile", eyebrow: "Profile", title: "Build a portfolio that speaks for itself.", subtitle: "Showcase projects, collect peer endorsements, gather reviews, and generate a professional resume in seconds.", buttonLabel: "Explore Profiles" },
+    { type: "resume", eyebrow: "Generate Resume", title: "Generate a professional resume instantly.", subtitle: "Turn your profile, projects, and contributions into a polished resume in one click. Upload your existing resume to enhance it further.", buttonLabel: "Explore Resume" },
   ];
 
   return (
