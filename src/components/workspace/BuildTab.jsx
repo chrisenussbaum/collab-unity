@@ -944,11 +944,31 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
         response_json_schema: {
           type: "object",
           properties: {
-            message: { type: "string" },
-            navigate_to: { type: "string" },
-            actions: { type: "array", items: { type: "object" } },
+            message: { type: "string", description: "Your conversational response to the user" },
+            navigate_to: { type: "string", description: "Tab to navigate to: tasks, milestones, assets, ideation, notes, tools, links, activity, or null" },
+            actions: {
+              type: "array",
+              description: "Actions to execute. MUST be populated with create_task/create_milestone objects whenever you are creating tasks or milestones.",
+              items: {
+                type: "object",
+                properties: {
+                  type: { type: "string", enum: ["create_task", "create_milestone", "save_note", "suggest_tool"] },
+                  title: { type: "string", description: "Short title (3-6 words)" },
+                  description: { type: "string", description: "Detailed description" },
+                  priority: { type: "string", enum: ["low", "medium", "high", "urgent"] },
+                  assigned_to: { type: "string", description: "Email of assignee or null" },
+                  due_date: { type: "string", description: "YYYY-MM-DD or null" },
+                  target_date: { type: "string", description: "YYYY-MM-DD for milestones or null" },
+                  content: { type: "string", description: "Content for save_note" },
+                  name: { type: "string", description: "Tool name for suggest_tool" },
+                  url: { type: "string", description: "Tool URL for suggest_tool" },
+                  icon: { type: "string", description: "Emoji icon for suggest_tool" },
+                },
+                required: ["type", "title"],
+              },
+            },
           },
-          required: ["message"],
+          required: ["message", "actions"],
         },
       });
 
