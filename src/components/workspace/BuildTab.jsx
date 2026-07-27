@@ -269,7 +269,7 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `When the user asks for videos, articles, research papers, tutorials, or ANY content that involves a URL:`,
     `1. ALWAYS include every resource as a markdown link directly in the "message" field — e.g. [Real Title](https://example.com/resource). These render as visual preview cards with screenshots in the chat. Links in your message are automatically saved to the Assets tab — you do NOT need a save_link action, and you do NOT need to say "links have been saved to Assets" because the system adds a confirmation footer automatically.`,
     `2. QUALITY OVER QUANTITY: Suggest only the 1-2 BEST resources — the most highly-rated, widely-used, and directly relevant to the user's request. Do NOT list 4+ resources. One excellent resource beats four mediocre ones.`,
-    `3. CRITICAL — YOUTUBE URLs: If a "VERIFIED YOUTUBE VIDEOS" section is provided in the context, you MUST use ONLY those exact URLs — copy them character-for-character. NEVER invent, guess, or hallucinate a YouTube video URL (e.g. do NOT make up video IDs like ?v=ABC123xyz). If no verified videos are provided, do NOT include any youtube.com/watch?v= links — instead provide a YouTube search link (https://www.youtube.com/results?search_query=...) so the user can find videos themselves.`,
+    `3. CRITICAL — NEVER HALLUCINATE URLs: You have web search enabled. When suggesting videos, tutorials, or articles, you MUST search the web first and ONLY include URLs that you have VERIFIED to exist in real search results. NEVER invent, guess, or fabricate a URL — especially YouTube video IDs (e.g. do NOT make up ?v=ABC123xyz). If you cannot find a specific verified video, provide a Google Search Videos link instead: https://www.google.com/search?q=YOUR+QUERY&tbm=vid (replace YOUR+QUERY with the search terms). This guarantees the user gets real results.`,
     `4. SEARCH THE WEB broadly for publicly available videos and resources — do NOT rely only on YouTube. Consider Vimeo, official course sites, university portals, reputable blogs, documentation sites, and other public platforms. Only suggest content that is CURRENTLY AVAILABLE and ACCESSIBLE (not deleted, private, paywalled, or region-locked).`,
     `5. NEVER use "save_note" to store URLs, videos, or articles. Notes are for text-only thoughts and ideas only. If you put a URL in a save_note, it is HIDDEN from the user — they cannot see it.`,
     `6. Use the REAL page or video title as the link text — never a bare URL or generic label like "click here".`,
@@ -860,24 +860,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
         `${m.role === "user" ? (m.sender_name || "User") : "Assistant"}: ${m.content}`
       ).join("\n\n");
 
-      // Detect if the user is asking for videos — search YouTube for real results
-      const videoKeywords = /\b(video|videos|watch|tutorial|tutorials|how to|demo|course|lecture|explain|learn|teach|guide me|show me|youtube)\b/i;
-      let youtubeContext = "";
-      if (videoKeywords.test(userText)) {
-        try {
-          const ytResult = await base44.functions.invoke('searchYouTubeVideos', { query: userText });
-          const videos = ytResult?.data?.videos || ytResult?.videos || [];
-          if (videos.length > 0) {
-            youtubeContext = `\n\n--- VERIFIED YOUTUBE VIDEOS (from live YouTube search) ---\nYou MUST use ONLY these exact URLs when suggesting videos. Do NOT make up or hallucinate any YouTube URL.\n${videos.map(v => `- [${v.title}](${v.url}) (Channel: ${v.channel})`).join("\n")}\n--- END VERIFIED VIDEOS ---\n`;
-          } else {
-            youtubeContext = `\n\n--- YOUTUBE SEARCH NOTE ---\nThe YouTube search returned no results. Do NOT make up YouTube URLs. Instead, provide a YouTube search link: https://www.youtube.com/results?search_query=${encodeURIComponent(userText.slice(0, 100))}\n--- END NOTE ---\n`;
-          }
-        } catch (e) {
-          youtubeContext = `\n\n--- YOUTUBE SEARCH NOTE ---\nYouTube API is unavailable. Do NOT make up YouTube URLs — they will be broken. Instead, provide a YouTube search link: https://www.youtube.com/results?search_query=${encodeURIComponent(userText.slice(0, 100))}\n--- END NOTE ---\n`;
-        }
-      }
-
-      const prompt = `${systemPrompt}\n\n--- CONVERSATION HISTORY ---\n${conversationHistory}${youtubeContext}\n\nRespond with valid JSON only (no markdown code blocks):`;
+      const prompt = `${systemPrompt}\n\n--- CONVERSATION HISTORY ---\n${conversationHistory}\n\nRespond with valid JSON only (no markdown code blocks):`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
