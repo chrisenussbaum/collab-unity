@@ -2,13 +2,14 @@ import React from "react";
 import { ArrowRight } from "lucide-react";
 
 const SCREENSHOTS = {
-  feed: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/f2c75096d_Screenshot2026-07-27at121344AM.png",
+  feed: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/a4a7e6a0a_Screenshot2026-07-27at123605AM.png",
   marketplace: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/4ccd546c1_Screenshot2026-07-27at120225AM.png",
   myprojects: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/5d25a0cef_Screenshot2026-07-27at120305AM.png",
   workspace: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/35f95fee3_Screenshot2026-07-27at120525AM.png",
-  chat: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/1619a84a7_Screenshot2026-07-27at120339AM.png",
+  chat: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/4b99d2b2a_Screenshot2026-07-27at123837AM.png",
   profile: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/76a7cdd71_Screenshot2026-07-27at121454AM.png",
   create: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/5ebb1d256_Screenshot2026-07-27at120554AM.png",
+  resume: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/673fa341a_Screenshot2026-07-27at124055AM.png",
 };
 
 const FeatureCard = ({ children }) => (
@@ -54,6 +55,7 @@ export default function FeaturesShowcase({ onAuth }) {
     { type: "chat", eyebrow: "Chat", title: "Message your team in real-time.", subtitle: "Stay connected with 1-on-1 and group chats, with your project context always accessible right alongside your work.", buttonLabel: "Explore Chat" },
     { type: "profile", eyebrow: "Profile", title: "Build a portfolio that speaks for itself.", subtitle: "Showcase projects, collect peer endorsements, gather reviews, and generate an AI-powered resume in seconds.", buttonLabel: "Explore Profiles" },
     { type: "create", eyebrow: "Create Project", title: "Start building in seconds.", subtitle: "Describe your idea in plain text and let AI help you bring it to life with a structured project plan, milestones, and tasks.", buttonLabel: "Explore Create" },
+    { type: "resume", eyebrow: "Generate Resume", title: "Generate a professional resume instantly.", subtitle: "Turn your profile, projects, and contributions into a polished resume in one click. Upload your existing resume to enhance it with AI.", buttonLabel: "Explore Resume" },
   ];
 
   return (
