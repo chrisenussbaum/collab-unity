@@ -281,6 +281,8 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
 
 // ─── AI Chat component ─────────────────────────────────────────────────────
 
+const VALID_NAV_TABS = ["tasks", "milestones", "assets", "ideation", "notes", "tools", "activity"];
+
 const WELCOME_MESSAGE = (title, taskCount, milestoneCount, assets) => {
   const phase = detectProjectPhase(
     taskCount > 0 ? Array(taskCount).fill({}) : [],
@@ -437,7 +439,7 @@ const chatMarkdownComponents = {
   },
 };
 
-function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers, onProjectUpdate, onNavigateTo, buildLinks = [], activityLogs = [] }) {
+function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers, onProjectUpdate, onNavigateTo, onTasksChanged, onMilestonesChanged, buildLinks = [], activityLogs = [] }) {
   const [messages, setMessages] = useState([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0, assets)]);
   const [thoughts, setThoughts] = useState([]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
@@ -825,13 +827,18 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
               if (result.text) actionTexts.push(result.text);
               if (result.tool) suggestedTools.push(result.tool);
             }
+            if (onTasksChanged) onTasksChanged();
+            if (onMilestonesChanged) onMilestonesChanged();
           }
+          const navTarget = parsed?.navigate_to;
           let finalContent = message;
           if (actionTexts.length > 0) {
             finalContent += `\n\n---\n**Actions taken:**\n${actionTexts.join("\n")}`;
           }
           await addAndPersist({ role: "assistant", content: finalContent, tools: suggestedTools });
-          // NOTE: Do NOT auto-navigate — let users read the response first
+          if (navTarget && VALID_NAV_TABS.includes(navTarget) && onNavigateTo) {
+            setTimeout(() => onNavigateTo(navTarget), 1500);
+          }
           if (actionTexts.length > 0 || suggestedTools.length > 0 || actions.length > 0) {
             const followUps = getContextualFollowUps(tasks, milestones, finalContent);
             setPendingFollowUp(followUps[0]?.label || "What else would you like to do?");
@@ -896,6 +903,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
       // Execute actions if user can edit
       const actionTexts = [];
       const suggestedTools = [];
+      const navTarget = parsed?.navigate_to;
       if (canEdit && actions.length > 0) {
         for (const action of actions) {
           const result = await executeAction(action, project, currentUser, onProjectUpdate);
@@ -903,6 +911,8 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
           if (result.text) actionTexts.push(result.text);
           if (result.tool) suggestedTools.push(result.tool);
         }
+        if (onTasksChanged) onTasksChanged();
+        if (onMilestonesChanged) onMilestonesChanged();
       }
 
       // Auto-extract markdown links from the message and save them as assets
@@ -935,7 +945,9 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
       }
 
       await addAndPersist({ role: "assistant", content: finalContent, tools: suggestedTools });
-      // NOTE: Do NOT auto-navigate — let users read the response first
+      if (navTarget && VALID_NAV_TABS.includes(navTarget) && onNavigateTo) {
+        setTimeout(() => onNavigateTo(navTarget), 1500);
+      }
       // After executing actions, prompt to continue
       if (actionTexts.length > 0 || suggestedTools.length > 0 || actions.length > 0) {
         const followUps = getContextualFollowUps(tasks, milestones, finalContent);
@@ -1448,6 +1460,14 @@ export default function BuildTab({
     } catch {}
   }, [project?.id, setTasks]);
 
+  const refreshMilestones = useCallback(async () => {
+    if (!project?.id) return;
+    try {
+      const refreshed = await base44.entities.ProjectMilestone.filter({ project_id: project.id });
+      setMilestones(Array.isArray(refreshed) ? refreshed : []);
+    } catch {}
+  }, [project?.id, setMilestones]);
+
   useEffect(() => {
     if (!project?.id) return;
     base44.entities.ActivityLog.filter({ project_id: project.id }, "-created_date", 10)
@@ -1610,7 +1630,7 @@ export default function BuildTab({
 
           {/* Chat */}
           {activeSection === "chat" && (
-            <AIChat project={project} tasks={tasks} milestones={milestones} assets={assets} currentUser={currentUser} canEdit={canEdit} projectUsers={projectUsers} onProjectUpdate={onProjectUpdate} onNavigateTo={setActiveSection} buildLinks={savedLinks} activityLogs={activityLogs} />
+            <AIChat project={project} tasks={tasks} milestones={milestones} assets={assets} currentUser={currentUser} canEdit={canEdit} projectUsers={projectUsers} onProjectUpdate={onProjectUpdate} onNavigateTo={setActiveSection} onTasksChanged={refreshTasks} onMilestonesChanged={refreshMilestones} buildLinks={savedLinks} activityLogs={activityLogs} />
           )}
 
           {/* Tasks */}
