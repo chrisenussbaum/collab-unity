@@ -92,15 +92,25 @@ export default function AssetPreviewModal({ asset, onClose }) {
 
       case "link":
         return (
-          <div className="flex flex-col items-center justify-center py-12 bg-gray-50 rounded-lg gap-4">
-            <ExternalLink className="w-12 h-12 text-blue-500" />
-            <p className="text-sm text-gray-600 break-all text-center max-w-sm">{asset.file_url}</p>
-            <a href={asset.file_url} target="_blank" rel="noopener noreferrer">
-              <Button className="cu-button">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Open Link
-              </Button>
-            </a>
+          <div className="flex flex-col gap-4">
+            <div className="w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-100" style={{ maxHeight: "55vh" }}>
+              <img
+                src={`https://api.microlink.io/?url=${encodeURIComponent(asset.file_url)}&screenshot=true&meta=false&embed=screenshot.url`}
+                alt={asset.asset_name}
+                className="w-full object-contain"
+                onError={(e) => { e.target.style.display = 'none'; }}
+                loading="lazy"
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3 py-2 px-3 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600 break-all flex-1 min-w-0">{asset.file_url}</p>
+              <a href={asset.file_url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
+                <Button className="cu-button">
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Open Link
+                </Button>
+              </a>
+            </div>
           </div>
         );
 

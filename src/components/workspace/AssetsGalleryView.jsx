@@ -91,12 +91,51 @@ function GalleryThumbnail({ asset, onPreview }) {
   }
 
   if (type === "link") {
-    return (
-      <div className="w-full h-full bg-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <LinkIcon className="w-10 h-10 text-blue-400 mx-auto mb-1" />
-          <p className="text-blue-500 text-xs font-medium">Link</p>
+    const url = asset.file_url || "";
+    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/);
+    let hostname = "";
+    try { hostname = new URL(url).hostname; } catch {}
+    const favicon = hostname ? `https://www.google.com/s2/favicons?sz=128&domain_url=${hostname}` : null;
+    const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`;
+
+    if (ytMatch) {
+      return (
+        <div className="w-full h-full bg-gray-900 overflow-hidden relative">
+          <img
+            src={`https://img.youtube.com/vi/${ytMatch[1]}/mqdefault.jpg`}
+            alt={asset.asset_name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={() => setImgError(true)}
+            loading="lazy"
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center">
+              <Play className="w-6 h-6 text-white ml-0.5" />
+            </div>
+          </div>
         </div>
+      );
+    }
+
+    return (
+      <div className="w-full h-full bg-gray-100 overflow-hidden">
+        {!imgError ? (
+          <img
+            src={screenshotUrl}
+            alt={asset.asset_name}
+            className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+            onError={() => setImgError(true)}
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full bg-blue-50 flex items-center justify-center">
+            <div className="text-center">
+              {favicon && <img src={favicon} alt="" className="w-8 h-8 mx-auto mb-1 object-contain" onError={(e) => e.target.style.display = "none"} />}
+              <LinkIcon className="w-8 h-8 text-blue-400 mx-auto" />
+              <p className="text-blue-500 text-xs font-medium mt-1">Link</p>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

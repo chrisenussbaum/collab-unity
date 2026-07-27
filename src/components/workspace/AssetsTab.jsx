@@ -747,9 +747,27 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
                                     : <Square className="w-4 h-4" />}
                                 </button>
                               )}
-                              <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                                <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
-                              </div>
+                              {asset.resource_type === 'link' && asset.file_url ? (
+                                <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                                  <img
+                                    src={`https://api.microlink.io/?url=${encodeURIComponent(asset.file_url)}&screenshot=true&meta=false&embed=screenshot.url`}
+                                    alt={asset.asset_name}
+                                    className="w-full h-full object-cover object-top"
+                                    loading="lazy"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                      e.target.parentElement.classList.add('flex', 'items-center', 'justify-center', 'bg-purple-100');
+                                      const fallback = document.createElement('div');
+                                      fallback.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-600"><path d="M10 13a5 5 0 0 1 5 5v1M15 6h.01M15 3v6M21 21l-3.5-3.5M12 18H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3"></path></svg>';
+                                      e.target.parentElement.appendChild(fallback);
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                  <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+                                </div>
+                              )}
                               <div className="flex-1 min-w-0">
                                 <h3 className="font-semibold text-sm sm:text-base text-gray-900 break-words leading-tight">
                                   {asset.asset_name}
