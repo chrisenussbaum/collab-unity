@@ -30,7 +30,7 @@ export default function Welcome() {
       <PublicNav currentPage="Welcome" />
       <HeroSection onAuth={handleAuth} />
       <StatsBanner />
-      <FeaturesShowcase />
+      <FeaturesShowcase onAuth={handleAuth} />
       <HowItWorks onAuth={handleAuth} />
       <AboutSection />
       <CTABanner onAuth={handleAuth} />
