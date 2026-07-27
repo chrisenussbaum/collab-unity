@@ -37,7 +37,7 @@ export default function HeroSection({ onAuth }) {
             Get started, it is free <ArrowRight className="w-4 h-4" />
           </button>
           <button
-            onClick={onAuth}
+            onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
             className="bg-white border border-gray-900 text-gray-900 rounded-full px-6 py-3 text-sm font-medium hover:bg-gray-900 hover:text-white transition-colors"
           >
             Explore features
