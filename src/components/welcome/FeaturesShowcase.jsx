@@ -1,21 +1,14 @@
 import React from "react";
 import { ArrowRight } from "lucide-react";
-import FeedMockup from "./mockups/FeedMockup";
-import MarketplaceMockup from "./mockups/MarketplaceMockup";
-import ProjectsMockup from "./mockups/ProjectsMockup";
-import WorkspaceMockup from "./mockups/WorkspaceMockup";
-import ChatMockup from "./mockups/ChatMockup";
-import ProfileMockup from "./mockups/ProfileMockup";
-import CreateProjectMockup from "./mockups/CreateProjectMockup";
 
-const MOCKUPS = {
-  feed: FeedMockup,
-  marketplace: MarketplaceMockup,
-  myprojects: ProjectsMockup,
-  workspace: WorkspaceMockup,
-  chat: ChatMockup,
-  profile: ProfileMockup,
-  create: CreateProjectMockup,
+const SCREENSHOTS = {
+  feed: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/f2c75096d_Screenshot2026-07-27at121344AM.png",
+  marketplace: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/4ccd546c1_Screenshot2026-07-27at120225AM.png",
+  myprojects: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/5d25a0cef_Screenshot2026-07-27at120305AM.png",
+  workspace: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/35f95fee3_Screenshot2026-07-27at120525AM.png",
+  chat: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/1619a84a7_Screenshot2026-07-27at120339AM.png",
+  profile: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/76a7cdd71_Screenshot2026-07-27at121454AM.png",
+  create: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/5ebb1d256_Screenshot2026-07-27at120554AM.png",
 };
 
 const FeatureCard = ({ children }) => (
@@ -25,7 +18,7 @@ const FeatureCard = ({ children }) => (
       <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
       <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
     </div>
-    <div className="p-4 bg-[#F8F7FF]">
+    <div className="p-4 bg-white">
       {children}
     </div>
   </div>
@@ -66,10 +59,14 @@ export default function FeaturesShowcase({ onAuth }) {
   return (
     <section id="features" className="bg-[#F8F7FF]">
       {features.map((f, i) => {
-        const Mockup = MOCKUPS[f.type];
         const visual = (
           <FeatureCard>
-            <Mockup />
+            <img
+              src={SCREENSHOTS[f.type]}
+              alt={f.title}
+              className="w-full rounded-lg"
+              style={{ minHeight: 200, objectFit: "cover" }}
+            />
           </FeatureCard>
         );
         return (
