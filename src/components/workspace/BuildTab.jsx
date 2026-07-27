@@ -364,7 +364,6 @@ async function executeAction(action, project, currentUser, onProjectUpdate) {
       assigned_to: action.assigned_to || undefined,
       due_date: action.due_date || undefined,
     });
-    if (onProjectUpdate) onProjectUpdate();
     return { text: `✅ Task created: **${taskTitle}**${action.assigned_to ? ` → assigned to ${action.assigned_to.split("@")[0]}` : ""}` };
   }
 
@@ -376,7 +375,6 @@ async function executeAction(action, project, currentUser, onProjectUpdate) {
       status: "not_started",
       target_date: action.target_date || undefined,
     });
-    if (onProjectUpdate) onProjectUpdate();
     return { text: `🏁 Milestone created: **${action.title}**` };
   }
 
@@ -416,6 +414,72 @@ async function executeAction(action, project, currentUser, onProjectUpdate) {
   }
 
   return null;
+}
+
+// Execute multiple AI actions, batching task/milestone creation for performance
+async function executeActionsBatch(actions, project, currentUser, onProjectUpdate) {
+  if (!project?.id || !currentUser) return { actionTexts: [], suggestedTools: [] };
+  const actionTexts = [];
+  const suggestedTools = [];
+
+  // Batch create_task actions via bulkCreate
+  const taskActions = actions.filter(a => a.type === "create_task");
+  if (taskActions.length > 0) {
+    const taskData = taskActions.map(action => {
+      let taskTitle = (action.title || "").trim();
+      let taskDescription = (action.description || "").trim();
+      const colonIdx = taskTitle.indexOf(": ");
+      if (colonIdx > 0 && colonIdx < 60 && !taskDescription) {
+        taskDescription = taskTitle.slice(colonIdx + 2).trim();
+        taskTitle = taskTitle.slice(0, colonIdx).trim();
+      }
+      return {
+        project_id: project.id,
+        title: taskTitle,
+        description: taskDescription,
+        priority: action.priority || "medium",
+        status: "todo",
+        ...(action.assigned_to ? { assigned_to: action.assigned_to } : {}),
+        ...(action.due_date ? { due_date: action.due_date } : {}),
+      };
+    });
+    await base44.entities.Task.bulkCreate(taskData);
+    taskActions.forEach(action => {
+      let taskTitle = (action.title || "").trim();
+      const colonIdx = taskTitle.indexOf(": ");
+      if (colonIdx > 0 && colonIdx < 60 && !(action.description || "").trim()) {
+        taskTitle = taskTitle.slice(0, colonIdx).trim();
+      }
+      actionTexts.push(`✅ Task created: **${taskTitle}**${action.assigned_to ? ` → assigned to ${action.assigned_to.split("@")[0]}` : ""}`);
+    });
+  }
+
+  // Batch create_milestone actions via bulkCreate
+  const milestoneActions = actions.filter(a => a.type === "create_milestone");
+  if (milestoneActions.length > 0) {
+    const milestoneData = milestoneActions.map(action => ({
+      project_id: project.id,
+      title: action.title,
+      description: action.description || "",
+      status: "not_started",
+      ...(action.target_date ? { target_date: action.target_date } : {}),
+    }));
+    await base44.entities.ProjectMilestone.bulkCreate(milestoneData);
+    milestoneActions.forEach(action => {
+      actionTexts.push(`🏁 Milestone created: **${action.title}**`);
+    });
+  }
+
+  // Execute remaining actions sequentially (save_note, save_link, suggest_tool)
+  for (const action of actions) {
+    if (action.type === "create_task" || action.type === "create_milestone") continue;
+    const result = await executeAction(action, project, currentUser, onProjectUpdate);
+    if (!result) continue;
+    if (result.text) actionTexts.push(result.text);
+    if (result.tool) suggestedTools.push(result.tool);
+  }
+
+  return { actionTexts, suggestedTools };
 }
 
 // Markdown renderer: render every external link in an assistant message as a rich preview card
@@ -821,12 +885,9 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
           const actionTexts = [];
           const suggestedTools = [];
           if (canEdit && actions.length > 0) {
-            for (const action of actions) {
-              const result = await executeAction(action, project, currentUser, onProjectUpdate);
-              if (!result) continue;
-              if (result.text) actionTexts.push(result.text);
-              if (result.tool) suggestedTools.push(result.tool);
-            }
+            const batchResult = await executeActionsBatch(actions, project, currentUser, onProjectUpdate);
+            actionTexts.push(...batchResult.actionTexts);
+            suggestedTools.push(...batchResult.suggestedTools);
             if (onTasksChanged) onTasksChanged();
             if (onMilestonesChanged) onMilestonesChanged();
           }
@@ -869,9 +930,10 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
 
       const prompt = `${systemPrompt}\n\n--- CONVERSATION HISTORY ---\n${conversationHistory}\n\nRespond with valid JSON only (no markdown code blocks):`;
 
+      const needsWebSearch = /\b(find|search|research|tutorial|article|video|resource|look up|look for|recommend)\b/i.test(userText);
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
-        add_context_from_internet: true,
+        add_context_from_internet: needsWebSearch,
         model: "gemini_3_flash",
         response_json_schema: {
           type: "object",
@@ -905,12 +967,9 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
       const suggestedTools = [];
       const navTarget = parsed?.navigate_to;
       if (canEdit && actions.length > 0) {
-        for (const action of actions) {
-          const result = await executeAction(action, project, currentUser, onProjectUpdate);
-          if (!result) continue;
-          if (result.text) actionTexts.push(result.text);
-          if (result.tool) suggestedTools.push(result.tool);
-        }
+        const batchResult = await executeActionsBatch(actions, project, currentUser, onProjectUpdate);
+        actionTexts.push(...batchResult.actionTexts);
+        suggestedTools.push(...batchResult.suggestedTools);
         if (onTasksChanged) onTasksChanged();
         if (onMilestonesChanged) onMilestonesChanged();
       }
