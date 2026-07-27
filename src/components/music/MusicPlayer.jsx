@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Music, Play, Pause, SkipForward, SkipBack, X, ChevronDown, ChevronUp, Volume2, Volume1, VolumeX } from "lucide-react";
+import { Music, Play, Pause, SkipForward, SkipBack, X, ChevronDown, ChevronUp, Volume2, Volume1, VolumeX, Search, Loader2 } from "lucide-react";
 import { PLAYLIST } from "./playlist";
 
 let apiLoaded = false;
@@ -29,6 +29,10 @@ export default function MusicPlayer({ isVisible, onClose }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedGenre, setSelectedGenre] = useState(null);
   const [volume, setVolume] = useState(60);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
 
   const availableGenres = [...new Set(PLAYLIST.map((t) => t.genre))].sort();
   const [playerReady, setPlayerReady] = useState(false);
@@ -45,6 +49,7 @@ export default function MusicPlayer({ isVisible, onClose }) {
   const playerRef = useRef(null);
   const playerHostRef = useRef(null);
   const containerRef = useRef(null);
+  const searchRef = useRef(null);
   const draggingRef = useRef(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const queueRef = useRef(PLAYLIST);
@@ -53,6 +58,7 @@ export default function MusicPlayer({ isVisible, onClose }) {
   const currentIndexRef = useRef(0);
   currentIndexRef.current = currentIndex;
   const prevVolumeRef = useRef(60);
+  const pendingSearchIndexRef = useRef(null);
 
   const currentTrack = queue[currentIndex] || PLAYLIST[0];
 
@@ -62,13 +68,64 @@ export default function MusicPlayer({ isVisible, onClose }) {
       ? PLAYLIST.filter((t) => t.genre === selectedGenre)
       : PLAYLIST;
     setQueue(filtered);
-    setCurrentIndex(0);
+    if (pendingSearchIndexRef.current !== null) {
+      setCurrentIndex(pendingSearchIndexRef.current);
+      pendingSearchIndexRef.current = null;
+    } else {
+      setCurrentIndex(0);
+    }
     failedIdsRef.current.clear();
   }, [PLAYLIST, selectedGenre]);
 
   useEffect(() => {
     loadYouTubeAPI();
   }, []);
+
+  // Debounced search — same mechanism as GlobalSearchBar (300ms debounce)
+  useEffect(() => {
+    const searchTimeout = setTimeout(() => {
+      const q = searchQuery.trim().toLowerCase();
+      if (q.length < 1) {
+        setSearchResults([]);
+        setShowSearchResults(false);
+        setIsSearching(false);
+        return;
+      }
+      setIsSearching(true);
+      const results = PLAYLIST.filter((track) => {
+        const titleMatch = track.title.toLowerCase().includes(q);
+        const genreMatch = track.genre.toLowerCase().includes(q);
+        return titleMatch || genreMatch;
+      }).slice(0, 20);
+      setSearchResults(results);
+      setShowSearchResults(true);
+      setIsSearching(false);
+    }, 300);
+    return () => clearTimeout(searchTimeout);
+  }, [searchQuery]);
+
+  // Click outside to close search results
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSearchResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSearchSelect = (track) => {
+    const idx = PLAYLIST.findIndex((t) => t.videoId === track.videoId);
+    if (idx >= 0) {
+      setSelectedGenre(null);
+      pendingSearchIndexRef.current = idx;
+      setQueue(PLAYLIST);
+      setCurrentIndex(idx);
+    }
+    setSearchQuery("");
+    setShowSearchResults(false);
+  };
 
   useEffect(() => {
     if (!isVisible) return;
@@ -325,6 +382,62 @@ export default function MusicPlayer({ isVisible, onClose }) {
                 {genre}
               </button>
             ))}
+          </div>
+          {/* Search */}
+          <div ref={searchRef} className="px-3 pt-2 pb-1 relative border-b border-gray-100">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+              <input
+                type="text"
+                placeholder="Search songs or artists..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => searchQuery.trim().length >= 1 && setShowSearchResults(true)}
+                className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg bg-gray-100 border border-transparent focus:border-purple-300 focus:bg-white focus:outline-none transition-colors"
+              />
+              {isSearching && (
+                <Loader2 className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5 animate-spin" />
+              )}
+              {searchQuery && !isSearching && (
+                <button
+                  onClick={() => { setSearchQuery(""); setShowSearchResults(false); }}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            {showSearchResults && searchQuery.trim().length >= 1 && (
+              <div className="absolute left-3 right-3 top-full mt-1 max-h-60 overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 z-10">
+                {searchResults.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    <Search className="w-6 h-6 mx-auto mb-1.5 text-gray-300" />
+                    <p className="text-xs font-medium">No songs found</p>
+                    <p className="text-[10px] mt-0.5">Try a different search</p>
+                  </div>
+                ) : (
+                  searchResults.map((track, i) => (
+                    <button
+                      key={`${track.videoId}-${i}`}
+                      onClick={() => handleSearchSelect(track)}
+                      className="w-full flex items-center gap-2.5 px-2.5 py-2 hover:bg-purple-50 transition-colors text-left border-b border-gray-50 last:border-0"
+                    >
+                      <img
+                        src={`https://img.youtube.com/vi/${track.videoId}/default.jpg`}
+                        alt={track.title}
+                        className="w-9 h-9 rounded object-cover bg-purple-100 flex-shrink-0"
+                        onError={(e) => { e.target.style.opacity = "0"; }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-900 truncate">{track.title}</p>
+                        <p className="text-[10px] text-gray-500 truncate">{track.genre}</p>
+                      </div>
+                      <Play className="w-3.5 h-3.5 text-purple-600 flex-shrink-0" />
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
           </div>
           <div className="p-3">
               <div className="flex items-center gap-3 mb-3">
