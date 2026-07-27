@@ -2,7 +2,7 @@ import React from "react";
 import { ArrowRight } from "lucide-react";
 
 const SCREENSHOTS = {
-  feed: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/e5eae64c4_Screenshot2026-07-27at120800AM.png",
+  feed: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/f2c75096d_Screenshot2026-07-27at121344AM.png",
   marketplace: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/4ccd546c1_Screenshot2026-07-27at120225AM.png",
   myprojects: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/5d25a0cef_Screenshot2026-07-27at120305AM.png",
   workspace: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/35f95fee3_Screenshot2026-07-27at120525AM.png",
