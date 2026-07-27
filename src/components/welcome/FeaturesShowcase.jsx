@@ -7,7 +7,7 @@ const SCREENSHOTS = {
   myprojects: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/5d25a0cef_Screenshot2026-07-27at120305AM.png",
   workspace: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/35f95fee3_Screenshot2026-07-27at120525AM.png",
   chat: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/1619a84a7_Screenshot2026-07-27at120339AM.png",
-  profile: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/994f3e846_Screenshot2026-07-27at120417AM.png",
+  profile: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/76a7cdd71_Screenshot2026-07-27at121454AM.png",
   create: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/5ebb1d256_Screenshot2026-07-27at120554AM.png",
 };
 

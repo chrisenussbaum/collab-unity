@@ -1,7 +1,7 @@
 import React from "react";
 import { ArrowRight } from "lucide-react";
 
-const SCREENSHOT_FEED = "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/e5eae64c4_Screenshot2026-07-27at120800AM.png";
+const SCREENSHOT_FEED = "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/f2c75096d_Screenshot2026-07-27at121344AM.png";
 
 const HeroVisual = () => (
   <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 max-w-4xl mx-auto">
@@ -21,7 +21,7 @@ const HeroVisual = () => (
 
 export default function HeroSection({ onAuth }) {
   return (
-    <section className="pt-28 pb-16 px-4" style={{ background: "linear-gradient(180deg, #F8F7FF 0%, #EDE9FF 100%)" }}>
+    <section className="pt-12 pb-16 px-4" style={{ background: "linear-gradient(180deg, #F8F7FF 0%, #EDE9FF 100%)" }}>
       <div className="max-w-[640px] mx-auto text-center">
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight leading-tight mb-5">
           Where Ideas Happen.
