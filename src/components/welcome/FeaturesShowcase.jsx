@@ -2,11 +2,13 @@ import React from "react";
 import { ArrowRight } from "lucide-react";
 
 const SCREENSHOTS = {
-  feed: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/95736e6bf_Screenshot2026-07-26at115024PM.png",
-  marketplace: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/dfdc69e59_Screenshot2026-07-26at115034PM.png",
-  workspace: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/985564772_Screenshot2026-07-26at115045PM.png",
-  chat: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/985564772_Screenshot2026-07-26at115045PM.png",
-  profile: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/a74be81f4_Screenshot2026-07-26at115053PM.png",
+  feed: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/e5eae64c4_Screenshot2026-07-27at120800AM.png",
+  marketplace: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/4ccd546c1_Screenshot2026-07-27at120225AM.png",
+  myprojects: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/5d25a0cef_Screenshot2026-07-27at120305AM.png",
+  workspace: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/35f95fee3_Screenshot2026-07-27at120525AM.png",
+  chat: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/1619a84a7_Screenshot2026-07-27at120339AM.png",
+  profile: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/994f3e846_Screenshot2026-07-27at120417AM.png",
+  create: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/5ebb1d256_Screenshot2026-07-27at120554AM.png",
 };
 
 const FeatureCard = ({ children }) => (
@@ -47,9 +49,11 @@ export default function FeaturesShowcase({ onAuth }) {
   const features = [
     { type: "feed", eyebrow: "Feed", title: "Share your journey with the world.", subtitle: "Post progress updates, showcase live links, and celebrate milestones with a community that cheers you on.", buttonLabel: "Explore Feed" },
     { type: "marketplace", eyebrow: "Marketplace", title: "Find gigs, services, and talent.", subtitle: "Browse paid gigs and professional services, post opportunities, and connect with talented people ready to collaborate.", buttonLabel: "Explore Marketplace" },
-    { type: "workspace", eyebrow: "Build Workspace", title: "Your collaborative project workspace.", subtitle: "Tasks, milestones, assets, and an AI project assistant all in one unified workspace built for shipping.", buttonLabel: "Explore Workspace" },
+    { type: "myprojects", eyebrow: "My Projects", title: "All your projects in one place.", subtitle: "Track progress, manage milestones, and switch between personal and collaborative projects from a single dashboard.", buttonLabel: "Explore Projects" },
+    { type: "workspace", eyebrow: "Build Workspace", title: "Your collaborative project workspace.", subtitle: "An AI project assistant, tasks, milestones, assets, and activity logs all unified in one workspace built for shipping.", buttonLabel: "Explore Workspace" },
     { type: "chat", eyebrow: "Chat", title: "Message your team in real-time.", subtitle: "Stay connected with 1-on-1 and group chats, with your project context always accessible right alongside your work.", buttonLabel: "Explore Chat" },
     { type: "profile", eyebrow: "Profile", title: "Build a portfolio that speaks for itself.", subtitle: "Showcase projects, collect peer endorsements, gather reviews, and generate an AI-powered resume in seconds.", buttonLabel: "Explore Profiles" },
+    { type: "create", eyebrow: "Create Project", title: "Start building in seconds.", subtitle: "Describe your idea in plain text and let AI help you bring it to life with a structured project plan, milestones, and tasks.", buttonLabel: "Explore Create" },
   ];
 
   return (
