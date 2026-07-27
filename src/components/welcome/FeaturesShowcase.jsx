@@ -65,7 +65,7 @@ export default function FeaturesShowcase({ onAuth }) {
               src={SCREENSHOTS[f.type]}
               alt={f.title}
               className="w-full rounded-lg"
-              style={{ minHeight: 200, objectFit: "cover", filter: "blur(3px)" }}
+              style={{ minHeight: 200, objectFit: "cover" }}
             />
           </FeatureCard>
         );
