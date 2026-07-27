@@ -14,7 +14,7 @@ const HeroVisual = () => (
       src={SCREENSHOT_HERO}
       alt="Collab Unity Feed"
       className="w-full"
-      style={{ minHeight: 280, objectFit: "cover" }}
+      style={{ minHeight: 280, objectFit: "cover", filter: "blur(3px)" }}
     />
   </div>
 );
