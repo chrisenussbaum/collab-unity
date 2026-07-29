@@ -294,26 +294,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {currentUser && !isOwnProject && (
-                  <Button variant="ghost" size="icon" className={`h-9 w-9 ${isFollowing ? 'text-purple-600 hover:text-purple-700 bg-purple-50' : 'text-gray-400 hover:text-purple-600 hover:bg-purple-50'}`} onClick={handleFollow} title={isFollowing ? "Unfollow project" : "Follow for updates"}>
-                    {isFollowing ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
-                  </Button>
-                )}
-                <Button variant="ghost" size="icon" onClick={handleShare} className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 h-9 w-9" title="Share project"><Share2 className="w-4 h-4" /></Button>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 mt-4">
-              <Badge variant="outline" className={`text-xs ${config.color} border-current shadow-sm`}>{config.icon}<span className="ml-1">{formatEnumLabel(project.status)}</span></Badge>
-              <Badge className="text-xs bg-purple-100 text-purple-700 border border-purple-200 shadow-sm">{project.project_type}</Badge>
-              {project.classification && (<Badge variant="outline" className="text-xs border-indigo-200 text-indigo-700 bg-indigo-50">{formatEnumLabel(project.classification)}</Badge>)}
-              <div className="flex items-center gap-1.5 text-xs sm:text-sm text-purple-600">
-                {collaboratorProfiles.length > 0 ? (
-                  <div className="flex items-center -space-x-1.5">{collaboratorProfiles.map(collab => <OptimizedAvatar key={collab.email} src={collab.profile_image} alt={collab.full_name || 'Collaborator'} fallback={collab.full_name?.[0] || 'U'} size="xs" className="w-6 h-6 sm:w-7 sm:h-7 border-2 border-white shadow-sm" />)}</div>
-                ) : (<Users className="w-3 h-3 sm:w-4 sm:h-4" />)}
-                <span className="font-medium ml-1">{(() => { const count = project.collaborator_emails?.length || 1; return count > 3 ? `3+ collaborators` : `${count} ${count === 1 ? 'collaborator' : 'collaborators'}`; })()}</span>
-              </div>
-              {followersCount > 0 && (<div className="flex items-center text-xs sm:text-sm text-gray-600"><Bookmark className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /><span className="font-medium">{followersCount} {followersCount === 1 ? 'follower' : 'followers'}</span></div>)}
             </div>
           </CardHeader>
 
