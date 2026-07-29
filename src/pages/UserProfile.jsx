@@ -20,7 +20,6 @@ import VoiceIntroButton from "../components/profile/VoiceIntroButton";
 import VoicePlayButton from "../components/profile/VoicePlayButton";
 import UserProfileSkeleton from "../components/skeletons/UserProfileSkeleton";
 import UserProjectsList from "../components/profile/UserProjectsList";
-import FollowingProjectsList from "../components/profile/FollowingProjectsList";
 import CollaboratorReviewDialog from "../components/profile/CollaboratorReviewDialog";
 import EditPortfolioModal from "../components/profile/EditPortfolioModal";
 import ClickableImage from "../components/ClickableImage";
@@ -1600,19 +1599,6 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
                     profileUser={profileUser}
                     loadMoreProjects={loadMoreProjects}
                     showLessProjects={showLessProjects}
-                  />
-
-                  {/* Following Section */}
-                  <FollowingProjectsList
-                    followedProjects={followedProjects}
-                    isLoadingFollowedProjects={isLoadingFollowedProjects}
-                    isOwner={isOwner}
-                    profileUser={profileUser}
-                    propCurrentUser={propCurrentUser}
-                    displayedFollowed={displayedFollowed}
-                    displayedFollowedCount={displayedFollowedCount}
-                    loadMoreFollowed={loadMoreFollowed}
-                    showLessFollowed={showLessFollowed}
                   />
                 </div>
 
