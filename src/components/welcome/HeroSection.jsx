@@ -34,7 +34,7 @@ export default function HeroSection({ onAuth }) {
             onClick={onAuth}
             className="bg-[#5B47DB] text-white rounded-full px-6 py-3 text-sm font-medium hover:bg-[#4A37C0] transition-colors shadow-md flex items-center gap-2"
           >
-            Collab Now <ArrowRight className="w-4 h-4" />
+            Collab Now
           </button>
           <button
             onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
