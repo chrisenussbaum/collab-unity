@@ -67,11 +67,6 @@
       "default": 0,
       "description": "Number of reviews received"
     },
-    "users_invited": {
-      "type": "number",
-      "default": 0,
-      "description": "Number of users invited to platform"
-    },
     "description": {
       "type": "string",
       "maxLength": 1000,
