@@ -20,16 +20,16 @@ import { motion } from "framer-motion";
 
 const PAGE_OPTIONS = [
   { value: "Feed", label: "Feed" },
-  { value: "Discover", label: "Discover" },
   { value: "MyProjects", label: "My Projects" },
   { value: "CreateProject", label: "Create Project" },
   { value: "ProjectDetail", label: "Project Detail" },
   { value: "UserProfile", label: "User Profile" },
-  { value: "Sync", label: "Sync (Messages)" },
+  { value: "Chat", label: "Chat" },
+  { value: "Marketplace", label: "Marketplace" },
+  { value: "Learning Hub", label: "Learning Hub" },
+  { value: "News & Entertainment", label: "News & Entertainment" },
+  { value: "Games", label: "Games" },
   { value: "Notifications", label: "Notifications" },
-  { value: "ProjectTemplates", label: "Project Templates" },
-  { value: "Advertise", label: "Advertise" },
-  { value: "AdminVerificationPanel", label: "Admin Panel" },
   { value: "SupportCU", label: "Support CU" },
   { value: "Other", label: "Other" }
 ];
