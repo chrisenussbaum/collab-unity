@@ -40,6 +40,26 @@ import ConversationSkeleton from "@/components/skeletons/ConversationSkeleton";
 import ProjectMentionPopover from "@/components/chat/ProjectMentionPopover";
 import ProjectItemPopover from "@/components/chat/ProjectItemPopover";
 
+// Retry wrapper for rate-limited (HTTP 429 / 500 "rate limit") calls — mirrors
+// the pattern used in ProjectDetail / ActivityTab so profile fetches recover
+// instead of silently dropping conversations or avatars.
+const withRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await apiCall();
+    } catch (error) {
+      const isRateLimit = error.response?.status === 429 ||
+        (error.response?.status === 500 && /rate limit/i.test(error.response?.data?.error || error.message || ''));
+      if (isRateLimit && attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 2000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+};
+
 export default function Chat({ currentUser, authIsLoading }) {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -225,7 +245,7 @@ export default function Chat({ currentUser, authIsLoading }) {
       const emailsArray = Array.from(participantEmails);
       if (emailsArray.length > 0) {
         try {
-          const { data: profiles } = await getPublicUserProfiles({ emails: emailsArray });
+          const { data: profiles } = await withRetry(() => getPublicUserProfiles({ emails: emailsArray }));
           (profiles || []).forEach(profile => {
             profilesMap[profile.email] = profile;
           });
@@ -960,7 +980,7 @@ export default function Chat({ currentUser, authIsLoading }) {
     setShowNewChatDialog(true);
     setIsLoadingUsers(true);
     try {
-      const { data: users } = await getAllPublicUserProfiles();
+      const { data: users } = await withRetry(() => getAllPublicUserProfiles());
       const filteredUsers = users.filter(u => u.email !== currentUser.email && u.has_completed_onboarding && u.profile_image);
       setAllUsers(filteredUsers);
     } catch (error) {
@@ -976,7 +996,7 @@ export default function Chat({ currentUser, authIsLoading }) {
     if (allUsers.length === 0) {
       setIsLoadingUsers(true);
       try {
-        const { data: users } = await getAllPublicUserProfiles();
+        const { data: users } = await withRetry(() => getAllPublicUserProfiles());
         const filteredUsers = users.filter(u => u.email !== currentUser.email && u.has_completed_onboarding && u.profile_image);
         setAllUsers(filteredUsers);
       } catch (error) {

@@ -38,6 +38,26 @@ import MilestoneProgress from "@/components/myprojects/MilestoneProgress";
 import WhileYouWereAway from "@/components/myprojects/WhileYouWereAway";
 import ApplicationsTab from "@/components/myprojects/ApplicationsTab";
 
+// Retry wrapper for rate-limited (HTTP 429 / 500 "rate limit") calls — mirrors
+// the pattern used in ProjectDetail / ActivityTab so profile fetches recover
+// instead of leaving collaborator avatars stuck on initials.
+const withRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await apiCall();
+    } catch (error) {
+      const isRateLimit = error.response?.status === 429 ||
+        (error.response?.status === 500 && /rate limit/i.test(error.response?.data?.error || error.message || ''));
+      if (isRateLimit && attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 2000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+};
+
 const formatEnumLabel = (str) => {
   if (!str) return '';
   return str.split('_').map(word => 
@@ -98,7 +118,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
       let profilesMap = {};
       if (allCollaboratorEmails.size > 0) {
         try {
-          const { data: profiles } = await getPublicUserProfiles({ emails: Array.from(allCollaboratorEmails) });
+          const { data: profiles } = await withRetry(() => getPublicUserProfiles({ emails: Array.from(allCollaboratorEmails) }));
           (profiles || []).forEach(profile => {
             profilesMap[profile.email] = profile;
           });
