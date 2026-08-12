@@ -22,7 +22,7 @@ function loadYouTubeAPI() {
   };
 }
 
-export default function MusicPlayer({ isVisible, onClose }) {
+export default function MusicPlayer({ isVisible, onClose, zIndex }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [queue, setQueue] = useState(PLAYLIST);
@@ -319,7 +319,7 @@ export default function MusicPlayer({ isVisible, onClose }) {
     <div
       ref={containerRef}
       className="fixed z-[70] shadow-2xl rounded-xl overflow-hidden select-none border border-purple-200"
-      style={{ left: position.x, top: position.y, width: isMinimized ? 180 : 320 }}
+      style={{ left: position.x, top: position.y, width: isMinimized ? 180 : 320, ...(zIndex ? { zIndex } : {}) }}
     >
       {/* Hidden YouTube player host — the actual player div is created
           programmatically so React re-renders don't destroy the iframe */}

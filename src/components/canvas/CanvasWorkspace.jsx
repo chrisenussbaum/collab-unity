@@ -4,13 +4,14 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import OptimizedAvatar from "../OptimizedAvatar";
 import { Link } from "react-router-dom";
-import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, Eye, Trophy, Heart, Bug, ShieldCheck, LogOut } from "lucide-react";
+import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, Eye, Trophy, Heart, Bug, ShieldCheck, LogOut, Music } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { buildFrameDefs } from "./canvasFrameRegistry";
 import CanvasFrame from "./CanvasFrame";
 import CanvasLayers from "./CanvasLayers";
 import CanvasToolbar from "./CanvasToolbar";
 import CanvasPresenceStack from "./CanvasPresenceStack";
+import MusicPlayer from "../music/MusicPlayer";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg";
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -42,6 +43,7 @@ export default function CanvasWorkspace({
   const [addOpen, setAddOpen] = useState(false);
   const [fullscreenId, setFullscreenId] = useState(null);
   const [layersOpen, setLayersOpen] = useState(() => (typeof window !== "undefined" ? window.innerWidth >= 1024 : true));
+  const [showMusicPlayer, setShowMusicPlayer] = useState(false);
 
   useEffect(() => {
     if (!fullscreenId) return;
@@ -319,6 +321,10 @@ export default function CanvasWorkspace({
           <span className="hidden md:inline text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{isOwner ? "Owner" : "Collaborator"}</span>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={() => setShowMusicPlayer((v) => !v)} className={`relative p-1.5 rounded hover:bg-gray-100 text-gray-600 ${showMusicPlayer ? "bg-purple-50 text-purple-600" : ""}`} title="CU Radio">
+            <Music className="w-4 h-4" />
+            {showMusicPlayer && <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-purple-600 rounded-full" />}
+          </button>
           <button onClick={() => setLayersOpen((v) => !v)} className={`p-1.5 rounded hover:bg-gray-100 text-gray-600 ${layersOpen ? "bg-gray-100 text-[#18A0FB]" : ""}`} title="Layers">
             <Layers className="w-4 h-4" />
           </button>
@@ -483,6 +489,8 @@ export default function CanvasWorkspace({
         hiddenFrames={hiddenFrames}
         onAddFrame={onAddFrame}
       />
+
+      <MusicPlayer isVisible={showMusicPlayer} onClose={() => setShowMusicPlayer(false)} zIndex={130} />
     </div>
   );
 }
