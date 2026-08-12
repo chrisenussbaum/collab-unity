@@ -3,12 +3,14 @@ import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import OptimizedAvatar from "../OptimizedAvatar";
-import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, PanelRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, Eye, Trophy, Heart, Bug, ShieldCheck, LogOut } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { buildFrameDefs } from "./canvasFrameRegistry";
 import CanvasFrame from "./CanvasFrame";
 import CanvasLayers from "./CanvasLayers";
 import CanvasToolbar from "./CanvasToolbar";
-import CanvasInspector from "./CanvasInspector";
+import CanvasPresenceStack from "./CanvasPresenceStack";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg";
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -39,7 +41,7 @@ export default function CanvasWorkspace({
   const [tool, setTool] = useState("move");
   const [addOpen, setAddOpen] = useState(false);
   const [fullscreenId, setFullscreenId] = useState(null);
-  const [mobilePanel, setMobilePanel] = useState(null);
+  const [layersOpen, setLayersOpen] = useState(() => (typeof window !== "undefined" ? window.innerWidth >= 1024 : true));
 
   useEffect(() => {
     if (!fullscreenId) return;
@@ -286,6 +288,13 @@ export default function CanvasWorkspace({
     setPan({ x: -minX * z + (rect.width - w * z) / 2, y: -minY * z + (rect.height - h * z) / 2 });
   };
 
+  const handleLogout = async () => {
+    try { localStorage.clear(); sessionStorage.clear(); } catch {}
+    const welcomeUrl = `${window.location.origin}${createPageUrl("Welcome")}`;
+    try { await base44.auth.logout(welcomeUrl); } catch {}
+    window.location.href = welcomeUrl;
+  };
+
   const hiddenFrames = defs.filter((d) => layout?.[d.id]?.hidden);
   const onAddFrame = (id) => { updateFrame(id, { hidden: false }); setAddOpen(false); };
 
@@ -310,8 +319,9 @@ export default function CanvasWorkspace({
           <span className="hidden md:inline text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{isOwner ? "Owner" : "Collaborator"}</span>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setMobilePanel('layers')} className="lg:hidden p-1.5 rounded hover:bg-gray-100 text-gray-600" title="Layers"><Layers className="w-4 h-4" /></button>
-          <button onClick={() => setMobilePanel('inspector')} className="lg:hidden p-1.5 rounded hover:bg-gray-100 text-gray-600" title="Design"><PanelRight className="w-4 h-4" /></button>
+          <button onClick={() => setLayersOpen((v) => !v)} className={`p-1.5 rounded hover:bg-gray-100 text-gray-600 ${layersOpen ? "bg-gray-100 text-[#18A0FB]" : ""}`} title="Layers">
+            <Layers className="w-4 h-4" />
+          </button>
           <div className="hidden md:flex items-center bg-gray-100 rounded-md text-xs">
             <button onClick={zoomOut} className="p-1.5 hover:bg-gray-200 text-gray-600"><ZoomOut className="w-3.5 h-3.5" /></button>
             <span className="px-1 text-gray-600 w-10 text-center">{Math.round(zoom * 100)}%</span>
@@ -321,13 +331,54 @@ export default function CanvasWorkspace({
           <Button onClick={onShare} className="bg-[#18A0FB] hover:bg-[#0E8FE0] text-white text-xs h-8 rounded-md px-2.5 md:px-3">
             <Share2 className="w-3.5 h-3.5 md:mr-1" /><span className="hidden md:inline">Share</span>
           </Button>
-          <OptimizedAvatar src={currentUser?.profile_image} alt={currentUser?.full_name || "User"} fallback={currentUser?.full_name?.[0] || "U"} size="xs" className="w-7 h-7" />
+          <CanvasPresenceStack project={project} currentUser={currentUser} projectUsers={projectUsers} projectOwnerProfile={projectOwnerProfile} />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="rounded-full focus:outline-none">
+                <OptimizedAvatar src={currentUser?.profile_image} alt={currentUser?.full_name || "User"} fallback={currentUser?.full_name?.[0] || "U"} size="xs" className="w-7 h-7" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem asChild>
+                <Link to={createPageUrl(`UserProfile?username=${currentUser?.username}`)} className="flex items-center cursor-pointer">
+                  <Eye className="w-4 h-4 mr-2" /> View Profile
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to={createPageUrl("Leaderboard")} className="flex items-center cursor-pointer">
+                  <Trophy className="w-4 h-4 mr-2" /> Leaderboard
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to={createPageUrl("SupportCU")} className="flex items-center cursor-pointer">
+                  <Heart className="w-4 h-4 mr-2" /> Support CU
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to={createPageUrl("ReportBug")} className="flex items-center cursor-pointer">
+                  <Bug className="w-4 h-4 mr-2" /> Report Bug
+                </Link>
+              </DropdownMenuItem>
+              {currentUser?.role === "admin" && (
+                <DropdownMenuItem asChild>
+                  <Link to={createPageUrl("AdminReview")} className="flex items-center cursor-pointer">
+                    <ShieldCheck className="w-4 h-4 mr-2" /> Admin Review
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700">
+                <LogOut className="w-4 h-4 mr-2" /> Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
       <div className="flex-1 flex min-h-0">
         {/* Left layers */}
-        <div className="hidden lg:block w-56 bg-white border-r border-gray-200 flex-shrink-0 overflow-y-auto">
+        <div className={`${layersOpen ? "hidden lg:block" : "hidden"} w-56 bg-white border-r border-gray-200 flex-shrink-0 overflow-y-auto`}>
           <CanvasLayers
             defs={defs}
             layout={layout}
@@ -402,30 +453,20 @@ export default function CanvasWorkspace({
           })()}
         </div>
 
-        {/* Right inspector */}
-        <div className="hidden lg:block w-60 bg-white border-l border-gray-200 flex-shrink-0 overflow-y-auto">
-          <CanvasInspector defs={defs} layout={layout} selectedId={selectedId} updateFrame={updateFrame} />
-        </div>
       </div>
 
-      {mobilePanel && (
+      {layersOpen && (
         <div className="lg:hidden fixed top-11 left-0 right-0 bottom-0 z-[120]">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setMobilePanel(null)} />
-          {mobilePanel === 'layers' ? (
-            <div className="absolute left-0 top-0 bottom-0 w-64 max-w-[80%] bg-white border-r border-gray-200 overflow-y-auto">
-              <CanvasLayers
-                defs={defs}
-                layout={layout}
-                selectedId={selectedId}
-                onSelect={(id) => { setSelectedId(id); setMobilePanel(null); }}
-                onToggleHide={(id) => updateFrame(id, { hidden: !layout[id].hidden })}
-              />
-            </div>
-          ) : (
-            <div className="absolute right-0 top-0 bottom-0 w-64 max-w-[80%] bg-white border-l border-gray-200 overflow-y-auto">
-              <CanvasInspector defs={defs} layout={layout} selectedId={selectedId} updateFrame={updateFrame} />
-            </div>
-          )}
+          <div className="absolute inset-0 bg-black/30" onClick={() => setLayersOpen(false)} />
+          <div className="absolute left-0 top-0 bottom-0 w-64 max-w-[80%] bg-white border-r border-gray-200 overflow-y-auto">
+            <CanvasLayers
+              defs={defs}
+              layout={layout}
+              selectedId={selectedId}
+              onSelect={(id) => { setSelectedId(id); setLayersOpen(false); }}
+              onToggleHide={(id) => updateFrame(id, { hidden: !layout[id].hidden })}
+            />
+          </div>
         </div>
       )}
 
