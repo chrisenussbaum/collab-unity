@@ -146,6 +146,71 @@ export default function CanvasWorkspace({
     return () => el.removeEventListener("wheel", handler);
   }, []);
 
+  // Touch gestures: two-finger pinch to zoom (toward the pinch midpoint),
+  // single-finger drag on the empty canvas to pan.
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    const mid = (a, b) => ({ x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 });
+    let g = null;
+
+    const onStart = (e) => {
+      if (e.touches.length === 2) {
+        const rect = el.getBoundingClientRect();
+        const m = mid(e.touches[0], e.touches[1]);
+        g = {
+          mode: "pinch",
+          startDist: dist(e.touches[0], e.touches[1]),
+          startZoom: stateRef.current.zoom,
+          startPan: { ...stateRef.current.pan },
+          mx: m.clientX - rect.left,
+          my: m.clientY - rect.top,
+        };
+      } else if (e.touches.length === 1 && e.target.dataset && e.target.dataset.canvasBg === "true") {
+        g = {
+          mode: "pan",
+          sx: e.touches[0].clientX,
+          sy: e.touches[0].clientY,
+          startPan: { ...stateRef.current.pan },
+        };
+      }
+    };
+
+    const onMove = (e) => {
+      if (!g) return;
+      if (g.mode === "pinch" && e.touches.length === 2) {
+        e.preventDefault();
+        const z = g.startZoom;
+        const nz = clamp(z * (dist(e.touches[0], e.touches[1]) / g.startDist), 0.2, 2);
+        const p = g.startPan;
+        setPan({ x: g.mx - (g.mx - p.x) * (nz / z), y: g.my - (g.my - p.y) * (nz / z) });
+        setZoom(nz);
+      } else if (g.mode === "pan" && e.touches.length === 1) {
+        e.preventDefault();
+        setPan({ x: g.startPan.x + (e.touches[0].clientX - g.sx), y: g.startPan.y + (e.touches[0].clientY - g.sy) });
+      }
+    };
+
+    const onEnd = (e) => {
+      if (e.touches.length === 0) { g = null; return; }
+      if (e.touches.length === 1) {
+        g = { mode: "pan", sx: e.touches[0].clientX, sy: e.touches[0].clientY, startPan: { ...stateRef.current.pan } };
+      }
+    };
+
+    el.addEventListener("touchstart", onStart, { passive: false });
+    el.addEventListener("touchmove", onMove, { passive: false });
+    el.addEventListener("touchend", onEnd);
+    el.addEventListener("touchcancel", onEnd);
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchmove", onMove);
+      el.removeEventListener("touchend", onEnd);
+      el.removeEventListener("touchcancel", onEnd);
+    };
+  }, []);
+
   const startPan = useCallback((e) => {
     const startX = e.clientX, startY = e.clientY;
     const orig = { ...stateRef.current.pan };
