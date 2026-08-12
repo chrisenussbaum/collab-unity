@@ -12,6 +12,8 @@ import NewsEntertainment from './pages/NewsEntertainment';
 import Resources from './pages/Resources';
 import Featured from './pages/Featured';
 import Explore from './pages/Explore';
+import Collaborators from './pages/Collaborators';
+import LibraryOfApps from './pages/LibraryOfApps';
 import Games from './pages/Games';
 import AdminReview from './pages/AdminReview';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -73,6 +75,8 @@ const AuthenticatedApp = () => {
       <Route path="/Resources" element={<Resources />} />
       <Route path="/Featured" element={<Featured />} />
       <Route path="/Explore" element={<LayoutWrapper currentPageName="Explore"><Explore /></LayoutWrapper>} />
+      <Route path="/Collaborators" element={<LayoutWrapper currentPageName="Collaborators"><Collaborators /></LayoutWrapper>} />
+      <Route path="/LibraryOfApps" element={<LayoutWrapper currentPageName="LibraryOfApps"><LibraryOfApps /></LayoutWrapper>} />
       <Route path="/Games" element={<LayoutWrapper currentPageName="Games"><Games /></LayoutWrapper>} />
       <Route path="/AdminReview" element={<LayoutWrapper currentPageName="AdminReview"><AdminReview /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />

@@ -43,6 +43,8 @@ const RESOURCES = [
   { id: 12, title: "Leaders Eat Last by Simon Sinek", category: "Leadership", format: "Video", url: "https://www.youtube.com/watch?v=ReRcHdeUG9Y", description: "Why some teams pull together and others don't — a talk by Simon Sinek.", difficulty: "Intermediate", duration: "45 min", free: true },
 ];
 
+export { RESOURCES };
+
 const difficultyColor = { Beginner: "bg-green-100 text-green-700", Intermediate: "bg-yellow-100 text-yellow-700", Advanced: "bg-red-100 text-red-700" };
 
 export default function LearningHub({ currentUser }) {

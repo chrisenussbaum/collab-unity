@@ -6,7 +6,7 @@ import NewsSection from "@/components/explore/NewsSection";
 import AppsSection from "@/components/explore/AppsSection";
 import LeaderboardSection from "@/components/explore/LeaderboardSection";
 
-export default function Explore() {
+export default function Explore({ currentUser }) {
   return (
     <div className="cu-container cu-page">
       <div className="mb-6">
@@ -17,7 +17,7 @@ export default function Explore() {
       </div>
       <div className="space-y-5">
         <GamesSection />
-        <CollaboratorsSection />
+        <CollaboratorsSection currentUser={currentUser} />
         <LearningHubSection />
         <NewsSection />
         <AppsSection />

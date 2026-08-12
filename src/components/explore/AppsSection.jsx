@@ -22,7 +22,7 @@ export default function AppsSection() {
   }, []);
 
   return (
-    <SectionShell icon={LayoutGrid} title="Library of Apps" seeAllTo={createPageUrl("Feed")}>
+    <SectionShell icon={LayoutGrid} title="Library of Apps" seeAllTo={createPageUrl("LibraryOfApps")}>
       {loading ? <SkeletonGrid count={6} /> : apps.length === 0 ? <Empty label="No apps yet" /> : (
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
           {apps.map(a => (

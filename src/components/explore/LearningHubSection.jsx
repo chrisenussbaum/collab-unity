@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { BookOpen, Video, Headphones, FileText, Users, ExternalLink } from "lucide-react";
+import { BookOpen, Video, Headphones, FileText, Users } from "lucide-react";
 import { LearningResource } from "@/entities/all";
 import { createPageUrl } from "@/utils";
+import { RESOURCES } from "@/pages/LearningHub";
 import SectionShell, { SkeletonGrid, Empty } from "./SectionShell";
 
 const FORMAT_ICONS = { Video, Article: FileText, "Audio Book": Headphones, Workshop: Users, Course: BookOpen };
@@ -13,8 +14,12 @@ export default function LearningHubSection() {
 
   useEffect(() => {
     (async () => {
-      try { setItems(await LearningResource.list("-created_date", 6) || []); }
-      catch { setItems([]); }
+      try {
+        const data = await LearningResource.list("-created_date", 6);
+        setItems(data && data.length ? data : RESOURCES.slice(0, 6));
+      } catch {
+        setItems(RESOURCES.slice(0, 6));
+      }
       setLoading(false);
     })();
   }, []);
@@ -26,9 +31,17 @@ export default function LearningHubSection() {
           {items.map(r => {
             const FIcon = FORMAT_ICONS[r.format] || BookOpen;
             return (
-              <a key={r.id} href={r.url} target="_blank" rel="noreferrer" className="group block rounded-xl overflow-hidden border border-gray-200 bg-white hover:shadow-md hover:border-purple-300 transition-all">
-                <div className="relative h-24 sm:h-28 bg-gray-100 overflow-hidden">
-                  <img src={screenshot(r.url)} alt={`${r.title} preview`} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300" onError={e => { e.target.style.display = 'none'; }} />
+              <a key={r.id || r.url} href={r.url} target="_blank" rel="noreferrer" className="group block rounded-xl overflow-hidden border border-gray-200 bg-white hover:shadow-md hover:border-purple-300 transition-all">
+                <div className="relative h-24 sm:h-28 overflow-hidden bg-gradient-to-br from-purple-100 to-indigo-100">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <FIcon className="w-8 h-8 text-purple-300" />
+                  </div>
+                  <img
+                    src={screenshot(r.url)}
+                    alt={`${r.title} preview`}
+                    className="relative w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                    onError={e => { e.target.style.display = 'none'; }}
+                  />
                 </div>
                 <div className="p-2.5">
                   <div className="flex items-center gap-1.5 mb-1">
