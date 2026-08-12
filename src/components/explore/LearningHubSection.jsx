@@ -8,6 +8,14 @@ import SectionShell, { SkeletonGrid, Empty } from "./SectionShell";
 const FORMAT_ICONS = { Video, Article: FileText, "Audio Book": Headphones, Workshop: Users, Course: BookOpen };
 const screenshot = (url) => `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`;
 
+function getYoutubeThumb(url) {
+  const m = url?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
+  return m ? `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg` : null;
+}
+function getFavicon(url) {
+  try { return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=128`; } catch { return null; }
+}
+
 export default function LearningHubSection() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,18 +38,28 @@ export default function LearningHubSection() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {items.map(r => {
             const FIcon = FORMAT_ICONS[r.format] || BookOpen;
+            const thumb = getYoutubeThumb(r.url);
+            const fav = getFavicon(r.url);
             return (
               <a key={r.id || r.url} href={r.url} target="_blank" rel="noreferrer" className="group block rounded-xl overflow-hidden border border-gray-200 bg-white hover:shadow-md hover:border-purple-300 transition-all">
                 <div className="relative h-24 sm:h-28 overflow-hidden bg-gradient-to-br from-purple-100 to-indigo-100">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <FIcon className="w-8 h-8 text-purple-300" />
-                  </div>
-                  <img
-                    src={screenshot(r.url)}
-                    alt={`${r.title} preview`}
-                    className="relative w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                    onError={e => { e.target.style.display = 'none'; }}
-                  />
+                  {thumb ? (
+                    <img src={thumb} alt={r.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onError={e => { e.target.style.display = 'none'; }} />
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        {fav ? (
+                          <img src={fav} alt="" className="w-10 h-10 rounded-lg object-contain opacity-70" onError={e => { e.target.style.display = 'none'; }} />
+                        ) : <FIcon className="w-8 h-8 text-purple-300" />}
+                      </div>
+                      <img
+                        src={screenshot(r.url)}
+                        alt={`${r.title} preview`}
+                        className="relative w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                        onError={e => { e.target.style.display = 'none'; }}
+                      />
+                    </>
+                  )}
                 </div>
                 <div className="p-2.5">
                   <div className="flex items-center gap-1.5 mb-1">
