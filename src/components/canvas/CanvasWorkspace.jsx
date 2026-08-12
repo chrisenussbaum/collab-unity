@@ -539,26 +539,24 @@ export default function CanvasWorkspace({
         </Dialog>
       )}
 
-      {isOwner && (
-        <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-          <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-[#18A0FB]" /> Team &amp; Invite
-              </DialogTitle>
-              <DialogDescription>Invite collaborators to join your project and manage existing members.</DialogDescription>
-            </DialogHeader>
-            <ProjectMembershipManager
-              project={project}
-              currentUser={currentUser}
-              projectUsers={projectUsers}
-              isOwner={isOwner}
-              isExplicitCollaborator={isCollaborator}
-              onUpdate={onProjectUpdate}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
+      <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-[#18A0FB]" /> Team &amp; Invite
+            </DialogTitle>
+            <DialogDescription>Invite collaborators to join your project and manage existing members.</DialogDescription>
+          </DialogHeader>
+          <ProjectMembershipManager
+            project={project}
+            currentUser={currentUser}
+            projectUsers={projectUsers}
+            isOwner={isOwner}
+            isExplicitCollaborator={isCollaborator}
+            onUpdate={onProjectUpdate}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

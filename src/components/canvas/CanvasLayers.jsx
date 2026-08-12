@@ -44,31 +44,30 @@ export default function CanvasLayers({
         })}
       </div>
 
+      <div className="border-t border-gray-100 mt-2" />
+      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">Manage</div>
       {isOwner && (
-        <>
-          <div className="border-t border-gray-100 mt-2" />
-          <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">Owner</div>
-          <div
-            onClick={onOpenApplications}
-            className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-50"
-          >
-            <Briefcase className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="truncate flex-1">Applications</span>
-            {pendingApplicationsCount > 0 && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-500 text-white">
-                {pendingApplicationsCount}
-              </span>
-            )}
-          </div>
-          <div
-            onClick={onOpenInvite}
-            className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-50"
-          >
-            <Users className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="truncate flex-1">Team &amp; Invite</span>
-          </div>
-        </>
+        <div
+          onClick={onOpenApplications}
+          className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-50"
+        >
+          <Briefcase className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="truncate flex-1">Applications</span>
+          {pendingApplicationsCount > 0 && (
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-500 text-white">
+              {pendingApplicationsCount}
+            </span>
+          )}
+        </div>
       )}
+      {/* Team & Invite is available to all collaborators (owners + members, who can leave) */}
+      <div
+        onClick={onOpenInvite}
+        className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-50"
+      >
+        <Users className="w-3.5 h-3.5 flex-shrink-0" />
+        <span className="truncate flex-1">Team &amp; Invite</span>
+      </div>
     </div>
   );
 }

@@ -34,6 +34,24 @@ const ROLE_COLORS = {
   Other: "bg-gray-100 text-gray-600",
 };
 
+// Retry helper — the platform sometimes returns HTTP 500 "Rate limit exceeded" (not 429).
+const withRetry = async (apiCall, maxRetries = 4, baseDelay = 1500) => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await apiCall();
+    } catch (error) {
+      const isRateLimit = error?.response?.status === 429 ||
+        (error?.response?.status === 500 && /rate limit/i.test(error?.response?.data?.error || error?.message || ""));
+      if (isRateLimit && attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+};
+
 export default function ProjectMembershipManager({
   project,
   currentUser,
@@ -63,7 +81,7 @@ export default function ProjectMembershipManager({
   useEffect(() => {
     const loadAllUsers = async () => {
       try {
-        const { data: users } = await getAllPublicUserProfiles();
+        const { data: users } = await withRetry(() => getAllPublicUserProfiles());
         setAllUsers(users || []);
       } catch (error) {
         console.error("Error loading users for invite:", error);

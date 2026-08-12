@@ -107,7 +107,9 @@ const withRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
     try {
       return await apiCall();
     } catch (error) {
-      if (error.response?.status === 429 && attempt < maxRetries - 1) {
+      const isRateLimit = error.response?.status === 429 ||
+        (error.response?.status === 500 && /rate limit/i.test(error.response?.data?.error || error.message || ''));
+      if (isRateLimit && attempt < maxRetries - 1) {
         // More aggressive backoff for rate limiting: 2s, 4s, 8s, 16s, 32s
         const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 2000;
         console.warn(`Rate limit hit, retrying in ${(delay / 1000).toFixed(1)}s (attempt ${attempt + 1}/${maxRetries})`);
