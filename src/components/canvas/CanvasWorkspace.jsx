@@ -146,6 +146,35 @@ export default function CanvasWorkspace({
     return () => el.removeEventListener("wheel", handler);
   }, []);
 
+  // Safari/Mac trackpad pinch fires `gesturechange` (not wheel) — handle it too.
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    let gs = null;
+    const onStart = (e) => {
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      gs = { z: stateRef.current.zoom, pan: { ...stateRef.current.pan }, mx: e.clientX - rect.left, my: e.clientY - rect.top };
+    };
+    const onChange = (e) => {
+      e.preventDefault();
+      if (!gs) return;
+      const nz = clamp(gs.z * (e.scale || 1), 0.2, 2);
+      const p = gs.pan;
+      setPan({ x: gs.mx - (gs.mx - p.x) * (nz / gs.z), y: gs.my - (gs.my - p.y) * (nz / gs.z) });
+      setZoom(nz);
+    };
+    const onEnd = (e) => { e.preventDefault(); gs = null; };
+    el.addEventListener("gesturestart", onStart, { passive: false });
+    el.addEventListener("gesturechange", onChange, { passive: false });
+    el.addEventListener("gestureend", onEnd);
+    return () => {
+      el.removeEventListener("gesturestart", onStart);
+      el.removeEventListener("gesturechange", onChange);
+      el.removeEventListener("gestureend", onEnd);
+    };
+  }, []);
+
   // Touch gestures: two-finger pinch to zoom (toward the pinch midpoint),
   // single-finger drag on the empty canvas to pan.
   useEffect(() => {
