@@ -9,12 +9,12 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
  * 3. Overdue milestones (past target_date, not completed) → nudge project owner
  * 
  * Dedup: skips any item that already got a notification of the same type
- * for the same entity within the last 24 hours.
+ * for the same entity within the last 7 days.
  * 
- * Designed to run daily via a scheduled automation.
+ * Designed to run weekly (every Monday) via a scheduled automation.
  */
 
-const NUDGE_WINDOW_HOURS = 24;
+const NUDGE_WINDOW_HOURS = 168;
 
 Deno.serve(async (req) => {
   try {
