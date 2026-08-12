@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ export default function AdminReview({ currentUser }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [editingBug, setEditingBug] = useState(null);
+  const fetchedBugIds = useRef(new Set());
 
   const isAdmin = currentUser?.role === 'admin';
 
@@ -43,14 +44,37 @@ export default function AdminReview({ currentUser }) {
     if (isAdmin) fetchBugs();
   }, []);
 
-  // Auto-open a specific bug when navigated via ?bug_id= query param
+  // Auto-open a specific bug when navigated via ?bug_id= query param (e.g. from a bug notification)
   useEffect(() => {
-    if (!isAdmin || isLoading || bugs.length === 0) return;
+    if (!isAdmin || isLoading) return;
     const params = new URLSearchParams(window.location.search);
     const bugId = params.get('bug_id');
-    if (bugId) {
-      const bug = bugs.find(b => b.id === bugId);
-      if (bug) setEditingBug(bug);
+    if (!bugId) return;
+
+    const clearParam = () => window.history.replaceState({}, '', window.location.pathname);
+
+    const existing = bugs.find(b => b.id === bugId);
+    if (existing) {
+      setEditingBug(existing);
+      clearParam();
+      return;
+    }
+
+    // Fallback: bug not in the loaded list — fetch it directly so the report still opens
+    if (!fetchedBugIds.current.has(bugId)) {
+      fetchedBugIds.current.add(bugId);
+      base44.entities.Bug.filter({ id: bugId })
+        .then(res => {
+          const bug = Array.isArray(res) && res[0] ? res[0] : null;
+          if (bug) {
+            setBugs(prev => (prev.some(b => b.id === bug.id) ? prev : [bug, ...prev]));
+            setEditingBug(bug);
+            clearParam();
+          } else {
+            toast.error("Bug report not found.");
+          }
+        })
+        .catch(() => toast.error("Bug report not found."));
     }
   }, [isAdmin, isLoading, bugs]);
 
