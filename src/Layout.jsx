@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, User as UserIcon, Lightbulb, Settings, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar, Users, Briefcase, Music, ShieldCheck } from "lucide-react";
+import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, User as UserIcon, Lightbulb, Settings, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar, Users, Compass, Music, ShieldCheck } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import MusicPlayer from "./components/music/MusicPlayer";
 import GlobalSearchBar from "./components/GlobalSearchBar";
@@ -438,7 +438,7 @@ export default function Layout({ children, currentPageName }) {
 
   const navigationItems = [
     { name: "Feed", path: createPageUrl("Feed"), icon: LayoutGrid },
-    { name: "Marketplace", path: createPageUrl("Marketplace"), icon: Briefcase },
+    { name: "Explore", path: createPageUrl("Explore"), icon: Compass },
     ...(currentUser ? [
       { name: "Projects", path: createPageUrl("MyProjects"), icon: Lightbulb },
       { name: "Chat", path: createPageUrl("Chat"), icon: MessageCircle },
@@ -448,7 +448,7 @@ export default function Layout({ children, currentPageName }) {
   const mobileNavItems = [
     { name: "Feed", path: createPageUrl("Feed"), icon: LayoutGrid },
       ...(currentUser ? [
-      { name: "Marketplace", path: createPageUrl("Marketplace"), icon: Briefcase },
+      { name: "Explore", path: createPageUrl("Explore"), icon: Compass },
       { name: "Create", path: createPageUrl("CreateProject"), icon: Plus, isCreateButton: true },
       { name: "My Projects", path: createPageUrl("MyProjects"), icon: Lightbulb },
       { name: "Chat", path: createPageUrl("Chat"), icon: MessageCircle },

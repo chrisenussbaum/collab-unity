@@ -11,7 +11,7 @@ import LearningHub from './pages/LearningHub';
 import NewsEntertainment from './pages/NewsEntertainment';
 import Resources from './pages/Resources';
 import Featured from './pages/Featured';
-import Marketplace from './pages/Marketplace';
+import Explore from './pages/Explore';
 import Games from './pages/Games';
 import AdminReview from './pages/AdminReview';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -72,7 +72,7 @@ const AuthenticatedApp = () => {
       <Route path="/NewsEntertainment" element={<LayoutWrapper currentPageName="NewsEntertainment"><NewsEntertainment /></LayoutWrapper>} />
       <Route path="/Resources" element={<Resources />} />
       <Route path="/Featured" element={<Featured />} />
-      <Route path="/Marketplace" element={<LayoutWrapper currentPageName="Marketplace"><Marketplace /></LayoutWrapper>} />
+      <Route path="/Explore" element={<LayoutWrapper currentPageName="Explore"><Explore /></LayoutWrapper>} />
       <Route path="/Games" element={<LayoutWrapper currentPageName="Games"><Games /></LayoutWrapper>} />
       <Route path="/AdminReview" element={<LayoutWrapper currentPageName="AdminReview"><AdminReview /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />

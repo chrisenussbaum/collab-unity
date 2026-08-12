@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 
 const SCREENSHOTS = {
   feed: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/a4a7e6a0a_Screenshot2026-07-27at123605AM.png",
-  marketplace: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/4ccd546c1_Screenshot2026-07-27at120225AM.png",
+
   myprojects: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/5d25a0cef_Screenshot2026-07-27at120305AM.png",
   workspace: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/35f95fee3_Screenshot2026-07-27at120525AM.png",
   chat: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/4b99d2b2a_Screenshot2026-07-27at123837AM.png",
@@ -50,7 +50,7 @@ export default function FeaturesShowcase({ onAuth }) {
   const features = [
     { type: "feed", eyebrow: "Feed", title: "Share your journey with the world.", subtitle: "Post progress updates, showcase live links, and celebrate milestones with a community that cheers you on.", buttonLabel: "Explore Feed" },
     { type: "create", eyebrow: "Create Project", title: "Start building in seconds.", subtitle: "Describe your idea in plain text and bring it to life with a structured project plan, milestones, and tasks.", buttonLabel: "Explore Create" },
-    { type: "marketplace", eyebrow: "Marketplace", title: "Find gigs, services, and talent.", subtitle: "Browse paid gigs and professional services, post opportunities, and connect with talented people ready to collaborate.", buttonLabel: "Explore Marketplace" },
+
     { type: "myprojects", eyebrow: "My Projects", title: "All your projects in one place.", subtitle: "Track progress, manage milestones, and switch between personal and collaborative projects from a single dashboard.", buttonLabel: "Explore Projects" },
     { type: "workspace", eyebrow: "Build Workspace", title: "Your collaborative project workspace.", subtitle: "A project assistant, tasks, milestones, assets, and activity logs all unified in one workspace built for shipping.", buttonLabel: "Explore Workspace" },
     { type: "chat", eyebrow: "Chat", title: "Message your team in real-time.", subtitle: "Stay connected with 1-on-1 and group chats, with your project context always accessible right alongside your work.", buttonLabel: "Explore Chat" },
