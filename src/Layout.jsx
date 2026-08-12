@@ -870,15 +870,15 @@ export default function Layout({ children, currentPageName }) {
         }
 
         [data-radix-popper-content-wrapper] {
-          z-index: 60 !important;
+          z-index: 200 !important;
         }
-        
+
         .dialog-overlay {
-          z-index: 60 !important;
+          z-index: 200 !important;
         }
-        
+
         .dialog-content {
-          z-index: 61 !important;
+          z-index: 201 !important;
         }
 
         .responsive-title {
