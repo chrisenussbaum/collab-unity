@@ -340,6 +340,10 @@ export default function NotificationBell() {
                 if (isDiscussionInteraction && notif.related_project_id) {
                     return createPageUrl(`ProjectDetail?id=${notif.related_project_id}&tab=discussion`);
                 }
+                // Application notifications: deep-link owners straight to the application
+                if (notif.type === 'project_application' && notif.related_project_id && notif.related_entity_id) {
+                    return createPageUrl(`ProjectDetail?id=${notif.related_project_id}&application=${notif.related_entity_id}`);
+                }
                 if (notif.related_project_id) {
                     return createPageUrl(`ProjectDetail?id=${notif.related_project_id}`);
                 }

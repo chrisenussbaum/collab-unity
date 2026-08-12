@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import OptimizedAvatar from "../OptimizedAvatar";
 import { Link } from "react-router-dom";
-import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, Eye, Trophy, Heart, Bug, ShieldCheck, LogOut, Music } from "lucide-react";
+import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, Eye, Trophy, Heart, Bug, ShieldCheck, LogOut, Music, Users, Briefcase } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { buildFrameDefs } from "./canvasFrameRegistry";
 import CanvasFrame from "./CanvasFrame";
@@ -12,6 +12,9 @@ import CanvasLayers from "./CanvasLayers";
 import CanvasToolbar from "./CanvasToolbar";
 import CanvasPresenceStack from "./CanvasPresenceStack";
 import MusicPlayer from "../music/MusicPlayer";
+import ProjectApplicationsManager from "../ProjectApplicationsManager";
+import ProjectMembershipManager from "../ProjectMembershipManager";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg";
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -30,7 +33,7 @@ function defaultLayout(defs) {
 
 export default function CanvasWorkspace({
   project, currentUser, projectUsers, projectOwnerProfile,
-  isOwner, isCollaborator, onProjectUpdate, onUpdateSocialLinks, onShare, onBack,
+  isOwner, isCollaborator, onProjectUpdate, onUpdateSocialLinks, onShare, onBack, initialApplicationId,
 }) {
   const [tasks, setTasks] = useState([]);
   const [milestones, setMilestones] = useState([]);
@@ -44,6 +47,9 @@ export default function CanvasWorkspace({
   const [fullscreenId, setFullscreenId] = useState(null);
   const [layersOpen, setLayersOpen] = useState(() => (typeof window !== "undefined" ? window.innerWidth >= 1024 : true));
   const [showMusicPlayer, setShowMusicPlayer] = useState(false);
+  const [showApplicationsDialog, setShowApplicationsDialog] = useState(false);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
 
   useEffect(() => {
     if (!fullscreenId) return;
@@ -76,6 +82,25 @@ export default function CanvasWorkspace({
   useEffect(() => {
     refreshTasks(); refreshMilestones(); refreshAssets();
   }, [project?.id, refreshTasks, refreshMilestones, refreshAssets]);
+
+  // Owner-only: pending applications count for the Layers sidebar badge
+  useEffect(() => {
+    if (!project?.id || !isOwner) { setPendingApplicationsCount(0); return; }
+    let cancelled = false;
+    const fetchPending = async () => {
+      try {
+        const apps = await base44.entities.ProjectApplication.filter({ project_id: project.id, status: "pending" });
+        if (!cancelled) setPendingApplicationsCount(Array.isArray(apps) ? apps.length : 0);
+      } catch (e) { /* ignore */ }
+    };
+    fetchPending();
+    return () => { cancelled = true; };
+  }, [project?.id, isOwner, showApplicationsDialog]);
+
+  // Deep-link from an application notification: auto-open the Applications panel
+  useEffect(() => {
+    if (initialApplicationId && isOwner) setShowApplicationsDialog(true);
+  }, [initialApplicationId, isOwner]);
 
   const navigateToFrame = useCallback((target) => {
     const map = { tasks: "tasks", milestones: "milestones", assets: "assets", ideation: "ideation", notes: "notes", tools: "tools", links: "links", activity: "activity" };
@@ -391,6 +416,10 @@ export default function CanvasWorkspace({
             selectedId={selectedId}
             onSelect={setSelectedId}
             onToggleHide={(id) => updateFrame(id, { hidden: !layout[id].hidden })}
+            isOwner={isOwner}
+            pendingApplicationsCount={pendingApplicationsCount}
+            onOpenApplications={() => setShowApplicationsDialog(true)}
+            onOpenInvite={() => setShowInviteDialog(true)}
           />
         </div>
 
@@ -471,6 +500,10 @@ export default function CanvasWorkspace({
               selectedId={selectedId}
               onSelect={(id) => { setSelectedId(id); setLayersOpen(false); }}
               onToggleHide={(id) => updateFrame(id, { hidden: !layout[id].hidden })}
+              isOwner={isOwner}
+              pendingApplicationsCount={pendingApplicationsCount}
+              onOpenApplications={() => { setShowApplicationsDialog(true); setLayersOpen(false); }}
+              onOpenInvite={() => { setShowInviteDialog(true); setLayersOpen(false); }}
             />
           </div>
         </div>
@@ -491,6 +524,41 @@ export default function CanvasWorkspace({
       />
 
       <MusicPlayer isVisible={showMusicPlayer} onClose={() => setShowMusicPlayer(false)} zIndex={130} />
+
+      {isOwner && (
+        <Dialog open={showApplicationsDialog} onOpenChange={setShowApplicationsDialog}>
+          <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-[#18A0FB]" /> Applications
+              </DialogTitle>
+              <DialogDescription>Review users who applied to join your project and accept or decline them.</DialogDescription>
+            </DialogHeader>
+            <ProjectApplicationsManager project={project} onProjectUpdate={onProjectUpdate} alwaysShow />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {isOwner && (
+        <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+          <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-[#18A0FB]" /> Team &amp; Invite
+              </DialogTitle>
+              <DialogDescription>Invite collaborators to join your project and manage existing members.</DialogDescription>
+            </DialogHeader>
+            <ProjectMembershipManager
+              project={project}
+              currentUser={currentUser}
+              projectUsers={projectUsers}
+              isOwner={isOwner}
+              isExplicitCollaborator={isCollaborator}
+              onUpdate={onProjectUpdate}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

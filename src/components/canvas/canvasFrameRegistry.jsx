@@ -48,7 +48,7 @@ export function buildFrameDefs(props) {
 
   return [
     {
-      id: "assistant", title: "AI Assistant", icon: Sparkles, w: 540, h: 580,
+      id: "assistant", title: "Project Assistant", icon: Sparkles, w: 540, h: 580,
       render: () => (
         <AIChat
           project={project} tasks={tasks} milestones={milestones} assets={assets}

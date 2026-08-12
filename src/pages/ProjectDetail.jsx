@@ -147,6 +147,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   const queryClient = useQueryClient();
   const projectId = searchParams.get("id");
   const tabParam = searchParams.get("tab");
+  const applicationId = searchParams.get("application");
 
   const [project, setProject] = useState(null);
   const [projectTemplate, setProjectTemplate] = useState(null);
@@ -972,6 +973,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
           onUpdateSocialLinks={handleUpdateSocialLinks}
           onShare={() => setShowShareCard(true)}
           onBack={() => navigate(createPageUrl("Discover"))}
+          initialApplicationId={applicationId}
         />
       </>
     );

@@ -1,7 +1,7 @@
 import React from "react";
 import { ArrowRight } from "lucide-react";
 
-const SCREENSHOT_HERO = "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/d881ca862_Screenshot2026-07-27at123442AM.png";
+const SCREENSHOT_HERO = "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/4c1c41ede_Screenshot2026-08-12at33654PM.png";
 
 const HeroVisual = () => (
   <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 max-w-4xl mx-auto">

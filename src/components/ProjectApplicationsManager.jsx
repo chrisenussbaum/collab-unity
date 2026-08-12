@@ -27,7 +27,7 @@ const withRetry = async (apiCall, maxRetries = 3, baseDelay = 1000) => {
   }
 };
 
-export default function ProjectApplicationsManager({ project, onProjectUpdate }) {
+export default function ProjectApplicationsManager({ project, onProjectUpdate, alwaysShow }) {
   const [applications, setApplications] = useState([]);
   const [applicantProfiles, setApplicantProfiles] = useState({});
   const [isLoading, setIsLoading] = useState(true);
@@ -168,6 +168,14 @@ export default function ProjectApplicationsManager({ project, onProjectUpdate })
   }
 
   if (applications.length === 0) {
+    if (alwaysShow) {
+      return (
+        <div className="text-center py-8 text-gray-500">
+          <Inbox className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+          <p className="text-sm">No pending applications right now.</p>
+        </div>
+      );
+    }
     return null;
   }
 
