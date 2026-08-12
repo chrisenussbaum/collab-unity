@@ -68,6 +68,7 @@ import { Input } from "@/components/ui/input";
 import ProjectApplicationsManager from "../components/ProjectApplicationsManager";
 import ProjectMembershipManager from "../components/ProjectMembershipManager";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
+import { getCachedUserProfiles } from "@/lib/userProfileCache";
 import { UploadFile } from "@/integrations/Core";
 import ProjectFundingCard from "../components/ProjectFundingCard";
 import SocialsPanel from '../components/SocialsPanel';
@@ -200,8 +201,8 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
       // Get profiles for followers
       const followerEmails = projectFollowers.map(f => f.email);
       if (followerEmails.length > 0) {
-        const { data: followerProfiles } = await getPublicUserProfiles({ emails: followerEmails });
-        const profiles = Array.isArray(followerProfiles) ? followerProfiles : [];
+        const followerMap = await getCachedUserProfiles(followerEmails);
+        const profiles = Object.values(followerMap);
         setFollowers(profiles);
         // Sync followers_count with actual count
         setProject(prev => prev ? { ...prev, followers_count: profiles.length } : prev);
@@ -243,11 +244,10 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
     
     if (validEmails.length > 0) {
       try {
-        const { data: profiles } = await withRetry(() => getPublicUserProfiles({ emails: validEmails }));
-        return Array.isArray(profiles) ? profiles : [];
+        const map = await getCachedUserProfiles(validEmails);
+        return Object.values(map);
       } catch (error) {
         console.error("Failed to fetch collaborator profiles:", error);
-        // Return empty array instead of failing completely
         return [];
       }
     }

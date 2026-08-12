@@ -14,7 +14,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { ActivityLog } from "@/entities/all";
-import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
+import { getCachedUserProfiles } from "@/lib/userProfileCache";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -101,21 +101,11 @@ export default function ActivityTab({ project, currentUser, isCollaborator, isPr
       const userEmails = [...new Set(safeActivities.map(activity => activity.user_email).filter(Boolean))];
 
       if (userEmails.length > 0) {
-        // Add delay between API calls
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
         try {
-          const { data: profilesData } = await withRetry(() => getPublicUserProfiles({ emails: userEmails }));
-          const profilesMap = {};
-          if (Array.isArray(profilesData)) {
-            profilesData.forEach(profile => {
-              profilesMap[profile.email] = profile;
-            });
-          }
+          const profilesMap = await getCachedUserProfiles(userEmails);
           setProfiles(profilesMap);
         } catch (error) {
           console.error("Error loading user profiles for activity:", error);
-          // Don't show toast for profile errors - silently fail
           setProfiles({});
         }
       } else {

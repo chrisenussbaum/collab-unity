@@ -28,6 +28,7 @@ import { base44 } from "@/api/base44Client";
 import FeedComments from "../components/FeedComments";
 import CreatePostDialog from "../components/CreatePostDialog";
 import { getPublicUserProfiles } from '@/functions/getPublicUserProfiles';
+import { getCachedUserProfiles } from '@/lib/userProfileCache';
 import { toast } from "sonner";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import ProjectLinkPreviewDialog from "@/components/ProjectLinkPreviewDialog";
@@ -537,17 +538,16 @@ export default function Feed({ currentUser, authIsLoading }) {
       const feedPostIds = initialFeedPostsData.map(fp => fp.id);
 
       // Profile fetch is non-essential — never let it fail the whole feed query (e.g. platform rate limits).
-      // Items render with fallback owners when profiles are unavailable.
-      const profilesResponse = allOwnerEmails.length > 0
-        ? await getPublicUserProfiles({ emails: allOwnerEmails }).catch(() => ({ data: [] }))
-        : { data: [] };
+      // Items render with fallback owners when profiles are unavailable. Uses the shared cache so
+      // concurrent profile requests across components coalesce into one backend call.
+      const profilesMap = allOwnerEmails.length > 0
+        ? await getCachedUserProfiles(allOwnerEmails).catch(() => ({}))
+        : {};
 
       const [fetchedProjectApplauds, fetchedFeedPostApplauds] = await Promise.all([
         projectIds.length > 0 ? withRetry(() => ProjectApplaud.filter({ project_id: { $in: projectIds } })).catch(() => []) : Promise.resolve([]),
         feedPostIds.length > 0 ? withRetry(() => FeedPostApplaud.filter({ feed_post_id: { $in: feedPostIds } })).catch(() => []) : Promise.resolve([])
       ]);
-
-      const profilesMap = (profilesResponse.data || []).reduce((acc, p) => { acc[p.email] = p; return acc; }, {});
 
       const fullyPopulatedProjects = visibleProjectsData.map(project => ({
         ...project, owner: profilesMap[project.created_by] || { email: project.created_by, full_name: project.created_by.split('@')[0], username: null, profile_image: null }
@@ -563,8 +563,7 @@ export default function Feed({ currentUser, authIsLoading }) {
       let collabProfilesMap = {};
       if (allCollabEmails.size > 0) {
         try {
-          const { data: collabProfiles } = await withRetry(() => getPublicUserProfiles({ emails: Array.from(allCollabEmails) }));
-          (collabProfiles || []).forEach(p => { collabProfilesMap[p.email] = p; });
+          collabProfilesMap = await getCachedUserProfiles(Array.from(allCollabEmails));
         } catch (error) { console.error("Error fetching collaborator profiles:", error); }
       }
 

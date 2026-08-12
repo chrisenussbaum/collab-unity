@@ -12,7 +12,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { ActivityLog } from "@/entities/all";
-import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
+import { getCachedUserProfiles } from "@/lib/userProfileCache";
 import { formatDistanceToNow } from "date-fns";
 import HorizontalScrollContainer from "../HorizontalScrollContainer";
 
@@ -95,17 +95,8 @@ export default function ProjectActivityFeed({ project }) {
         const userEmails = [...new Set(safeActivities.map(a => a.user_email).filter(Boolean))];
 
         if (userEmails.length > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 300));
           try {
-            const { data: profilesData } = await withRetry(() =>
-              getPublicUserProfiles({ emails: userEmails })
-            );
-            const profilesMap = {};
-            if (Array.isArray(profilesData)) {
-              profilesData.forEach(profile => {
-                profilesMap[profile.email] = profile;
-              });
-            }
+            const profilesMap = await getCachedUserProfiles(userEmails);
             setProfiles(profilesMap);
           } catch (error) {
             console.error("Error loading profiles:", error);
