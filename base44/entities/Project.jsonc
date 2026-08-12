@@ -302,6 +302,11 @@
       "type": "boolean",
       "default": false,
       "description": "Whether this project is a career-readiness challenge with defined acceptance criteria"
+    },
+    "canvas_layout": {
+      "type": "object",
+      "description": "Figma-style canvas frame positions for the project workspace (map of frameId -> {x, y, w, h, collapsed, hidden, z})",
+      "additionalProperties": true
     }
   },
   "required": [

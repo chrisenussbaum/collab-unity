@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import WorkspaceTabs from "@/components/workspace/WorkspaceTabs";
+import CanvasWorkspace from "@/components/canvas/CanvasWorkspace";
 import ProjectHighlights from "../components/project/ProjectHighlights";
 import ProjectAnalyticsDashboard from "../components/project/ProjectAnalyticsDashboard";
 import ClickableImage from "../components/ClickableImage";
@@ -949,6 +950,33 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   // Get project owner profile for personalizing messages
   const projectOwnerProfile = projectUsers.find(u => u.email === project.created_by);
   
+  // Collaborators get the Figma-style canvas workspace; viewers keep the static layout below.
+  if (userCanContribute) {
+    return (
+      <>
+        <ShareCardDialog
+          isOpen={showShareCard}
+          onClose={() => setShowShareCard(false)}
+          type="project"
+          data={{ project, owner: projectUsers.find(u => u.email === project?.created_by) }}
+          shareUrl={`${getShareBaseUrl()}${createPageUrl(`ProjectDetail?id=${project.id}`)}`}
+        />
+        <CanvasWorkspace
+          project={project}
+          currentUser={currentUser}
+          projectUsers={projectUsers}
+          projectOwnerProfile={projectUsers.find(u => u.email === project.created_by)}
+          isOwner={isOwner}
+          isCollaborator={isExplicitCollaborator || isOwner}
+          onProjectUpdate={handleProjectUpdate}
+          onUpdateSocialLinks={handleUpdateSocialLinks}
+          onShare={() => setShowShareCard(true)}
+          onBack={() => navigate(createPageUrl("Discover"))}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       {/* Real-time Collaboration Presence Tracking */}

@@ -522,7 +522,7 @@ const chatMarkdownComponents = {
   },
 };
 
-function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers, onProjectUpdate, onNavigateTo, onTasksChanged, onMilestonesChanged, buildLinks = [], activityLogs = [] }) {
+export function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers, onProjectUpdate, onNavigateTo, onTasksChanged, onMilestonesChanged, buildLinks = [], activityLogs = [] }) {
   const [messages, setMessages] = useState([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0, assets)]);
   const [thoughts, setThoughts] = useState([]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
