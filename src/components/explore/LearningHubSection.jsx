@@ -4,17 +4,9 @@ import { LearningResource } from "@/entities/all";
 import { createPageUrl } from "@/utils";
 import { RESOURCES } from "@/pages/LearningHub";
 import SectionShell, { SkeletonGrid, Empty } from "./SectionShell";
+import ResourceThumb from "./ResourceThumb";
 
 const FORMAT_ICONS = { Video, Article: FileText, "Audio Book": Headphones, Workshop: Users, Course: BookOpen };
-const screenshot = (url) => `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=400&h=300`;
-
-function getYoutubeThumb(url) {
-  const m = url?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
-  return m ? `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg` : null;
-}
-function getFavicon(url) {
-  try { return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=128`; } catch { return null; }
-}
 
 export default function LearningHubSection() {
   const [items, setItems] = useState([]);
@@ -38,29 +30,14 @@ export default function LearningHubSection() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {items.map(r => {
             const FIcon = FORMAT_ICONS[r.format] || BookOpen;
-            const thumb = getYoutubeThumb(r.url);
-            const fav = getFavicon(r.url);
             return (
               <a key={r.id || r.url} href={r.url} target="_blank" rel="noreferrer" className="group block rounded-xl overflow-hidden border border-gray-200 bg-white hover:shadow-md hover:border-purple-300 transition-all">
-                <div className="relative h-24 sm:h-28 overflow-hidden bg-gradient-to-br from-purple-100 to-indigo-100">
-                  {thumb ? (
-                    <img src={thumb} alt={r.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onError={e => { e.target.style.display = 'none'; }} />
-                  ) : (
-                    <>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        {fav ? (
-                          <img src={fav} alt="" className="w-10 h-10 rounded-lg object-contain opacity-70" onError={e => { e.target.style.display = 'none'; }} />
-                        ) : <FIcon className="w-8 h-8 text-purple-300" />}
-                      </div>
-                      <img
-                        src={screenshot(r.url)}
-                        alt={`${r.title} preview`}
-                        className="relative w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                        onError={e => { e.target.style.display = 'none'; }}
-                      />
-                    </>
-                  )}
-                </div>
+                <ResourceThumb
+                  url={r.url}
+                  title={r.title}
+                  fallbackIcon={<FIcon className="w-8 h-8 text-purple-300" />}
+                  className="h-24 sm:h-28 group-hover:scale-105 transition-transform duration-300"
+                />
                 <div className="p-2.5">
                   <div className="flex items-center gap-1.5 mb-1">
                     <FIcon className="w-3.5 h-3.5 text-purple-600 flex-shrink-0" />

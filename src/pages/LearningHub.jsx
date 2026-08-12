@@ -8,6 +8,7 @@ import { Search, BookOpen, Video, Headphones, FileText, Users, ExternalLink, Spa
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import ResourceThumb from "@/components/explore/ResourceThumb";
 
 const CATEGORIES = [
   { label: "All", icon: null },
@@ -214,15 +215,7 @@ Only return resources you are confident actually exist.`,
             <motion.div key={r.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
               <a href={r.url} target="_blank" rel="noopener noreferrer">
                 <Card className="cu-card h-full flex flex-col hover:border-purple-300 transition-all overflow-hidden group">
-                  <div className="relative w-full h-32 overflow-hidden bg-gray-100">
-                    <img
-                      src={`https://api.microlink.io/?url=${encodeURIComponent(r.url)}&screenshot=true&meta=false&embed=screenshot.url`}
-                      alt={`${r.title} preview`}
-                      className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                      onError={e => { e.target.style.display = 'none'; }}
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                  </div>
+                  <ResourceThumb url={r.url} title={r.title} fallbackIcon={<BookOpen className="w-8 h-8 text-purple-300" />} className="w-full h-32 group-hover:scale-105 transition-transform duration-300" />
                   <CardHeader className="pb-2">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-purple-600">{FORMAT_ICONS[r.format] || <BookOpen className="w-4 h-4" />}</span>
