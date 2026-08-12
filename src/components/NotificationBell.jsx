@@ -323,6 +323,10 @@ export default function NotificationBell() {
                 if (notif.metadata?.redirect_to === 'mybookings') {
                   return createPageUrl('MyBookings');
                 }
+
+                if (notif.metadata?.redirect_to === 'admin_review' && notif.metadata?.bug_id) {
+                  return `${createPageUrl('AdminReview')}?bug_id=${notif.metadata.bug_id}`;
+                }
                 
                 if (notif.type === 'direct_message' && notif.related_entity_id) {
                   return `${createPageUrl('Chat')}?conversation=${notif.related_entity_id}`;

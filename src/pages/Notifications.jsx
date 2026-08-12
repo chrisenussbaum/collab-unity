@@ -453,6 +453,10 @@ export default function Notifications({ currentUser, authIsLoading }) {
   };
 
   const getNotificationLink = useCallback((notification) => {
+    if (notification.metadata?.redirect_to === 'admin_review' && notification.metadata?.bug_id) {
+      return `${createPageUrl('AdminReview')}?bug_id=${notification.metadata.bug_id}`;
+    }
+
     // Handle direct message notifications
     if (notification.type === 'direct_message' && notification.related_entity_id) {
       return `${createPageUrl('Chat')}?conversation=${notification.related_entity_id}`;

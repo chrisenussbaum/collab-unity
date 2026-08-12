@@ -37,6 +37,7 @@ Deno.serve(async (req) => {
           related_entity_id: bug_id,
           actor_email: reporter,
           actor_name: reporterName,
+          metadata: { redirect_to: 'admin_review', bug_id },
           read: false
         });
         notified++;

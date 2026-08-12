@@ -43,6 +43,17 @@ export default function AdminReview({ currentUser }) {
     if (isAdmin) fetchBugs();
   }, []);
 
+  // Auto-open a specific bug when navigated via ?bug_id= query param
+  useEffect(() => {
+    if (!isAdmin || isLoading || bugs.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const bugId = params.get('bug_id');
+    if (bugId) {
+      const bug = bugs.find(b => b.id === bugId);
+      if (bug) setEditingBug(bug);
+    }
+  }, [isAdmin, isLoading, bugs]);
+
   const fetchBugs = async () => {
     setIsLoading(true);
     try {
