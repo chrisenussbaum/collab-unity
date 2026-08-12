@@ -1,7 +1,7 @@
 import React from "react";
 import {
   Sparkles, Lightbulb, Flag, CheckSquare, FileStack, Wrench,
-  BookOpen, Activity, Image as ImageIcon, Link2, BarChart3, Heart
+  BookOpen, Activity, Image as ImageIcon, Link2, BarChart3, Heart, DollarSign
 } from "lucide-react";
 import TaskBoard from "../workspace/TaskBoard";
 import MilestonesTab from "../workspace/MilestonesTab";
@@ -100,7 +100,7 @@ export function buildFrameDefs(props) {
       render: () => showcase,
     },
     {
-      id: "funding", title: "Funding", icon: Heart, w: 360, h: 320,
+      id: "funding", title: "Funding", icon: DollarSign, w: 360, h: 320,
       render: () => (
         <ProjectFundingCard
           project={project} projectOwner={projectOwnerProfile}
