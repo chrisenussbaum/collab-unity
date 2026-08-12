@@ -15,7 +15,11 @@ export default function FeedProjectHighlights({
 }) {
   const [uploaderProfiles, setUploaderProfiles] = useState({});
   
-  const allProjectHighlights = project.highlights || [];
+  const allProjectHighlights = [...(project.highlights || [])].sort((a, b) => {
+    const dateA = new Date(a.uploaded_at || 0).getTime();
+    const dateB = new Date(b.uploaded_at || 0).getTime();
+    return dateB - dateA;
+  });
 
   // Fetch uploader profiles (including project creator as fallback)
   useEffect(() => {

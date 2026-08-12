@@ -16,7 +16,11 @@ export default function ProjectHighlights({ project, currentUser, onProjectUpdat
   const [uploadProgress, setUploadProgress] = useState(null);
   const [uploaderProfiles, setUploaderProfiles] = useState({});
 
-  const highlights = project?.highlights || [];
+  const highlights = [...(project?.highlights || [])].sort((a, b) => {
+    const dateA = new Date(a.uploaded_at || 0).getTime();
+    const dateB = new Date(b.uploaded_at || 0).getTime();
+    return dateB - dateA;
+  });
   const canEdit = currentUser && (
     currentUser.email === project?.created_by ||
     project?.collaborator_emails?.includes(currentUser.email)
