@@ -16,6 +16,23 @@ import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import { formatDistanceToNow } from "date-fns";
 import HorizontalScrollContainer from "../HorizontalScrollContainer";
 
+// Retry wrapper for rate-limited (HTTP 429) calls — mirrors ActivityTab so
+// collaborator profile data loads just as reliably here as in the workspace.
+const withRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await apiCall();
+    } catch (error) {
+      if (error.response?.status === 429 && attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 2000;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+};
+
 const ICON_MAP = {
   asset_uploaded: FileStack,
   asset_updated: FileStack,
@@ -60,16 +77,14 @@ export default function ProjectActivityFeed({ project }) {
 
       try {
         setIsLoading(true);
-        
-        const projectActivities = await ActivityLog.filter(
-          { project_id: project.id }, 
-          "-created_date", 
-          10
+
+        const projectActivities = await withRetry(() =>
+          ActivityLog.filter({ project_id: project.id }, "-created_date", 10)
         );
-        
+
         // Filter out project highlight activities (asset_uploaded with entity_type: highlight)
-        const safeActivities = Array.isArray(projectActivities) 
-          ? projectActivities.filter(activity => 
+        const safeActivities = Array.isArray(projectActivities)
+          ? projectActivities.filter(activity =>
               !(activity.action_type === 'asset_uploaded' && activity.entity_type === 'highlight')
             )
           : [];
@@ -80,8 +95,11 @@ export default function ProjectActivityFeed({ project }) {
         const userEmails = [...new Set(safeActivities.map(a => a.user_email).filter(Boolean))];
 
         if (userEmails.length > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 300));
           try {
-            const { data: profilesData } = await getPublicUserProfiles({ emails: userEmails });
+            const { data: profilesData } = await withRetry(() =>
+              getPublicUserProfiles({ emails: userEmails })
+            );
             const profilesMap = {};
             if (Array.isArray(profilesData)) {
               profilesData.forEach(profile => {

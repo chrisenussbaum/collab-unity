@@ -1,17 +1,25 @@
-import React from "react";
-import { ExternalLink } from "lucide-react";
+import React, { useState, useEffect } from "react";
 
 /**
- * Reusable Microlink preview component for displaying rich link previews
- * Used across LearningHub, NewsEntertainment, and Feed project showcases
+ * Reusable screenshot preview component for displaying rich link previews.
+ * Uses WordPress mShots (the same reliable service as the Explore page's
+ * Learning Hub / News sections) layered over a subtle favicon fallback.
+ *
+ * For URLs mShots hasn't captured yet, it returns a "Generating Preview"
+ * placeholder. We re-fetch after short delays so the real screenshot replaces
+ * the placeholder once generation completes — every link ends up with a real
+ * thumbnail. Changing src (no remount) swaps old→new directly with no flicker.
  */
-export default function MicrolinkPreview({ 
-  url, 
-  title, 
+export default function MicrolinkPreview({
+  url,
+  title,
   className = "w-[280px] sm:w-[320px]",
   showBrowser = true,
   aspectRatio = "aspect-video"
 }) {
+  const [retry, setRetry] = useState(0);
+  const [hidden, setHidden] = useState(false);
+
   const getFaviconUrl = (urlString) => {
     try {
       const hostname = new URL(urlString).hostname;
@@ -23,11 +31,22 @@ export default function MicrolinkPreview({
 
   const getDomain = (urlString) => {
     try {
-      return new URL(urlString).hostname.replace(/^www\./, '');
+      return new URL(urlString).hostname.replace(/^www\./, "");
     } catch {
       return url;
     }
   };
+
+  // Re-fetch mShots (cache-busted) at 4s, 10s, and 20s so an uncached URL's
+  // "Generating Preview" placeholder is replaced by the real screenshot.
+  useEffect(() => {
+    if (hidden || retry >= 3) return;
+    const delays = [4000, 10000, 20000];
+    const t = setTimeout(() => setRetry((r) => r + 1), delays[retry]);
+    return () => clearTimeout(t);
+  }, [retry, hidden]);
+
+  const shotSrc = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=400&h=300${retry > 0 ? `&_=${retry}` : ""}`;
 
   return (
     <a
@@ -58,13 +77,15 @@ export default function MicrolinkPreview({
               onError={(e) => { e.target.style.display = "none"; }}
             />
           </div>
-          <img
-            src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=400&h=300`}
-            alt={title || "Preview"}
-            className="relative w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-            onError={(e) => { e.target.style.display = "none"; }}
-            loading="lazy"
-          />
+          {!hidden && (
+            <img
+              src={shotSrc}
+              alt={title || "Preview"}
+              className="relative w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+              onError={() => setHidden(true)}
+              loading="lazy"
+            />
+          )}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
         </div>
         {title && (
