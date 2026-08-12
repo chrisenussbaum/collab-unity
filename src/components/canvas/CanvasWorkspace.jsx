@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import OptimizedAvatar from "../OptimizedAvatar";
-import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2 } from "lucide-react";
+import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, PanelRight } from "lucide-react";
 import { buildFrameDefs } from "./canvasFrameRegistry";
 import CanvasFrame from "./CanvasFrame";
 import CanvasLayers from "./CanvasLayers";
@@ -39,6 +39,7 @@ export default function CanvasWorkspace({
   const [tool, setTool] = useState("move");
   const [addOpen, setAddOpen] = useState(false);
   const [fullscreenId, setFullscreenId] = useState(null);
+  const [mobilePanel, setMobilePanel] = useState(null);
 
   useEffect(() => {
     if (!fullscreenId) return;
@@ -145,7 +146,7 @@ export default function CanvasWorkspace({
     };
     el.addEventListener("wheel", handler, { passive: false });
     return () => el.removeEventListener("wheel", handler);
-  }, []);
+  }, [layout]);
 
   // Safari/Mac trackpad pinch fires `gesturechange` (not wheel) — handle it too.
   useEffect(() => {
@@ -174,7 +175,7 @@ export default function CanvasWorkspace({
       el.removeEventListener("gesturechange", onChange);
       el.removeEventListener("gestureend", onEnd);
     };
-  }, []);
+  }, [layout]);
 
   // Touch gestures: two fingers = pinch-zoom AND two-finger pan (simultaneous,
   // in any direction); single-finger drag on empty canvas = pan.
@@ -248,7 +249,7 @@ export default function CanvasWorkspace({
       el.removeEventListener("touchend", onEnd);
       el.removeEventListener("touchcancel", onEnd);
     };
-  }, []);
+  }, [layout]);
 
   const startPan = useCallback((e) => {
     const startX = e.clientX, startY = e.clientY;
@@ -309,6 +310,8 @@ export default function CanvasWorkspace({
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{isOwner ? "Owner" : "Collaborator"}</span>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={() => setMobilePanel('layers')} className="lg:hidden p-1.5 rounded hover:bg-gray-100 text-gray-600" title="Layers"><Layers className="w-4 h-4" /></button>
+          <button onClick={() => setMobilePanel('inspector')} className="lg:hidden p-1.5 rounded hover:bg-gray-100 text-gray-600" title="Design"><PanelRight className="w-4 h-4" /></button>
           <div className="flex items-center bg-gray-100 rounded-md text-xs">
             <button onClick={zoomOut} className="p-1.5 hover:bg-gray-200 text-gray-600"><ZoomOut className="w-3.5 h-3.5" /></button>
             <span className="px-1 text-gray-600 w-10 text-center">{Math.round(zoom * 100)}%</span>
@@ -324,7 +327,7 @@ export default function CanvasWorkspace({
 
       <div className="flex-1 flex min-h-0">
         {/* Left layers */}
-        <div className="w-56 bg-white border-r border-gray-200 flex-shrink-0 overflow-y-auto">
+        <div className="hidden lg:block w-56 bg-white border-r border-gray-200 flex-shrink-0 overflow-y-auto">
           <CanvasLayers
             defs={defs}
             layout={layout}
@@ -400,10 +403,31 @@ export default function CanvasWorkspace({
         </div>
 
         {/* Right inspector */}
-        <div className="w-60 bg-white border-l border-gray-200 flex-shrink-0 overflow-y-auto">
+        <div className="hidden lg:block w-60 bg-white border-l border-gray-200 flex-shrink-0 overflow-y-auto">
           <CanvasInspector defs={defs} layout={layout} selectedId={selectedId} updateFrame={updateFrame} />
         </div>
       </div>
+
+      {mobilePanel && (
+        <div className="lg:hidden fixed top-11 left-0 right-0 bottom-0 z-[120]">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setMobilePanel(null)} />
+          {mobilePanel === 'layers' ? (
+            <div className="absolute left-0 top-0 bottom-0 w-64 max-w-[80%] bg-white border-r border-gray-200 overflow-y-auto">
+              <CanvasLayers
+                defs={defs}
+                layout={layout}
+                selectedId={selectedId}
+                onSelect={(id) => { setSelectedId(id); setMobilePanel(null); }}
+                onToggleHide={(id) => updateFrame(id, { hidden: !layout[id].hidden })}
+              />
+            </div>
+          ) : (
+            <div className="absolute right-0 top-0 bottom-0 w-64 max-w-[80%] bg-white border-l border-gray-200 overflow-y-auto">
+              <CanvasInspector defs={defs} layout={layout} selectedId={selectedId} updateFrame={updateFrame} />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Bottom toolbar */}
       <CanvasToolbar
