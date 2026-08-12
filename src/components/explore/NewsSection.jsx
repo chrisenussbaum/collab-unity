@@ -5,7 +5,7 @@ import { createPageUrl } from "@/utils";
 import SectionShell, { SkeletonGrid, Empty } from "./SectionShell";
 
 const getFavicon = (url) => `https://www.google.com/s2/favicons?domain=${url}&sz=64`;
-const screenshot = (url) => `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`;
+const screenshot = (url) => `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=400&h=300`;
 
 export default function NewsSection() {
   const [items, setItems] = useState([]);

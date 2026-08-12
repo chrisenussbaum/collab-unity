@@ -6,7 +6,7 @@ import { RESOURCES } from "@/pages/LearningHub";
 import SectionShell, { SkeletonGrid, Empty } from "./SectionShell";
 
 const FORMAT_ICONS = { Video, Article: FileText, "Audio Book": Headphones, Workshop: Users, Course: BookOpen };
-const screenshot = (url) => `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`;
+const screenshot = (url) => `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=400&h=300`;
 
 function getYoutubeThumb(url) {
   const m = url?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
