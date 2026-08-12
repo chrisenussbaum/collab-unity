@@ -300,7 +300,7 @@ export default function CanvasWorkspace({
           ref={viewportRef}
           className="flex-1 relative overflow-hidden"
           onMouseDown={onCanvasMouseDown}
-          style={{ cursor: tool === "hand" ? "grab" : "default" }}
+          style={{ cursor: tool === "hand" ? "grab" : "default", touchAction: "none" }}
         >
           <div
             data-canvas-bg="true"
