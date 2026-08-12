@@ -175,7 +175,7 @@ export default function EditProject({ currentUser, authIsLoading }) {
         return;
       }
       const linkObj = { url: newLink };
-      const newArray = [...formData.project_urls, linkObj];
+      const newArray = [linkObj, ...formData.project_urls];
       handleInputChange('project_urls', newArray);
       setNewLink("");
     }

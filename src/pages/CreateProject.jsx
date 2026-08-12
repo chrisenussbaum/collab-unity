@@ -281,7 +281,7 @@ export default function CreateProject() {
       };
       setFormData(prev => ({
         ...prev,
-        project_urls: [...prev.project_urls, linkObj]
+        project_urls: [linkObj, ...prev.project_urls]
       }));
       setNewLink("");
       setNewLinkTitle("");

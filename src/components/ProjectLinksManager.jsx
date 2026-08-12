@@ -42,7 +42,7 @@ export default function ProjectLinksManager({ project, currentUser, onProjectUpd
         title: newLinkTitle.trim() || '',
         url: newLink.trim()
       };
-      setEditedLinks([...editedLinks, linkObj]);
+      setEditedLinks([linkObj, ...editedLinks]);
       setNewLink("");
       setNewLinkTitle("");
       toast.success("Link added! Click 'Save Changes' to save.");
