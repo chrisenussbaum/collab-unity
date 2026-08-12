@@ -52,27 +52,28 @@ export default function MicrolinkPreview({
           </div>
         )}
         <div className={`relative ${aspectRatio} bg-gray-100 overflow-hidden flex-1`}>
-          {!showFallback ? (
+          {/* Favicon + title fallback rendered behind the screenshot; revealed only if mShots fails */}
+          <div className="absolute inset-0 flex items-center justify-center p-6 group-hover:bg-gray-50 transition-colors">
+            <div className="text-center">
+              <img
+                src={getFaviconUrl(url)}
+                alt=""
+                className="w-16 h-16 mx-auto mb-2 object-contain"
+                onError={(e) => (e.target.style.display = "none")}
+              />
+              {title && <p className="text-sm font-bold text-gray-900 mb-1 line-clamp-2">{title}</p>}
+              <p className="text-xs text-gray-500 mt-1">Click to visit</p>
+            </div>
+          </div>
+          {/* WordPress mShots — reliable screenshot capture with no per-request rate limits */}
+          {!showFallback && (
             <img
-              src={`https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`}
-              alt={title || 'Preview'}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=800`}
+              alt={title || "Preview"}
+              className="relative z-10 w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
               onError={() => setShowFallback(true)}
               loading="lazy"
             />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center p-6 group-hover:bg-gray-50 transition-colors">
-              <div className="text-center">
-                <img 
-                  src={getFaviconUrl(url)} 
-                  alt="" 
-                  className="w-16 h-16 mx-auto mb-2 object-contain" 
-                  onError={(e) => e.target.style.display='none'} 
-                />
-                {title && <p className="text-sm font-bold text-gray-900 mb-1 line-clamp-2">{title}</p>}
-                <p className="text-xs text-gray-500 mt-1">Click to visit</p>
-              </div>
-            </div>
           )}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
         </div>
