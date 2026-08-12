@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { ExternalLink } from "lucide-react";
 
 /**
@@ -12,8 +12,6 @@ export default function MicrolinkPreview({
   showBrowser = true,
   aspectRatio = "aspect-video"
 }) {
-  const [showFallback, setShowFallback] = React.useState(false);
-
   const getFaviconUrl = (urlString) => {
     try {
       const hostname = new URL(urlString).hostname;
@@ -51,30 +49,22 @@ export default function MicrolinkPreview({
             </div>
           </div>
         )}
-        <div className={`relative ${aspectRatio} bg-gray-100 overflow-hidden flex-1`}>
-          {/* Favicon + title fallback rendered behind the screenshot; revealed only if mShots fails */}
-          <div className="absolute inset-0 flex items-center justify-center p-6 group-hover:bg-gray-50 transition-colors">
-            <div className="text-center">
-              <img
-                src={getFaviconUrl(url)}
-                alt=""
-                className="w-16 h-16 mx-auto mb-2 object-contain"
-                onError={(e) => (e.target.style.display = "none")}
-              />
-              {title && <p className="text-sm font-bold text-gray-900 mb-1 line-clamp-2">{title}</p>}
-              <p className="text-xs text-gray-500 mt-1">Click to visit</p>
-            </div>
-          </div>
-          {/* WordPress mShots — reliable screenshot capture with no per-request rate limits */}
-          {!showFallback && (
+        <div className={`relative ${aspectRatio} overflow-hidden flex-1 bg-gradient-to-br from-purple-100 to-indigo-100`}>
+          <div className="absolute inset-0 flex items-center justify-center">
             <img
-              src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=800`}
-              alt={title || "Preview"}
-              className="relative z-10 w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-              onError={() => setShowFallback(true)}
-              loading="lazy"
+              src={getFaviconUrl(url)}
+              alt=""
+              className="w-8 h-8 rounded object-contain opacity-50"
+              onError={(e) => { e.target.style.display = "none"; }}
             />
-          )}
+          </div>
+          <img
+            src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=400&h=300`}
+            alt={title || "Preview"}
+            className="relative w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => { e.target.style.display = "none"; }}
+            loading="lazy"
+          />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
         </div>
         {title && (
