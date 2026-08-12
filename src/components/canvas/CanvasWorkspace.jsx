@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import OptimizedAvatar from "../OptimizedAvatar";
-import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize } from "lucide-react";
+import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2 } from "lucide-react";
 import { buildFrameDefs } from "./canvasFrameRegistry";
 import CanvasFrame from "./CanvasFrame";
 import CanvasLayers from "./CanvasLayers";
@@ -38,6 +38,7 @@ export default function CanvasWorkspace({
   const [selectedId, setSelectedId] = useState(null);
   const [tool, setTool] = useState("move");
   const [addOpen, setAddOpen] = useState(false);
+  const [fullscreenId, setFullscreenId] = useState(null);
 
   const viewportRef = useRef(null);
   const saveTimer = useRef(null);
@@ -258,10 +259,33 @@ export default function CanvasWorkspace({
                   onDelete={() => { updateFrame(d.id, { hidden: true }); setSelectedId(null); }}
                   onToggleCollapse={() => updateFrame(d.id, { collapsed: !f.collapsed })}
                   onToggleHide={() => updateFrame(d.id, { hidden: !f.hidden })}
+                  onToggleFullscreen={() => setFullscreenId(d.id)}
                 />
               );
             })}
           </div>
+
+          {fullscreenId && (() => {
+            const d = defs.find((dd) => dd.id === fullscreenId);
+            if (!d) return null;
+            const FIcon = d.icon;
+            return (
+              <div className="absolute inset-0 z-30 bg-white flex flex-col">
+                <div className="h-10 flex items-center gap-2 px-3 border-b border-gray-200 bg-white flex-shrink-0">
+                  <FIcon className="w-4 h-4 text-[#18A0FB]" />
+                  <span className="text-sm font-semibold text-gray-800">{d.title}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">Full screen</span>
+                  <button
+                    onClick={() => setFullscreenId(null)}
+                    className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs"
+                  >
+                    <Minimize2 className="w-3.5 h-3.5" /> Exit full screen
+                  </button>
+                </div>
+                <div className="flex-1 overflow-auto">{d.render()}</div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Right inspector */}

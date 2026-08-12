@@ -1,8 +1,12 @@
 import React from "react";
-import { Trash2, EyeOff, ChevronDown, ChevronRight } from "lucide-react";
+import { Trash2, EyeOff, ChevronDown, ChevronRight, Maximize2 } from "lucide-react";
+
+const MIN_W = 280;
+const MIN_H = 220;
 
 export default function CanvasFrame({
-  def, frame, zoom, selected, onSelect, onChange, onDelete, onToggleCollapse, onToggleHide,
+  def, frame, zoom, selected, onSelect, onChange, onDelete,
+  onToggleCollapse, onToggleHide, onToggleFullscreen,
 }) {
   const Icon = def.icon;
 
@@ -15,33 +19,46 @@ export default function CanvasFrame({
     const move = (ev) => {
       onChange({ x: origX + (ev.clientX - startX) / zoom, y: origY + (ev.clientY - startY) / zoom });
     };
-    const up = () => {
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", up);
-    };
+    const up = () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", up);
   };
 
-  const onResizeStart = (e) => {
+  const onResizeStart = (e, edges) => {
     if (e.button !== 0) return;
     e.stopPropagation();
     e.preventDefault();
+    onSelect();
     const startX = e.clientX, startY = e.clientY;
-    const origW = frame.w, origH = frame.h;
+    const orig = { x: frame.x, y: frame.y, w: frame.w, h: frame.h };
     const move = (ev) => {
-      onChange({
-        w: Math.max(280, origW + (ev.clientX - startX) / zoom),
-        h: Math.max(220, origH + (ev.clientY - startY) / zoom),
-      });
+      const dx = (ev.clientX - startX) / zoom;
+      const dy = (ev.clientY - startY) / zoom;
+      let x = orig.x, y = orig.y, w = orig.w, h = orig.h;
+      if (edges.w) { x = orig.x + dx; w = orig.w - dx; }
+      if (edges.e) { w = orig.w + dx; }
+      if (edges.n) { y = orig.y + dy; h = orig.h - dy; }
+      if (edges.s) { h = orig.h + dy; }
+      if (w < MIN_W) { if (edges.w) x = orig.x + (orig.w - MIN_W); w = MIN_W; }
+      if (h < MIN_H) { if (edges.n) y = orig.y + (orig.h - MIN_H); h = MIN_H; }
+      onChange({ x, y, w, h });
     };
-    const up = () => {
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", up);
-    };
+    const up = () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", up);
   };
+
+  // Resize handle definitions: position + cursor + edges
+  const handles = [
+    { key: "nw", cls: "top-0 left-0 w-3 h-3 cursor-nwse-resize", edges: { n: true, w: true } },
+    { key: "ne", cls: "top-0 right-0 w-3 h-3 cursor-nesw-resize", edges: { n: true, e: true } },
+    { key: "sw", cls: "bottom-0 left-0 w-3 h-3 cursor-nesw-resize", edges: { s: true, w: true } },
+    { key: "se", cls: "bottom-0 right-0 w-3 h-3 cursor-nwse-resize", edges: { s: true, e: true } },
+    { key: "n", cls: "top-0 left-3 right-3 h-1.5 cursor-ns-resize", edges: { n: true } },
+    { key: "s", cls: "bottom-0 left-3 right-3 h-1.5 cursor-ns-resize", edges: { s: true } },
+    { key: "w", cls: "left-0 top-3 bottom-3 w-1.5 cursor-ew-resize", edges: { w: true } },
+    { key: "e", cls: "right-0 top-3 bottom-3 w-1.5 cursor-ew-resize", edges: { e: true } },
+  ];
 
   return (
     <div
@@ -63,6 +80,13 @@ export default function CanvasFrame({
       >
         <Icon className="w-3.5 h-3.5 text-[#18A0FB] flex-shrink-0" />
         <span className="text-xs font-medium text-gray-700 truncate flex-1">{def.title}</span>
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleFullscreen(); }}
+          className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-[#18A0FB]"
+          title="Full screen"
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+        </button>
         <button
           onClick={(e) => { e.stopPropagation(); onToggleCollapse(); }}
           className="p-1 rounded hover:bg-gray-100 text-gray-400"
@@ -90,13 +114,14 @@ export default function CanvasFrame({
           {def.render()}
         </div>
       )}
-      {!frame.collapsed && (
+      {!frame.collapsed && handles.map((h) => (
         <div
-          onMouseDown={onResizeStart}
-          className="absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize"
-          style={{ background: "linear-gradient(135deg, transparent 50%, #18A0FB 50%)" }}
+          key={h.key}
+          onMouseDown={(e) => onResizeStart(e, h.edges)}
+          className={`absolute ${h.cls}`}
+          style={{ zIndex: 5 }}
         />
-      )}
+      ))}
     </div>
   );
 }
