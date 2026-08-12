@@ -306,20 +306,20 @@ export default function CanvasWorkspace({
             <ChevronLeft className="w-4 h-4" />
           </button>
           <img src={LOGO_URL} alt="Collab Unity" className="w-6 h-6 rounded" />
-          <span className="text-sm font-medium text-gray-800 truncate max-w-[260px]">{project?.title}</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{isOwner ? "Owner" : "Collaborator"}</span>
+          <span className="text-sm font-medium text-gray-800 truncate max-w-[120px] md:max-w-[260px]">{project?.title}</span>
+          <span className="hidden md:inline text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{isOwner ? "Owner" : "Collaborator"}</span>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setMobilePanel('layers')} className="lg:hidden p-1.5 rounded hover:bg-gray-100 text-gray-600" title="Layers"><Layers className="w-4 h-4" /></button>
           <button onClick={() => setMobilePanel('inspector')} className="lg:hidden p-1.5 rounded hover:bg-gray-100 text-gray-600" title="Design"><PanelRight className="w-4 h-4" /></button>
-          <div className="flex items-center bg-gray-100 rounded-md text-xs">
+          <div className="hidden md:flex items-center bg-gray-100 rounded-md text-xs">
             <button onClick={zoomOut} className="p-1.5 hover:bg-gray-200 text-gray-600"><ZoomOut className="w-3.5 h-3.5" /></button>
             <span className="px-1 text-gray-600 w-10 text-center">{Math.round(zoom * 100)}%</span>
             <button onClick={zoomIn} className="p-1.5 hover:bg-gray-200 text-gray-600"><ZoomIn className="w-3.5 h-3.5" /></button>
             <button onClick={zoomFit} className="p-1.5 hover:bg-gray-200 border-l border-gray-200 text-gray-600" title="Zoom to fit"><Maximize className="w-3.5 h-3.5" /></button>
           </div>
-          <Button onClick={onShare} className="bg-[#18A0FB] hover:bg-[#0E8FE0] text-white text-xs h-8 rounded-md px-3">
-            <Share2 className="w-3.5 h-3.5 mr-1" />Share
+          <Button onClick={onShare} className="bg-[#18A0FB] hover:bg-[#0E8FE0] text-white text-xs h-8 rounded-md px-2.5 md:px-3">
+            <Share2 className="w-3.5 h-3.5 md:mr-1" /><span className="hidden md:inline">Share</span>
           </Button>
           <OptimizedAvatar src={currentUser?.profile_image} alt={currentUser?.full_name || "User"} fallback={currentUser?.full_name?.[0] || "U"} size="xs" className="w-7 h-7" />
         </div>
