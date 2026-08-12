@@ -43,9 +43,8 @@ const OptimizedAvatar = ({
       params.append('height', avatarSize);
       params.append('quality', '90'); // Higher quality for profile images
       params.append('format', 'webp');
-      // Add cache-busting parameter to force fresh image fetch
-      params.append('t', Date.now());
-      
+      // No cache-busting: let the browser/CDN cache the optimized WebP avatar
+      // (a profile update produces a new storage URL, so stale-image isn't an issue)
       return `${transformUrl}?${params.toString()}`;
     } catch (e) {
       return originalUrl;
