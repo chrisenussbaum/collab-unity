@@ -48,13 +48,13 @@ const FeatureRow = ({ eyebrow, title, subtitle, visual, buttonLabel, reverse, on
 
 export default function FeaturesShowcase({ onAuth }) {
   const features = [
-    { type: "feed", eyebrow: "Feed", title: "Share your journey with the world.", subtitle: "Post progress updates, showcase live links, and celebrate milestones with a community that cheers you on.", buttonLabel: "Explore Feed" },
-    { type: "create", eyebrow: "Create Project", title: "Start building in seconds.", subtitle: "Describe your idea in plain text and bring it to life with a structured project plan, milestones, and tasks.", buttonLabel: "Explore Create" },
+    { type: "feed", eyebrow: "Feed", title: "Share your journey with the world.", subtitle: "Post progress updates, showcase live links, and celebrate milestones with a community that cheers you on.", buttonLabel: "Get Started" },
+    { type: "create", eyebrow: "Create Project", title: "Start building in seconds.", subtitle: "Describe your idea in plain text and bring it to life with a structured project plan, milestones, and tasks.", buttonLabel: "Get Started" },
 
-    { type: "myprojects", eyebrow: "My Projects", title: "All your projects in one place.", subtitle: "Track progress, manage milestones, and switch between personal and collaborative projects from a single dashboard.", buttonLabel: "Explore Projects" },
-    { type: "chat", eyebrow: "Chat", title: "Message your team in real-time.", subtitle: "Stay connected with 1-on-1 and group chats, with your project context always accessible right alongside your work.", buttonLabel: "Explore Chat" },
-    { type: "profile", eyebrow: "Profile", title: "Build a portfolio that speaks for itself.", subtitle: "Showcase projects, collect peer endorsements, gather reviews, and generate a professional resume in seconds.", buttonLabel: "Explore Profiles" },
-    { type: "resume", eyebrow: "Generate Resume", title: "Generate a professional resume instantly.", subtitle: "Turn your profile, projects, and contributions into a polished resume in one click. Upload your existing resume to enhance it further.", buttonLabel: "Explore Resume" },
+    { type: "myprojects", eyebrow: "My Projects", title: "All your projects in one place.", subtitle: "Track progress, manage milestones, and switch between personal and collaborative projects from a single dashboard.", buttonLabel: "Get Started" },
+    { type: "chat", eyebrow: "Chat", title: "Message your team in real-time.", subtitle: "Stay connected with 1-on-1 and group chats, with your project context always accessible right alongside your work.", buttonLabel: "Get Started" },
+    { type: "profile", eyebrow: "Profile", title: "Build a portfolio that speaks for itself.", subtitle: "Showcase projects, collect peer endorsements, gather reviews, and generate a professional resume in seconds.", buttonLabel: "Get Started" },
+    { type: "resume", eyebrow: "Generate Resume", title: "Generate a professional resume instantly.", subtitle: "Turn your profile, projects, and contributions into a polished resume in one click. Upload your existing resume to enhance it further.", buttonLabel: "Get Started" },
   ];
 
   return (
