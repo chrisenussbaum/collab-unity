@@ -227,7 +227,7 @@ export default function MusicPlayer({ isVisible, onClose, zIndex }) {
         const t = playerRef.current.getCurrentTime();
         const d = playerRef.current.getDuration();
         if (typeof t === "number") setCurrentTime(t);
-        if (typeof d === "number" && d > 0) setDuration(d);
+        if (typeof d === "number" && d > 0 && d < 86400) setDuration(d);
       } catch (e) {}
     }, 1000);
     return () => clearInterval(interval);

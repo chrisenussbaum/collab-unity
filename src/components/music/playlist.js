@@ -45,9 +45,6 @@ export const PLAYLIST = [
   { videoId: "rEGOihjqO9w", title: "Rachmaninoff: Piano Concerto No. 2 — Anna Fedorova", genre: "Classical" },
   { videoId: "rOjHhS5MtvA", title: "Beethoven — Symphony No. 9 (Chicago Symphony)", genre: "Classical" },
 
-  // Lofi
-  { videoId: "jfKfPfyJRdk", title: "lofi hip hop radio — beats to relax/study to", genre: "Lofi" },
-
   // Indie
   { videoId: "bpOSxM0rNPM", title: "Arctic Monkeys — Do I Wanna Know?", genre: "Indie" },
 ];
