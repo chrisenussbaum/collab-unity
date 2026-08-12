@@ -44,6 +44,25 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Enforce project membership: skip notifications to users who left the project.
+    // They resume receiving notifications only once they rejoin (accepted) or are invited
+    // and accept — both add them back to collaborator_emails.
+    if (related_project_id) {
+      const projects = await base44.asServiceRole.entities.Project.filter({ id: related_project_id });
+      if (projects.length > 0) {
+        const project = projects[0];
+        const isMember = project.created_by === recipient_email ||
+                         (project.collaborator_emails || []).includes(recipient_email);
+        if (!isMember) {
+          return Response.json({
+            success: true,
+            skipped: true,
+            reason: 'Recipient is no longer a member of this project'
+          });
+        }
+      }
+    }
+
     // Create the notification
     const notification = await base44.asServiceRole.entities.Notification.create({
       user_email: recipient_email,

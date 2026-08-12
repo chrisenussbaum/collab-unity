@@ -358,8 +358,10 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
         entity_id: task.id
       });
 
-      // Notify assigned user if different from current user
-      if (task.assigned_to && task.assigned_to !== currentUser.email) {
+      // Notify assigned user if different from current user AND still a project member
+      const isAssigneeStillMember = task.assigned_to === project.created_by ||
+        (collaborators || []).some(c => c.email === task.assigned_to);
+      if (task.assigned_to && task.assigned_to !== currentUser.email && isAssigneeStillMember) {
         await Notification.create({
           user_email: task.assigned_to,
           title: "Task status updated",

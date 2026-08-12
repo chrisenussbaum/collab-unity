@@ -78,6 +78,11 @@ Deno.serve(async (req) => {
 
       // Send notifications
       for (const email of notifyEmails) {
+        // Skip recipients who are no longer project members (left/removed)
+        const isMember = project.created_by === email ||
+                         (project.collaborator_emails || []).includes(email);
+        if (!isMember) continue;
+
         await base44.asServiceRole.entities.Notification.create({
           user_email: email,
           title: "Task due soon",
