@@ -542,10 +542,15 @@ export default function Feed({ currentUser, authIsLoading }) {
       const projectIds = visibleProjectsData.map(p => p.id);
       const feedPostIds = initialFeedPostsData.map(fp => fp.id);
 
-      const [profilesResponse, fetchedProjectApplauds, fetchedFeedPostApplauds] = await Promise.all([
-        allOwnerEmails.length > 0 ? withRetry(() => getPublicUserProfiles({ emails: allOwnerEmails }), 2, 2000) : Promise.resolve({ data: [] }),
-        projectIds.length > 0 ? withRetry(() => ProjectApplaud.filter({ project_id: { $in: projectIds } })) : Promise.resolve([]),
-        feedPostIds.length > 0 ? withRetry(() => FeedPostApplaud.filter({ feed_post_id: { $in: feedPostIds } })) : Promise.resolve([])
+      // Profile fetch is non-essential — never let it fail the whole feed query (e.g. platform rate limits).
+      // Items render with fallback owners when profiles are unavailable.
+      const profilesResponse = allOwnerEmails.length > 0
+        ? await getPublicUserProfiles({ emails: allOwnerEmails }).catch(() => ({ data: [] }))
+        : { data: [] };
+
+      const [fetchedProjectApplauds, fetchedFeedPostApplauds] = await Promise.all([
+        projectIds.length > 0 ? withRetry(() => ProjectApplaud.filter({ project_id: { $in: projectIds } })).catch(() => []) : Promise.resolve([]),
+        feedPostIds.length > 0 ? withRetry(() => FeedPostApplaud.filter({ feed_post_id: { $in: feedPostIds } })).catch(() => []) : Promise.resolve([])
       ]);
 
       const profilesMap = (profilesResponse.data || []).reduce((acc, p) => { acc[p.email] = p; return acc; }, {});
