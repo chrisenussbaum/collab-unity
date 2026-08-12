@@ -122,7 +122,7 @@ export default function CanvasWorkspace({
     });
   }, [saveLayout]);
 
-  // Wheel: ctrl/cmd = zoom, otherwise pan. Native non-passive listener so preventDefault works.
+  // Wheel: ctrl/cmd (trackpad pinch) = zoom toward cursor, two-finger scroll = pan.
   useEffect(() => {
     const el = viewportRef.current;
     if (!el) return;
@@ -133,7 +133,8 @@ export default function CanvasWorkspace({
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         const z = stateRef.current.zoom;
-        const nz = clamp(z * (e.deltaY < 0 ? 1.1 : 0.9), 0.2, 2);
+        const factor = Math.exp(-e.deltaY * 0.0015); // smooth, magnitude-aware
+        const nz = clamp(z * factor, 0.2, 2);
         const p = stateRef.current.pan;
         setPan({ x: mx - (mx - p.x) * (nz / z), y: my - (my - p.y) * (nz / z) });
         setZoom(nz);
@@ -175,8 +176,8 @@ export default function CanvasWorkspace({
     };
   }, []);
 
-  // Touch gestures: two-finger pinch to zoom (toward the pinch midpoint),
-  // single-finger drag on the empty canvas to pan.
+  // Touch gestures: two fingers = pinch-zoom AND two-finger pan (simultaneous,
+  // in any direction); single-finger drag on empty canvas = pan.
   useEffect(() => {
     const el = viewportRef.current;
     if (!el) return;
@@ -187,33 +188,38 @@ export default function CanvasWorkspace({
     const onStart = (e) => {
       if (e.touches.length === 2) {
         const rect = el.getBoundingClientRect();
-        const m = mid(e.touches[0], e.touches[1]);
+        const t0 = e.touches[0], t1 = e.touches[1];
+        const m = mid(t0, t1);
         g = {
-          mode: "pinch",
-          startDist: dist(e.touches[0], e.touches[1]),
+          mode: "two",
+          startDist: dist(t0, t1) || 1,
           startZoom: stateRef.current.zoom,
           startPan: { ...stateRef.current.pan },
           mx: m.clientX - rect.left,
           my: m.clientY - rect.top,
+          startMidClientX: m.clientX,
+          startMidClientY: m.clientY,
         };
       } else if (e.touches.length === 1 && e.target.dataset && e.target.dataset.canvasBg === "true") {
-        g = {
-          mode: "pan",
-          sx: e.touches[0].clientX,
-          sy: e.touches[0].clientY,
-          startPan: { ...stateRef.current.pan },
-        };
+        g = { mode: "pan", sx: e.touches[0].clientX, sy: e.touches[0].clientY, startPan: { ...stateRef.current.pan } };
+      } else {
+        g = null;
       }
     };
 
     const onMove = (e) => {
       if (!g) return;
-      if (g.mode === "pinch" && e.touches.length === 2) {
+      if (g.mode === "two" && e.touches.length === 2) {
         e.preventDefault();
-        const z = g.startZoom;
-        const nz = clamp(z * (dist(e.touches[0], e.touches[1]) / g.startDist), 0.2, 2);
-        const p = g.startPan;
-        setPan({ x: g.mx - (g.mx - p.x) * (nz / z), y: g.my - (g.my - p.y) * (nz / z) });
+        const t0 = e.touches[0], t1 = e.touches[1];
+        const curMid = mid(t0, t1);
+        const ratio = dist(t0, t1) / g.startDist;
+        const nz = clamp(g.startZoom * ratio, 0.2, 2);
+        // zoom anchored at the starting pinch midpoint
+        const baseX = g.mx - (g.mx - g.startPan.x) * (nz / g.startZoom);
+        const baseY = g.my - (g.my - g.startPan.y) * (nz / g.startZoom);
+        // plus two-finger pan (midpoint travel) — works in any direction
+        setPan({ x: baseX + (curMid.clientX - g.startMidClientX), y: baseY + (curMid.clientY - g.startMidClientY) });
         setZoom(nz);
       } else if (g.mode === "pan" && e.touches.length === 1) {
         e.preventDefault();
@@ -224,7 +230,11 @@ export default function CanvasWorkspace({
     const onEnd = (e) => {
       if (e.touches.length === 0) { g = null; return; }
       if (e.touches.length === 1) {
-        g = { mode: "pan", sx: e.touches[0].clientX, sy: e.touches[0].clientY, startPan: { ...stateRef.current.pan } };
+        if (e.target.dataset && e.target.dataset.canvasBg === "true") {
+          g = { mode: "pan", sx: e.touches[0].clientX, sy: e.touches[0].clientY, startPan: { ...stateRef.current.pan } };
+        } else {
+          g = null;
+        }
       }
     };
 
