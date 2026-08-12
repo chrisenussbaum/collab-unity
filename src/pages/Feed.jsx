@@ -364,6 +364,26 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
               {project.area_of_interest && (<div className="flex items-center"><Tag className="cu-icon-sm mr-2 flex-shrink-0 text-pink-500" /><span className="truncate">{formatEnumLabel(project.area_of_interest)}</span></div>)}
             </div>
 
+            {project.collaborator_emails && project.collaborator_emails.length > 0 && (
+              <div className="flex items-center gap-1.5 text-xs sm:text-sm text-purple-600 mb-4">
+                {collaboratorProfiles.length > 0 ? (
+                  <div className="flex items-center -space-x-1.5">
+                    {collaboratorProfiles.map(collab => (
+                      <OptimizedAvatar key={collab.email} src={collab.profile_image} alt={collab.full_name || 'Collaborator'} fallback={collab.full_name?.[0] || 'U'} size="xs" className="w-6 h-6 sm:w-7 sm:h-7 border-2 border-white shadow-sm" />
+                    ))}
+                  </div>
+                ) : (
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+                )}
+                <span className="font-medium ml-1">
+                  {(() => {
+                    const count = project.collaborator_emails.length;
+                    return count > 3 ? `3+ collaborators` : `${count} ${count === 1 ? 'collaborator' : 'collaborators'}`;
+                  })()}
+                </span>
+              </div>
+            )}
+
             {project.skills_needed && project.skills_needed.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {project.skills_needed.slice(0, 5).map(skill => (<Badge key={skill} className="cu-text-responsive-xs bg-purple-50 text-purple-700 border border-purple-200">{skill}</Badge>))}
