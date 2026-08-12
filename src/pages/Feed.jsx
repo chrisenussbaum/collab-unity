@@ -571,7 +571,10 @@ export default function Feed({ currentUser, authIsLoading }) {
       return { projects: fullyPopulatedProjects, feedPosts: fullyPopulatedFeedPosts, projectApplauds: fetchedProjectApplauds, feedPostApplauds: fetchedFeedPostApplauds, collaboratorProfiles: collabProfilesMap };
     },
     enabled: !authIsLoading,
-    staleTime: 0, gcTime: 0, refetchOnWindowFocus: true, refetchOnMount: 'always',
+    // Keep feed data fresh for 90s and cached for 5min. Avoid refetching on every
+    // window focus / mount — that was hammering getPublicUserProfiles and hitting
+    // platform rate limits. Manual refreshes still work via loadFeedData().
+    staleTime: 90 * 1000, gcTime: 5 * 60 * 1000, refetchOnWindowFocus: false,
   });
 
   const queryClient = useQueryClient();
