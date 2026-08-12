@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, User as UserIcon, Lightbulb, Settings, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar, Users, Briefcase, Music } from "lucide-react";
+import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, User as UserIcon, Lightbulb, Settings, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar, Users, Briefcase, Music, ShieldCheck } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import MusicPlayer from "./components/music/MusicPlayer";
 import GlobalSearchBar from "./components/GlobalSearchBar";
@@ -1086,6 +1086,13 @@ export default function Layout({ children, currentPageName }) {
                       <Bug className="cu-icon-sm mr-2" /> Report Bug
                     </Link>
                   </DropdownMenuItem>
+                  {currentUser?.role === 'admin' && (
+                    <DropdownMenuItem asChild>
+                      <Link to={createPageUrl("AdminReview")} className="flex items-center cursor-pointer">
+                        <ShieldCheck className="cu-icon-sm mr-2" /> Admin Review
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700">
                     <LogOut className="cu-icon-sm mr-2" /> Sign Out
@@ -1197,6 +1204,13 @@ export default function Layout({ children, currentPageName }) {
                           <Bug className="cu-icon-sm mr-2" /> Report Bug
                         </Link>
                       </DropdownMenuItem>
+                      {currentUser?.role === 'admin' && (
+                        <DropdownMenuItem asChild>
+                          <Link to={createPageUrl("AdminReview")} className="flex items-center cursor-pointer">
+                            <ShieldCheck className="cu-icon-sm mr-2" /> Admin Review
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700">
                         <LogOut className="cu-icon-sm mr-2" /> Sign Out

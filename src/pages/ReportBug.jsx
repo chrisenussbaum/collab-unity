@@ -72,7 +72,7 @@ export default function ReportBug({ currentUser }) {
         pageUrl = `${window.location.origin}${createPageUrl(formData.page_name)}`;
       }
       
-      await base44.entities.Bug.create({
+      const bug = await base44.entities.Bug.create({
         title: formData.title.trim(),
         description: formData.description.trim(),
         page_url: pageUrl,
@@ -82,6 +82,19 @@ export default function ReportBug({ currentUser }) {
         status: 'pending',
         priority: 'medium'
       });
+
+      // Notify all admins about the new bug report
+      try {
+        await base44.functions.invoke('notifyAdminsOfBug', {
+          bug_id: bug.id,
+          bug_title: formData.title.trim(),
+          reporter_email: currentUser?.email,
+          reporter_name: currentUser?.full_name,
+          page_name: formData.page_name
+        });
+      } catch (notifyError) {
+        console.warn('Failed to notify admins of bug report:', notifyError);
+      }
 
       setSubmitted(true);
       toast.success("Bug report submitted successfully!");
