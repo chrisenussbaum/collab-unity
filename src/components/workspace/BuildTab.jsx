@@ -193,6 +193,13 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
   // Recent activity
   const activityLines = extraContext.activityLogs?.slice(0, 5).map(a => `- ${a.user_name || a.user_email}: ${a.action_description}`);
 
+  // Chat history scan — used to dedupe and inform item creation
+  const chatHistoryLines = extraContext.chatHistory?.slice(-30).map(m => {
+    const speaker = m.role === "user" ? (m.sender_name || "User") : "Assistant";
+    const content = (m.content || "").replace(/\s+/g, " ").slice(0, 280);
+    return `- ${speaker}: ${content}`;
+  });
+
   const parts = [
     `You are an intelligent, proactive project assistant embedded inside Collab Unity — a collaborative project platform.`,
     `You deeply understand this project and act as a smart co-pilot driving it from its current state toward completion.`,
@@ -233,6 +240,7 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     assetLines?.length ? `\n== ASSETS (${assets.length} total) ==\n${assetLines.join("\n")}` : `\n== ASSETS == None uploaded yet`,
     thoughtLines?.length ? `\n== THOUGHTS & NOTES ==\n${thoughtLines.join("\n")}` : `\n== THOUGHTS & NOTES == None saved yet`,
     activityLines?.length ? `\n== RECENT ACTIVITY ==\n${activityLines.join("\n")}` : null,
+    chatHistoryLines?.length ? `\n== CHAT HISTORY (scan before creating items to avoid duplicates) ==\n${chatHistoryLines.join("\n")}` : null,
     collaboratorLines?.length ? `\n== COLLABORATORS (${projectUsers.length}) ==\n${collaboratorLines.join("\n")}` : `\n== COLLABORATORS == Just the project owner`,
     `\n== YOUR BEHAVIOR ==`,
     `You are conversational, smart, and phase-aware. Always meet the user where they are:`,
@@ -247,6 +255,11 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `- Reference actual collaborator names when suggesting task assignments`,
     `- Always end with one clear next-step question or suggestion to keep momentum`,
     `- Be specific and personal — reference actual project data, not generic advice`,
+    `\n== SCAN BEFORE CREATING (CRITICAL) ==`,
+    `Before adding ANY task, milestone, note/thought, resource/link, or tool, SCAN the "CHAT HISTORY" above AND the existing items (tasks, milestones, assets, thoughts, tools).`,
+    `- If an equivalent item already exists OR was already created or discussed in chat, do NOT create a duplicate — reference the existing one instead.`,
+    `- Only create items that are genuinely new and actionable from the latest user request.`,
+    `- When unsure whether something already exists, ask the user before creating.`,
     `\n== ACTION EXECUTION (CRITICAL) ==`,
     `You CREATE tasks, milestones, and notes by putting them as objects in the "actions" array. This is the ONLY way they actually get created.`,
     `⚠️ If you describe creating tasks/milestones in your "message" but leave "actions" empty, NOTHING will be created. You MUST populate the actions array.`,
@@ -589,7 +602,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
     if (!project?.id) return;
     setIsLoading(true);
     try {
-      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs });
+      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs, chatHistory: messages.filter(m => !m.isWelcome) });
       const analysisRequest = `Analyze the current state of this project. Summarize what exists (tasks, milestones, assets, tools, build links, notes, collaborators), identify the most important next steps based on what's missing or overdue, and end with ONE specific question asking what the user wants to work on first. Be concise, specific, and conversational. Respond with valid JSON only.`;
       const raw = await base44.integrations.Core.InvokeLLM({ prompt: `${systemPrompt}\n\n${analysisRequest}` });
       let parsed = null;
@@ -877,7 +890,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
         await persistMessage(userMsg);
         setIsLoading(true);
         try {
-          const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs });
+          const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs, chatHistory: messages.filter(m => !m.isWelcome) });
           const raw = await base44.integrations.Core.InvokeLLM({ prompt: `${systemPrompt}\n\n${prompt}\n\nRespond with valid JSON only:` });
           let parsed = null;
           try {
@@ -929,7 +942,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
     setTimeout(scrollToBottom, 50);
 
     try {
-      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs });
+      const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs, chatHistory: messages.filter(m => !m.isWelcome) });
       const conversationHistory = newMessages.slice(-20).map(m =>
         `${m.role === "user" ? (m.sender_name || "User") : "Assistant"}: ${m.content}`
       ).join("\n\n");
@@ -1152,7 +1165,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
         setAnalyzingFiles(true);
         try {
           const { file_url } = await base44.integrations.Core.UploadFile({ file: files[0] });
-          const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs });
+          const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs, chatHistory: messages.filter(m => !m.isWelcome) });
           const analysisPrompt = `${systemPrompt}\n\nThe user uploaded a file "${files[0].name}" and said: "${userText}"\n\nRespond conversationally to their message and the file context. If the file is an image or doc, provide relevant feedback. Respond with valid JSON only.`;
           const raw = await base44.integrations.Core.InvokeLLM({ prompt: analysisPrompt, file_urls: [file_url], model: "claude_sonnet_4_6" });
           let parsed = null;
@@ -1176,7 +1189,7 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
           return file_url;
         }));
         const contextText = userText || "Please analyze these files and provide detailed feedback and suggestions to help move this project forward.";
-        const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs });
+        const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs, chatHistory: messages.filter(m => !m.isWelcome) });
         const analysisPrompt = `${systemPrompt}\n\nThe user has shared ${files.length} file(s) for analysis: ${files.map(f => f.name).join(", ")}.\n\nUser's request: "${contextText}"\n\nPlease analyze the provided file(s) thoroughly. Provide detailed observations, specific actionable suggestions, and relevant next steps for this project. Be specific and tie feedback to the project goals.`;
         const result = await base44.integrations.Core.InvokeLLM({ prompt: analysisPrompt, file_urls: uploadedUrls, model: "claude_sonnet_4_6" });
         await addAndPersist({ role: "assistant", content: result });
