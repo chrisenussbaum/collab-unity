@@ -200,12 +200,12 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `\n== WORKSPACE TABS AVAILABLE ==`,
     `Users can navigate these workspace tabs at any time. When relevant, suggest they switch to a tab by name:`,
     `- Assistant (AI chat — current view)`,
-    `- Tasks (task board with todo/in_progress/done columns)`,
-    `- Milestones (project phases and goals with target dates)`,
-    `- Assets (files, images, documents, and links)`,
     `- Planning & Ideation (brainstorming, mind maps, kanban, whiteboard)`,
-    `- Thoughts & Notes (quick notes and saved ideas)`,
+    `- Milestones (project phases and goals with target dates)`,
+    `- Tasks (task board with todo/in_progress/done columns)`,
+    `- Assets (files, images, documents, and links)`,
     `- Project Tools (tools and platforms the team is using)`,
+    `- Thoughts & Notes (quick notes and saved ideas)`,
     `- Build Links (GitHub, Figma, deployment links, etc.)`,
     `- Activity (recent project activity log)`,
     `\n== CURRENT PROJECT PHASE: ${phase.toUpperCase()} ==`,
@@ -1551,14 +1551,14 @@ function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, proj
 // ─── Main BuildTab ─────────────────────────────────────────────────────────
 
 const SIDEBAR_SECTIONS = [
-  { id: "chat",      icon: Sparkles,    label: "Assistant",         shortLabel: "Chat" },
-  { id: "tasks",     icon: CheckSquare, label: "Tasks",             shortLabel: "Tasks" },
-  { id: "milestones",icon: Flag,        label: "Milestones",        shortLabel: "Miles." },
-  { id: "assets",    icon: FileStack,   label: "Assets",            shortLabel: "Assets" },
+  { id: "chat",      icon: Sparkles,    label: "Assistant",           shortLabel: "Chat" },
   { id: "ideation",  icon: Lightbulb,   label: "Planning & Ideation", shortLabel: "Ideation" },
-  { id: "notes",     icon: BookOpen,    label: "Thoughts & Notes",  shortLabel: "Notes" },
-  { id: "tools",     icon: Wrench,      label: "Project Tools",     shortLabel: "Tools" },
-  { id: "activity",  icon: Activity,    label: "Activity",          shortLabel: "Activity" },
+  { id: "milestones",icon: Flag,        label: "Milestones",          shortLabel: "Miles." },
+  { id: "tasks",     icon: CheckSquare, label: "Tasks",              shortLabel: "Tasks" },
+  { id: "assets",    icon: FileStack,   label: "Assets",              shortLabel: "Assets" },
+  { id: "tools",     icon: Wrench,      label: "Project Tools",       shortLabel: "Tools" },
+  { id: "notes",     icon: BookOpen,    label: "Thoughts & Notes",   shortLabel: "Notes" },
+  { id: "activity",  icon: Activity,    label: "Activity",           shortLabel: "Activity" },
 ];
 
 export default function BuildTab({
