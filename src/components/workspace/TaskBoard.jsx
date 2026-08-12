@@ -816,12 +816,12 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                             const isChecked = selectedIds.has(task.id);
                             return (
                               <motion.div key={task.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-                                <Card className={`hover:shadow-md transition-shadow cursor-pointer ${isChecked ? 'ring-2 ring-purple-400 bg-purple-50' : ''}`} onClick={() => { setSelectedTask(task); setIsTaskDetailOpen(true); }}>
+                                <Card className={`overflow-hidden hover:shadow-md transition-shadow cursor-pointer ${isChecked ? 'ring-2 ring-purple-400 bg-purple-50' : ''}`} onClick={() => { setSelectedTask(task); setIsTaskDetailOpen(true); }}>
                                   <CardContent className="p-3">
                                     <div className="flex items-start gap-2 mb-2">
                                       <Checkbox checked={isChecked} onCheckedChange={() => toggleSelect(task.id, { stopPropagation: () => {} })} onClick={(e) => e.stopPropagation()} className="mt-0.5 flex-shrink-0" />
                                       <div className="flex items-center justify-between flex-1 min-w-0">
-                                        <h4 className="font-medium text-sm flex-1 mr-1">{task.title}</h4>
+                                        <h4 className="font-medium text-sm flex-1 mr-1 truncate">{task.title}</h4>
                                         <PriorityBadge priority={task.priority || 'medium'} />
                                       </div>
                                     </div>
@@ -887,19 +887,19 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                               const isChecked = selectedIds.has(task.id);
                               return (
                                 <motion.div key={task.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-                                  <Card className={`hover:shadow-md transition-shadow cursor-pointer ${isChecked ? 'ring-2 ring-purple-400 bg-purple-50' : ''}`} onClick={() => { setSelectedTask(task); setIsTaskDetailOpen(true); }}>
+                                  <Card className={`overflow-hidden hover:shadow-md transition-shadow cursor-pointer ${isChecked ? 'ring-2 ring-purple-400 bg-purple-50' : ''}`} onClick={() => { setSelectedTask(task); setIsTaskDetailOpen(true); }}>
                                     <CardContent className="p-3">
                                       <div className="flex items-start gap-2 mb-2">
                                         <Checkbox checked={isChecked} onCheckedChange={() => toggleSelect(task.id, { stopPropagation: () => {} })} onClick={(e) => e.stopPropagation()} className="mt-0.5 flex-shrink-0" />
                                         <div className="flex items-center justify-between flex-1 min-w-0">
-                                          <h4 className="font-medium text-sm flex-1 mr-1">{task.title}</h4>
+                                          <h4 className="font-medium text-sm flex-1 mr-1 truncate">{task.title}</h4>
                                           <PriorityBadge priority={task.priority || 'medium'} />
                                         </div>
                                       </div>
                                       {task.description && <p className="text-xs text-gray-600 mb-2 line-clamp-2 ml-6">{task.description}</p>}
-                                      <div className="flex items-center justify-between text-xs text-gray-500 mb-2 ml-6">
-                                        {task.due_date && <span className="flex items-center"><Calendar className="w-3 h-3 mr-1" />{format(new Date(task.due_date), 'MMM d')}</span>}
-                                        {assignedUser && <span className="flex items-center"><User className="w-3 h-3 mr-1" />{assignedUser.full_name || assignedUser.email.split('@')[0]}</span>}
+                                      <div className="flex items-center justify-between gap-2 text-xs text-gray-500 mb-2 ml-6 min-w-0">
+                                        {task.due_date && <span className="flex items-center flex-shrink-0"><Calendar className="w-3 h-3 mr-1" />{format(new Date(task.due_date), 'MMM d')}</span>}
+                                        {assignedUser && <span className="flex items-center min-w-0"><User className="w-3 h-3 mr-1 flex-shrink-0" /><span className="truncate">{assignedUser.full_name || assignedUser.email.split('@')[0]}</span></span>}
                                       </div>
                                       <div className="flex items-center justify-between mt-2 ml-6">
                                         <Select value={task.status} onValueChange={(value) => handleStatusChange(task, value)}>
@@ -960,7 +960,7 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                           exit={{ opacity: 0, y: -20 }}
                         >
                           <Card 
-                            className={`hover:shadow-md transition-shadow cursor-pointer ${isChecked ? 'ring-2 ring-purple-400 bg-purple-50' : ''}`}
+                            className={`overflow-hidden hover:shadow-md transition-shadow cursor-pointer ${isChecked ? 'ring-2 ring-purple-400 bg-purple-50' : ''}`}
                             onClick={() => {
                               setSelectedTask(task);
                               setIsTaskDetailOpen(true);
@@ -975,7 +975,7 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                                   className="mt-0.5 flex-shrink-0"
                                 />
                                 <div className="flex items-center justify-between flex-1 min-w-0">
-                                  <h4 className="font-medium text-sm flex-1 mr-1">{task.title}</h4>
+                                  <h4 className="font-medium text-sm flex-1 mr-1 truncate">{task.title}</h4>
                                   <PriorityBadge priority={task.priority || 'medium'} />
                                 </div>
                               </div>
@@ -993,17 +993,17 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
                                   </div>
                                 </div>
                               )}
-                              <div className="flex items-center justify-between text-xs text-gray-500 mb-2 ml-6">
+                              <div className="flex items-center justify-between gap-2 text-xs text-gray-500 mb-2 ml-6 min-w-0">
                                 {task.due_date && (
-                                  <span className="flex items-center">
+                                  <span className="flex items-center flex-shrink-0">
                                     <Calendar className="w-3 h-3 mr-1" />
                                     {format(new Date(task.due_date), 'MMM d')}
                                   </span>
                                 )}
                                 {assignedUser && (
-                                  <span className="flex items-center">
-                                    <User className="w-3 h-3 mr-1" />
-                                    {assignedUser.full_name || assignedUser.email.split('@')[0]}
+                                  <span className="flex items-center min-w-0">
+                                    <User className="w-3 h-3 mr-1 flex-shrink-0" />
+                                    <span className="truncate">{assignedUser.full_name || assignedUser.email.split('@')[0]}</span>
                                   </span>
                                 )}
                               </div>
