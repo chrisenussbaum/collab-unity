@@ -40,6 +40,13 @@ export default function CanvasWorkspace({
   const [addOpen, setAddOpen] = useState(false);
   const [fullscreenId, setFullscreenId] = useState(null);
 
+  useEffect(() => {
+    if (!fullscreenId) return;
+    const onKey = (e) => { if (e.key === "Escape") setFullscreenId(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [fullscreenId]);
+
   const viewportRef = useRef(null);
   const saveTimer = useRef(null);
   const stateRef = useRef({ zoom, pan });
@@ -270,7 +277,7 @@ export default function CanvasWorkspace({
             if (!d) return null;
             const FIcon = d.icon;
             return (
-              <div className="absolute inset-0 z-30 bg-white flex flex-col">
+              <div className="fixed inset-0 z-[110] bg-white flex flex-col">
                 <div className="h-10 flex items-center gap-2 px-3 border-b border-gray-200 bg-white flex-shrink-0">
                   <FIcon className="w-4 h-4 text-[#18A0FB]" />
                   <span className="text-sm font-semibold text-gray-800">{d.title}</span>
@@ -282,7 +289,7 @@ export default function CanvasWorkspace({
                     <Minimize2 className="w-3.5 h-3.5" /> Exit full screen
                   </button>
                 </div>
-                <div className="flex-1 overflow-auto">{d.render()}</div>
+                <div className="flex-1 min-h-0 overflow-auto">{d.render()}</div>
               </div>
             );
           })()}

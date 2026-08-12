@@ -1203,8 +1203,7 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
 
   return (
     <div
-      className={`flex flex-col relative transition-colors ${isDragOver ? "bg-purple-50" : ""}`}
-      style={{ height: "520px" }}
+      className={`flex flex-col relative transition-colors h-full min-h-[520px] ${isDragOver ? "bg-purple-50" : ""}`}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}

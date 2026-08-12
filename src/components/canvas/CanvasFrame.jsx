@@ -1,14 +1,38 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { Trash2, EyeOff, ChevronDown, ChevronRight, Maximize2 } from "lucide-react";
 
 const MIN_W = 280;
 const MIN_H = 220;
+const HEADER_H = 36;
 
 export default function CanvasFrame({
   def, frame, zoom, selected, onSelect, onChange, onDelete,
   onToggleCollapse, onToggleHide, onToggleFullscreen,
 }) {
   const Icon = def.icon;
+  const contentRef = useRef(null);
+  const frameRef = useRef(frame);
+  frameRef.current = frame;
+  const suppressFit = useRef(0);
+
+  // Auto-fit frame height to its content so there's never random whitespace.
+  // Only snaps DOWN (removes extra space) — never grows the frame beyond content.
+  // Suppressed briefly after a manual resize so dragging isn't fought.
+  useEffect(() => {
+    if (frame.collapsed) return;
+    const el = contentRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      if (Date.now() < suppressFit.current) return;
+      const f = frameRef.current;
+      if (f.collapsed) return;
+      const natural = el.offsetHeight; // content's natural height at current width
+      const desired = Math.max(MIN_H, Math.min(natural + HEADER_H, f.h));
+      if (Math.abs(desired - f.h) > 2) onChange({ h: desired });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [frame.collapsed, onChange]);
 
   const onHeaderMouseDown = (e) => {
     if (e.button !== 0) return;
@@ -29,6 +53,7 @@ export default function CanvasFrame({
     e.stopPropagation();
     e.preventDefault();
     onSelect();
+    suppressFit.current = Date.now() + 1200; // give the user a moment to size freely
     const startX = e.clientX, startY = e.clientY;
     const orig = { x: frame.x, y: frame.y, w: frame.w, h: frame.h };
     const move = (ev) => {
@@ -48,7 +73,6 @@ export default function CanvasFrame({
     window.addEventListener("mouseup", up);
   };
 
-  // Resize handle definitions: position + cursor + edges
   const handles = [
     { key: "nw", cls: "top-0 left-0 w-3 h-3 cursor-nwse-resize", edges: { n: true, w: true } },
     { key: "ne", cls: "top-0 right-0 w-3 h-3 cursor-nesw-resize", edges: { n: true, e: true } },
@@ -67,7 +91,7 @@ export default function CanvasFrame({
         left: frame.x,
         top: frame.y,
         width: frame.w,
-        height: frame.collapsed ? 36 : frame.h,
+        height: frame.collapsed ? HEADER_H : frame.h,
         boxShadow: selected
           ? "0 0 0 2px #18A0FB, 0 8px 24px rgba(0,0,0,0.12)"
           : "0 4px 12px rgba(0,0,0,0.08)",
@@ -111,7 +135,9 @@ export default function CanvasFrame({
       </div>
       {!frame.collapsed && (
         <div className="flex-1 overflow-auto" onMouseDown={(e) => e.stopPropagation()}>
-          {def.render()}
+          <div ref={contentRef} className="min-h-full flex flex-col">
+            {def.render()}
+          </div>
         </div>
       )}
       {!frame.collapsed && handles.map((h) => (
