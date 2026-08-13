@@ -622,7 +622,7 @@ export default function CanvasWorkspace({
                   onToggleCollapse={() => updateFrame(d.id, { collapsed: !f.collapsed })}
                   onToggleHide={() => updateFrame(d.id, { hidden: !f.hidden })}
                   onToggleFullscreen={() => setFullscreenId(d.id)}
-                  blurred={readOnly && !["highlights", "analytics"].includes(d.id)}
+                  blurred={readOnly}
                 />
               );
             })}
