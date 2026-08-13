@@ -389,6 +389,26 @@ export default function CanvasWorkspace({
   const zoomFitRef = useRef(zoomFit);
   zoomFitRef.current = zoomFit;
 
+  // Re-arrange all visible frames into a neat grid so they don't overlap.
+  const organizeFrames = useCallback(() => {
+    if (!layout) return;
+    const visibleDefs = defs.filter((d) => !layout[d.id]?.hidden);
+    if (!visibleDefs.length) return;
+    const cols = Math.min(3, visibleDefs.length);
+    const colW = 560, gapX = 40, gapY = 40;
+    const colY = new Array(cols).fill(0);
+    const next = { ...layout };
+    visibleDefs.forEach((d, i) => {
+      const c = i % cols;
+      const f = next[d.id];
+      next[d.id] = { ...f, x: c * (colW + gapX), y: colY[c], z: i };
+      colY[c] += (f.h || d.h) + gapY;
+    });
+    setLayout(next);
+    saveLayout(next);
+    setTimeout(() => zoomFitRef.current(), 80);
+  }, [layout, defs, saveLayout]);
+
   // First time the layout is ready, frame all visible components instead of
   // dropping the user at a static 70% offset.
   useEffect(() => {
@@ -450,6 +470,9 @@ export default function CanvasWorkspace({
               <MessageCircle className="w-4 h-4" />
             </button>
           )}
+          <button onClick={onShare} className="p-1.5 rounded hover:bg-gray-100 text-gray-600" title="Share project">
+            <Share2 className="w-4 h-4" />
+          </button>
           <button onClick={() => setShowMusicPlayer((v) => !v)} className={`relative p-1.5 rounded hover:bg-gray-100 text-gray-600 ${showMusicPlayer ? "bg-purple-50 text-purple-600" : ""}`} title="CU Radio">
             <Music className="w-4 h-4" />
             {showMusicPlayer && <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-purple-600 rounded-full" />}
@@ -463,9 +486,7 @@ export default function CanvasWorkspace({
             <button onClick={zoomIn} className="p-1.5 hover:bg-gray-200 text-gray-600"><ZoomIn className="w-3.5 h-3.5" /></button>
             <button onClick={zoomFit} className="p-1.5 hover:bg-gray-200 border-l border-gray-200 text-gray-600" title="Zoom to fit"><Maximize className="w-3.5 h-3.5" /></button>
           </div>
-          <Button onClick={onShare} className="bg-[#18A0FB] hover:bg-[#0E8FE0] text-white text-xs h-8 rounded-md px-2.5 md:px-3">
-            <Share2 className="w-3.5 h-3.5 md:mr-1" /><span className="hidden md:inline">Share</span>
-          </Button>
+          {/* Share button moved next to the comment button */}
           <CanvasPresenceStack project={project} currentUser={currentUser} projectUsers={projectUsers} projectOwnerProfile={projectOwnerProfile} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -635,6 +656,7 @@ export default function CanvasWorkspace({
         setAddOpen={setAddOpen}
         hiddenFrames={hiddenFrames}
         onAddFrame={onAddFrame}
+        onOrganize={organizeFrames}
       />
 
       <MusicPlayer isVisible={showMusicPlayer} onClose={() => setShowMusicPlayer(false)} zIndex={130} />
@@ -692,7 +714,7 @@ export default function CanvasWorkspace({
               {isOwner ? "View and edit your project information." : "Project information."}
             </DialogDescription>
           </DialogHeader>
-          <ProjectDetailsFrame project={project} canEdit={isOwner} />
+          <ProjectDetailsFrame project={project} canEdit={isOwner} ownerProfile={projectOwnerProfile} />
         </DialogContent>
       </Dialog>
 

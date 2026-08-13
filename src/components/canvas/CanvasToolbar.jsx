@@ -1,10 +1,10 @@
 import React from "react";
 import {
-  MousePointer2, Hand, ZoomIn, ZoomOut, Maximize, Plus,
+  MousePointer2, Hand, ZoomIn, ZoomOut, Maximize, Plus, LayoutGrid,
 } from "lucide-react";
 
 export default function CanvasToolbar({
-  tool, setTool, zoom, onZoomIn, onZoomOut, onZoomFit,
+  tool, setTool, zoom, onZoomIn, onZoomOut, onZoomFit, onOrganize,
   addOpen, setAddOpen, hiddenFrames, onAddFrame,
 }) {
   const btn = (active) =>
@@ -45,6 +45,8 @@ export default function CanvasToolbar({
         <span className="text-[11px] md:text-xs text-gray-500 w-7 md:w-9 text-center">{Math.round(zoom * 100)}%</span>
         <button onClick={onZoomIn} className="p-1.5 md:p-2 rounded-full text-gray-600 hover:bg-gray-100" title="Zoom in"><ZoomIn className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
         <button onClick={onZoomFit} className="p-1.5 md:p-2 rounded-full text-gray-600 hover:bg-gray-100" title="Zoom to fit"><Maximize className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
+        <div className="w-px h-4 md:h-5 bg-gray-200 mx-1" />
+        <button onClick={onOrganize} className="p-1.5 md:p-2 rounded-full text-gray-600 hover:bg-gray-100" title="Organize components"><LayoutGrid className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
       </div>
     </div>
   );

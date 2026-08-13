@@ -27,7 +27,7 @@ function Row({ label, value }) {
   );
 }
 
-export default function ProjectDetailsFrame({ project, canEdit = false }) {
+export default function ProjectDetailsFrame({ project, canEdit = false, ownerProfile }) {
   return (
     <div className="p-3 space-y-3">
       <div className="flex items-center gap-3">
@@ -88,7 +88,16 @@ export default function ProjectDetailsFrame({ project, canEdit = false }) {
         </div>
       )}
 
-      <p className="text-[11px] text-gray-400">Owner: {project?.created_by}</p>
+      <div className="text-[11px] text-gray-400">
+        Owner:{" "}
+        {ownerProfile?.username ? (
+          <Link to={createPageUrl(`UserProfile?username=${ownerProfile.username}`)} className="text-[#18A0FB] hover:underline">
+            @{ownerProfile.username}
+          </Link>
+        ) : (
+          <span>{project?.created_by ? project.created_by.split("@")[0] : "—"}</span>
+        )}
+      </div>
     </div>
   );
 }
