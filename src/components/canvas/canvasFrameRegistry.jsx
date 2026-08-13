@@ -1,7 +1,7 @@
 import React from "react";
 import {
   Sparkles, Lightbulb, Flag, CheckSquare, FileStack, Wrench,
-  BookOpen, Activity, Image as ImageIcon, BarChart3
+  BookOpen, Activity, Image as ImageIcon, BarChart3, StickyNote
 } from "lucide-react";
 import TaskBoard from "../workspace/TaskBoard";
 import MilestonesTab from "../workspace/MilestonesTab";
@@ -13,6 +13,7 @@ import ToolsHub from "../workspace/ToolsHub";
 import { AIChat } from "../workspace/BuildTab";
 import ProjectHighlights from "../project/ProjectHighlights";
 import ProjectAnalyticsDashboard from "../project/ProjectAnalyticsDashboard";
+import SharedScratchpad from "../workspace/SharedScratchpad";
 
 export function buildFrameDefs(props) {
   const {
@@ -120,6 +121,14 @@ export function buildFrameDefs(props) {
         <ActivityTab
           project={project} currentUser={currentUser}
           isCollaborator={isCollaborator} isProjectOwner={isOwner} projectOwnerName={projectOwnerName}
+        />
+      ),
+    },
+    {
+      id: "scratchpad", title: "Shared Scratchpad", icon: StickyNote, w: 420, h: 380, fill: true,
+      render: () => (
+        <SharedScratchpad
+          project={project} currentUser={currentUser} isCollaborator={isCollaborator || isOwner}
         />
       ),
     },

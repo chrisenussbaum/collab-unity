@@ -307,6 +307,26 @@
       "type": "object",
       "description": "Figma-style canvas frame positions for the project workspace (map of frameId -> {x, y, w, h, collapsed, hidden, z})",
       "additionalProperties": true
+    },
+    "scratchpad_content": {
+      "type": "string",
+      "description": "Shared quick-notes text block on the project canvas, synced in real-time between collaborators"
+    },
+    "scratchpad_metadata": {
+      "type": "object",
+      "properties": {
+        "last_saved_by": {
+          "type": "string"
+        },
+        "last_saved_by_name": {
+          "type": "string"
+        },
+        "last_saved_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "Metadata about who last edited the shared scratchpad"
     }
   },
   "required": [
