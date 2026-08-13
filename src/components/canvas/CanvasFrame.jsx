@@ -134,7 +134,7 @@ export default function CanvasFrame({
         </button>
       </div>
       {!frame.collapsed && (
-        <div className="flex-1 overflow-auto select-text" style={{ touchAction: "none" }} onMouseDown={(e) => e.stopPropagation()}>
+        <div data-canvas-scroll="true" className="flex-1 overflow-auto select-text" style={{ touchAction: "none" }} onMouseDown={(e) => e.stopPropagation()}>
           <div ref={contentRef} className="min-h-full flex flex-col">
             {def.render()}
           </div>

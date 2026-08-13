@@ -157,6 +157,10 @@ export default function CanvasWorkspace({
     const el = viewportRef.current;
     if (!el) return;
     const handler = (e) => {
+      // Let trackpad / mouse wheel scroll inside frames natively instead of
+      // hijacking it to pan the canvas. Ctrl/Cmd+wheel still zooms the canvas.
+      const overFrame = e.target && typeof e.target.closest === 'function' && e.target.closest('[data-canvas-scroll="true"]');
+      if (overFrame && !e.ctrlKey && !e.metaKey) return;
       const rect = el.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
@@ -244,13 +248,26 @@ export default function CanvasWorkspace({
       g = { mode: "pan", sx: t.clientX, sy: t.clientY, startPan: { ...stateRef.current.pan } };
     };
 
+    // Single-finger swipe that scrolls a frame's content (vertical + horizontal)
+    const beginScroll = (e, scroller) => {
+      const t = e.touches[0];
+      g = { mode: "scroll", el: scroller, sx: t.clientX, sy: t.clientY, top: scroller.scrollTop, left: scroller.scrollLeft };
+    };
+
     const onStart = (e) => {
       if (e.touches.length >= 2) {
         // Keep an existing pinch stable if a stray third finger grazes the screen
         if (g && g.mode === "two" && findTouch(e.touches, g.idA) && findTouch(e.touches, g.idB)) return;
         beginTwo(e);
-      } else if (e.touches.length === 1 && e.target.dataset && e.target.dataset.canvasBg === "true") {
-        beginPan(e);
+      } else if (e.touches.length === 1) {
+        const scroller = e.target && typeof e.target.closest === 'function' && e.target.closest('[data-canvas-scroll="true"]');
+        if (scroller) {
+          beginScroll(e, scroller);
+        } else if (e.target.dataset && e.target.dataset.canvasBg === "true") {
+          beginPan(e);
+        } else {
+          g = null;
+        }
       } else {
         g = null;
       }
@@ -276,6 +293,11 @@ export default function CanvasWorkspace({
         e.preventDefault();
         const t = e.touches[0];
         setPan({ x: g.startPan.x + (t.clientX - g.sx), y: g.startPan.y + (t.clientY - g.sy) });
+      } else if (g.mode === "scroll" && e.touches.length >= 1) {
+        e.preventDefault();
+        const t = e.touches[0];
+        g.el.scrollTop = g.top - (t.clientY - g.sy);
+        g.el.scrollLeft = g.left - (t.clientX - g.sx);
       }
     };
 
