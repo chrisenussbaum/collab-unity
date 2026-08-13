@@ -1,64 +1,74 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 /**
  * Resilient video player for demo posts.
  *
- * Some uploaded videos report an incorrect (too-short) duration in their
- * container metadata. The browser then fires `ended` prematurely and shows a
- * replay button — clicking it restarts from 0, while seeking to a later
- * point forces a fresh range request and resumes. `preload="auto"` makes the
- * browser fetch the full file up front so the true duration is known, and the
- * `ended`/`stalled` guards keep playback going when there is clearly more
- * seekable content available.
+ * The file host periodically drops the progressive-download stream partway
+ * through a video, so playback stalls even though the duration metadata is
+ * correct (clicking play restarts from 0; seeking forces a fresh range request
+ * that works for a while, then stalls again). Fetching the whole file into a
+ * local blob once and playing from memory eliminates the stalls entirely.
  */
 export default function DemoVideo({ src, poster, className }) {
   const videoRef = useRef(null);
+  const [blobSrc, setBlobSrc] = useState(null);
+  const [buffering, setBuffering] = useState(false);
 
-  const handleEnded = () => {
-    const v = videoRef.current;
-    if (!v) return;
+  const ensureBlob = async () => {
+    if (blobSrc) return blobSrc;
+    setBuffering(true);
     try {
-      const seekableEnd =
-        v.seekable && v.seekable.length
-          ? v.seekable.end(v.seekable.length - 1)
-          : 0;
-      // If the seekable range extends well past the reported end, the duration
-      // metadata is wrong — keep playing instead of stopping.
-      if (seekableEnd - v.currentTime > 1) {
-        v.currentTime = v.currentTime + 0.01;
-        v.play().catch(() => {});
-      }
+      const res = await fetch(src);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      setBlobSrc(url);
+      return url;
     } catch {
-      /* ignore */
+      return null; // fall back to streaming src
+    } finally {
+      setBuffering(false);
     }
   };
 
-  const handleStalled = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    try {
-      if (v.readyState < 3) {
-        // Nudge a fresh range request for the current position.
-        const t = v.currentTime;
-        v.currentTime = t + 0.01;
-        if (t + 0.01 >= (v.duration || 0)) v.currentTime = t;
-      }
-    } catch {
-      /* ignore */
+  // Once the full-file blob is ready, start playing it.
+  useEffect(() => {
+    if (blobSrc && videoRef.current) {
+      videoRef.current.play().catch(() => {});
     }
+  }, [blobSrc]);
+
+  // Revoke the object URL when it changes or the component unmounts.
+  useEffect(() => {
+    return () => {
+      if (blobSrc) URL.revokeObjectURL(blobSrc);
+    };
+  }, [blobSrc]);
+
+  const handlePlay = async () => {
+    if (blobSrc) return; // already playing from local memory
+    const v = videoRef.current;
+    if (v) v.pause();
+    await ensureBlob(); // effect above resumes playback once ready
   };
 
   return (
-    <video
-      ref={videoRef}
-      src={src}
-      poster={poster || undefined}
-      controls
-      playsInline
-      preload="auto"
-      className={className}
-      onEnded={handleEnded}
-      onStalled={handleStalled}
-    />
+    <div className="relative bg-black">
+      <video
+        ref={videoRef}
+        src={blobSrc || src}
+        poster={poster || undefined}
+        controls
+        playsInline
+        preload="metadata"
+        className={className}
+        onPlay={handlePlay}
+      />
+      {buffering && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 pointer-events-none">
+          <Loader2 className="w-8 h-8 text-white animate-spin" />
+        </div>
+      )}
+    </div>
   );
 }
