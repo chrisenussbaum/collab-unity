@@ -1,7 +1,7 @@
 import React from "react";
 import {
   Sparkles, Lightbulb, Flag, CheckSquare, FileStack, Wrench,
-  BookOpen, Activity, Image as ImageIcon, Link2, BarChart3, Heart, DollarSign
+  BookOpen, Activity, Image as ImageIcon, BarChart3
 } from "lucide-react";
 import TaskBoard from "../workspace/TaskBoard";
 import MilestonesTab from "../workspace/MilestonesTab";
@@ -13,14 +13,11 @@ import ToolsHub from "../workspace/ToolsHub";
 import { AIChat } from "../workspace/BuildTab";
 import ProjectHighlights from "../project/ProjectHighlights";
 import ProjectAnalyticsDashboard from "../project/ProjectAnalyticsDashboard";
-import ProjectFundingCard from "../ProjectFundingCard";
-import SocialsPanel from "../SocialsPanel";
-import MicrolinkPreview from "../MicrolinkPreview";
 
 export function buildFrameDefs(props) {
   const {
-    project, currentUser, projectUsers, projectOwnerProfile,
-    isOwner, isCollaborator, onProjectUpdate, onUpdateSocialLinks,
+    project, currentUser, projectUsers,
+    isOwner, isCollaborator, onProjectUpdate,
     refreshTasks, refreshMilestones, navigateToFrame,
     tasks, milestones, assets,
   } = props;
@@ -31,20 +28,6 @@ export function buildFrameDefs(props) {
         || project.created_by.split("@")[0]
         || "The project owner")
     : "The project owner";
-
-  const showcase = (
-    <div className="p-3 space-y-3">
-      {project?.project_urls?.length ? (
-        project.project_urls.map((l, i) => {
-          const url = typeof l === "object" ? l.url : l;
-          const title = typeof l === "object" ? l.title : "";
-          return <MicrolinkPreview key={i} url={url} title={title || ""} className="w-full" />;
-        })
-      ) : (
-        <p className="text-sm text-gray-400">No showcase links yet. Add them via Edit Project.</p>
-      )}
-    </div>
-  );
 
   return [
     {
@@ -92,31 +75,6 @@ export function buildFrameDefs(props) {
       render: () => (
         <ProjectAnalyticsDashboard
           project={project} currentUser={currentUser} isCollaborator={canEdit}
-        />
-      ),
-    },
-    {
-      id: "links", title: "Showcase Links", icon: Link2, w: 420, h: 360,
-      render: () => showcase,
-    },
-    {
-      id: "funding", title: "Funding", icon: DollarSign, w: 360, h: 320,
-      render: () => (
-        <ProjectFundingCard
-          project={project} projectOwner={projectOwnerProfile}
-          canEdit={isOwner} onUpdate={onProjectUpdate}
-        />
-      ),
-    },
-    {
-      id: "social", title: "Social Media", icon: Heart, w: 360, h: 320,
-      render: () => (
-        <SocialsPanel
-          socialLinks={project?.social_links || {}}
-          onUpdate={onUpdateSocialLinks}
-          canEdit={isOwner}
-          title="Social Media"
-          emptyMessage="Add social media links to promote this project"
         />
       ),
     },

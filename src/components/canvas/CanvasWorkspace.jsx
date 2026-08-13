@@ -4,12 +4,14 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import OptimizedAvatar from "../OptimizedAvatar";
 import { Link } from "react-router-dom";
-import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, Eye, Trophy, Heart, Bug, ShieldCheck, LogOut, Music, Users, Briefcase, Info } from "lucide-react";
+import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, Eye, Trophy, Heart, Bug, ShieldCheck, LogOut, Music, Users, Briefcase, Info, DollarSign, Link2, Pencil } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { buildFrameDefs } from "./canvasFrameRegistry";
 import CanvasFrame from "./CanvasFrame";
-import CanvasItemFrame from "./CanvasItemFrame";
 import ProjectDetailsFrame from "./ProjectDetailsFrame";
+import ProjectFundingCard from "../ProjectFundingCard";
+import SocialsPanel from "../SocialsPanel";
+import MicrolinkPreview from "../MicrolinkPreview";
 import CanvasLayers from "./CanvasLayers";
 import CanvasToolbar from "./CanvasToolbar";
 import CanvasPresenceStack from "./CanvasPresenceStack";
@@ -52,9 +54,10 @@ export default function CanvasWorkspace({
   const [showApplicationsDialog, setShowApplicationsDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showProjectDetailsDialog, setShowProjectDetailsDialog] = useState(false);
+  const [showFundingDialog, setShowFundingDialog] = useState(false);
+  const [showSocialDialog, setShowSocialDialog] = useState(false);
+  const [showShowcaseDialog, setShowShowcaseDialog] = useState(false);
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
-  const [items, setItems] = useState([]);
-  const itemSaveTimers = useRef({});
 
   useEffect(() => {
     if (!fullscreenId) return;
@@ -83,28 +86,10 @@ export default function CanvasWorkspace({
     if (!project?.id) return;
     try { const r = await base44.entities.AssetVersion.filter({ project_id: project.id }); setAssets(Array.isArray(r) ? r : []); } catch {}
   }, [project?.id]);
-  const refreshItems = useCallback(async () => {
-    if (!project?.id) return;
-    try { const r = await base44.entities.CanvasItem.filter({ project_id: project.id }); setItems(Array.isArray(r) ? r : []); } catch {}
-  }, [project?.id]);
 
   useEffect(() => {
-    refreshTasks(); refreshMilestones(); refreshAssets(); refreshItems();
-  }, [project?.id, refreshTasks, refreshMilestones, refreshAssets, refreshItems]);
-
-  // Live-sync free-form canvas items across collaborators
-  useEffect(() => {
-    if (!project?.id) return;
-    const unsub = base44.entities.CanvasItem.subscribe((event) => {
-      setItems((prev) => {
-        if (event.type === "create") return prev.some((i) => i.id === event.data.id) ? prev : [...prev, event.data];
-        if (event.type === "update") return prev.map((i) => (i.id === event.data.id ? { ...i, ...event.data } : i));
-        if (event.type === "delete") return prev.filter((i) => i.id !== event.id);
-        return prev;
-      });
-    });
-    return unsub;
-  }, [project?.id]);
+    refreshTasks(); refreshMilestones(); refreshAssets();
+  }, [project?.id, refreshTasks, refreshMilestones, refreshAssets]);
 
   // Owner-only: pending applications count for the Layers sidebar badge
   useEffect(() => {
@@ -185,40 +170,6 @@ export default function CanvasWorkspace({
       return next;
     });
   }, [saveLayout]);
-
-  const updateItem = useCallback((id, patch) => {
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
-    clearTimeout(itemSaveTimers.current[id]);
-    itemSaveTimers.current[id] = setTimeout(async () => {
-      try { await base44.entities.CanvasItem.update(id, patch); } catch (e) { console.warn("Failed to save canvas item", e); }
-    }, 500);
-  }, []);
-
-  const deleteItem = useCallback(async (id) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
-    try { await base44.entities.CanvasItem.delete(id); } catch (e) { console.warn("Failed to delete canvas item", e); }
-  }, []);
-
-  const createItem = useCallback(async (type, extra = {}) => {
-    if (!project?.id || !viewportRef.current) return;
-    const rect = viewportRef.current.getBoundingClientRect();
-    const defaults = {
-      text: { w: 220, h: 160 },
-      canvas: { w: 240, h: 180, color: "#ffffff" },
-      shape: { w: 150, h: 170, shape: "rect", color: "#9ca3af" },
-    };
-    const d = defaults[type];
-    const x = (rect.width / 2 - stateRef.current.pan.x) / stateRef.current.zoom - d.w / 2;
-    const y = (rect.height / 2 - stateRef.current.pan.y) / stateRef.current.zoom - d.h / 2;
-    try {
-      const created = await base44.entities.CanvasItem.create({
-        project_id: project.id, type, x, y, z: Date.now(),
-        created_by_email: currentUser?.email, created_by_name: currentUser?.full_name,
-        ...d, ...extra,
-      });
-      setItems((prev) => (prev.some((i) => i.id === created.id) ? prev : [...prev, created]));
-    } catch (e) { console.warn("Failed to create canvas item", e); }
-  }, [project?.id, currentUser]);
 
   // Wheel: ctrl/cmd (trackpad pinch) = zoom toward cursor, two-finger scroll = pan.
   useEffect(() => {
@@ -531,6 +482,9 @@ export default function CanvasWorkspace({
             onOpenApplications={() => setShowApplicationsDialog(true)}
             onOpenInvite={() => setShowInviteDialog(true)}
             onOpenProjectDetails={() => setShowProjectDetailsDialog(true)}
+            onOpenFunding={() => setShowFundingDialog(true)}
+            onOpenSocial={() => setShowSocialDialog(true)}
+            onOpenShowcase={() => setShowShowcaseDialog(true)}
           />
         </div>
 
@@ -574,17 +528,6 @@ export default function CanvasWorkspace({
                 />
               );
             })}
-            {items.map((it) => (
-              <CanvasItemFrame
-                key={it.id}
-                item={it}
-                zoom={zoom}
-                selected={selectedId === `item:${it.id}`}
-                onSelect={() => setSelectedId(`item:${it.id}`)}
-                onChange={(patch) => updateItem(it.id, patch)}
-                onDelete={() => { deleteItem(it.id); setSelectedId(null); }}
-              />
-            ))}
           </div>
 
           {fullscreenId && (() => {
@@ -628,6 +571,9 @@ export default function CanvasWorkspace({
               onOpenApplications={() => { setShowApplicationsDialog(true); setLayersOpen(false); }}
               onOpenInvite={() => { setShowInviteDialog(true); setLayersOpen(false); }}
               onOpenProjectDetails={() => { setShowProjectDetailsDialog(true); setLayersOpen(false); }}
+              onOpenFunding={() => { setShowFundingDialog(true); setLayersOpen(false); }}
+              onOpenSocial={() => { setShowSocialDialog(true); setLayersOpen(false); }}
+              onOpenShowcase={() => { setShowShowcaseDialog(true); setLayersOpen(false); }}
             />
           </div>
         </div>
@@ -645,9 +591,6 @@ export default function CanvasWorkspace({
         setAddOpen={setAddOpen}
         hiddenFrames={hiddenFrames}
         onAddFrame={onAddFrame}
-        onAddText={() => createItem("text")}
-        onAddCanvas={() => createItem("canvas")}
-        onAddShape={(shape) => createItem("shape", { shape })}
       />
 
       <MusicPlayer isVisible={showMusicPlayer} onClose={() => setShowMusicPlayer(false)} zIndex={130} />
@@ -696,6 +639,63 @@ export default function CanvasWorkspace({
             </DialogDescription>
           </DialogHeader>
           <ProjectDetailsFrame project={project} canEdit={isOwner} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showFundingDialog} onOpenChange={setShowFundingDialog}>
+        <DialogContent className="sm:max-w-[420px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-[#18A0FB]" /> Funding
+            </DialogTitle>
+            <DialogDescription>{isOwner ? "Manage your project funding links." : "Project funding links."}</DialogDescription>
+          </DialogHeader>
+          <ProjectFundingCard project={project} projectOwner={projectOwnerProfile} canEdit={isOwner} onUpdate={onProjectUpdate} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showSocialDialog} onOpenChange={setShowSocialDialog}>
+        <DialogContent className="sm:max-w-[420px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Heart className="w-5 h-5 text-[#18A0FB]" /> Social Media
+            </DialogTitle>
+            <DialogDescription>{isOwner ? "Add social media links to promote this project." : "Project social media links."}</DialogDescription>
+          </DialogHeader>
+          <SocialsPanel
+            socialLinks={project?.social_links || {}}
+            onUpdate={onUpdateSocialLinks}
+            canEdit={isOwner}
+            title="Social Media"
+            emptyMessage="Add social media links to promote this project"
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showShowcaseDialog} onOpenChange={setShowShowcaseDialog}>
+        <DialogContent className="sm:max-w-[520px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Link2 className="w-5 h-5 text-[#18A0FB]" /> Showcase Links
+            </DialogTitle>
+            <DialogDescription>{isOwner ? "Showcase links are managed on the Edit Project page." : "Project showcase links."}</DialogDescription>
+          </DialogHeader>
+          <div className="p-1 space-y-3">
+            {project?.project_urls?.length ? (
+              project.project_urls.map((l, i) => {
+                const url = typeof l === "object" ? l.url : l;
+                const title = typeof l === "object" ? l.title : "";
+                return <MicrolinkPreview key={i} url={url} title={title || ""} className="w-full" />;
+              })
+            ) : (
+              <p className="text-sm text-gray-400">No showcase links yet. Add them via Edit Project.</p>
+            )}
+            {isOwner && (
+              <Link to={createPageUrl(`EditProject?id=${project?.id}`)} className="inline-flex items-center gap-1 text-xs text-[#18A0FB] hover:underline pt-1">
+                <Pencil className="w-3 h-3" /> Edit showcase links
+              </Link>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -1,23 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
 import {
-  MousePointer2, Hand, ZoomIn, ZoomOut, Maximize, Plus, Hash, Type, Square,
-  Circle, Triangle, Diamond, Star,
+  MousePointer2, Hand, ZoomIn, ZoomOut, Maximize, Plus,
 } from "lucide-react";
-
-const SHAPES = [
-  { key: "rect", label: "Rectangle", Icon: Square },
-  { key: "circle", label: "Circle", Icon: Circle },
-  { key: "triangle", label: "Triangle", Icon: Triangle },
-  { key: "diamond", label: "Diamond", Icon: Diamond },
-  { key: "star", label: "Star", Icon: Star },
-];
 
 export default function CanvasToolbar({
   tool, setTool, zoom, onZoomIn, onZoomOut, onZoomFit,
   addOpen, setAddOpen, hiddenFrames, onAddFrame,
-  onAddText, onAddCanvas, onAddShape,
 }) {
-  const [shapeOpen, setShapeOpen] = useState(false);
   const btn = (active) =>
     `p-1.5 md:p-2 rounded-full ${active ? "bg-[#18A0FB] text-white" : "text-gray-600 hover:bg-gray-100"}`;
   return (
@@ -43,21 +32,6 @@ export default function CanvasToolbar({
       <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-full shadow-lg px-1 py-1 md:px-1.5 md:py-1.5">
         <button onClick={() => setTool("move")} className={btn(tool === "move")} title="Move (V)"><MousePointer2 className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
         <button onClick={() => setTool("hand")} className={btn(tool === "hand")} title="Hand (H)"><Hand className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
-        <div className="w-px h-4 md:h-5 bg-gray-200 mx-1" />
-        <button onClick={onAddCanvas} className="hidden md:flex p-2 rounded-full text-gray-600 hover:bg-gray-100" title="Add color canvas"><Hash className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
-        <button onClick={onAddText} className="hidden md:flex p-2 rounded-full text-gray-600 hover:bg-gray-100" title="Add text note"><Type className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
-        <div className="relative hidden md:block">
-          <button onClick={() => setShapeOpen((v) => !v)} className={btn(shapeOpen)} title="Add shape"><Square className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
-          {shapeOpen && (
-            <div className="absolute bottom-11 left-1/2 -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-xl p-1 flex gap-1">
-              {SHAPES.map((s) => (
-                <button key={s.key} onClick={() => { onAddShape(s.key); setShapeOpen(false); }} className="p-2 rounded hover:bg-gray-100 text-gray-600" title={s.label}>
-                  <s.Icon className="w-4 h-4" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
         <div className="w-px h-4 md:h-5 bg-gray-200 mx-1" />
         <button
           onClick={() => setAddOpen(!addOpen)}

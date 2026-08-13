@@ -1,11 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Eye, EyeOff, Users, Briefcase, Pencil, Info } from "lucide-react";
+import { Eye, EyeOff, Users, Briefcase, Pencil, Info, DollarSign, Heart, Link2 } from "lucide-react";
 
 export default function CanvasLayers({
   defs, layout, selectedId, onSelect, onToggleHide,
   isOwner, projectId, pendingApplicationsCount = 0, onOpenApplications, onOpenInvite, onOpenProjectDetails,
+  onOpenFunding, onOpenSocial, onOpenShowcase,
 }) {
   // Front-most first (defs order is back-to-front; reverse for display)
   const ordered = [...defs].reverse();
@@ -54,6 +55,18 @@ export default function CanvasLayers({
       >
         <Info className="w-3.5 h-3.5 flex-shrink-0" />
         <span className="truncate flex-1">Project Details</span>
+      </div>
+      <div onClick={onOpenFunding} className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-50">
+        <DollarSign className="w-3.5 h-3.5 flex-shrink-0" />
+        <span className="truncate flex-1">Funding</span>
+      </div>
+      <div onClick={onOpenSocial} className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-50">
+        <Heart className="w-3.5 h-3.5 flex-shrink-0" />
+        <span className="truncate flex-1">Social Media</span>
+      </div>
+      <div onClick={onOpenShowcase} className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-50">
+        <Link2 className="w-3.5 h-3.5 flex-shrink-0" />
+        <span className="truncate flex-1">Showcase Links</span>
       </div>
       {isOwner && (
         <Link
