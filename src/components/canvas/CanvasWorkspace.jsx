@@ -181,6 +181,12 @@ export default function CanvasWorkspace({
   useEffect(() => {
     const el = viewportRef.current;
     if (!el) return;
+    // Safari fires non-standard `gesture*` events for two-finger pinch on touch
+    // devices too, where they conflict with our touch handler and cause the
+    // canvas to freeze / components to stop scaling. Only use them on non-touch
+    // (trackpad/mouse) devices.
+    const isTouchDevice = (navigator.maxTouchPoints || 0) > 0 && window.matchMedia('(pointer: coarse)').matches;
+    if (isTouchDevice) return;
     let gs = null;
     const onStart = (e) => {
       e.preventDefault();
@@ -213,25 +219,38 @@ export default function CanvasWorkspace({
     if (!el) return;
     const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
     const mid = (a, b) => ({ x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 });
+    const findTouch = (touches, id) => { for (let i = 0; i < touches.length; i++) { if (touches[i].identifier === id) return touches[i]; } return null; };
     let g = null;
 
+    const beginTwo = (e) => {
+      const rect = el.getBoundingClientRect();
+      const t0 = e.touches[0], t1 = e.touches[1];
+      const m = mid(t0, t1);
+      g = {
+        mode: "two",
+        idA: t0.identifier, idB: t1.identifier,
+        startDist: dist(t0, t1) || 1,
+        startZoom: stateRef.current.zoom,
+        startPan: { ...stateRef.current.pan },
+        mx: m.clientX - rect.left,
+        my: m.clientY - rect.top,
+        startMidClientX: m.clientX,
+        startMidClientY: m.clientY,
+      };
+    };
+
+    const beginPan = (e) => {
+      const t = e.touches[0];
+      g = { mode: "pan", sx: t.clientX, sy: t.clientY, startPan: { ...stateRef.current.pan } };
+    };
+
     const onStart = (e) => {
-      if (e.touches.length === 2) {
-        const rect = el.getBoundingClientRect();
-        const t0 = e.touches[0], t1 = e.touches[1];
-        const m = mid(t0, t1);
-        g = {
-          mode: "two",
-          startDist: dist(t0, t1) || 1,
-          startZoom: stateRef.current.zoom,
-          startPan: { ...stateRef.current.pan },
-          mx: m.clientX - rect.left,
-          my: m.clientY - rect.top,
-          startMidClientX: m.clientX,
-          startMidClientY: m.clientY,
-        };
+      if (e.touches.length >= 2) {
+        // Keep an existing pinch stable if a stray third finger grazes the screen
+        if (g && g.mode === "two" && findTouch(e.touches, g.idA) && findTouch(e.touches, g.idB)) return;
+        beginTwo(e);
       } else if (e.touches.length === 1 && e.target.dataset && e.target.dataset.canvasBg === "true") {
-        g = { mode: "pan", sx: e.touches[0].clientX, sy: e.touches[0].clientY, startPan: { ...stateRef.current.pan } };
+        beginPan(e);
       } else {
         g = null;
       }
@@ -239,11 +258,13 @@ export default function CanvasWorkspace({
 
     const onMove = (e) => {
       if (!g) return;
-      if (g.mode === "two" && e.touches.length === 2) {
+      if (g.mode === "two") {
+        const a = findTouch(e.touches, g.idA);
+        const b = findTouch(e.touches, g.idB);
+        if (!a || !b) return; // a pinch finger lifted — wait for the end event
         e.preventDefault();
-        const t0 = e.touches[0], t1 = e.touches[1];
-        const curMid = mid(t0, t1);
-        const ratio = dist(t0, t1) / g.startDist;
+        const curMid = mid(a, b);
+        const ratio = dist(a, b) / g.startDist;
         const nz = clamp(g.startZoom * ratio, 0.2, 2);
         // zoom anchored at the starting pinch midpoint
         const baseX = g.mx - (g.mx - g.startPan.x) * (nz / g.startZoom);
@@ -251,20 +272,18 @@ export default function CanvasWorkspace({
         // plus two-finger pan (midpoint travel) — works in any direction
         setPan({ x: baseX + (curMid.clientX - g.startMidClientX), y: baseY + (curMid.clientY - g.startMidClientY) });
         setZoom(nz);
-      } else if (g.mode === "pan" && e.touches.length === 1) {
+      } else if (g.mode === "pan" && e.touches.length >= 1) {
         e.preventDefault();
-        setPan({ x: g.startPan.x + (e.touches[0].clientX - g.sx), y: g.startPan.y + (e.touches[0].clientY - g.sy) });
+        const t = e.touches[0];
+        setPan({ x: g.startPan.x + (t.clientX - g.sx), y: g.startPan.y + (t.clientY - g.sy) });
       }
     };
 
     const onEnd = (e) => {
       if (e.touches.length === 0) { g = null; return; }
-      if (e.touches.length === 1) {
-        if (e.target.dataset && e.target.dataset.canvasBg === "true") {
-          g = { mode: "pan", sx: e.touches[0].clientX, sy: e.touches[0].clientY, startPan: { ...stateRef.current.pan } };
-        } else {
-          g = null;
-        }
+      if (g && g.mode === "two") {
+        // only end the pinch if one of the two tracked fingers is gone
+        if (!findTouch(e.touches, g.idA) || !findTouch(e.touches, g.idB)) g = null;
       }
     };
 
