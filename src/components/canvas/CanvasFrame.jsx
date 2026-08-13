@@ -7,7 +7,7 @@ const HEADER_H = 36;
 
 export default function CanvasFrame({
   def, frame, zoom, selected, onSelect, onChange, onDelete,
-  onToggleCollapse, onToggleHide, onToggleFullscreen,
+  onToggleCollapse, onToggleHide, onToggleFullscreen, blurred,
 }) {
   const Icon = def.icon;
   const contentRef = useRef(null);
@@ -108,6 +108,7 @@ export default function CanvasFrame({
         boxShadow: selected
           ? "0 0 0 2px #18A0FB, 0 8px 24px rgba(0,0,0,0.12)"
           : "0 4px 12px rgba(0,0,0,0.08)",
+        filter: blurred ? "blur(6px)" : undefined,
       }}
       onMouseDown={(e) => e.stopPropagation()}
     >

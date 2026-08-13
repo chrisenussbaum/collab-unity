@@ -14,6 +14,7 @@ import SocialsPanel from "../SocialsPanel";
 import MicrolinkPreview from "../MicrolinkPreview";
 import ProjectChatPanel from "./ProjectChatPanel";
 import CanvasLayers from "./CanvasLayers";
+import ReadOnlyProjectBanner from "./ReadOnlyProjectBanner";
 import CanvasToolbar from "./CanvasToolbar";
 import CanvasPresenceStack from "./CanvasPresenceStack";
 import MusicPlayer from "../music/MusicPlayer";
@@ -599,7 +600,7 @@ export default function CanvasWorkspace({
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
               transformOrigin: "0 0",
-              ...(readOnly ? { filter: "blur(6px)", pointerEvents: "none", userSelect: "none" } : {}),
+              ...(readOnly ? { pointerEvents: "none", userSelect: "none" } : {}),
             }}
           >
             {defs.map((d) => {
@@ -618,10 +619,21 @@ export default function CanvasWorkspace({
                   onToggleCollapse={() => updateFrame(d.id, { collapsed: !f.collapsed })}
                   onToggleHide={() => updateFrame(d.id, { hidden: !f.hidden })}
                   onToggleFullscreen={() => setFullscreenId(d.id)}
+                  blurred={readOnly && !["highlights", "analytics"].includes(d.id)}
                 />
               );
             })}
           </div>
+
+          {readOnly && (
+            <ReadOnlyProjectBanner
+              project={project}
+              projectUsers={projectUsers}
+              projectOwnerProfile={projectOwnerProfile}
+              canApply={canApply}
+              onApply={onApply}
+            />
+          )}
 
           {fullscreenId && (() => {
             const d = defs.find((dd) => dd.id === fullscreenId);
@@ -672,22 +684,21 @@ export default function CanvasWorkspace({
         </div>
       )}
 
-      {/* Bottom toolbar (hidden in read-only preview mode) */}
-      {!readOnly && (
-        <CanvasToolbar
-          tool={tool}
-          setTool={setTool}
-          zoom={zoom}
-          onZoomIn={zoomIn}
-          onZoomOut={zoomOut}
-          onZoomFit={zoomFit}
-          addOpen={addOpen}
-          setAddOpen={setAddOpen}
-          hiddenFrames={hiddenFrames}
-          onAddFrame={onAddFrame}
-          onOrganize={organizeFrames}
-        />
-      )}
+      {/* Bottom toolbar (Add/Organize hidden in read-only preview mode) */}
+      <CanvasToolbar
+        tool={tool}
+        setTool={setTool}
+        zoom={zoom}
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
+        onZoomFit={zoomFit}
+        addOpen={addOpen}
+        setAddOpen={setAddOpen}
+        hiddenFrames={hiddenFrames}
+        onAddFrame={onAddFrame}
+        onOrganize={organizeFrames}
+        readOnly={readOnly}
+      />
 
       <MusicPlayer isVisible={showMusicPlayer} onClose={() => setShowMusicPlayer(false)} zIndex={130} />
 
