@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import OptimizedAvatar from "../OptimizedAvatar";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, Eye, Trophy, Heart, Bug, ShieldCheck, LogOut, Music, Users, Briefcase } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { buildFrameDefs } from "./canvasFrameRegistry";
@@ -50,11 +50,6 @@ export default function CanvasWorkspace({
   const [showApplicationsDialog, setShowApplicationsDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
-  const navigate = useNavigate();
-  const onEditProject = useCallback(() => {
-    if (!project?.id) return;
-    navigate(createPageUrl(`EditProject?id=${project.id}`));
-  }, [navigate, project?.id]);
 
   useEffect(() => {
     if (!fullscreenId) return;
@@ -466,7 +461,6 @@ export default function CanvasWorkspace({
             pendingApplicationsCount={pendingApplicationsCount}
             onOpenApplications={() => setShowApplicationsDialog(true)}
             onOpenInvite={() => setShowInviteDialog(true)}
-            onEditProject={onEditProject}
           />
         </div>
 
@@ -551,7 +545,6 @@ export default function CanvasWorkspace({
               pendingApplicationsCount={pendingApplicationsCount}
               onOpenApplications={() => { setShowApplicationsDialog(true); setLayersOpen(false); }}
               onOpenInvite={() => { setShowInviteDialog(true); setLayersOpen(false); }}
-              onEditProject={() => { onEditProject(); setLayersOpen(false); }}
             />
           </div>
         </div>
