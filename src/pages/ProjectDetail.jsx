@@ -43,6 +43,7 @@ import {
   BookOpen,
   Paperclip,
   FileText,
+  Lock,
   Loader2
 } from "lucide-react";
 import { toast } from "sonner";
@@ -960,34 +961,13 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
 
   return (
     <>
-      {/* Real-time Collaboration Presence Tracking */}
-      {userCanContribute && currentUser && (
-        <CollaboratorPresence projectId={projectId} currentUser={currentUser} />
-      )}
-
-      {/* Hidden file input for logo upload */}
-      <input
-        type="file"
-        accept="image/png, image/jpeg, image/jpg"
-        ref={logoInputRef}
-        onChange={handleLogoUpload}
-        className="hidden"
-      />
-
-      <ShareCardDialog
-        isOpen={showShareCard}
-        onClose={() => setShowShareCard(false)}
-        type="project"
-        data={{ project, owner: projectUsers.find(u => u.email === project?.created_by) }}
-        shareUrl={`${getShareBaseUrl()}${createPageUrl(`ProjectDetail?id=${project.id}`)}`}
-      />
-
+      {/* Apply to join modal — available from the restricted screen for public projects */}
       <Dialog open={showApplyModal} onOpenChange={(open) => { setShowApplyModal(open); if (!open) { setApplicationMessage(""); setApplicationAttachments([]); } }}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-purple-600" />
-              Apply to join "{project.title}"
+              Apply to Join
             </DialogTitle>
             <DialogDescription>
               Write a brief message to {projectOwnerProfile?.full_name || 'the project owner'} explaining why you'd be a great collaborator.
@@ -1003,7 +983,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                 required
                 className="resize-none"
               />
-              {/* Attachments */}
               <div>
                 <p className="text-xs text-gray-500 mb-1.5">Attach documents, photos, or videos to showcase your expertise</p>
                 {applicationAttachments.length > 0 && (
@@ -1012,14 +991,9 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                       <div key={idx} className="relative group">
                         {att.file_type === "image" ? (
                           <img src={att.file_url} alt={att.file_name} className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
-                        ) : att.file_type === "video" ? (
+                        ) : (
                           <div className="w-16 h-16 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center">
                             <FileText className="w-5 h-5 text-gray-500" />
-                          </div>
-                        ) : (
-                          <div className="w-16 h-16 rounded-lg border border-gray-200 bg-red-50 flex flex-col items-center justify-center p-1">
-                            <FileText className="w-4 h-4 text-red-500" />
-                            <span className="text-[8px] text-red-600 truncate w-full text-center mt-0.5">{att.file_type === "pdf" ? "PDF" : "FILE"}</span>
                           </div>
                         )}
                         <button
@@ -1029,7 +1003,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
                         >
                           <X className="w-3 h-3" />
                         </button>
-                        <p className="text-[8px] text-gray-400 truncate w-16 mt-0.5 text-center">{att.file_name}</p>
                       </div>
                     ))}
                   </div>
@@ -1066,596 +1039,98 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
           </div>
         </DialogContent>
       </Dialog>
-      
+
       <div className="cu-container cu-page">
-        <div className="flex items-center justify-end mb-4 sm:mb-6">
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            
-            {canApply && (
-                <Button onClick={() => setShowApplyModal(true)} className="cu-button text-sm" size="sm">
-                    <UserPlus className="w-4 h-4 mr-1 sm:mr-2" />
-                    Apply to Join
-                </Button>
-            )}
-            <Button
-              variant="ghost"
-              onClick={handleShare}
-              className="flex items-center text-sm hover:bg-transparent"
-              size="sm"
+        <div className="max-w-2xl mx-auto">
+          {/* Invitation banner — invited users can accept to become collaborators (no project content shown) */}
+          {pendingInvitation && currentUser && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6"
             >
-              <Share2 className="w-4 h-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Share</span>
-            </Button>
-            
-            {isOwner && (
-              <Link to={createPageUrl(`EditProject?id=${project.id}`)}>
-                <Button className="cu-button text-sm" size="sm">
-                  <Edit className="w-4 h-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Edit Project</span>
-                  <span className="sm:hidden">Edit</span>
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
-
-        {/* Invitation Banner - Show prominently if user has a pending invitation */}
-        {pendingInvitation && currentUser && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
-          >
-            <Card className="cu-card border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-indigo-50">
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <UserPlus className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-lg text-gray-900 mb-1">
-                        You've Been Invited!
-                      </h3>
-                      <p className="text-sm text-gray-700">
-                        You've been invited to join this project as a collaborator.
-                        {pendingInvitation.message && (
-                          <span className="block mt-2 italic text-gray-600">
-                            "{pendingInvitation.message}"
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex space-x-3 sm:flex-shrink-0">
-                    <Button
-                      onClick={handleAcceptInvitation}
-                      disabled={isRespondingToInvite}
-                      className="cu-button flex-1 sm:flex-initial"
-                    >
-                      <Check className="w-4 h-4 mr-2" />
-                      {isRespondingToInvite ? 'Processing...' : 'Accept'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleDeclineInvitation}
-                      disabled={isRespondingToInvite}
-                      className="flex-1 sm:flex-initial"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Decline
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Desktop Layout (xl and above) - Dynamic grid based on collaborator status */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 xl:gap-8">
-          {/* Left Sidebar - Desktop Only */}
-          <aside className="hidden xl:block xl:col-span-3 space-y-6">
-
-            {/* For non-collaborators: Show Social & Funding in left sidebar */}
-            {!userCanContribute && (
-              <>
-                <SocialsPanel
-                  socialLinks={project.social_links || {}}
-                  onUpdate={handleUpdateSocialLinks}
-                  canEdit={isOwner}
-                  title="Project Social Media"
-                  emptyMessage="Add social media links to promote this project"
-                />
-                <ProjectFundingCard 
-                  project={project} 
-                  projectOwner={projectOwnerProfile}
-                  canEdit={isOwner}
-                  onUpdate={handleProjectUpdate}
-                />
-              </>
-            )}
-
-            {/* For collaborators: Show project tools + social in left sidebar (funding moved to right) */}
-            {userCanContribute && (
-              <>
-                <ProjectLinksManager
-                  project={project}
-                  currentUser={currentUser}
-                  onProjectUpdate={handleProjectUpdate}
-                />
-                <SocialsPanel
-                  socialLinks={project.social_links || {}}
-                  onUpdate={handleUpdateSocialLinks}
-                  canEdit={isOwner}
-                  title="Project Social Media"
-                  emptyMessage="Add social media links to promote this project"
-                />
-              </>
-            )}
-          </aside>
-
-          {/* Main Content - 75% width for non-collaborators (9 cols), 50% for collaborators (6 cols) */}
-          <main className={`${userCanContribute ? 'xl:col-span-6' : 'xl:col-span-9'} cu-content-grid space-y-4 sm:space-y-6`}>
-            {/* Project Visibility Toggle - Mobile/Tablet for project owner - ABOVE project details */}
-            {isOwner && (
-              <Card className="cu-card xl:hidden">
+              <Card className="cu-card border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-indigo-50">
                 <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      <div className="flex items-center space-x-2">
-                        {project.is_visible_on_feed ? (
-                          <Eye className="w-4 h-4 sm:w-5 h-5 mr-2 text-green-600 flex-shrink-0" />
-                        ) : (
-                          <EyeOff className="w-4 h-4 sm:w-5 h-5 text-gray-400 flex-shrink-0" />
-                        )}
-                        <div className="min-w-0">
-                          <Label htmlFor="visibility-toggle-mobile" className="text-sm font-medium cursor-pointer">
-                            {project.is_visible_on_feed ? 'Public on Feed' : 'Private Project'}
-                          </Label>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {project.is_visible_on_feed 
-                              ? 'Anyone can view and contribute' 
-                              : 'Only invited collaborators can view'
-                            }
-                          </p>
-                        </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <UserPlus className="w-6 h-6 text-white" />
                       </div>
-                    </div>
-                    <Switch
-                      id="visibility-toggle-mobile"
-                      checked={project.is_visible_on_feed}
-                      onCheckedChange={handleToggleVisibility}
-                      disabled={isUpdatingVisibility}
-                      className="ml-3 flex-shrink-0"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            {isOwner && <ProjectApplicationsManager project={project} onProjectUpdate={handleProjectUpdate} />}
-            
-            <Card className="cu-card">
-              <CardHeader className="p-4 sm:p-6">
-                <div className="flex items-start space-x-3 sm:space-x-4">
-                  {/* Editable Project Logo */}
-                  <div className="relative w-12 h-12 sm:w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0 group">
-                    {project.logo_url ? (
-                      <ClickableImage 
-                        src={project.logo_url} 
-                        alt={`${project.title} logo`}
-                        caption={`${project.title} - Project Logo`}
-                        className="w-full h-full object-cover" 
-                      />
-                    ) : (
-                      <CategoryIcon className="w-6 h-6 sm:w-8 h-8 text-white" />
-                    )}
-                    
-                    {/* Upload overlay for project owner */}
-                    {isOwner && (
-                      <div
-                        onClick={() => !isUploadingLogo && logoInputRef.current?.click()}
-                        className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 flex items-center justify-center transition-all cursor-pointer"
-                      >
-                        {isUploadingLogo ? (
-                          <div className="text-white text-xs">Uploading...</div>
-                        ) : (
-                          <Camera className="w-5 h-5 sm:w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 break-words">
-                      {project.title}
-                    </CardTitle>
-                    <div className="flex items-center flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4">
-                      {isOwner ? (
-                        <Select 
-                          value={project.status} 
-                          onValueChange={handleStatusChange}
-                          disabled={isUpdatingStatus}
-                        >
-                          <SelectTrigger className="w-[160px] h-8 text-xs sm:text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="seeking_collaborators">Seeking Collaborators</SelectItem>
-                            <SelectItem value="in_progress">In Progress</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Badge className={`${statusClass} text-xs sm:text-sm px-2 sm:px-3 py-1`}>
-                          {project.status?.replace(/_/g, ' ')}
-                        </Badge>
-                      )}
-                      <Badge variant="outline" className="text-xs sm:text-sm">
-                        {project.project_type}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs sm:text-sm">
-                        {project.classification?.replace(/_/g, ' ')}
-                      </Badge>
-                      {project.is_visible_on_feed && (
-                        <Badge className="bg-green-100 text-green-800 text-xs sm:text-sm flex items-center">
-                          <UserPlus className="w-3 h-3 mr-1" />
-                          Open for Collaboration
-                        </Badge>
-                      )}
-                      {currentUser && !isOwner && !isExplicitCollaborator && (
-                        <SkillMatchBadge currentUser={currentUser} project={project} />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
-                <CardDescription className="text-sm sm:text-base text-gray-700 leading-relaxed mb-4">
-                  {project.description}
-                </CardDescription>
-                
-                {project.area_of_interest && (
-                  <div className="flex items-center mt-4 text-sm sm:text-base text-gray-600">
-                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
-                    <span className="break-words">{project.area_of_interest}</span>
-                    {project.location && (
-                      <>
-                        <span className="mx-2">•</span>
-                        <span className="break-words">{project.location}</span>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {project.skills_needed && project.skills_needed.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="font-semibold text-gray-900 mb-3 text-sm sm:text-base">Skills Needed</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {project.skills_needed.map((skill, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs sm:text-sm">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {project.tools_needed && project.tools_needed.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="font-semibold text-gray-900 mb-3 text-sm sm:text-base">Tools Needed</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {project.tools_needed.map((tool, index) => (
-                        <Badge key={index} variant="outline" className="text-xs sm:text-sm">
-                          {tool}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Project Collaborators */}
-                {projectUsers && projectUsers.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="font-semibold text-gray-900 mb-3 text-sm sm:text-base flex items-center">
-                      <Users className="w-4 h-4 mr-2 text-purple-600" />
-                      Team Members ({projectUsers.length})
-                    </h3>
-                    <div className="flex flex-wrap gap-3">
-                      {projectUsers.slice(0, 8).map((user) => (
-                        <Link
-                          key={user.email}
-                          to={createPageUrl(`UserProfile?username=${user.username}`)}
-                          className="group"
-                        >
-                          <div className="flex flex-col items-center space-y-1">
-                            <Avatar className="h-10 w-10 ring-2 ring-white group-hover:ring-purple-200 transition-all">
-                              <AvatarImage src={user.profile_image} />
-                              <AvatarFallback className="text-xs bg-purple-100 text-purple-600">
-                                {user.full_name?.[0] || user.email?.[0] || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-xs text-gray-600 group-hover:text-purple-600 transition-colors max-w-[80px] truncate text-center">
-                              {user.full_name || user.email}
+                      <div className="flex-1">
+                        <h3 className="font-bold text-lg text-gray-900 mb-1">
+                          You've Been Invited!
+                        </h3>
+                        <p className="text-sm text-gray-700">
+                          You've been invited to join this project as a collaborator.
+                          {pendingInvitation.message && (
+                            <span className="block mt-2 italic text-gray-600">
+                              "{pendingInvitation.message}"
                             </span>
-                          </div>
-                        </Link>
-                      ))}
-                      {projectUsers.length > 8 && (
-                        <div className="flex flex-col items-center space-y-1">
-                          <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                            <span className="text-xs font-medium text-gray-600">
-                              +{projectUsers.length - 8}
-                            </span>
-                          </div>
-                          <span className="text-xs text-gray-500">more</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Project Followers */}
-                {(followers.length > 0 || project.followers_count > 0) && (
-                  <div className="mt-6">
-                    <h3 className="font-semibold text-gray-900 mb-3 text-sm sm:text-base flex items-center">
-                      <Heart className="w-4 h-4 mr-2 text-pink-600" />
-                      Followers ({followers.length})
-                    </h3>
-                    {isLoadingFollowers ? (
-                      <div className="flex items-center space-x-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
-                        <span className="text-xs text-gray-500">Loading followers...</span>
-                      </div>
-                    ) : followers.length > 0 ? (
-                      <div className="flex flex-wrap gap-3">
-                        {followers.slice(0, 8).map((follower) => (
-                          <Link
-                            key={follower.email}
-                            to={createPageUrl(`UserProfile?username=${follower.username}`)}
-                            className="group"
-                          >
-                            <div className="flex flex-col items-center space-y-1">
-                              <Avatar className="h-10 w-10 ring-2 ring-white group-hover:ring-pink-200 transition-all">
-                                <AvatarImage src={follower.profile_image} />
-                                <AvatarFallback className="text-xs bg-pink-100 text-pink-600">
-                                  {follower.full_name?.[0] || follower.email?.[0] || 'U'}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-xs text-gray-600 group-hover:text-pink-600 transition-colors max-w-[80px] truncate text-center">
-                                {follower.full_name || follower.email}
-                              </span>
-                            </div>
-                          </Link>
-                        ))}
-                        {followers.length > 8 && (
-                          <div className="flex flex-col items-center space-y-1">
-                            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                              <span className="text-xs font-medium text-gray-600">
-                                +{followers.length - 8}
-                              </span>
-                            </div>
-                            <span className="text-xs text-gray-500">more</span>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">
-                        Be the first to follow this project!
-                      </p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-
-
-            {/* Project Analytics Dashboard - Show if there's activity or user can contribute */}
-            <ProjectAnalyticsDashboard
-              project={project}
-              currentUser={currentUser}
-              isCollaborator={userCanContribute}
-            />
-
-            {/* Project Links Section */}
-            {project.project_urls && project.project_urls.length > 0 ? (
-              <Card className="cu-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center text-base sm:text-lg">
-                    <LinkIcon className="w-5 h-5 mr-2 text-purple-600" />
-                    Showcase
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                   {project.project_urls && project.project_urls.length === 1 ? (
-                     <MicrolinkPreview
-                       url={typeof project.project_urls[0] === 'object' ? project.project_urls[0].url : project.project_urls[0]}
-                       title={typeof project.project_urls[0] === 'object' ? project.project_urls[0].title : ''}
-                       className="w-full max-w-md mx-auto"
-                     />
-                   ) : project.project_urls && project.project_urls.length > 1 ? (
-                    <div className="space-y-3">
-                      <HorizontalScrollContainer
-                        className="pb-2"
-                        showArrows={project.project_urls.length > 1}
-                      >
-                        {project.project_urls.map((linkItem, index) => {
-                           const linkUrl = typeof linkItem === 'object' ? linkItem.url : linkItem;
-                           const linkTitle = typeof linkItem === 'object' ? linkItem.title : '';
-                           return (
-                             <MicrolinkPreview
-                               key={index}
-                               url={linkUrl}
-                               title={linkTitle || ''}
-                               className="flex-shrink-0 w-[280px] sm:w-[320px]"
-                             />
-                           );
-                         })}
-                      </HorizontalScrollContainer>
-
-                      {project.project_urls.length > 3 && (
-                        <div className="text-center">
-                          <p className="text-sm text-gray-500">
-                            Scroll to see all {project.project_urls.length} project links
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ) : null}
-                </CardContent>
-              </Card>
-            ) : null}
-
-            {/* Project Highlights - Show if highlights exist OR if user can edit (to allow adding) */}
-            {(project.highlights && project.highlights.length > 0) || (userCanContribute) ? (
-              <ProjectHighlights 
-                project={project} 
-                currentUser={currentUser}
-                isCollaborator={userCanContribute} 
-                onProjectUpdate={handleProjectUpdate}
-              />
-            ) : null}
-          </main>
-
-          {/* Right Sidebar - Only show to collaborators on desktop */}
-          {userCanContribute && (
-            <aside className="hidden xl:block xl:col-span-3 space-y-4 sm:space-y-6">
-              {/* Project Visibility Toggle - Only for project owner */}
-              {isOwner && (
-                <Card className="cu-card">
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3 flex-1 min-w-0">
-                        <div className="flex items-center space-x-2">
-                          {project.is_visible_on_feed ? (
-                            <Eye className="w-4 h-4 sm:w-5 h-5 mr-2 text-green-600 flex-shrink-0" />
-                          ) : (
-                            <EyeOff className="w-4 h-4 sm:w-5 h-5 text-gray-400 flex-shrink-0" />
                           )}
-                          <div className="min-w-0">
-                            <Label htmlFor="visibility-toggle" className="text-sm font-medium cursor-pointer">
-                              {project.is_visible_on_feed ? 'Public on Feed' : 'Private Project'}
-                            </Label>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {project.is_visible_on_feed 
-                                ? 'Anyone can view and contribute' 
-                                : 'Only invited collaborators can view'
-                              }
-                            </p>
-                          </div>
-                        </div>
+                        </p>
                       </div>
-                      <Switch
-                        id="visibility-toggle"
-                        checked={project.is_visible_on_feed}
-                        onCheckedChange={handleToggleVisibility}
-                        disabled={isUpdatingVisibility}
-                        className="ml-3 flex-shrink-0"
-                      />
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-
-
-
-              {/* Project Membership Manager */}
-              {(isOwner || isExplicitCollaborator || (userApplication && userApplication.status === 'accepted')) && (
-                <ProjectMembershipManager
-                  project={project}
-                  currentUser={currentUser}
-                  projectUsers={projectUsers}
-                  isOwner={isOwner}
-                  isExplicitCollaborator={isExplicitCollaborator || (userApplication && userApplication.status === 'accepted')}
-                  onUpdate={handleProjectUpdate}
-                />
-              )}
-
-              {/* Project Funding - Desktop only, below Team Members */}
-              <ProjectFundingCard 
-                project={project} 
-                projectOwner={projectOwnerProfile}
-                canEdit={isOwner}
-                onUpdate={handleProjectUpdate}
-              />
-            </aside>
+                    <div className="flex space-x-3 sm:flex-shrink-0">
+                      <Button
+                        onClick={handleAcceptInvitation}
+                        disabled={isRespondingToInvite}
+                        className="cu-button flex-1 sm:flex-initial"
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        {isRespondingToInvite ? 'Processing...' : 'Accept'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={handleDeclineInvitation}
+                        disabled={isRespondingToInvite}
+                        className="flex-1 sm:flex-initial"
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Decline
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           )}
 
-          {/* Mobile/Tablet Only: All sidebar content except Project Information (moved above) */}
-          <div className="xl:hidden col-span-1 space-y-4 sm:space-y-6">
-
-            {/* For non-collaborators on mobile/tablet: Social & Funding */}
-            {!userCanContribute && (
-              <>
-                <SocialsPanel
-                  socialLinks={project.social_links || {}}
-                  onUpdate={handleUpdateSocialLinks}
-                  canEdit={isOwner}
-                  title="Project Social Media"
-                  emptyMessage="Add social media links to promote this project"
-                />
-                <ProjectFundingCard 
-                  project={project} 
-                  projectOwner={projectOwnerProfile}
-                  canEdit={isOwner}
-                  onUpdate={handleProjectUpdate}
-                />
-              </>
-            )}
-
-            {/* For collaborators on mobile/tablet: All components including Team Members */}
-            {userCanContribute && (
-              <>
-                <ProjectLinksManager
-                  project={project}
-                  currentUser={currentUser}
-                  onProjectUpdate={handleProjectUpdate}
-                />
-                {(isOwner || isExplicitCollaborator || (userApplication && userApplication.status === 'accepted')) && (
-                  <ProjectMembershipManager
-                    project={project}
-                    currentUser={currentUser}
-                    projectUsers={projectUsers}
-                    isOwner={isOwner}
-                    isExplicitCollaborator={isExplicitCollaborator || (userApplication && userApplication.status === 'accepted')}
-                    onUpdate={handleProjectUpdate}
-                  />
-                )}
-                <SocialsPanel
-                  socialLinks={project.social_links || {}}
-                  onUpdate={handleUpdateSocialLinks}
-                  canEdit={isOwner}
-                  title="Project Social Media"
-                  emptyMessage="Add social media links to promote this project"
-                />
-                <ProjectFundingCard 
-                  project={project} 
-                  projectOwner={projectOwnerProfile}
-                  canEdit={isOwner}
-                  onUpdate={handleProjectUpdate}
-                />
-              </>
-            )}
-          </div>
+          {/* Access-restricted screen — no project content is shown to non-collaborators */}
+          {!pendingInvitation && (
+            <Card className="cu-card">
+              <CardContent className="p-8 sm:p-10 text-center">
+                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-5">
+                  <Lock className="w-8 h-8 text-purple-600" />
+                </div>
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">
+                  Collaborators Only
+                </h2>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  You need to be a collaborator on this project to view its details. If you'd like to join, you can request access below.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(createPageUrl("Discover"), { replace: true })}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back to Discover
+                  </Button>
+                  {canApply && (
+                    <Button
+                      onClick={() => setShowApplyModal(true)}
+                      className="bg-purple-600 hover:bg-purple-700"
+                    >
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Apply to Join
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
-
-
-
-        {/* Workspace Tabs */}
-        {(userCanContribute) && (
-          <div className="mt-6 sm:mt-8">
-            <WorkspaceTabs 
-              project={project} 
-              currentUser={currentUser}
-              projectUsers={projectUsers}
-              onProjectUpdate={handleProjectUpdate}
-              isCollaborator={userCanContribute}
-              isProjectOwner={isOwner}
-            />
-          </div>
-        )}
-        </div>
-        </>
-        );
+      </div>
+    </>
+  );
         }
