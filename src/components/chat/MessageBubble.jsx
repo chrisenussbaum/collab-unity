@@ -9,6 +9,8 @@ import ProjectMentionCard from "./ProjectMentionCard";
 import ProjectItemReferenceCard from "./ProjectItemReferenceCard";
 import ProjectMentionPopover from "./ProjectMentionPopover";
 import ProjectItemPopover from "./ProjectItemPopover";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 export default function MessageBubble({ 
   message, 
@@ -20,7 +22,8 @@ export default function MessageBubble({
   isGroupChat = false,
   isRead = false,
   currentUser = null,
-  conversationParticipants = []
+  conversationParticipants = [],
+  enableUserMentions = false
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
@@ -105,7 +108,28 @@ export default function MessageBubble({
                 </span>
               );
             } else if (sub) {
-              textParts.push(<span key={`${keyPrefix}-txt-${k}`}>{sub}</span>);
+              if (enableUserMentions) {
+                const atParts = sub.split(/(@\w+)/g);
+                atParts.forEach((ap, kk) => {
+                  if (/^@\w+$/.test(ap)) {
+                    textParts.push(
+                      <Link
+                        key={`${keyPrefix}-at-${k}-${kk}`}
+                        to={createPageUrl(`UserProfile?username=${ap.slice(1)}`)}
+                        className="font-bold hover:underline"
+                        style={{ color: isOwn ? "#c4b5fd" : "#7c3aed" }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {ap}
+                      </Link>
+                    );
+                  } else if (ap) {
+                    textParts.push(<span key={`${keyPrefix}-txt-${k}-${kk}`}>{ap}</span>);
+                  }
+                });
+              } else {
+                textParts.push(<span key={`${keyPrefix}-txt-${k}`}>{sub}</span>);
+              }
             }
           });
         }

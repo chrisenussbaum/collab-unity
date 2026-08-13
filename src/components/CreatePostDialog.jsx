@@ -35,7 +35,10 @@ import {
   BarChart3,
   HelpCircle
 } from "lucide-react";
-import { FeedPost, Project } from "@/entities/all";
+import { FeedPost, Project, Notification } from "@/entities/all";
+import MentionTextarea from "@/components/MentionTextarea";
+import { getCachedAllUserProfiles } from "@/lib/userProfileCache";
+import { extractMentionedEmails } from "@/lib/mentions";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 
@@ -119,6 +122,7 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
   // Q&A fields
   const [qaTitle, setQaTitle] = useState("");
   const [qaContent, setQaContent] = useState("");
+  const [allUsers, setAllUsers] = useState([]);
 
   useEffect(() => {
     const loadUserProjects = async () => {
@@ -136,6 +140,11 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
 
     loadUserProjects();
   }, [currentUser, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    getCachedAllUserProfiles().then(setAllUsers).catch(() => {});
+  }, [isOpen]);
 
   const resetForm = () => {
     setSelectedType(null);
@@ -415,7 +424,28 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
 
     setIsSubmitting(true);
     try {
-      await FeedPost.create(postData);
+      const createdPost = await FeedPost.create(postData);
+      const mentionContent = postData.content || "";
+      const mentionedEmails = extractMentionedEmails(mentionContent, allUsers);
+      if (mentionedEmails.length > 0) {
+        Promise.all(
+          mentionedEmails
+            .filter((e) => e !== currentUser.email)
+            .map((email) =>
+              Notification.create({
+                user_email: email,
+                title: "You were mentioned in a post",
+                message: `${currentUser.full_name || currentUser.email} mentioned you: "${mentionContent.substring(0, 100)}"`,
+                type: "feed_comment_mention",
+                related_project_id: createdPost.id,
+                actor_email: currentUser.email,
+                actor_name: currentUser.full_name || currentUser.email,
+                read: false,
+                metadata: { post_id: createdPost.id, post_title: postData.title },
+              })
+            )
+        ).catch(() => {});
+      }
       handleClose();
       if (onPostCreated) {
         onPostCreated();
@@ -491,10 +521,9 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
 
       <div>
         <Label htmlFor="statusContent">What's the update? *</Label>
-        <Textarea
-          id="statusContent"
+        <MentionTextarea
           value={statusContent}
-          onChange={(e) => setStatusContent(e.target.value)}
+          onChange={setStatusContent}
           placeholder="Share what you've accomplished, what you're working on, or what's changed..."
           rows={5}
           className="resize-none"
@@ -600,10 +629,9 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
 
       <div>
         <Label htmlFor="narrativeContent">Your Story * <span className="text-xs text-gray-500">(min. 100 characters)</span></Label>
-        <Textarea
-          id="narrativeContent"
+        <MentionTextarea
           value={narrativeContent}
-          onChange={(e) => setNarrativeContent(e.target.value)}
+          onChange={setNarrativeContent}
           placeholder="Share your experience, insights, or lessons learned..."
           rows={8}
           className="resize-none"
@@ -683,10 +711,9 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
 
       <div>
         <Label htmlFor="collabContent">Tell us more *</Label>
-        <Textarea
-          id="collabContent"
+        <MentionTextarea
           value={collabContent}
-          onChange={(e) => setCollabContent(e.target.value)}
+          onChange={setCollabContent}
           placeholder="Describe your project, what kind of help you need, and what skills or background you're looking for..."
           rows={6}
           className="resize-none"
@@ -754,10 +781,9 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
     <div className="space-y-4">
       <div>
         <Label htmlFor="pollQuestion">Poll Question *</Label>
-        <Textarea
-          id="pollQuestion"
+        <MentionTextarea
           value={pollQuestion}
-          onChange={(e) => setPollQuestion(e.target.value)}
+          onChange={setPollQuestion}
           placeholder="Ask a question for the community to vote on..."
           rows={3}
           className="resize-none"
@@ -821,10 +847,9 @@ export default function CreatePostDialog({ isOpen, onClose, currentUser, onPostC
 
       <div>
         <Label htmlFor="qaContent">Your Question * <span className="text-xs text-gray-500">(provide context for better answers)</span></Label>
-        <Textarea
-          id="qaContent"
+        <MentionTextarea
           value={qaContent}
-          onChange={(e) => setQaContent(e.target.value)}
+          onChange={setQaContent}
           placeholder="Ask your question and provide any relevant context..."
           rows={6}
           className="resize-none"

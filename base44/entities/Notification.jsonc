@@ -48,7 +48,8 @@
         "project_member_removed",
         "project_member_added",
         "project_status_changed",
-        "direct_message"
+        "direct_message",
+        "project_chat_mention"
       ],
       "description": "Type of notification"
     },

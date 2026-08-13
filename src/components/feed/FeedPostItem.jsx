@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 import HorizontalScrollContainer from "@/components/HorizontalScrollContainer";
 import FeedComments from "@/components/FeedComments";
+import { renderContentWithMentions } from "@/lib/mentions";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import MediaDisplay from "@/components/MediaDisplay";
 import PollWidget from "@/components/feed/PollWidget";
@@ -204,7 +205,7 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
                   <Badge className={`text-sm border ${statusConfig[post.status]?.color || statusConfig.on_track.color}`}>{statusConfig[post.status]?.label || "On Track"}</Badge>
                 </div>
               )}
-              <p className="text-gray-700 cu-text-responsive-sm leading-relaxed">{post.content}</p>
+              <p className="text-gray-700 cu-text-responsive-sm leading-relaxed">{renderContentWithMentions(post.content)}</p>
               {post.media_attachments && post.media_attachments.length > 0 && (
                 <div className="mt-4">
                   {post.media_attachments.length === 1 ? (
@@ -240,14 +241,14 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
 
           {post.post_type === "narrative" && (
             <div className="space-y-4">
-              <p className="text-gray-700 cu-text-responsive-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
+              <p className="text-gray-700 cu-text-responsive-sm leading-relaxed whitespace-pre-wrap">{renderContentWithMentions(post.content)}</p>
               <RelatedProjectCard color="purple" />
             </div>
           )}
 
           {post.post_type === "collaboration_call" && (
             <div className="space-y-4">
-              <p className="text-gray-700 cu-text-responsive-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
+              <p className="text-gray-700 cu-text-responsive-sm leading-relaxed whitespace-pre-wrap">{renderContentWithMentions(post.content)}</p>
               <RelatedProjectCard color="green" />
               {post.tags && post.tags.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2">
@@ -260,14 +261,14 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
 
           {post.post_type === "poll" && (
             <div className="space-y-4">
-              <p className="text-gray-700 cu-text-responsive-sm leading-relaxed">{post.content}</p>
+              <p className="text-gray-700 cu-text-responsive-sm leading-relaxed">{renderContentWithMentions(post.content)}</p>
               <PollWidget post={post} currentUser={currentUser} />
             </div>
           )}
 
           {post.post_type === "qa" && (
             <div className="space-y-4">
-              <p className="text-gray-700 cu-text-responsive-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
+              <p className="text-gray-700 cu-text-responsive-sm leading-relaxed whitespace-pre-wrap">{renderContentWithMentions(post.content)}</p>
               <QAWidget post={post} currentUser={currentUser} />
             </div>
           )}

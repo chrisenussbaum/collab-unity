@@ -59,6 +59,7 @@ const notificationIcons = {
   feed_share: Share2,
   discussion_comment: MessageCircle,
   discussion_comment_mention: AtSign,
+  project_chat_mention: AtSign,
   project_comment: MessageCircle,
   project_task_assigned: CheckSquare,
   project_task_completed: Trophy,

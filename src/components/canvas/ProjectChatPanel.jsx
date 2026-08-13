@@ -152,6 +152,23 @@ export default function ProjectChatPanel({ open, onClose, project, currentUser, 
     }).catch(() => {});
   };
 
+  const resolveMentions = (content) => {
+    const re = /@(\w+)/g;
+    const emails = new Set();
+    let m;
+    while ((m = re.exec(content)) !== null) {
+      const name = m[1].toLowerCase();
+      const u = collaborators.find(
+        (c) =>
+          (c.username && c.username.toLowerCase() === name) ||
+          (c.full_name && c.full_name.split(" ")[0].toLowerCase() === name) ||
+          (c.email && c.email.split("@")[0].toLowerCase() === name)
+      );
+      if (u && u.email !== currentUser.email) emails.add(u.email);
+    }
+    return [...emails];
+  };
+
   const handleSend = async (e) => {
     if (e) e.preventDefault();
     const content = newMessage.trim();
@@ -169,6 +186,24 @@ export default function ProjectChatPanel({ open, onClose, project, currentUser, 
       });
       setMessages((prev) => [...prev, created]);
       await bumpUnread(content.substring(0, 100));
+      const mentioned = resolveMentions(content);
+      if (mentioned.length > 0) {
+        Promise.all(
+          mentioned.map((email) =>
+            base44.entities.Notification.create({
+              user_email: email,
+              title: `You were mentioned in ${project?.title || "project chat"}`,
+              message: `${currentUser.full_name || currentUser.email}: ${content.substring(0, 100)}`,
+              type: "project_chat_mention",
+              related_project_id: project.id,
+              actor_email: currentUser.email,
+              actor_name: currentUser.full_name || currentUser.email,
+              read: false,
+              metadata: { project_id: project.id, conversation_id: conversation.id, mentioned: true },
+            })
+          )
+        ).catch(() => {});
+      }
     } catch (err) {
       console.error(err);
       toast.error("Failed to send message");
@@ -246,7 +281,7 @@ export default function ProjectChatPanel({ open, onClose, project, currentUser, 
     const atIdx = upTo.search(/@\w*$/);
     const before = newMessage.slice(0, atIdx);
     const after = newMessage.slice(cursor);
-    const token = `@${user.full_name || user.email} `;
+    const token = `@${user.username || user.full_name?.split(" ")[0] || user.email.split("@")[0]} `;
     setNewMessage(`${before}${token}${after}`);
     setShowMention(false);
     setMentionQuery("");
@@ -313,6 +348,7 @@ export default function ProjectChatPanel({ open, onClose, project, currentUser, 
                     isRead={(message.read_by || []).length > 0}
                     currentUser={currentUser}
                     conversationParticipants={(conversation?.participants || []).filter((e) => e !== currentUser.email)}
+                    enableUserMentions
                   />
                 );
               })}
