@@ -4,11 +4,12 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import OptimizedAvatar from "../OptimizedAvatar";
 import { Link } from "react-router-dom";
-import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, Eye, Trophy, Heart, Bug, ShieldCheck, LogOut, Music, Users, Briefcase } from "lucide-react";
+import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, Eye, Trophy, Heart, Bug, ShieldCheck, LogOut, Music, Users, Briefcase, Info } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { buildFrameDefs } from "./canvasFrameRegistry";
 import CanvasFrame from "./CanvasFrame";
 import CanvasItemFrame from "./CanvasItemFrame";
+import ProjectDetailsFrame from "./ProjectDetailsFrame";
 import CanvasLayers from "./CanvasLayers";
 import CanvasToolbar from "./CanvasToolbar";
 import CanvasPresenceStack from "./CanvasPresenceStack";
@@ -50,6 +51,7 @@ export default function CanvasWorkspace({
   const [showMusicPlayer, setShowMusicPlayer] = useState(false);
   const [showApplicationsDialog, setShowApplicationsDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [showProjectDetailsDialog, setShowProjectDetailsDialog] = useState(false);
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
   const [items, setItems] = useState([]);
   const itemSaveTimers = useRef({});
@@ -528,6 +530,7 @@ export default function CanvasWorkspace({
             pendingApplicationsCount={pendingApplicationsCount}
             onOpenApplications={() => setShowApplicationsDialog(true)}
             onOpenInvite={() => setShowInviteDialog(true)}
+            onOpenProjectDetails={() => setShowProjectDetailsDialog(true)}
           />
         </div>
 
@@ -624,6 +627,7 @@ export default function CanvasWorkspace({
               pendingApplicationsCount={pendingApplicationsCount}
               onOpenApplications={() => { setShowApplicationsDialog(true); setLayersOpen(false); }}
               onOpenInvite={() => { setShowInviteDialog(true); setLayersOpen(false); }}
+              onOpenProjectDetails={() => { setShowProjectDetailsDialog(true); setLayersOpen(false); }}
             />
           </div>
         </div>
@@ -678,6 +682,20 @@ export default function CanvasWorkspace({
             isExplicitCollaborator={isCollaborator}
             onUpdate={onProjectUpdate}
           />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showProjectDetailsDialog} onOpenChange={setShowProjectDetailsDialog}>
+        <DialogContent className="sm:max-w-[480px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Info className="w-5 h-5 text-[#18A0FB]" /> Project Details
+            </DialogTitle>
+            <DialogDescription>
+              {isOwner ? "View and edit your project information." : "Project information."}
+            </DialogDescription>
+          </DialogHeader>
+          <ProjectDetailsFrame project={project} canEdit={isOwner} />
         </DialogContent>
       </Dialog>
     </div>

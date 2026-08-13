@@ -1,7 +1,7 @@
 import React from "react";
 import {
   Sparkles, Lightbulb, Flag, CheckSquare, FileStack, Wrench,
-  BookOpen, Activity, Image as ImageIcon, Link2, BarChart3, Heart, DollarSign, Info
+  BookOpen, Activity, Image as ImageIcon, Link2, BarChart3, Heart, DollarSign
 } from "lucide-react";
 import TaskBoard from "../workspace/TaskBoard";
 import MilestonesTab from "../workspace/MilestonesTab";
@@ -16,7 +16,6 @@ import ProjectAnalyticsDashboard from "../project/ProjectAnalyticsDashboard";
 import ProjectFundingCard from "../ProjectFundingCard";
 import SocialsPanel from "../SocialsPanel";
 import MicrolinkPreview from "../MicrolinkPreview";
-import ProjectDetailsFrame from "./ProjectDetailsFrame";
 
 export function buildFrameDefs(props) {
   const {
@@ -48,10 +47,6 @@ export function buildFrameDefs(props) {
   );
 
   return [
-    ...(isOwner ? [{
-      id: "project-details", title: "Project Details", icon: Info, w: 420, h: 460,
-      render: () => <ProjectDetailsFrame project={project} />,
-    }] : []),
     {
       id: "assistant", title: "Project Assistant", icon: Sparkles, w: 540, h: 580,
       render: () => (

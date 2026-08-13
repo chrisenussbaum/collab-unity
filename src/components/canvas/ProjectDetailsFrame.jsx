@@ -27,7 +27,7 @@ function Row({ label, value }) {
   );
 }
 
-export default function ProjectDetailsFrame({ project }) {
+export default function ProjectDetailsFrame({ project, canEdit = false }) {
   return (
     <div className="p-3 space-y-3">
       <div className="flex items-center gap-3">
@@ -46,12 +46,14 @@ export default function ProjectDetailsFrame({ project }) {
             </span>
           )}
         </div>
-        <Link
-          to={createPageUrl(`EditProject?id=${project?.id}`)}
-          className="flex items-center gap-1 px-2 py-1 rounded-md bg-[#18A0FB] hover:bg-[#0E8FE0] text-white text-xs flex-shrink-0"
-        >
-          <Pencil className="w-3 h-3" /> Edit
-        </Link>
+        {canEdit && (
+          <Link
+            to={createPageUrl(`EditProject?id=${project?.id}`)}
+            className="flex items-center gap-1 px-2 py-1 rounded-md bg-[#18A0FB] hover:bg-[#0E8FE0] text-white text-xs flex-shrink-0"
+          >
+            <Pencil className="w-3 h-3" /> Edit
+          </Link>
+        )}
       </div>
 
       {project?.description && <p className="text-sm text-gray-600">{project.description}</p>}
