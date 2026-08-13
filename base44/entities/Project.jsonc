@@ -111,11 +111,6 @@
       "default": 1,
       "description": "Number of users actually collaborating on the project"
     },
-    "followers_count": {
-      "type": "number",
-      "default": 0,
-      "description": "Number of users following this project for updates"
-    },
     "status": {
       "type": "string",
       "enum": [

@@ -204,7 +204,6 @@ export default function Featured() {
     })
     .sort((a, b) => {
       if (sortOrder === "newest") return new Date(b.created_date || 0) - new Date(a.created_date || 0);
-      if (sortOrder === "popular") return (b.followers_count || 0) - (a.followers_count || 0);
       return 0;
     });
 
@@ -279,7 +278,6 @@ export default function Featured() {
                 className="text-xs border border-gray-200 rounded-full px-3 py-1.5 text-gray-600 bg-white focus:outline-none focus:border-[#5B47DB] cursor-pointer"
               >
                 <option value="newest">Newest First</option>
-                <option value="popular">Most Popular</option>
               </select>
               {(industryFilter !== "All" || interestFilter !== "All") && (
                 <button

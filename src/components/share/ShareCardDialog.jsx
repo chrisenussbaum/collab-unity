@@ -283,7 +283,6 @@ const ProjectCard = React.forwardRef(({ data, shareUrl }, ref) => {
   const { project, owner } = data;
   const skillsNeeded = (project?.skills_needed || []).slice(0, 4);
   const collaboratorCount = project?.current_collaborators_count || (project?.collaborator_emails?.length || 0);
-  const followersCount = project?.followers_count || 0;
 
   return (
     <div
@@ -329,9 +328,8 @@ const ProjectCard = React.forwardRef(({ data, shareUrl }, ref) => {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-1.5 mb-3">
+        <div className="grid grid-cols-2 gap-1.5 mb-3">
           <StatBox value={collaboratorCount} label="Collabs" />
-          <StatBox value={followersCount} label="Followers" />
           <StatBox value={classificationLabels[project?.classification] || "—"} label="Type" isText />
         </div>
 

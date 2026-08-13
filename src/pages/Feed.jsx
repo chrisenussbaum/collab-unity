@@ -105,7 +105,6 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
   const commentsRef = useRef(null);
   const [showAllLinksDialog, setShowAllLinksDialog] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [followersCount, setFollowersCount] = useState(project.followers_count || 0);
   const [selectedProjectLink, setSelectedProjectLink] = useState(null);
   const [showLinkPreview, setShowLinkPreview] = useState(false);
   const [showFundingDialog, setShowFundingDialog] = useState(false);
@@ -150,8 +149,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
 
   useEffect(() => {
     if (currentUser?.followed_projects) setIsFollowing(currentUser.followed_projects.includes(project.id));
-    setFollowersCount(project.followers_count || 0);
-  }, [currentUser, project.id, project.followers_count]);
+  }, [currentUser, project.id]);
 
   const handleFollow = async (e) => {
     e.preventDefault(); e.stopPropagation();
@@ -160,16 +158,12 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
       if (isFollowing) {
         const updatedFollowed = (currentUser.followed_projects || []).filter(id => id !== project.id);
         await base44.auth.updateMe({ followed_projects: updatedFollowed });
-        const newCount = Math.max(0, followersCount - 1);
-        await Project.update(project.id, { followers_count: newCount });
-        setIsFollowing(false); setFollowersCount(newCount);
+        setIsFollowing(false);
         if (onProjectUpdate) onProjectUpdate();
       } else {
         const updatedFollowed = [...(currentUser.followed_projects || []), project.id];
         await base44.auth.updateMe({ followed_projects: updatedFollowed });
-        const newCount = followersCount + 1;
-        await Project.update(project.id, { followers_count: newCount });
-        setIsFollowing(true); setFollowersCount(newCount);
+        setIsFollowing(true);
         if (onProjectUpdate) onProjectUpdate();
       }
     } catch (error) { toast.error("Failed to update follow status."); }
