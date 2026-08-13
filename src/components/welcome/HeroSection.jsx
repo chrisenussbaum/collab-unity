@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Download, Loader2 } from "lucide-react";
 
-const SCREENSHOT_HERO = "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/93243e71d_Screenshot2026-08-12at104950PM.png";
+const SCREENSHOT_HERO = "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/049ef5c30_Screenshot2026-08-12at112128PM.png";
 
 const HeroVisual = () => (
   <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 max-w-4xl mx-auto">
@@ -12,7 +12,7 @@ const HeroVisual = () => (
     </div>
     <img
       src={SCREENSHOT_HERO}
-      alt="Collab Unity Feed"
+      alt="Collab Unity Workspace Canvas"
       className="w-full"
       style={{ minHeight: 280, objectFit: "cover" }}
     />
