@@ -31,14 +31,14 @@ export function buildFrameDefs(props) {
 
   return [
     {
-      id: "assistant", title: "Project Assistant", icon: Sparkles, w: 540, h: 580,
+      id: "assistant", title: "Project Assistant", icon: Sparkles, w: 540, h: 580, fill: true,
       render: () => (
         <AIChat
           project={project} tasks={tasks} milestones={milestones} assets={assets}
           currentUser={currentUser} canEdit={canEdit} projectUsers={projectUsers}
           onProjectUpdate={onProjectUpdate} onNavigateTo={navigateToFrame}
           onTasksChanged={refreshTasks} onMilestonesChanged={refreshMilestones}
-          buildLinks={[]} activityLogs={[]}
+          buildLinks={[]} activityLogs={[]} fitContainer
         />
       ),
     },

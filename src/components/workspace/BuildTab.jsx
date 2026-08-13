@@ -522,7 +522,7 @@ const chatMarkdownComponents = {
   },
 };
 
-export function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers, onProjectUpdate, onNavigateTo, onTasksChanged, onMilestonesChanged, buildLinks = [], activityLogs = [] }) {
+export function AIChat({ project, tasks, milestones, assets, currentUser, canEdit, projectUsers, onProjectUpdate, onNavigateTo, onTasksChanged, onMilestonesChanged, buildLinks = [], activityLogs = [], fitContainer = false }) {
   const [messages, setMessages] = useState([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0, assets)]);
   const [thoughts, setThoughts] = useState([]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
@@ -1203,7 +1203,7 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
 
   return (
     <div
-      className={`flex flex-col relative transition-colors h-full min-h-[520px] ${isDragOver ? "bg-purple-50" : ""}`}
+      className={`flex flex-col relative transition-colors h-full ${fitContainer ? "min-h-0" : "min-h-[520px]"} ${isDragOver ? "bg-purple-50" : ""}`}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
