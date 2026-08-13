@@ -74,6 +74,7 @@ export default function CanvasWorkspace({
   const fullscreenRef = useRef(null);
   const projectIdRef = useRef(null);
   const didInit = useRef(false);
+  const autoFitDone = useRef(false);
 
   useEffect(() => { stateRef.current = { zoom, pan }; }, [zoom, pan]);
   useEffect(() => { fullscreenRef.current = fullscreenId; }, [fullscreenId]);
@@ -131,6 +132,7 @@ export default function CanvasWorkspace({
     if (projectIdRef.current !== project?.id) {
       projectIdRef.current = project?.id;
       didInit.current = false;
+      autoFitDone.current = false;
     }
     if (didInit.current || !defs.length) return;
     didInit.current = true;
@@ -383,6 +385,35 @@ export default function CanvasWorkspace({
     setPan({ x: -minX * z + (rect.width - w * z) / 2, y: -minY * z + (rect.height - h * z) / 2 });
   };
 
+  // Keep a ref to the latest zoomFit so the one-time auto-fit effect can call it.
+  const zoomFitRef = useRef(zoomFit);
+  zoomFitRef.current = zoomFit;
+
+  // First time the layout is ready, frame all visible components instead of
+  // dropping the user at a static 70% offset.
+  useEffect(() => {
+    if (autoFitDone.current) return;
+    if (!layout) return;
+    const el = viewportRef.current;
+    if (!el || el.getBoundingClientRect().width === 0) return;
+    autoFitDone.current = true;
+    const t = setTimeout(() => zoomFitRef.current(), 600);
+    return () => clearTimeout(t);
+  }, [layout]);
+
+  // After exiting a frame's full-screen view, refresh shared data and remount
+  // the canvas frames so they re-fetch and reflect changes made while full-screen.
+  const [frameNonce, setFrameNonce] = useState(0);
+  const wasFullscreenId = useRef(null);
+  useEffect(() => {
+    if (fullscreenId) { wasFullscreenId.current = fullscreenId; return; }
+    const exitedId = wasFullscreenId.current;
+    wasFullscreenId.current = null;
+    if (!exitedId) return;
+    refreshTasks(); refreshMilestones(); refreshAssets();
+    setFrameNonce((n) => n + 1);
+  }, [fullscreenId]);
+
   const handleLogout = async () => {
     try { localStorage.clear(); sessionStorage.clear(); } catch {}
     const welcomeUrl = `${window.location.origin}${createPageUrl("Welcome")}`;
@@ -527,7 +558,7 @@ export default function CanvasWorkspace({
               if (!f || f.hidden) return null;
               return (
                 <CanvasFrame
-                  key={d.id}
+                  key={`${d.id}-${frameNonce}`}
                   def={d}
                   frame={f}
                   zoom={zoom}
