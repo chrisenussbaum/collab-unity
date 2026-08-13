@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 import FeedComments from "@/components/FeedComments";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
+import DemoVideo from "@/components/demos/DemoVideo";
 import { renderContentWithMentions } from "@/lib/mentions";
 
 const formatCount = (n) => {
@@ -186,10 +187,8 @@ export default function DemoItem({
         {/* Media */}
         <div className="bg-black">
           {demo.media_type === "video" ? (
-            <video
+            <DemoVideo
               src={demo.media_url}
-              controls
-              playsInline
               poster={demo.thumbnail_url || undefined}
               className="w-full max-h-[80vh] object-contain bg-black"
             />
