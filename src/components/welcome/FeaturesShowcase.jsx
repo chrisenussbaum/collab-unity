@@ -2,11 +2,11 @@ import React from "react";
 import { ArrowRight } from "lucide-react";
 
 const SCREENSHOTS = {
-  feed: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/a4a7e6a0a_Screenshot2026-07-27at123605AM.png",
-
-  myprojects: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/5d25a0cef_Screenshot2026-07-27at120305AM.png",
+  feed: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/3301db4d5_Screenshot2026-08-13at34450PM.png",
+  demos: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/ae8505a8c_Screenshot2026-08-13at34859PM.png",
+  myprojects: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/a4f97bed8_Screenshot2026-08-13at34520PM.png",
   workspace: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/35f95fee3_Screenshot2026-07-27at120525AM.png",
-  chat: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/4b99d2b2a_Screenshot2026-07-27at123837AM.png",
+  chat: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/a9a234835_Screenshot2026-08-13at34736PM.png",
   profile: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/76a7cdd71_Screenshot2026-07-27at121454AM.png",
   create: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/5ebb1d256_Screenshot2026-07-27at120554AM.png",
   resume: "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/673fa341a_Screenshot2026-07-27at124055AM.png",
@@ -49,6 +49,7 @@ const FeatureRow = ({ eyebrow, title, subtitle, visual, buttonLabel, reverse, on
 export default function FeaturesShowcase({ onAuth }) {
   const features = [
     { type: "feed", eyebrow: "Feed", title: "Share your journey with the world.", subtitle: "Post progress updates, showcase live links, and celebrate milestones with a community that cheers you on.", buttonLabel: "Get Started" },
+    { type: "demos", eyebrow: "Demos", title: "Show off your work in progress.", subtitle: "Post photos and videos of what you are building, collect applause, and spark conversations that move your project forward.", buttonLabel: "Get Started" },
     { type: "create", eyebrow: "Create Project", title: "Start building in seconds.", subtitle: "Describe your idea in plain text and bring it to life with a structured project plan, milestones, and tasks.", buttonLabel: "Get Started" },
 
     { type: "myprojects", eyebrow: "My Projects", title: "All your projects in one place.", subtitle: "Track progress, manage milestones, and switch between personal and collaborative projects from a single dashboard.", buttonLabel: "Get Started" },
