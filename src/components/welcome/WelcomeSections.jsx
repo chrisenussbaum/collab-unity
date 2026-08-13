@@ -140,12 +140,17 @@ export function CTABanner({ onAuth }) {
 
 export function FAQ() {
   const faqs = [
-    { q: "What is Collab Unity?", a: "A project-based collaboration platform connecting creators, learners, and innovators to build projects together with built-in tools for tasks, chat, assets, and project assistance." },
-    { q: "Is it free?", a: "Yes. Core features are completely free. Create projects, join collaborations, use workspace tools, message teammates, and build your profile at no cost." },
-    { q: "Who is it for?", a: "Students, developers, designers, entrepreneurs, hobbyists. Anyone who wants to build something with others." },
-    { q: "How do I find collaborators?", a: "Create a project and list the skills you need. It appears on Discover where others can apply. AI matching also recommends relevant people and projects." },
-    { q: "What is in the workspace?", a: "An AI project assistant, milestone tracking, task board, asset management, rich-text ideation editor, tools hub, team discussions, and an activity log." },
-    { q: "Can I keep my project private?", a: "Yes. Toggle visibility when creating or editing. Private projects will not appear on Feed or Discover." },
+    { q: "What is Collab Unity?", a: "A project-based collaboration platform where creators, learners, and innovators build together. Each project gets a free-form canvas workspace with real-time collaboration, AI assistance, and everything you need to plan, build, and ship." },
+    { q: "Is it free?", a: "Yes. Core features are completely free — create projects, run the canvas workspace, message teammates, use the Project Assistant, and build your profile at no cost." },
+    { q: "Who is it for?", a: "Students, developers, designers, founders, hobbyists — anyone who wants to build something with others." },
+    { q: "What is the project canvas?", a: "A Figma-style workspace where every part of your project lives on a drag-and-drop canvas: tasks, milestones, assets, ideation notes, showcase links, funding, analytics, highlights, and a Project Assistant — all movable, toggleable, and arranged your way." },
+    { q: "Can I collaborate in real time?", a: "Yes. Collaborators see each other's presence and cursors on the canvas in real time, so you can work alongside your team just like in a live editor." },
+    { q: "What is the Project Assistant?", a: "An AI assistant inside each project that can generate tasks and milestones, draft ideation content, suggest tools, and help move your project forward — all from the canvas." },
+    { q: "How do I find collaborators?", a: "Create a project and list the skills you need. It appears on Feed and Explore where others can apply, and AI matching recommends relevant people and projects to you." },
+    { q: "Can people support my project?", a: "Yes. Add PayPal, Venmo, or CashApp links to your project so the community can fund your work directly from the canvas and project page." },
+    { q: "Is there more than just projects?", a: "Yes — Explore brings together games, a learning hub, industry news, an app library, a leaderboard, and collaborator discovery so the community stays engaged between builds." },
+    { q: "Can I keep my project private?", a: "Yes. Toggle visibility when creating or editing. Private projects never appear on the Feed or Explore." },
+    { q: "Is it available on mobile?", a: "Collab Unity is a progressive web app — install it on your desktop or home screen for an app-like experience from the same codebase." },
   ];
   return (
     <section id="faq" className="py-20 px-4 bg-white border-t border-gray-200">
