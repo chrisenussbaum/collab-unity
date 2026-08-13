@@ -18,7 +18,7 @@ export default function CanvasLayers({
         Canvas
       </div>
       <div className="border-t border-gray-100 mt-1" />
-      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">Layers</div>
+      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">Workspaces</div>
       <div>
         {ordered.map((d) => {
           const f = layout[d.id];

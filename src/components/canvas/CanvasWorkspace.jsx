@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import OptimizedAvatar from "../OptimizedAvatar";
 import { Link } from "react-router-dom";
-import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, Eye, Trophy, Heart, Bug, ShieldCheck, LogOut, Music, Users, Briefcase, Info, DollarSign, Link2, Pencil } from "lucide-react";
+import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, Eye, Trophy, Heart, Bug, ShieldCheck, LogOut, Music, Users, Briefcase, Info, DollarSign, Link2, Pencil, MessageCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { buildFrameDefs } from "./canvasFrameRegistry";
 import CanvasFrame from "./CanvasFrame";
@@ -12,6 +12,7 @@ import ProjectDetailsFrame from "./ProjectDetailsFrame";
 import ProjectFundingCard from "../ProjectFundingCard";
 import SocialsPanel from "../SocialsPanel";
 import MicrolinkPreview from "../MicrolinkPreview";
+import ProjectChatPanel from "./ProjectChatPanel";
 import CanvasLayers from "./CanvasLayers";
 import CanvasToolbar from "./CanvasToolbar";
 import CanvasPresenceStack from "./CanvasPresenceStack";
@@ -57,6 +58,7 @@ export default function CanvasWorkspace({
   const [showFundingDialog, setShowFundingDialog] = useState(false);
   const [showSocialDialog, setShowSocialDialog] = useState(false);
   const [showShowcaseDialog, setShowShowcaseDialog] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
 
   useEffect(() => {
@@ -91,7 +93,7 @@ export default function CanvasWorkspace({
     refreshTasks(); refreshMilestones(); refreshAssets();
   }, [project?.id, refreshTasks, refreshMilestones, refreshAssets]);
 
-  // Owner-only: pending applications count for the Layers sidebar badge
+  // Owner-only: pending applications count for the Workspaces sidebar badge
   useEffect(() => {
     if (!project?.id || !isOwner) { setPendingApplicationsCount(0); return; }
     let cancelled = false;
@@ -406,11 +408,16 @@ export default function CanvasWorkspace({
           <span className="hidden md:inline text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{isOwner ? "Owner" : "Collaborator"}</span>
         </div>
         <div className="flex items-center gap-2">
+          {(isOwner || isCollaborator) && (
+            <button onClick={() => setShowChat((v) => !v)} className={`relative p-1.5 rounded hover:bg-gray-100 text-gray-600 ${showChat ? "bg-purple-50 text-purple-600" : ""}`} title="Project Chat">
+              <MessageCircle className="w-4 h-4" />
+            </button>
+          )}
           <button onClick={() => setShowMusicPlayer((v) => !v)} className={`relative p-1.5 rounded hover:bg-gray-100 text-gray-600 ${showMusicPlayer ? "bg-purple-50 text-purple-600" : ""}`} title="CU Radio">
             <Music className="w-4 h-4" />
             {showMusicPlayer && <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-purple-600 rounded-full" />}
           </button>
-          <button onClick={() => setLayersOpen((v) => !v)} className={`p-1.5 rounded hover:bg-gray-100 text-gray-600 ${layersOpen ? "bg-gray-100 text-[#18A0FB]" : ""}`} title="Layers">
+          <button onClick={() => setLayersOpen((v) => !v)} className={`p-1.5 rounded hover:bg-gray-100 text-gray-600 ${layersOpen ? "bg-gray-100 text-[#18A0FB]" : ""}`} title="Workspaces">
             <Layers className="w-4 h-4" />
           </button>
           <div className="hidden md:flex items-center bg-gray-100 rounded-md text-xs">
@@ -594,6 +601,16 @@ export default function CanvasWorkspace({
       />
 
       <MusicPlayer isVisible={showMusicPlayer} onClose={() => setShowMusicPlayer(false)} zIndex={130} />
+
+      {(isOwner || isCollaborator) && (
+        <ProjectChatPanel
+          open={showChat}
+          onClose={() => setShowChat(false)}
+          project={project}
+          currentUser={currentUser}
+          projectUsers={projectUsers}
+        />
+      )}
 
       {isOwner && (
         <Dialog open={showApplicationsDialog} onOpenChange={setShowApplicationsDialog}>

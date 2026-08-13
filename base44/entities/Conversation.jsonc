@@ -11,6 +11,10 @@
       "default": "direct",
       "description": "Type of conversation - direct (1-on-1) or group"
     },
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project this group conversation belongs to (for project-scoped collaborator chats)"
+    },
     "participant_1_email": {
       "type": "string",
       "description": "Email of the first participant (for direct chats)"
