@@ -24,9 +24,8 @@ export default function CanvasFrame({
     if (!el) return;
     const f = frameRef.current;
     if (f.collapsed) return;
-    const natural = el.offsetHeight; // content's natural height at current width
-    // Grow (or shrink) the frame to the content's full height so nothing is cropped.
-    const desired = Math.max(MIN_H, natural + HEADER_H);
+    // Keep a 1:1 aspect ratio: the frame height matches its width.
+    const desired = Math.max(MIN_H, f.w);
     if (Math.abs(desired - f.h) > 2) onChange({ h: desired });
   }, [onChange]);
 
