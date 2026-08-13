@@ -181,44 +181,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   const [showShareCard, setShowShareCard] = useState(false);
   const [isRespondingToInvite, setIsRespondingToInvite] = useState(false);
    
-  // State for followers
-  const [followers, setFollowers] = useState([]);
-  const [isLoadingFollowers, setIsLoadingFollowers] = useState(false);
-
-
-
-  // Load followers function
-  const loadFollowers = useCallback(async () => {
-    if (!projectId) return;
-    
-    setIsLoadingFollowers(true);
-    try {
-      const allUsers = await withRetry(() => User.filter({}));
-      const projectFollowers = allUsers.filter(user => 
-        user.followed_projects?.includes(projectId)
-      );
-      
-      // Get profiles for followers
-      const followerEmails = projectFollowers.map(f => f.email);
-      if (followerEmails.length > 0) {
-        const followerMap = await getCachedUserProfiles(followerEmails);
-        const profiles = Object.values(followerMap);
-        setFollowers(profiles);
-        // Sync followers_count with actual count
-        setProject(prev => prev ? { ...prev, followers_count: profiles.length } : prev);
-      } else {
-        setFollowers([]);
-        // Sync followers_count to 0 if no followers
-        setProject(prev => prev ? { ...prev, followers_count: 0 } : prev);
-      }
-    } catch (error) {
-      console.error("Error loading followers:", error);
-      setFollowers([]);
-    } finally {
-      setIsLoadingFollowers(false);
-    }
-  }, [projectId]);
-
   // Function to check if current user can contribute to this project
   const canContribute = useCallback((project, user, userApplication) => {
     if (!project || !user) return false;
@@ -406,9 +368,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
 
       retryCountRef.current = 0;
       hasInitialized.current = true;
-      
-      // Load followers (non-blocking)
-      loadFollowers();
 
     } catch (error) {
       if (isMounted.current) {
