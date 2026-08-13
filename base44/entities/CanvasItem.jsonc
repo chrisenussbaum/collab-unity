@@ -1,0 +1,77 @@
+{
+  "name": "CanvasItem",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "Project this canvas item belongs to"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "canvas",
+        "shape"
+      ],
+      "description": "Item type: text note, color canvas block, or shape"
+    },
+    "x": {
+      "type": "number",
+      "default": 0,
+      "description": "Canvas X position"
+    },
+    "y": {
+      "type": "number",
+      "default": 0,
+      "description": "Canvas Y position"
+    },
+    "w": {
+      "type": "number",
+      "default": 200,
+      "description": "Width in canvas units"
+    },
+    "h": {
+      "type": "number",
+      "default": 160,
+      "description": "Height in canvas units"
+    },
+    "z": {
+      "type": "number",
+      "default": 0,
+      "description": "Stacking order"
+    },
+    "content": {
+      "type": "string",
+      "description": "Text content for text items"
+    },
+    "color": {
+      "type": "string",
+      "default": "#ffffff",
+      "description": "Background/fill color as hex"
+    },
+    "shape": {
+      "type": "string",
+      "enum": [
+        "rect",
+        "circle",
+        "triangle",
+        "diamond",
+        "star"
+      ],
+      "default": "rect",
+      "description": "Shape type for shape items"
+    },
+    "created_by_email": {
+      "type": "string",
+      "description": "Email of the creator"
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Display name of the creator"
+    }
+  },
+  "required": [
+    "project_id",
+    "type"
+  ]
+}
