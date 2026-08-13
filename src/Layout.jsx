@@ -84,7 +84,6 @@ export default function Layout({ children, currentPageName }) {
     createPageUrl("Contact"),
     createPageUrl("TermsOfService"),
     createPageUrl("PrivacyPolicy"),
-    createPageUrl("Demos"),
     createPageUrl("AboutUs"),
     createPageUrl("FeatureRequest"),
     createPageUrl("Testimonials"),
@@ -403,13 +402,12 @@ export default function Layout({ children, currentPageName }) {
     );
   }
 
-  // Public pages that should render without the main layout (About, Contact, Terms, Privacy, Demos)
+  // Public pages that should render without the main layout (About, Contact, Terms, Privacy)
   const publicPagesWithoutLayout = [
     createPageUrl("About"),
     createPageUrl("Contact"),
     createPageUrl("TermsOfService"),
     createPageUrl("PrivacyPolicy"),
-    createPageUrl("Demos"),
     createPageUrl("AboutUs"),
     createPageUrl("FeatureRequest"),
     createPageUrl("Testimonials"),
