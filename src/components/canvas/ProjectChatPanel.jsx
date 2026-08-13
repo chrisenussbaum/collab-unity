@@ -184,7 +184,7 @@ export default function ProjectChatPanel({ open, onClose, project, currentUser, 
         is_read: false,
         read_by: [],
       });
-      setMessages((prev) => [...prev, created]);
+      setMessages((prev) => (prev.some((x) => x.id === created.id) ? prev : [...prev, created]));
       await bumpUnread(content.substring(0, 100));
       const mentioned = resolveMentions(content);
       if (mentioned.length > 0) {
@@ -230,7 +230,7 @@ export default function ProjectChatPanel({ open, onClose, project, currentUser, 
         media_name: file.name,
         media_size: file.size,
       });
-      setMessages((prev) => [...prev, created]);
+      setMessages((prev) => (prev.some((x) => x.id === created.id) ? prev : [...prev, created]));
       const preview = mediaType === "image" ? "📷 Image" : mediaType === "video" ? "🎥 Video" : `📎 ${file.name}`;
       await bumpUnread(preview);
     } catch (err) {
