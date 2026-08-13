@@ -186,10 +186,32 @@ export default function CanvasWorkspace({
     const handler = (e) => {
       // While a frame is in full-screen mode, let its content scroll natively.
       if (fullscreenRef.current) return;
-      // Let trackpad / mouse wheel scroll inside frames natively instead of
-      // hijacking it to pan the canvas. Ctrl/Cmd+wheel still zooms the canvas.
+      // Let trackpad / mouse wheel scroll inside frames natively when the frame
+      // content can actually scroll. When the hovered frame (e.g. the assistant
+      // while it's loading and its chat can't scroll) has nothing to scroll,
+      // pan the canvas instead so the user isn't stuck.
       const overFrame = e.target && typeof e.target.closest === 'function' && e.target.closest('[data-canvas-scroll="true"]');
-      if (overFrame && !e.ctrlKey && !e.metaKey) return;
+      if (overFrame && !e.ctrlKey && !e.metaKey) {
+        const vert = Math.abs(e.deltaY) >= Math.abs(e.deltaX);
+        let node = e.target;
+        let canScroll = false;
+        while (node && node !== el) {
+          const style = window.getComputedStyle(node);
+          const ov = vert ? style.overflowY : style.overflowX;
+          if (ov === 'auto' || ov === 'scroll') {
+            const overflow = vert ? node.scrollHeight > node.clientHeight + 1 : node.scrollWidth > node.clientWidth + 1;
+            if (overflow) {
+              const atBoundary = vert
+                ? (e.deltaY > 0 ? node.scrollTop + node.clientHeight >= node.scrollHeight - 1 : node.scrollTop <= 0)
+                : (e.deltaX > 0 ? node.scrollLeft + node.clientWidth >= node.scrollWidth - 1 : node.scrollLeft <= 0);
+              if (!atBoundary) { canScroll = true; break; }
+            }
+          }
+          node = node.parentElement;
+        }
+        if (canScroll) return; // native scroll handles the frame
+        // otherwise fall through to pan the canvas
+      }
       const rect = el.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;

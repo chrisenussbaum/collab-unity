@@ -260,12 +260,14 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `- If an equivalent item already exists OR was already created or discussed in chat, do NOT create a duplicate — reference the existing one instead.`,
     `- Only create items that are genuinely new and actionable from the latest user request.`,
     `- When unsure whether something already exists, ask the user before creating.`,
-    `\n== ACTION EXECUTION (CRITICAL) ==`,
-    `You CREATE tasks, milestones, and notes by putting them as objects in the "actions" array. This is the ONLY way they actually get created.`,
-    `⚠️ If you describe creating tasks/milestones in your "message" but leave "actions" empty, NOTHING will be created. You MUST populate the actions array.`,
+    `\n== ACTION EXECUTION (IMPORTANT) ==`,
+    `By default, do NOT create tasks, milestones, or notes. Be advisory: discuss, suggest, and recommend. Only put create_task / create_milestone / save_note objects in the "actions" array when the user EXPLICITLY asks you to create/add/make a task, milestone, or note (e.g. "create a task", "add a milestone", "make a plan with tasks", "save this note").`,
+    `If the user is just discussing, brainstorming, asking for advice, research, or a status update, return an EMPTY "actions" array and just answer in "message".`,
+    `When you DO create items, the only way they get created is via the "actions" array — describing them in "message" without populating "actions" creates nothing.`,
     `Example — user says "Create a task to design the logo and a milestone for Phase 1":`,
     `CORRECT: {"message": "Done!", "actions": [{"type": "create_task", "title": "Design the logo", "priority": "medium"}, {"type": "create_milestone", "title": "Phase 1"}]}`,
-    `WRONG (nothing gets created): {"message": "I've created a task to design the logo and a milestone for Phase 1", "actions": []}`,
+    `Example — user says "What should I focus on next?":`,
+    `CORRECT (advisory, no actions): {"message": "Here's what I'd prioritize…", "actions": []}`,
     `Also include "navigate_to" if you want to switch the user to a workspace tab.`,
     `\n== RESPONSE FORMAT ==`,
     `You MUST respond with valid JSON (no markdown code blocks, just raw JSON):`,
@@ -279,9 +281,9 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `    {"type": "suggest_tool", "name": "Tool name", "url": "https://...", "icon": "emoji"}`,
     `  ]`,
     `}`,
-    `- "actions" MUST contain create_task/create_milestone objects whenever you mention creating tasks or milestones. NEVER leave it empty if you say you created something.`,
+    `- "actions" must be EMPTY unless the user explicitly asked you to create/add a task, milestone, or note. Do NOT auto-generate actions for advice, plans, research, or status updates.`,
     `- "navigate_to" should be null unless you want to redirect the user to a specific tab after your response`,
-    `- Only include actions the user actually asked for, or that are obviously needed`,
+    `- Only include actions the user EXPLICITLY asked for — never create items the user didn't request`,
     `- For create_task: "title" must be SHORT (3-6 words max, no colons). Put details in "description". NEVER format title as "Name: description text"`,
     `- For assigned_to, use the exact email from the collaborators list above`,
     `\n== RESOURCE & LINK HANDLING (CRITICAL) ==`,
@@ -961,7 +963,7 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
             navigate_to: { type: "string", description: "Tab to navigate to: tasks, milestones, assets, ideation, notes, tools, links, activity, or null" },
             actions: {
               type: "array",
-              description: "Actions to execute. MUST be populated with create_task/create_milestone objects whenever you are creating tasks or milestones.",
+              description: "Only populate this when the user EXPLICITLY asks to create/add a task, milestone, or note. Otherwise return an empty array.",
               items: {
                 type: "object",
                 properties: {
@@ -1001,38 +1003,8 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
       const message = parsed?.message || (typeof result === "string" ? result : "");
       let actions = Array.isArray(parsed?.actions) ? parsed.actions : [];
 
-      // Validation: if message claims to create tasks/milestones but actions is empty, extract via retry
-      if (canEdit && actions.length === 0 && /\b(task|milestone)/i.test(message) && /\b(creat|add|set up|assign)/i.test(message)) {
-        try {
-          const extractResult = await base44.integrations.Core.InvokeLLM({
-            prompt: `${systemPrompt}\n\nYour previous response was: "${message}"\n\nYou claimed to create tasks/milestones but returned an empty actions array. Extract ALL tasks and milestones mentioned in your response and return them as action objects now. Each task: {"type":"create_task","title":"short title","description":"details","priority":"medium","assigned_to":"email or null","due_date":"YYYY-MM-DD or null"}. Each milestone: {"type":"create_milestone","title":"name","description":"...","target_date":"YYYY-MM-DD or null"}. Return JSON with an "actions" array:`,
-            response_json_schema: {
-              type: "object",
-              properties: {
-                actions: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      type: { type: "string" },
-                      title: { type: "string" },
-                      description: { type: "string" },
-                      priority: { type: "string" },
-                      assigned_to: { type: "string" },
-                      due_date: { type: "string" },
-                      target_date: { type: "string" },
-                    },
-                  },
-                },
-              },
-            },
-          });
-          const extracted = Array.isArray(extractResult?.actions) ? extractResult.actions : [];
-          if (extracted.length > 0) actions.push(...extracted);
-        } catch (e) {
-          console.error("Failed to extract actions on retry:", e);
-        }
-      }
+      // Auto-action extraction removed: the assistant only creates items when the
+      // user explicitly requests it, so an empty actions array is always valid.
 
       // Execute actions if user can edit
       const actionTexts = [];
