@@ -187,11 +187,11 @@ export default function Chat({ currentUser, authIsLoading }) {
         }, "-last_message_time")
       ]);
 
-      // Fetch group chats
+      // Fetch group chats — exclude project-scoped chats (those live inside the project workspace)
       const groupChats = await base44.entities.Conversation.filter({
         conversation_type: "group"
       }, "-last_message_time").then(chats => 
-        chats.filter(chat => chat.participants?.includes(currentUser.email))
+        chats.filter(chat => chat.participants?.includes(currentUser.email) && !chat.project_id)
       );
 
       const allConversations = [...conv1, ...conv2, ...groupChats];
@@ -233,6 +233,8 @@ export default function Chat({ currentUser, authIsLoading }) {
       // Filter out invalid conversations
       const validConversations = uniqueConversations.filter(conv => {
         if (conv.conversation_type === 'group') {
+          // Project-scoped chats belong to the project workspace, not the Chat page
+          if (conv.project_id) return false;
           return conv.participants && conv.participants.length >= 2;
         }
         const otherEmail = conv.participant_1_email === currentUser.email 
