@@ -373,6 +373,8 @@ export default function CanvasWorkspace({
   const zoomOut = () => setZoom((z) => clamp(z / 1.2, 0.2, 2));
   const zoomFit = () => {
     if (!layout || !viewportRef.current) return;
+    const rect = viewportRef.current.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
     const visible = Object.entries(layout).filter(([, f]) => !f.hidden);
     if (visible.length === 0) { setZoom(0.7); setPan({ x: 40, y: 40 }); return; }
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -381,7 +383,6 @@ export default function CanvasWorkspace({
       maxX = Math.max(maxX, f.x + f.w); maxY = Math.max(maxY, f.y + f.h);
     });
     const w = maxX - minX, h = maxY - minY;
-    const rect = viewportRef.current.getBoundingClientRect();
     const z = clamp(Math.min((rect.width - 120) / w, (rect.height - 120) / h), 0.2, 1.5);
     setZoom(z);
     setPan({ x: -minX * z + (rect.width - w * z) / 2, y: -minY * z + (rect.height - h * z) / 2 });
@@ -426,15 +427,17 @@ export default function CanvasWorkspace({
   }, [layout, defs, saveLayout]);
 
   // First time the layout is ready, frame all visible components instead of
-  // dropping the user at a static 70% offset.
+  // dropping the user at a static 70% offset. Retry a few times so the fit
+  // lands reliably once the viewport and saved frame positions have settled
+  // (covers cases where the first tick fires before the canvas is measured).
   useEffect(() => {
-    if (autoFitDone.current) return;
     if (!layout) return;
-    const el = viewportRef.current;
-    if (!el || el.getBoundingClientRect().width === 0) return;
+    if (autoFitDone.current) return;
     autoFitDone.current = true;
-    const t = setTimeout(() => zoomFitRef.current(), 600);
-    return () => clearTimeout(t);
+    let cancelled = false;
+    const delays = [0, 150, 400, 800, 1400];
+    const timers = delays.map((d) => setTimeout(() => { if (!cancelled) zoomFitRef.current(); }, d));
+    return () => { cancelled = true; timers.forEach(clearTimeout); };
   }, [layout]);
 
   // After exiting a frame's full-screen view, refresh shared data and remount
