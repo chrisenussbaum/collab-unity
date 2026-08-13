@@ -36,7 +36,7 @@ function ViewerRow({ viewer, showProject }) {
     <Avatar className="w-9 h-9 flex-shrink-0">
       <AvatarImage src={viewer.profile_image} className="object-cover" />
       <AvatarFallback className="bg-purple-100 text-purple-600 text-xs font-semibold">
-        {viewer.full_name?.[0] || viewer.email?.[0] || "U"}
+        {viewer.full_name?.[0] || (viewer.email && viewer.email.includes('@') ? viewer.email[0] : "U")}
       </AvatarFallback>
     </Avatar>
   );
@@ -56,11 +56,11 @@ function ViewerRow({ viewer, showProject }) {
             to={profileUrl}
             className="text-sm font-medium text-gray-900 hover:text-purple-600 transition-colors truncate block"
           >
-            {viewer.full_name || viewer.email || "Anonymous"}
+            {viewer.full_name || (viewer.email && viewer.email.includes('@') ? viewer.email : "Anonymous")}
           </Link>
         ) : (
           <p className="text-sm font-medium text-gray-900 truncate">
-            {viewer.full_name || viewer.email || "Anonymous"}
+            {viewer.full_name || (viewer.email && viewer.email.includes('@') ? viewer.email : "Anonymous")}
           </p>
         )}
         {showProject && viewer.project_title ? (

@@ -35,7 +35,10 @@ Deno.serve(async (req) => {
 
     // Build a dedup key: viewer identity + target + day
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-    const viewerKey = currentUser?.email || req.headers.get("cf-connecting-ip") || "anon";
+    // Anonymous visitors are deduped by IP, but the key is prefixed with "anon:"
+    // so it is never mistaken for a user email (and is skipped by viewer-detail
+    // backfill). Raw IPs must never surface as a viewer identity.
+    const viewerKey = currentUser?.email || `anon:${req.headers.get("cf-connecting-ip") || "x"}`;
 
     if (type === "profile") {
       if (!target_email) return Response.json({ error: "target_email required" }, { status: 400 });

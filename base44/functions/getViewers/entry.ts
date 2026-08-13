@@ -24,15 +24,24 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'User not found' }, { status: 404 });
     }
 
-    let profileViewerDetails = user.profile_viewer_details || [];
-    let projectViewerDetails = user.project_viewer_details || [];
+    // Sanitize stored details: drop any entry whose "email" isn't a real email
+    // (e.g. a raw IP address leaked in by older backfill logic). IPs must never
+    // be shown as a viewer identity.
+    const isRealEmail = (e) => typeof e === 'string' && e.includes('@');
+    let profileViewerDetails = (user.profile_viewer_details || []).filter(v => isRealEmail(v.email));
+    let projectViewerDetails = (user.project_viewer_details || []).filter(v => isRealEmail(v.email));
     const profileDedupKeys = user.recent_profile_viewers || [];
     const projectDedupKeys = user.recent_project_viewers || [];
 
-    const needsProfileBackfill = profileDedupKeys.length > 0 &&
-      profileViewerDetails.length < profileDedupKeys.filter(k => !k.startsWith('anon:')).length;
-    const needsProjectBackfill = projectDedupKeys.length > 0 &&
-      projectViewerDetails.length < projectDedupKeys.filter(k => !k.startsWith('anon:')).length;
+    // Only count dedup keys that belong to a real registered user (email with '@').
+    // IP-based anon keys (no '@') and 'anon:' keys are excluded so they never
+    // trigger backfill or get surfaced as viewer identities.
+    const validProfileKeys = profileDedupKeys.filter(k => !k.startsWith('anon:') && k.includes('@'));
+    const validProjectKeys = projectDedupKeys.filter(k => !k.startsWith('anon:') && k.includes('@'));
+    const needsProfileBackfill = validProfileKeys.length > 0 &&
+      profileViewerDetails.length < validProfileKeys.length;
+    const needsProjectBackfill = validProjectKeys.length > 0 &&
+      projectViewerDetails.length < validProjectKeys.length;
 
     // Only backfill if there are dedup keys with real viewer emails that aren't yet in details
     if (needsProfileBackfill || needsProjectBackfill) {
@@ -50,7 +59,8 @@ Deno.serve(async (req) => {
           if (lastColon === -1) continue;
           const email = key.substring(0, lastColon);
           const dateStr = key.substring(lastColon + 1);
-          if (email && !existingEmails.has(email)) {
+          // Only backfill real registered users — skip IP-based / anon keys
+          if (isRealEmail(email) && !existingEmails.has(email)) {
             parsed.push({ email, dateStr, key });
           }
         }
@@ -60,11 +70,12 @@ Deno.serve(async (req) => {
           try {
             const viewerUsers = await base44.asServiceRole.entities.User.filter({ email: p.email });
             const v = viewerUsers?.[0];
+            if (!v) continue; // not a registered user — never store a raw email/IP
             const detail = {
               email: p.email,
-              username: v?.username || "",
-              full_name: v?.full_name || "",
-              profile_image: v?.profile_image || "",
+              username: v.username || "",
+              full_name: v.full_name || "",
+              profile_image: v.profile_image || "",
               viewed_at: `${p.dateStr}T00:00:00.000Z`
             };
             if (!existingEmails.has(p.email)) {
@@ -96,7 +107,8 @@ Deno.serve(async (req) => {
           if (firstColon === -1) continue;
           const email = rest.substring(0, firstColon);
           const projectId = rest.substring(firstColon + 1);
-          if (email && projectId && !existingKeys.has(`${email}:${projectId}`)) {
+          // Only backfill real registered users — skip IP-based / anon keys
+          if (isRealEmail(email) && projectId && !existingKeys.has(`${email}:${projectId}`)) {
             parsed.push({ email, projectId, dateStr, key });
           }
         }
@@ -124,11 +136,12 @@ Deno.serve(async (req) => {
 
         for (const p of parsed) {
           const v = userMap[p.email];
+          if (!v) continue; // not a registered user — never store a raw email/IP
           const detail = {
             email: p.email,
-            username: v?.username || "",
-            full_name: v?.full_name || "",
-            profile_image: v?.profile_image || "",
+            username: v.username || "",
+            full_name: v.full_name || "",
+            profile_image: v.profile_image || "",
             viewed_at: `${p.dateStr}T00:00:00.000Z`,
             project_id: p.projectId,
             project_title: projectMap[p.projectId] || ""
