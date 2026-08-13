@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import { Trash2, EyeOff, ChevronDown, ChevronRight, Maximize2 } from "lucide-react";
 
 const MIN_W = 280;
@@ -15,24 +15,31 @@ export default function CanvasFrame({
   frameRef.current = frame;
   const suppressFit = useRef(0);
 
-  // Auto-fit frame height to its content so there's never random whitespace.
-  // Only snaps DOWN (removes extra space) — never grows the frame beyond content.
-  // Suppressed briefly after a manual resize so dragging isn't fought.
+  // Auto-fit frame height to its content so there's never extra whitespace.
+  // Snaps the frame DOWN to the content's natural height (never grows beyond it),
+  // and also snaps after a manual resize finishes. Suppressed while the user is
+  // actively dragging so the fit doesn't fight the drag.
+  const fitToContent = useCallback(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const f = frameRef.current;
+    if (f.collapsed) return;
+    const natural = el.offsetHeight; // content's natural height at current width
+    const desired = Math.max(MIN_H, Math.min(natural + HEADER_H, f.h));
+    if (Math.abs(desired - f.h) > 2) onChange({ h: desired });
+  }, [onChange]);
+
   useEffect(() => {
     if (frame.collapsed) return;
     const el = contentRef.current;
     if (!el) return;
     const ro = new ResizeObserver(() => {
       if (Date.now() < suppressFit.current) return;
-      const f = frameRef.current;
-      if (f.collapsed) return;
-      const natural = el.offsetHeight; // content's natural height at current width
-      const desired = Math.max(MIN_H, Math.min(natural + HEADER_H, f.h));
-      if (Math.abs(desired - f.h) > 2) onChange({ h: desired });
+      fitToContent();
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [frame.collapsed, onChange]);
+  }, [frame.collapsed, fitToContent]);
 
   const onHeaderMouseDown = (e) => {
     if (e.button !== 0) return;
@@ -57,6 +64,7 @@ export default function CanvasFrame({
     const startX = e.clientX, startY = e.clientY;
     const orig = { x: frame.x, y: frame.y, w: frame.w, h: frame.h };
     const move = (ev) => {
+      suppressFit.current = Date.now() + 600; // keep suppressing fit while actively dragging
       const dx = (ev.clientX - startX) / zoom;
       const dy = (ev.clientY - startY) / zoom;
       let x = orig.x, y = orig.y, w = orig.w, h = orig.h;
@@ -68,7 +76,12 @@ export default function CanvasFrame({
       if (h < MIN_H) { if (edges.n) y = orig.y + (orig.h - MIN_H); h = MIN_H; }
       onChange({ x, y, w, h });
     };
-    const up = () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
+    const up = () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+      suppressFit.current = 0; // allow auto-fit to snap to content now that dragging stopped
+      requestAnimationFrame(fitToContent);
+    };
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", up);
   };
@@ -135,7 +148,7 @@ export default function CanvasFrame({
       </div>
       {!frame.collapsed && (
         <div data-canvas-scroll="true" className="flex-1 overflow-auto select-text" style={{ touchAction: "none" }} onMouseDown={(e) => e.stopPropagation()}>
-          <div ref={contentRef} className="min-h-full flex flex-col">
+          <div ref={contentRef} className="flex flex-col p-3">
             {def.render()}
           </div>
         </div>
