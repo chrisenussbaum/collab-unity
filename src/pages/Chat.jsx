@@ -1152,24 +1152,15 @@ export default function Chat({ currentUser, authIsLoading }) {
   return (
     <>
       <div className="cu-container py-6 sm:py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
-              <MessageCircle className="w-8 h-8 mr-3 text-purple-600" />
-              Chat
-            </h1>
-            <p className="text-gray-600 mt-1">Messages and group conversations</p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button className="cu-button" onClick={handleOpenNewChatDialog}>
-              <Plus className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">New Chat</span>
-            </Button>
-            <Button variant="outline" onClick={handleOpenNewGroupDialog}>
-              <Users className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">New Group</span>
-            </Button>
-          </div>
+        <div className="mb-6 flex items-center justify-end space-x-2">
+          <Button className="cu-button" onClick={handleOpenNewChatDialog}>
+            <Plus className="w-4 h-4 mr-2" />
+            <span className="hidden sm:inline">New Chat</span>
+          </Button>
+          <Button variant="outline" onClick={handleOpenNewGroupDialog}>
+            <Users className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">New Group</span>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
