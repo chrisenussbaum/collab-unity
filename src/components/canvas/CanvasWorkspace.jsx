@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import OptimizedAvatar from "../OptimizedAvatar";
 import { Link } from "react-router-dom";
-import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, Eye, Trophy, Heart, Bug, ShieldCheck, LogOut, Music, Users, Briefcase, Info, DollarSign, Link2, Pencil, MessageCircle } from "lucide-react";
+import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, Eye, Trophy, Heart, Bug, ShieldCheck, LogOut, Music, Users, Briefcase, Info, DollarSign, Link2, Pencil, MessageCircle, UserPlus } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { buildFrameDefs } from "./canvasFrameRegistry";
 import CanvasFrame from "./CanvasFrame";
@@ -39,6 +39,7 @@ function defaultLayout(defs) {
 export default function CanvasWorkspace({
   project, currentUser, projectUsers, projectOwnerProfile,
   isOwner, isCollaborator, onProjectUpdate, onUpdateSocialLinks, onShare, onBack, initialApplicationId,
+  readOnly = false, canApply = false, onApply,
 }) {
   const [tasks, setTasks] = useState([]);
   const [milestones, setMilestones] = useState([]);
@@ -161,7 +162,7 @@ export default function CanvasWorkspace({
   }, [defs, project?.id, project?.canvas_layout]);
 
   const saveLayout = useCallback((newLayout) => {
-    if (!project?.id) return;
+    if (!project?.id || readOnly) return;
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       try { await base44.entities.Project.update(project.id, { canvas_layout: newLayout }); } catch (e) { console.warn("Failed to save canvas layout", e); }
@@ -476,7 +477,7 @@ export default function CanvasWorkspace({
           </button>
           <img src={LOGO_URL} alt="Collab Unity" className="w-6 h-6 rounded" />
           <span className="text-sm font-medium text-gray-800 truncate max-w-[120px] md:max-w-[260px]">{project?.title}</span>
-          <span className="hidden md:inline text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{isOwner ? "Owner" : "Collaborator"}</span>
+          <span className="hidden md:inline text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{readOnly ? "Viewer" : isOwner ? "Owner" : "Collaborator"}</span>
         </div>
         <div className="flex items-center gap-2">
           {(isOwner || isCollaborator) && (
@@ -487,13 +488,22 @@ export default function CanvasWorkspace({
           <button onClick={onShare} className="p-1.5 rounded hover:bg-gray-100 text-gray-600" title="Share project">
             <Share2 className="w-4 h-4" />
           </button>
-          <button onClick={() => setShowMusicPlayer((v) => !v)} className={`relative p-1.5 rounded hover:bg-gray-100 text-gray-600 ${showMusicPlayer ? "bg-purple-50 text-purple-600" : ""}`} title="CU Radio">
-            <Music className="w-4 h-4" />
-            {showMusicPlayer && <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-purple-600 rounded-full" />}
-          </button>
-          <button onClick={() => setLayersOpen((v) => !v)} className={`p-1.5 rounded hover:bg-gray-100 text-gray-600 ${layersOpen ? "bg-gray-100 text-[#18A0FB]" : ""}`} title="Workspaces">
-            <Layers className="w-4 h-4" />
-          </button>
+          {readOnly && canApply && (
+            <Button onClick={onApply} className="bg-[#18A0FB] hover:bg-[#0E8FE0] text-white text-xs h-8 rounded-md px-2.5 md:px-3">
+              <UserPlus className="w-3.5 h-3.5 md:mr-1" /><span className="hidden md:inline">Apply to Join</span>
+            </Button>
+          )}
+          {!readOnly && (
+            <button onClick={() => setShowMusicPlayer((v) => !v)} className={`relative p-1.5 rounded hover:bg-gray-100 text-gray-600 ${showMusicPlayer ? "bg-purple-50 text-purple-600" : ""}`} title="CU Radio">
+              <Music className="w-4 h-4" />
+              {showMusicPlayer && <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-purple-600 rounded-full" />}
+            </button>
+          )}
+          {!readOnly && (
+            <button onClick={() => setLayersOpen((v) => !v)} className={`p-1.5 rounded hover:bg-gray-100 text-gray-600 ${layersOpen ? "bg-gray-100 text-[#18A0FB]" : ""}`} title="Workspaces">
+              <Layers className="w-4 h-4" />
+            </button>
+          )}
           <div className="hidden md:flex items-center bg-gray-100 rounded-md text-xs">
             <button onClick={zoomOut} className="p-1.5 hover:bg-gray-200 text-gray-600"><ZoomOut className="w-3.5 h-3.5" /></button>
             <span className="px-1 text-gray-600 w-10 text-center">{Math.round(zoom * 100)}%</span>
@@ -547,8 +557,8 @@ export default function CanvasWorkspace({
       </div>
 
       <div className="flex-1 flex min-h-0">
-        {/* Left layers */}
-        <div className={`${layersOpen ? "hidden lg:block" : "hidden"} w-56 bg-white border-r border-gray-200 flex-shrink-0 overflow-y-auto`}>
+        {/* Left layers (hidden in read-only preview mode) */}
+        <div className={`${!readOnly && layersOpen ? "hidden lg:block" : "hidden"} w-56 bg-white border-r border-gray-200 flex-shrink-0 overflow-y-auto`}>
           <CanvasLayers
             defs={defs}
             layout={layout}
@@ -586,7 +596,11 @@ export default function CanvasWorkspace({
           <div
             data-canvas-bg="true"
             className="absolute"
-            style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: "0 0" }}
+            style={{
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              transformOrigin: "0 0",
+              ...(readOnly ? { filter: "blur(6px)", pointerEvents: "none", userSelect: "none" } : {}),
+            }}
           >
             {defs.map((d) => {
               const f = layout[d.id];
@@ -634,7 +648,7 @@ export default function CanvasWorkspace({
 
       </div>
 
-      {layersOpen && (
+      {!readOnly && layersOpen && (
         <div className="lg:hidden fixed top-11 left-0 right-0 bottom-0 z-[120]">
           <div className="absolute inset-0 bg-black/30" onClick={() => setLayersOpen(false)} />
           <div className="absolute left-0 top-0 bottom-0 w-64 max-w-[80%] bg-white border-r border-gray-200 overflow-y-auto">
@@ -658,20 +672,22 @@ export default function CanvasWorkspace({
         </div>
       )}
 
-      {/* Bottom toolbar */}
-      <CanvasToolbar
-        tool={tool}
-        setTool={setTool}
-        zoom={zoom}
-        onZoomIn={zoomIn}
-        onZoomOut={zoomOut}
-        onZoomFit={zoomFit}
-        addOpen={addOpen}
-        setAddOpen={setAddOpen}
-        hiddenFrames={hiddenFrames}
-        onAddFrame={onAddFrame}
-        onOrganize={organizeFrames}
-      />
+      {/* Bottom toolbar (hidden in read-only preview mode) */}
+      {!readOnly && (
+        <CanvasToolbar
+          tool={tool}
+          setTool={setTool}
+          zoom={zoom}
+          onZoomIn={zoomIn}
+          onZoomOut={zoomOut}
+          onZoomFit={zoomFit}
+          addOpen={addOpen}
+          setAddOpen={setAddOpen}
+          hiddenFrames={hiddenFrames}
+          onAddFrame={onAddFrame}
+          onOrganize={organizeFrames}
+        />
+      )}
 
       <MusicPlayer isVisible={showMusicPlayer} onClose={() => setShowMusicPlayer(false)} zIndex={130} />
 

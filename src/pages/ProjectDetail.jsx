@@ -48,7 +48,6 @@ import {
 import { toast } from "sonner";
 import WorkspaceTabs from "@/components/workspace/WorkspaceTabs";
 import CanvasWorkspace from "@/components/canvas/CanvasWorkspace";
-import ReadOnlyProjectCanvas from "../components/canvas/ReadOnlyProjectCanvas";
 import ProjectHighlights from "../components/project/ProjectHighlights";
 import ProjectAnalyticsDashboard from "../components/project/ProjectAnalyticsDashboard";
 import ClickableImage from "../components/ClickableImage";
@@ -1051,7 +1050,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="cu-container pt-4"
+          className="fixed top-14 left-0 right-0 z-[120] cu-container"
         >
           <div className="max-w-5xl mx-auto">
             <Card className="cu-card border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-indigo-50">
@@ -1088,14 +1087,20 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         </motion.div>
       )}
 
-      <ReadOnlyProjectCanvas
+      <CanvasWorkspace
         project={project}
         currentUser={currentUser}
         projectUsers={projectUsers}
         projectOwnerProfile={projectOwnerProfile}
+        isOwner={false}
+        isCollaborator={false}
+        onProjectUpdate={handleProjectUpdate}
+        onUpdateSocialLinks={handleUpdateSocialLinks}
+        onShare={() => setShowShareCard(true)}
+        onBack={() => navigate(createPageUrl("Discover"))}
+        readOnly
         canApply={canApply}
         onApply={() => setShowApplyModal(true)}
-        onShare={handleShare}
       />
     </>
   );
