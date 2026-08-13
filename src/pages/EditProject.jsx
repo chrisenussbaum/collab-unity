@@ -53,6 +53,7 @@ export default function EditProject({ currentUser, authIsLoading }) {
   const [project, setProject] = useState(null); // State to store the fetched project object
   
   const [newLink, setNewLink] = useState("");
+  const [newLinkTitle, setNewLinkTitle] = useState("");
 
   const logoInputRef = useRef(null);
 
@@ -166,23 +167,27 @@ export default function EditProject({ currentUser, authIsLoading }) {
   };
 
   const addLink = () => {
-    if (formData.project_urls.length >= 10) {
-      return;
-    }
     if (newLink) {
       if (!newLink.startsWith('http://') && !newLink.startsWith('https://')) {
         toast.error("Please enter a valid URL including http:// or https://");
         return;
       }
-      const linkObj = { url: newLink };
+      const linkObj = { url: newLink, title: newLinkTitle.trim() };
       const newArray = [linkObj, ...formData.project_urls];
       handleInputChange('project_urls', newArray);
       setNewLink("");
+      setNewLinkTitle("");
     }
   };
 
   const removeLink = (linkToRemove) => {
     const newArray = formData.project_urls.filter(link => link.url !== linkToRemove.url);
+    handleInputChange('project_urls', newArray);
+  };
+
+  const updateLinkTitle = (index, title) => {
+    const newArray = [...formData.project_urls];
+    newArray[index] = { ...newArray[index], title };
     handleInputChange('project_urls', newArray);
   };
 
@@ -446,24 +451,37 @@ export default function EditProject({ currentUser, authIsLoading }) {
               />
 
               <div className="space-y-3">
-                <Label className="text-sm font-medium">
-                  Project Showcase Links (Optional)
-                </Label>
-                {(formData.project_urls || []).length > 0 && (
-                  <div className="flex flex-col gap-2 p-3 border rounded-lg bg-gray-50/50">
-                    {formData.project_urls.map((link, index) => (
-                      <div key={index} className="flex items-center justify-between text-sm">
-                        <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline truncate">
-                          <LinkIcon className="inline w-4 h-4 mr-1 text-gray-500" />
-                          {link.title || link.url}
-                        </a>
-                        <button onClick={() => removeLink(link)} className="ml-4 flex-shrink-0 text-gray-500 hover:text-red-500">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <Label className="text-sm font-medium">
+                Project Showcase Links (Optional)
+              </Label>
+              {(formData.project_urls || []).length > 0 && (
+                <div className="flex flex-col gap-2 p-3 border rounded-lg bg-gray-50/50">
+                  {formData.project_urls.map((link, index) => (
+                    <div key={index} className="flex items-center gap-2 text-sm">
+                      <LinkIcon className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                      <Input
+                        placeholder="Link title (e.g. Live Demo)"
+                        value={link.title || ""}
+                        onChange={(e) => updateLinkTitle(index, e.target.value)}
+                        className="flex-1 h-8 text-sm"
+                      />
+                      <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline truncate max-w-[40%]" title={link.url}>
+                        {link.url}
+                      </a>
+                      <button onClick={() => removeLink(link)} className="flex-shrink-0 text-gray-500 hover:text-red-500">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input
+                  placeholder="Link title (optional, e.g. Live Demo)"
+                  value={newLinkTitle}
+                  onChange={(e) => setNewLinkTitle(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addLink())}
+                />
                 <div className="flex space-x-2">
                   <Input
                     placeholder="https://yourproject.com..."
@@ -471,11 +489,12 @@ export default function EditProject({ currentUser, authIsLoading }) {
                     onChange={(e) => setNewLink(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addLink())}
                   />
-                  <Button type="button" variant="outline" onClick={addLink} disabled={!newLink}><Plus className="w-4 h-4"/></Button>
+                  <Button type="button" variant="outline" onClick={addLink} disabled={!newLink} className="flex-shrink-0"><Plus className="w-4 h-4"/></Button>
                 </div>
-                <p className="text-xs text-gray-500 text-center">
-                  Add links to showcase/demo the current state of your project. For repositories, documents, and other resources, use the Assets tab after creating the project. (Max 10 URLs)
-                </p>
+              </div>
+              <p className="text-xs text-gray-500 text-center">
+                Add links to showcase/demo the current state of your project. For repositories, documents, and other resources, use the Assets tab after creating the project.
+              </p>
               </div>
 
               <div className="space-y-3 pt-4 border-t">

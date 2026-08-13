@@ -267,9 +267,6 @@ export default function CreateProject() {
   };
 
   const addLink = () => {
-    if (formData.project_urls.length >= 10) {
-      return;
-    }
     if (newLink) {
       if (!newLink.startsWith('http://') && !newLink.startsWith('https://')) {
         toast.error("Please enter a valid URL including http:// or https://");
@@ -1088,7 +1085,7 @@ export default function CreateProject() {
                         <LinkIcon className="w-4 h-4" />
                         Project Links (Optional)
                       </Label>
-                      <p className="text-xs text-gray-500 mt-1">Add relevant links for your project (max 10)</p>
+                      <p className="text-xs text-gray-500 mt-1">Add relevant links for your project</p>
                     </div>
                     
                     <div className="space-y-3">
@@ -1115,7 +1112,6 @@ export default function CreateProject() {
                           type="button"
                           onClick={addLink}
                           variant="outline"
-                          disabled={formData.project_urls.length >= 10}
                         >
                           <Plus className="w-4 h-4" />
                         </Button>
