@@ -389,20 +389,34 @@ export default function CanvasWorkspace({
   const zoomFitRef = useRef(zoomFit);
   zoomFitRef.current = zoomFit;
 
-  // Re-arrange all visible frames into a neat grid so they don't overlap.
+  // Re-arrange all visible frames into a non-overlapping masonry grid.
+  // Each column is sized to its widest frame so nothing overlaps, and frames
+  // stack vertically within their column. Custom frame sizes are preserved.
   const organizeFrames = useCallback(() => {
     if (!layout) return;
     const visibleDefs = defs.filter((d) => !layout[d.id]?.hidden);
     if (!visibleDefs.length) return;
     const cols = Math.min(3, visibleDefs.length);
-    const colW = 560, gapX = 40, gapY = 40;
-    const colY = new Array(cols).fill(0);
+    const gapX = 48, gapY = 48;
     const next = { ...layout };
-    visibleDefs.forEach((d, i) => {
-      const c = i % cols;
-      const f = next[d.id];
-      next[d.id] = { ...f, x: c * (colW + gapX), y: colY[c], z: i };
-      colY[c] += (f.h || d.h) + gapY;
+    // Distribute frames round-robin into columns to balance the layout.
+    const buckets = Array.from({ length: cols }, () => []);
+    visibleDefs.forEach((d, i) => buckets[i % cols].push(d));
+    // Column width = widest frame in that column (respect custom sizes, min 360).
+    const colWidths = buckets.map((b) => Math.max(360, ...b.map((d) => next[d.id]?.w || d.w)));
+    const colX = [];
+    let acc = 0;
+    for (let c = 0; c < cols; c++) { colX.push(acc); acc += colWidths[c] + gapX; }
+    const colY = new Array(cols).fill(0);
+    let z = 0;
+    buckets.forEach((bucket, c) => {
+      bucket.forEach((d) => {
+        const prev = next[d.id] || {};
+        const w = prev.w || d.w;
+        const h = prev.h || d.h;
+        next[d.id] = { ...prev, x: colX[c], y: colY[c], w, h, z: z++ };
+        colY[c] += h + gapY;
+      });
     });
     setLayout(next);
     saveLayout(next);
