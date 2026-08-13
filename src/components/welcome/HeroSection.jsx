@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Download, Loader2 } from "lucide-react";
 
-const SCREENSHOT_HERO = "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/049ef5c30_Screenshot2026-08-12at112128PM.png";
+const SCREENSHOT_HERO = "https://media.base44.com/images/public/689d7b3bdca9ca6bab2aeef8/be2d196cb_Screenshot2026-08-13at123157PM.png";
 
 const HeroVisual = () => (
   <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 max-w-4xl mx-auto">
