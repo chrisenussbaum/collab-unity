@@ -67,6 +67,20 @@ export default function Demos({ currentUser, authIsLoading }) {
     }
   }, []);
 
+  // Re-fetch only applaud records after an applaud toggle — mirrors the Feed
+  // pattern so the list never blanks/reloads (local optimistic UI already
+  // updated the heart + count instantly inside DemoItem).
+  const handleApplaudUpdate = useCallback(async () => {
+    const ids = demos.map((d) => d.id);
+    if (ids.length === 0) return;
+    try {
+      const a = await withRetry(() => DemoApplaud.filter({ demo_id: { $in: ids } }));
+      setApplauds(a || []);
+    } catch (e) {
+      console.error("Error refreshing applauds:", e);
+    }
+  }, [demos]);
+
   useEffect(() => {
     if (!authIsLoading) loadDemos();
   }, [authIsLoading, loadDemos]);
@@ -154,7 +168,7 @@ export default function Demos({ currentUser, authIsLoading }) {
                   currentUser={currentUser}
                   demoApplauds={applauds}
                   onDemoDeleted={loadDemos}
-                  onApplaudUpdate={loadDemos}
+                  onApplaudUpdate={handleApplaudUpdate}
                 />
               ))
             )}
