@@ -1,9 +1,11 @@
 import React from "react";
-import { Eye, EyeOff, Users, Briefcase } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Eye, EyeOff, Users, Briefcase, Pencil } from "lucide-react";
 
 export default function CanvasLayers({
   defs, layout, selectedId, onSelect, onToggleHide,
-  isOwner, pendingApplicationsCount = 0, onOpenApplications, onOpenInvite,
+  isOwner, projectId, pendingApplicationsCount = 0, onOpenApplications, onOpenInvite,
 }) {
   // Front-most first (defs order is back-to-front; reverse for display)
   const ordered = [...defs].reverse();
@@ -46,6 +48,15 @@ export default function CanvasLayers({
 
       <div className="border-t border-gray-100 mt-2" />
       <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">Manage</div>
+      {isOwner && (
+        <Link
+          to={createPageUrl(`EditProject?id=${projectId}`)}
+          className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-50"
+        >
+          <Pencil className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="truncate flex-1">Edit Project</span>
+        </Link>
+      )}
       {isOwner && (
         <div
           onClick={onOpenApplications}

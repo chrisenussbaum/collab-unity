@@ -458,6 +458,7 @@ export default function CanvasWorkspace({
             onSelect={setSelectedId}
             onToggleHide={(id) => updateFrame(id, { hidden: !layout[id].hidden })}
             isOwner={isOwner}
+            projectId={project?.id}
             pendingApplicationsCount={pendingApplicationsCount}
             onOpenApplications={() => setShowApplicationsDialog(true)}
             onOpenInvite={() => setShowInviteDialog(true)}
@@ -542,6 +543,7 @@ export default function CanvasWorkspace({
               onSelect={(id) => { setSelectedId(id); setLayersOpen(false); }}
               onToggleHide={(id) => updateFrame(id, { hidden: !layout[id].hidden })}
               isOwner={isOwner}
+              projectId={project?.id}
               pendingApplicationsCount={pendingApplicationsCount}
               onOpenApplications={() => { setShowApplicationsDialog(true); setLayersOpen(false); }}
               onOpenInvite={() => { setShowInviteDialog(true); setLayersOpen(false); }}
