@@ -11,7 +11,7 @@ import LearningHub from './pages/LearningHub';
 import NewsEntertainment from './pages/NewsEntertainment';
 import Resources from './pages/Resources';
 import Featured from './pages/Featured';
-import Explore from './pages/Explore';
+import Demos from './pages/Demos';
 import Collaborators from './pages/Collaborators';
 import LibraryOfApps from './pages/LibraryOfApps';
 import Games from './pages/Games';
@@ -74,7 +74,7 @@ const AuthenticatedApp = () => {
       <Route path="/NewsEntertainment" element={<LayoutWrapper currentPageName="NewsEntertainment"><NewsEntertainment /></LayoutWrapper>} />
       <Route path="/Resources" element={<Resources />} />
       <Route path="/Featured" element={<Featured />} />
-      <Route path="/Explore" element={<LayoutWrapper currentPageName="Explore"><Explore /></LayoutWrapper>} />
+      <Route path="/Demos" element={<LayoutWrapper currentPageName="Demos"><Demos /></LayoutWrapper>} />
       <Route path="/Collaborators" element={<LayoutWrapper currentPageName="Collaborators"><Collaborators /></LayoutWrapper>} />
       <Route path="/LibraryOfApps" element={<LayoutWrapper currentPageName="LibraryOfApps"><LibraryOfApps /></LayoutWrapper>} />
       <Route path="/Games" element={<LayoutWrapper currentPageName="Games"><Games /></LayoutWrapper>} />

@@ -1,0 +1,22 @@
+{
+  "name": "DemoApplaud",
+  "type": "object",
+  "properties": {
+    "demo_id": {
+      "type": "string",
+      "description": "ID of the demo being applauded"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who applauded"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Name of the user who applauded"
+    }
+  },
+  "required": [
+    "demo_id",
+    "user_email"
+  ]
+}

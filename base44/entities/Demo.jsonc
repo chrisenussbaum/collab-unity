@@ -1,0 +1,40 @@
+{
+  "name": "Demo",
+  "type": "object",
+  "properties": {
+    "caption": {
+      "type": "string",
+      "description": "Caption describing the demo"
+    },
+    "media_url": {
+      "type": "string",
+      "description": "URL of the demo media (image or video)"
+    },
+    "media_type": {
+      "type": "string",
+      "enum": [
+        "image",
+        "video"
+      ],
+      "default": "image",
+      "description": "Type of media"
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "description": "Thumbnail URL for videos"
+    },
+    "related_project_id": {
+      "type": "string",
+      "description": "Optional related project ID"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this demo is visible on the Demos page"
+    }
+  },
+  "required": [
+    "media_url",
+    "media_type"
+  ]
+}

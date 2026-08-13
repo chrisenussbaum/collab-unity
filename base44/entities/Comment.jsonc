@@ -27,10 +27,11 @@
       "enum": [
         "feed",
         "discussion",
-        "feed_post"
+        "feed_post",
+        "demo"
       ],
       "default": "feed",
-      "description": "The context where the comment was posted (e.g., public feed, private team discussion, or feed post)"
+      "description": "The context where the comment was posted (e.g., public feed, private team discussion, feed post, or demo)"
     },
     "mentions": {
       "type": "array",
