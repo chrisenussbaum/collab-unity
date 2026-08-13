@@ -101,7 +101,7 @@ export default function Demos({ currentUser, authIsLoading }) {
   return (
     <div className="min-h-screen">
       <div className="cu-container cu-page">
-        <div className="max-w-lg mx-auto space-y-3">
+        <div className="max-w-2xl mx-auto space-y-3">
           {currentUser && (
             <Button
               onClick={() => setShowCreate(true)}
