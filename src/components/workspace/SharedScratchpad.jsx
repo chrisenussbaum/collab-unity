@@ -1,9 +1,24 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from "@/api/base44Client";
-import { Loader2, Check, RefreshCw, Users } from 'lucide-react';
+import { Loader2, Check, RefreshCw, Users, Save } from 'lucide-react';
 
-const SAVE_DEBOUNCE_MS = 1200;
 const MAX_LEN = 10000;
+
+// Retry helper matching IdeationNotes — handles 429 rate-limits with backoff.
+const withRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await apiCall();
+    } catch (error) {
+      if (error.response?.status === 429 && attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 2000;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+};
 
 const formatDate = (dateString) => {
   if (!dateString) return '';
@@ -18,85 +33,70 @@ const formatDate = (dateString) => {
 
 export default function SharedScratchpad({ project, currentUser, isCollaborator }) {
   const [content, setContent] = useState(project?.scratchpad_content || '');
-  const [status, setStatus] = useState('saved'); // 'saved' | 'saving' | 'stale'
-  const [lastSavedBy, setLastSavedBy] = useState(project?.scratchpad_metadata?.last_saved_by_name || project?.scratchpad_metadata?.last_saved_by || null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isStale, setIsStale] = useState(false);
+  const [lastSavedBy, setLastSavedBy] = useState(
+    project?.scratchpad_metadata?.last_saved_by_name || project?.scratchpad_metadata?.last_saved_by || null
+  );
   const [lastSavedAt, setLastSavedAt] = useState(project?.scratchpad_metadata?.last_saved_at || null);
 
   const contentRef = useRef(content);
-  const savedRef = useRef(content);
-  const saveTimer = useRef(null);
+  const initialContentRef = useRef(content);
+  const isMountedRef = useRef(true);
+  const savingRef = useRef(false);
   const projectIdRef = useRef(project?.id);
   const userEmailRef = useRef(currentUser?.email);
 
-  useEffect(() => { contentRef.current = content; }, [content]);
-  useEffect(() => { savedRef.current = project?.scratchpad_content || ''; }, [project?.scratchpad_content]);
+  useEffect(() => { isMountedRef.current = true; return () => { isMountedRef.current = false; }; }, []);
   useEffect(() => { projectIdRef.current = project?.id; }, [project?.id]);
   useEffect(() => { userEmailRef.current = currentUser?.email; }, [currentUser?.email]);
 
-  // Initialize from project + keep in sync when project id changes
+  // Initialize / re-sync when the project changes.
   useEffect(() => {
     const initial = project?.scratchpad_content || '';
     setContent(initial);
-    savedRef.current = initial;
-    setStatus('saved');
+    contentRef.current = initial;
+    initialContentRef.current = initial;
+    setHasUnsavedChanges(false);
+    setIsStale(false);
     setLastSavedBy(project?.scratchpad_metadata?.last_saved_by_name || project?.scratchpad_metadata?.last_saved_by || null);
     setLastSavedAt(project?.scratchpad_metadata?.last_saved_at || null);
   }, [project?.id]);
 
-  const persist = useCallback(async (text) => {
-    const pid = projectIdRef.current;
-    if (!pid) return;
-    setStatus('saving');
-    try {
-      const metadata = {
-        last_saved_by: userEmailRef.current,
-        last_saved_by_name: currentUser?.full_name || userEmailRef.current,
-        last_saved_at: new Date().toISOString(),
-      };
-      await base44.entities.Project.update(pid, {
-        scratchpad_content: text,
-        scratchpad_metadata: metadata,
-      });
-      savedRef.current = text;
-      setStatus('saved');
-      setLastSavedBy(metadata.last_saved_by_name);
-      setLastSavedAt(metadata.last_saved_at);
-    } catch (e) {
-      console.error("SharedScratchpad save error:", e);
-      setStatus('stale');
-    }
-  }, [currentUser?.full_name]);
-
-  // Real-time sync: subscribe to Project updates so other collaborators' edits appear instantly.
+  // Real-time sync: other collaborators' edits appear live. Skipped while a
+  // local save is in flight so it never clobbers the saving/saved state.
   useEffect(() => {
     if (!project?.id) return;
     const unsubscribe = base44.entities.Project.subscribe((event) => {
       if (event.type !== 'update') return;
       const data = event.data;
       if (!data || data.id !== projectIdRef.current) return;
-      // Ignore our own saves (they echo back)
+      if (savingRef.current) return;
       const remoteBy = data.scratchpad_metadata?.last_saved_by;
       if (remoteBy && remoteBy === userEmailRef.current) return;
 
       const remoteContent = data.scratchpad_content || '';
-      const local = contentRef.current;
-      const saved = savedRef.current;
+      const byName = data.scratchpad_metadata?.last_saved_by_name || data.scratchpad_metadata?.last_saved_by || null;
+      const at = data.scratchpad_metadata?.last_saved_at || null;
 
-      // If the local user has unsaved edits, don't clobber them — flag as stale.
-      if (local !== saved) {
-        setStatus('stale');
-        setLastSavedBy(data.scratchpad_metadata?.last_saved_by_name || data.scratchpad_metadata?.last_saved_by || null);
-        setLastSavedAt(data.scratchpad_metadata?.last_saved_at || null);
+      // Local user has unsaved edits — flag stale instead of overwriting.
+      if (contentRef.current !== initialContentRef.current) {
+        setIsStale(true);
+        setLastSavedBy(byName);
+        setLastSavedAt(at);
         return;
       }
-      // No pending local edits — apply the remote content directly.
-      if (remoteContent !== local) {
+      if (remoteContent !== contentRef.current) {
         setContent(remoteContent);
-        savedRef.current = remoteContent;
+        contentRef.current = remoteContent;
+        initialContentRef.current = remoteContent;
+        setHasUnsavedChanges(false);
       }
-      setStatus('saved');
-      setLastSavedBy(data.scratchpad_metadata?.last_saved_by_name || data.scratchpad_metadata?.last_saved_by || null);
-      setLastSavedAt(data.scratchpad_metadata?.last_saved_at || null);
+      setIsStale(false);
+      setLastSavedBy(byName);
+      setLastSavedAt(at);
     });
     return () => { if (typeof unsubscribe === 'function') unsubscribe(); };
   }, [project?.id]);
@@ -105,36 +105,61 @@ export default function SharedScratchpad({ project, currentUser, isCollaborator 
     let val = e.target.value;
     if (val.length > MAX_LEN) val = val.slice(0, MAX_LEN);
     setContent(val);
-    if (!isCollaborator) return;
-    setStatus('saving');
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => persist(val), SAVE_DEBOUNCE_MS);
+    contentRef.current = val;
+    setHasUnsavedChanges(val !== initialContentRef.current);
   };
 
-  const handleRefresh = () => {
-    // Pull the latest from the saved server value (accept remote version, discard local)
-    const latest = project?.scratchpad_content || '';
-    setContent(latest);
-    savedRef.current = latest;
-    setStatus('saved');
-    setLastSavedBy(project?.scratchpad_metadata?.last_saved_by_name || project?.scratchpad_metadata?.last_saved_by || null);
-    setLastSavedAt(project?.scratchpad_metadata?.last_saved_at || null);
-  };
-
-  const handleBlur = () => {
-    if (!isCollaborator) return;
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    if (contentRef.current !== savedRef.current) {
-      persist(contentRef.current);
+  const handleSave = async () => {
+    if (!isCollaborator || savingRef.current) return;
+    savingRef.current = true;
+    setIsSaving(true);
+    try {
+      const metadata = {
+        last_saved_by: userEmailRef.current,
+        last_saved_by_name: currentUser?.full_name || userEmailRef.current,
+        last_saved_at: new Date().toISOString(),
+      };
+      await withRetry(() => base44.entities.Project.update(projectIdRef.current, {
+        scratchpad_content: contentRef.current,
+        scratchpad_metadata: metadata,
+      }));
+      initialContentRef.current = contentRef.current;
+      setHasUnsavedChanges(false);
+      setIsStale(false);
+      setLastSavedBy(metadata.last_saved_by_name);
+      setLastSavedAt(metadata.last_saved_at);
+    } catch (e) {
+      console.error("SharedScratchpad save error:", e);
+    } finally {
+      if (isMountedRef.current) {
+        setIsSaving(false);
+        savingRef.current = false;
+      }
     }
   };
 
-  useEffect(() => () => { if (saveTimer.current) clearTimeout(saveTimer.current); }, []);
-
-  const statusLabel = () => {
-    if (status === 'saving') return 'Saving…';
-    if (status === 'stale') return 'Newer version available';
-    return 'Saved';
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const results = await withRetry(() => base44.entities.Project.filter({ id: projectIdRef.current }));
+      const fresh = results?.[0];
+      if (fresh && isMountedRef.current) {
+        const freshContent = fresh.scratchpad_content || '';
+        setContent(freshContent);
+        contentRef.current = freshContent;
+        initialContentRef.current = freshContent;
+        setHasUnsavedChanges(false);
+        setIsStale(false);
+        if (fresh.scratchpad_metadata) {
+          setLastSavedBy(fresh.scratchpad_metadata.last_saved_by_name || fresh.scratchpad_metadata.last_saved_by);
+          setLastSavedAt(fresh.scratchpad_metadata.last_saved_at);
+        }
+      }
+    } catch (e) {
+      console.error("SharedScratchpad refresh error:", e);
+    } finally {
+      if (isMountedRef.current) setIsRefreshing(false);
+    }
   };
 
   return (
@@ -145,23 +170,35 @@ export default function SharedScratchpad({ project, currentUser, isCollaborator 
           <span>Shared · everyone sees edits live</span>
         </div>
         <div className="flex items-center gap-1.5 text-xs">
-          {status === 'saving' && <Loader2 className="w-3 h-3 animate-spin text-gray-400" />}
-          {status === 'saved' && <Check className="w-3 h-3 text-green-500" />}
-          {status === 'stale' && (
+          {isStale ? (
             <button onClick={handleRefresh} className="flex items-center gap-1 text-amber-600 hover:text-amber-700" title="Pull latest">
-              <RefreshCw className="w-3 h-3" />
+              <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>Newer version</span>
+            </button>
+          ) : hasUnsavedChanges ? (
+            <span className="text-amber-600">Unsaved changes</span>
+          ) : (
+            <span className="flex items-center gap-1 text-gray-400">
+              <Check className="w-3 h-3 text-green-500" />
+              Saved
+            </span>
+          )}
+          {isCollaborator && hasUnsavedChanges && !isStale && (
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex items-center gap-1 rounded-md bg-purple-600 px-2 py-0.5 text-white hover:bg-purple-700 disabled:opacity-60"
+            >
+              {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+              {isSaving ? 'Saving…' : 'Save'}
             </button>
           )}
-          <span className={status === 'stale' ? 'text-amber-600' : 'text-gray-400'}>
-            {statusLabel()}
-          </span>
         </div>
       </div>
 
       <textarea
         value={content}
         onChange={handleChange}
-        onBlur={handleBlur}
         readOnly={!isCollaborator}
         placeholder={isCollaborator ? "Quick notes, reminders, links… everyone on this project sees what you type here." : "No scratchpad content yet."}
         className="flex-1 min-h-0 w-full resize-none rounded-lg border border-gray-200 bg-amber-50/30 p-3 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-300/60 focus:border-purple-300 leading-relaxed font-mono"
