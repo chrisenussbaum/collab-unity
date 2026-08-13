@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { Project, ActivityLog, User, Notification } from "@/entities/all";
 import { base44 } from "@/api/base44Client";
 import MediaDisplay from "../MediaDisplay";
-import HorizontalScrollContainer from "../HorizontalScrollContainer";
 import { optimizeImage, validateVideo, isImageFile, isVideoFile, formatFileSize } from "../mediaOptimization";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 
@@ -436,10 +435,7 @@ export default function ProjectHighlights({ project, currentUser, onProjectUpdat
           )}
         </div>
       ) : (
-        <HorizontalScrollContainer 
-          className="pb-2"
-          showArrows={highlights.length > 1}
-        >
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {highlights.map((highlight, index) => {
             const mediaUrl = highlight.media_url || highlight.image_url;
             const mediaType = highlight.media_type || 'image';
@@ -451,10 +447,7 @@ export default function ProjectHighlights({ project, currentUser, onProjectUpdat
             const canDeleteThis = isUploader || isProjectOwner;
             
             return (
-              <div 
-                key={index} 
-                className="relative flex-shrink-0 w-[280px] sm:w-[320px] md:w-[360px]"
-              >
+              <div key={index} className="relative">
                 <div className="relative aspect-[4/3] rounded-lg overflow-hidden group">
                   <MediaDisplay
                     src={mediaUrl}
@@ -505,7 +498,7 @@ export default function ProjectHighlights({ project, currentUser, onProjectUpdat
               </div>
             );
           })}
-        </HorizontalScrollContainer>
+        </div>
       )}
     </Card>
   );
