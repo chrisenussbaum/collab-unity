@@ -71,10 +71,12 @@ export default function CanvasWorkspace({
   const viewportRef = useRef(null);
   const saveTimer = useRef(null);
   const stateRef = useRef({ zoom, pan });
+  const fullscreenRef = useRef(null);
   const projectIdRef = useRef(null);
   const didInit = useRef(false);
 
   useEffect(() => { stateRef.current = { zoom, pan }; }, [zoom, pan]);
+  useEffect(() => { fullscreenRef.current = fullscreenId; }, [fullscreenId]);
 
   const refreshTasks = useCallback(async () => {
     if (!project?.id) return;
@@ -178,6 +180,8 @@ export default function CanvasWorkspace({
     const el = viewportRef.current;
     if (!el) return;
     const handler = (e) => {
+      // While a frame is in full-screen mode, let its content scroll natively.
+      if (fullscreenRef.current) return;
       // Let trackpad / mouse wheel scroll inside frames natively instead of
       // hijacking it to pan the canvas. Ctrl/Cmd+wheel still zooms the canvas.
       const overFrame = e.target && typeof e.target.closest === 'function' && e.target.closest('[data-canvas-scroll="true"]');
@@ -214,6 +218,7 @@ export default function CanvasWorkspace({
     if (isTouchDevice) return;
     let gs = null;
     const onStart = (e) => {
+      if (fullscreenRef.current) return; // don't pinch-zoom the hidden canvas while full-screen
       e.preventDefault();
       const rect = el.getBoundingClientRect();
       gs = { z: stateRef.current.zoom, pan: { ...stateRef.current.pan }, mx: e.clientX - rect.left, my: e.clientY - rect.top };
@@ -276,6 +281,7 @@ export default function CanvasWorkspace({
     };
 
     const onStart = (e) => {
+      if (fullscreenRef.current) return; // let full-screen content scroll/swipe natively
       if (e.touches.length >= 2) {
         // Keep an existing pinch stable if a stray third finger grazes the screen
         if (g && g.mode === "two" && findTouch(e.touches, g.idA) && findTouch(e.touches, g.idB)) return;
@@ -554,7 +560,7 @@ export default function CanvasWorkspace({
                     <Minimize2 className="w-3.5 h-3.5" /> Exit full screen
                   </button>
                 </div>
-                <div className="flex-1 min-h-0 overflow-auto">{d.render()}</div>
+                <div className="flex-1 min-h-0 overflow-auto" data-canvas-scroll="true" style={{ touchAction: 'auto' }}>{d.render()}</div>
               </div>
             );
           })()}
