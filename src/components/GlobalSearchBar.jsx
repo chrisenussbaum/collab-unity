@@ -16,8 +16,6 @@ import {
   TrendingUp,
   BookOpen,
   Users as UsersIcon,
-  Eye,
-  EyeOff,
   Clock,
   CheckCircle,
   Briefcase,
@@ -206,15 +204,6 @@ export default function GlobalSearchBar({ className = "", placeholder = "Search.
                             <span className="text-xs text-gray-500 capitalize">
                               {formatEnumLabel(project.status)}
                             </span>
-                          </>
-                        )}
-                        {project.is_visible_on_feed === false && (
-                          <>
-                            <span className="text-xs text-gray-300">•</span>
-                            <Badge variant="outline" className="text-[10px] h-4 px-1.5">
-                              <EyeOff className="w-2.5 h-2.5 mr-0.5" />
-                              Private
-                            </Badge>
                           </>
                         )}
                       </div>

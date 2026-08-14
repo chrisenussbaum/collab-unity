@@ -157,7 +157,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   const [currentUser, setCurrentUser] = useState(null);
   const [projectUsers, setProjectUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [userApplication, setUserApplication] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
@@ -290,14 +289,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         }
       }
       
-      // Check privacy: deny access if project is private and user is not owner/collaborator/has no pending invite
-      if (projectData.is_visible_on_feed === false && !isOwner && !isExplicitCollaborator && !hasPendingInvitation) {
-        toast.error("This project is private and you don't have access to view it.");
-        setProject(null);
-        navigate(createPageUrl("Discover"), { replace: true });
-        return;
-      }
-
       setProject(projectData);
 
       updateMetaTags({
@@ -420,35 +411,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
 
   const handleShare = () => {
     setShowShareCard(true);
-  };
-
-  const handleToggleVisibility = async () => {
-    const isOwner = currentUser && project.created_by === currentUser.email;
-    if (!project || !isOwner || isUpdatingVisibility) return;
-    
-    setIsUpdatingVisibility(true);
-    try {
-      const newVisibility = !project.is_visible_on_feed;
-      await withRetry(() => Project.update(project.id, { is_visible_on_feed: newVisibility }));
-      
-      setProject(prev => ({ ...prev, is_visible_on_feed: newVisibility }));
-      
-      // Invalidate all relevant query caches AND refetch to immediately update other pages
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['feed-projects'], refetchType: 'all' }),
-        queryClient.invalidateQueries({ queryKey: ['discover-projects'], refetchType: 'all' }),
-        queryClient.invalidateQueries({ queryKey: ['my-projects'], refetchType: 'all' })
-      ]);
-    } catch (error) {
-      console.error("Error updating project visibility:", error);
-      if (error.response?.status === 429) {
-        toast.error("Too many requests. Please wait a moment and try again.");
-      } else {
-        toast.error("Failed to update project visibility.");
-      }
-    } finally {
-      setIsUpdatingVisibility(false);
-    }
   };
 
   const handleSafeNavigation = () => {
@@ -619,11 +581,6 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
 
       // toast.success("Invitation declined."); // Removed redundant success toast
       setPendingInvitation(null);
-      
-      // If project is private, redirect away since they declined
-      if (!project.is_visible_on_feed) {
-        navigate(createPageUrl("Discover"), { replace: true });
-      }
     } catch (error) {
       console.error("Error declining invitation:", error);
       toast.error("Failed to decline invitation. Please try again.");
@@ -876,11 +833,10 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   const isExplicitCollaborator = currentUser && project.collaborator_emails?.includes(currentUser.email);
   const userCanContribute = canContribute(project, currentUser, userApplication);
   
-  // User can apply if logged in, not owner/contributor, no existing pending/accepted application, and project is public
+  // User can apply if logged in, not owner/contributor, and no existing pending/accepted application
   const canApply = currentUser && 
                    !userCanContribute && 
                    (!userApplication || userApplication.status === 'rejected' || userApplication.status === 'withdrawn') && 
-                   project.is_visible_on_feed &&
                    !pendingInvitation; // Cannot apply if there's a pending invitation
 
   const CategoryIcon = categoryIcons[project.classification] || Building;

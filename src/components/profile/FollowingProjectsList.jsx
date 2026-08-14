@@ -70,9 +70,6 @@ export default function FollowingProjectsList({
                       <Badge variant={project.project_type === 'Personal' ? 'default' : 'secondary'} className="text-xs">
                         {project.project_type}
                       </Badge>
-                      {!project.is_visible_on_feed && (
-                        <Badge variant="outline" className="text-xs border-orange-300 text-orange-600">Private</Badge>
-                      )}
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">

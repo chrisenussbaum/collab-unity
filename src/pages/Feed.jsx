@@ -520,7 +520,7 @@ export default function Feed({ currentUser, authIsLoading }) {
     queryKey: ['feed-projects', currentUser?.email],
     queryFn: async () => {
       const [visibleProjectsData, initialFeedPostsData] = await Promise.all([
-        withRetry(() => Project.filter({ is_visible_on_feed: true }, "-created_date")),
+        withRetry(() => Project.filter({}, "-created_date")),
         withRetry(() => FeedPost.filter({ is_visible: true }, "-created_date")),
       ]);
 

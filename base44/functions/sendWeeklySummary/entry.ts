@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     }
 
     // ── 2. Fetch trending projects (visible on feed, not archived) ──
-    const visibleProjects = await sr.entities.Project.filter({ is_archived: false, is_visible_on_feed: true });
+    const visibleProjects = await sr.entities.Project.filter({ is_archived: false });
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
     // Recent applauds for trending score

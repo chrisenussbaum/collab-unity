@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     const projects = await base44.asServiceRole.entities.Project.list('-updated_date', 100);
 
     const visibleProjects = (projects || []).filter(p =>
-      p.is_visible_on_feed !== false && p.is_archived !== true
+      p.is_archived !== true
     );
 
     if (visibleProjects.length === 0) {

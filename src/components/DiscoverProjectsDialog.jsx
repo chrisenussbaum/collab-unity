@@ -23,7 +23,7 @@ export default function DiscoverProjectsDialog({ isOpen, onClose, currentUser })
       setIsLoading(true);
       try {
         const results = await base44.entities.Project.filter(
-          { status: "seeking_collaborators", is_visible_on_feed: true },
+          { status: "seeking_collaborators" },
           "-created_date",
           6
         );

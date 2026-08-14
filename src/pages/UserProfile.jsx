@@ -132,14 +132,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
           id: { $in: user.followed_projects }
         });
         
-        // Filter to show only public projects if viewing someone else's profile
-        const visibleFollowedProjects = followedProjectsData.filter(project => {
-          if (isOwner) return true; // Owner sees all their followed projects
-          // Others only see public followed projects
-          return project.is_visible_on_feed;
-        });
-
-        setFollowedProjects(visibleFollowedProjects);
+        setFollowedProjects(followedProjectsData);
       } catch (error) {
         console.error("Error loading followed projects:", error);
         setFollowedProjects([]);
@@ -266,17 +259,7 @@ export default function UserProfile({ currentUser: propCurrentUser, authIsLoadin
 
           uniqueProjects.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
 
-          const visibleProjects = uniqueProjects.filter(project => {
-            if (isOwnerCheck) return true;
-            // For others viewing the profile: only show public projects OR projects they're collaborating on
-            if (!project.is_visible_on_feed) {
-              // Private project - only show if current user is a collaborator
-              return propCurrentUser && project.collaborator_emails && project.collaborator_emails.includes(propCurrentUser.email);
-            }
-            // Public project - always visible
-            return true;
-          });
-          setUserProjects(visibleProjects);
+          setUserProjects(uniqueProjects);
 
           // Load followed projects in the background
           loadFollowedProjectsStable(normalizedUser, isOwnerCheck);

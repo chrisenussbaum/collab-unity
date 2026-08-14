@@ -28,10 +28,7 @@ export default function UserProjectsList({
           </div>
           {!isOwner && userProjects.length > 0 && (
             <Badge variant="outline" className="text-xs w-fit">
-              {userProjects.filter(p => p.is_visible_on_feed).length} Public
-              {propCurrentUser && userProjects.filter(p => !p.is_visible_on_feed && p.collaborator_emails?.includes(propCurrentUser.email)).length > 0 &&
-                ` • ${userProjects.filter(p => !p.is_visible_on_feed && p.collaborator_emails?.includes(propCurrentUser.email)).length} Shared`
-              }
+              {userProjects.length} Public
             </Badge>
           )}
         </CardTitle>
@@ -42,7 +39,6 @@ export default function UserProjectsList({
             {displayedProjects.map(project => {
               const isProjectOwner = propCurrentUser && project.created_by === propCurrentUser.email;
               const isProjectCollaborator = propCurrentUser && project.collaborator_emails?.includes(propCurrentUser.email) && !isProjectOwner;
-              const isPublicProject = project.is_visible_on_feed;
               const highlights = project.highlights || [];
               const projectUrls = project.project_urls || [];
               const hasRichMedia = highlights.length > 0 || projectUrls.length > 0;
@@ -67,7 +63,6 @@ export default function UserProjectsList({
                           <Badge variant={project.project_type === 'Personal' ? 'default' : 'secondary'} className="text-xs">{project.project_type}</Badge>
                           {isProjectOwner && <Badge className="bg-purple-100 text-purple-800 text-xs">Owner</Badge>}
                           {isProjectCollaborator && <Badge className="bg-blue-100 text-blue-800 text-xs">Collaborator</Badge>}
-                          {!isPublicProject && <Badge variant="outline" className="text-xs border-orange-300 text-orange-600">Private</Badge>}
                         </div>
                       </div>
 
