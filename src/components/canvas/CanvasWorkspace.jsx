@@ -20,7 +20,7 @@ import { useCanvasAnnotations } from "./annotations/useCanvasAnnotations";
 import CanvasAnnotationItems from "./annotations/CanvasAnnotationItems";
 import CanvasAnnotationsOverlay from "./annotations/CanvasAnnotationsOverlay";
 import CanvasPresenceStack from "./CanvasPresenceStack";
-import MusicPlayer from "../music/MusicPlayer";
+import { useMusicPlayer } from "../music/MusicPlayerContext";
 import ProjectApplicationsManager from "../ProjectApplicationsManager";
 import ProjectMembershipManager from "../ProjectMembershipManager";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -56,7 +56,7 @@ export default function CanvasWorkspace({
   const [addOpen, setAddOpen] = useState(false);
   const [fullscreenId, setFullscreenId] = useState(null);
   const [layersOpen, setLayersOpen] = useState(() => (typeof window !== "undefined" ? window.innerWidth >= 1024 : true));
-  const [showMusicPlayer, setShowMusicPlayer] = useState(false);
+  const music = useMusicPlayer();
   const [showApplicationsDialog, setShowApplicationsDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showProjectDetailsDialog, setShowProjectDetailsDialog] = useState(false);
@@ -526,9 +526,9 @@ export default function CanvasWorkspace({
             </Button>
           )}
           {!readOnly && (
-            <button onClick={() => setShowMusicPlayer((v) => !v)} className={`relative p-1.5 rounded hover:bg-gray-100 text-gray-600 ${showMusicPlayer ? "bg-purple-50 text-purple-600" : ""}`} title="CU Radio">
+            <button onClick={() => music.toggle("project")} className={`relative p-1.5 rounded hover:bg-gray-100 text-gray-600 ${music.visible ? "bg-purple-50 text-purple-600" : ""}`} title="CU Radio">
               <Music className="w-4 h-4" />
-              {showMusicPlayer && <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-purple-600 rounded-full" />}
+              {music.visible && <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-purple-600 rounded-full" />}
             </button>
           )}
           {!readOnly && (
@@ -752,8 +752,6 @@ export default function CanvasWorkspace({
         drawColor={drawColor}
         setDrawColor={setDrawColor}
       />
-
-      <MusicPlayer isVisible={showMusicPlayer} onClose={() => setShowMusicPlayer(false)} zIndex={130} />
 
       {(isOwner || isCollaborator) && (
         <ProjectChatPanel

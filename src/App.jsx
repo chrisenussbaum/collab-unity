@@ -18,6 +18,7 @@ import Games from './pages/Games';
 import AdminReview from './pages/AdminReview';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import { MusicPlayerProvider } from '@/components/music/MusicPlayerContext';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -52,6 +53,7 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
+    <MusicPlayerProvider>
     <Routes>
       <Route path="/" element={
         <LayoutWrapper currentPageName={mainPageKey}>
@@ -81,6 +83,7 @@ const AuthenticatedApp = () => {
       <Route path="/AdminReview" element={<LayoutWrapper currentPageName="AdminReview"><AdminReview /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
+    </MusicPlayerProvider>
   );
 };
 

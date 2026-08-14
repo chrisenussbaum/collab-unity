@@ -18,6 +18,7 @@ import {
 import { Home, Bell, Plus, LogOut, Eye, Edit, LayoutGrid, User as UserIcon, Lightbulb, Settings, Search, MessageCircle, Loader2, Heart, Bug, Trophy, Calendar, Users, Compass, Music, ShieldCheck, Video } from "lucide-react";
 import NotificationBell from "./components/NotificationBell";
 import MusicPlayer from "./components/music/MusicPlayer";
+import { useMusicPlayer } from "./components/music/MusicPlayerContext";
 import GlobalSearchBar from "./components/GlobalSearchBar";
 
 // Force logout timestamp - update this to force all users to re-authenticate
@@ -76,7 +77,7 @@ export default function Layout({ children, currentPageName }) {
   const [authChecked, setAuthChecked] = useState(false);
   const [hasNavigated, setHasNavigated] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [showMusicPlayer, setShowMusicPlayer] = useState(false);
+  const music = useMusicPlayer();
 
   const publicRoutes = [
     createPageUrl("Welcome"),
@@ -1038,12 +1039,12 @@ export default function Layout({ children, currentPageName }) {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowMusicPlayer(!showMusicPlayer)}
-                className={`relative rounded-full h-9 w-9 ${showMusicPlayer ? 'text-purple-600 bg-purple-50' : 'text-gray-600'}`}
-                title={showMusicPlayer ? "Turn Music Off" : "Turn Music On"}
+                onClick={() => music.toggle("global")}
+                className={`relative rounded-full h-9 w-9 ${music.visible ? 'text-purple-600 bg-purple-50' : 'text-gray-600'}`}
+                title={music.visible ? "Turn Music Off" : "Turn Music On"}
               >
                 <Music className="w-5 h-5" />
-                {showMusicPlayer && (
+                {music.visible && (
                   <span className="absolute top-1 right-1 w-2 h-2 bg-purple-600 rounded-full border border-white" />
                 )}
               </Button>
@@ -1156,12 +1157,12 @@ export default function Layout({ children, currentPageName }) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setShowMusicPlayer(!showMusicPlayer)}
-                    className={`relative rounded-full h-9 w-9 ${showMusicPlayer ? 'text-purple-600 bg-purple-50' : 'text-gray-600 hover:text-purple-600'}`}
-                    title={showMusicPlayer ? "Turn Music Off" : "Turn Music On"}
+                    onClick={() => music.toggle("global")}
+                    className={`relative rounded-full h-9 w-9 ${music.visible ? 'text-purple-600 bg-purple-50' : 'text-gray-600 hover:text-purple-600'}`}
+                    title={music.visible ? "Turn Music Off" : "Turn Music On"}
                   >
                     <Music className="w-5 h-5" />
-                    {showMusicPlayer && (
+                    {music.visible && (
                       <span className="absolute top-1 right-1 w-2 h-2 bg-purple-600 rounded-full border border-white" />
                     )}
                   </Button>
@@ -1288,7 +1289,7 @@ export default function Layout({ children, currentPageName }) {
         </div>
       </nav>
 
-      <MusicPlayer isVisible={showMusicPlayer} onClose={() => setShowMusicPlayer(false)} />
+      <MusicPlayer isVisible={music.visible} onClose={music.close} zIndex={music.isProject ? 130 : undefined} />
     </div>
   );
 }
