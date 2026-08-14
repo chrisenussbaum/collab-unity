@@ -16,6 +16,9 @@ import ProjectChatPanel from "./ProjectChatPanel";
 import CanvasLayers from "./CanvasLayers";
 import ReadOnlyProjectBanner from "./ReadOnlyProjectBanner";
 import CanvasToolbar from "./CanvasToolbar";
+import { useCanvasAnnotations } from "./annotations/useCanvasAnnotations";
+import CanvasAnnotationItems from "./annotations/CanvasAnnotationItems";
+import CanvasAnnotationsOverlay from "./annotations/CanvasAnnotationsOverlay";
 import CanvasPresenceStack from "./CanvasPresenceStack";
 import MusicPlayer from "../music/MusicPlayer";
 import ProjectApplicationsManager from "../ProjectApplicationsManager";
@@ -62,6 +65,9 @@ export default function CanvasWorkspace({
   const [showShowcaseDialog, setShowShowcaseDialog] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
+  const [drawColor, setDrawColor] = useState("#18A0FB");
+  const [selectedAnnoId, setSelectedAnnoId] = useState(null);
+  const { annotations, createAnno, updateAnno, deleteAnno } = useCanvasAnnotations(project?.id, currentUser, readOnly);
 
   useEffect(() => {
     if (!fullscreenId) return;
@@ -608,7 +614,7 @@ export default function CanvasWorkspace({
           ref={viewportRef}
           className="flex-1 relative overflow-hidden"
           onMouseDown={onCanvasMouseDown}
-          style={{ cursor: tool === "hand" ? "grab" : "default", touchAction: "none" }}
+          style={{ cursor: tool === "hand" ? "grab" : tool === "draw" ? "crosshair" : "default", touchAction: "none" }}
         >
           <div
             data-canvas-bg="true"
@@ -648,8 +654,26 @@ export default function CanvasWorkspace({
                 />
               );
             })}
+            <CanvasAnnotationItems
+              annotations={annotations}
+              tool={tool}
+              zoom={zoom}
+              readOnly={readOnly}
+              selectedAnnoId={selectedAnnoId}
+              onSelect={setSelectedAnnoId}
+              onUpdate={updateAnno}
+              onDelete={deleteAnno}
+            />
           </div>
 
+          <CanvasAnnotationsOverlay
+            tool={tool}
+            pan={pan}
+            zoom={zoom}
+            viewportRef={viewportRef}
+            drawColor={drawColor}
+            onCreate={createAnno}
+          />
           {readOnly && (
             <ReadOnlyProjectBanner
               project={project}
@@ -723,6 +747,8 @@ export default function CanvasWorkspace({
         onAddFrame={onAddFrame}
         onOrganize={organizeFrames}
         readOnly={readOnly}
+        drawColor={drawColor}
+        setDrawColor={setDrawColor}
       />
 
       <MusicPlayer isVisible={showMusicPlayer} onClose={() => setShowMusicPlayer(false)} zIndex={130} />

@@ -1,0 +1,62 @@
+{
+  "name": "CanvasAnnotation",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project this canvas annotation belongs to"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "draw",
+        "sticky",
+        "image"
+      ],
+      "description": "Annotation type: freehand draw, sticky note, or image pin"
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Payload: draw {points:[[x,y]...], color, strokeWidth, bbox:{width,height}}; sticky {text, color, fontSize}; image {src, borderColor, borderWidth}"
+    },
+    "x": {
+      "type": "number",
+      "description": "Canvas-space X position (top-left)"
+    },
+    "y": {
+      "type": "number",
+      "description": "Canvas-space Y position (top-left)"
+    },
+    "width": {
+      "type": "number",
+      "description": "Width in canvas units"
+    },
+    "height": {
+      "type": "number",
+      "description": "Height in canvas units"
+    },
+    "z": {
+      "type": "number",
+      "default": 0,
+      "description": "Stacking order (higher = above)"
+    },
+    "created_by_email": {
+      "type": "string",
+      "description": "Email of the user who created the annotation"
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Name of the user who created the annotation"
+    }
+  },
+  "required": [
+    "project_id",
+    "type",
+    "data",
+    "x",
+    "y",
+    "width",
+    "height"
+  ]
+}
