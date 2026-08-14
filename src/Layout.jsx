@@ -1126,7 +1126,9 @@ export default function Layout({ children, currentPageName }) {
             <div className="flex items-center justify-center space-x-0.5">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = location.pathname === item.path;
+                const isActive = item.name === "Feed"
+                  ? (location.pathname === item.path || location.pathname === "/")
+                  : location.pathname === item.path;
                 return (
                   <Link
                     key={item.name}
@@ -1240,7 +1242,9 @@ export default function Layout({ children, currentPageName }) {
           <div className={`grid h-[70px] ${currentUser ? 'grid-cols-5' : 'grid-cols-3'}`}>
             {mobileNavItems.map((item, index) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.path;
+              const isActive = item.name === "Feed"
+                ? (location.pathname === item.path || location.pathname === "/")
+                : location.pathname === item.path;
               
               // Special styling for Create button (middle button)
               if (item.isCreateButton) {

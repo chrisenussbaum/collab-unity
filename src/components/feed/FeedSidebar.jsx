@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, BookOpen, Tv, ChevronRight, MessageCircle, Sparkles, Loader2, Gamepad2 } from "lucide-react";
+import { Users, BookOpen, Tv, ChevronRight, MessageCircle, Sparkles, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,9 +29,22 @@ export default function FeedSidebar({ currentUser }) {
       return;
     }
     let cancelled = false;
+    const fetchWithRetry = async (fn, retries = 3) => {
+      for (let i = 0; i < retries; i++) {
+        try {
+          return await fn();
+        } catch (e) {
+          if (i < retries - 1) {
+            await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+            continue;
+          }
+          throw e;
+        }
+      }
+    };
     const fetchUsers = async () => {
       try {
-        const { data: allUsers } = await getPublicUserProfilesForDiscovery();
+        const { data: allUsers } = await fetchWithRetry(() => getPublicUserProfilesForDiscovery());
         if (cancelled) return;
         const filtered = (allUsers || []).filter(
           (u) => u.email !== currentUser.email && u.id !== currentUser.id
@@ -88,16 +101,6 @@ export default function FeedSidebar({ currentUser }) {
             </div>
             <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-600 flex-shrink-0 transition-colors" />
           </Link>
-          <Link to="/Games" className="flex items-center gap-3 p-2 rounded-lg hover:bg-purple-50 transition-colors group">
-            <div className="w-8 h-8 rounded-lg cu-gradient flex items-center justify-center flex-shrink-0">
-              <Gamepad2 className="w-4 h-4 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm text-gray-900 group-hover:text-purple-700 transition-colors">Games</p>
-              <p className="text-[10px] text-gray-500">Play free online games</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-600 flex-shrink-0 transition-colors" />
-          </Link>
         </div>
       </div>
 
@@ -107,10 +110,13 @@ export default function FeedSidebar({ currentUser }) {
       {/* Suggested Collaborators */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
         <div className="flex items-center gap-2 mb-1">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0">
             <Users className="w-4 h-4 text-white" />
           </div>
           <h3 className="font-bold text-sm text-gray-900">Suggested Collaborators</h3>
+          <Link to="/Collaborators" className="ml-auto text-[10px] text-gray-400 hover:text-indigo-600 flex items-center gap-0.5 transition-colors">
+            See all <ChevronRight className="w-3 h-3" />
+          </Link>
         </div>
         <p className="text-[11px] text-gray-500 mb-4 ml-10">Based on your skills & interests</p>
 

@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, MessageCircle, Sparkles } from "lucide-react";
+import { Users, MessageCircle, Sparkles, ChevronRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 
@@ -73,6 +73,9 @@ export default function CollaboratorDiscoveryWidget({ currentUser }) {
             <span className="text-[10px] font-semibold uppercase tracking-wide text-pink-600">
               Connect with Collaborators
             </span>
+            <Link to="/Collaborators" className="ml-auto text-[10px] text-gray-400 hover:text-pink-600 flex items-center gap-0.5 transition-colors">
+              See all <ChevronRight className="w-3 h-3" />
+            </Link>
           </div>
           <div className="space-y-3">
             {users.map((user, i) => {
