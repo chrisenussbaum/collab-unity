@@ -43,7 +43,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { formatDistanceToNow } from 'date-fns';
+import { timeAgo } from "@/lib/timeAgo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -657,7 +657,7 @@ export default function Notifications({ currentUser, authIsLoading }) {
                                   </p>
                                 )}
                                 <div className="flex items-center space-x-4 text-xs text-gray-500">
-                                  <span>{formatDistanceToNow(new Date(notification.created_date), { addSuffix: true })}</span>
+                                  <span>{timeAgo(notification.created_date)}</span>
                                   {!notification.read && (
                                     <Badge variant="secondary" className="text-xs">New</Badge>
                                   )}

@@ -28,7 +28,7 @@ import { toast } from "sonner";
 import ConfirmationDialog from "./ConfirmationDialog";
 import { getPublicUserProfiles } from "@/functions/getPublicUserProfiles";
 import { getAllPublicUserProfiles } from "@/functions/getAllPublicUserProfiles";
-import { formatDistanceToNow } from "date-fns";
+import { timeAgo } from "@/lib/timeAgo";
 import { Link } from "react-router-dom";
 
 // Add global cache for all users (shared across all FeedComments instances)
@@ -701,7 +701,7 @@ const FeedComments = forwardRef(({ project, currentUser, context = "feed" }, ref
                   {displayName}
                 </Link>
                 <span className="text-xs text-gray-500 flex-shrink-0">
-                  {formatDistanceToNow(new Date(comment.created_date), { addSuffix: true })}
+                  {timeAgo(comment.created_date)}
                 </span>
                 {comment.is_pinned && (
                   <Badge variant="outline" className="bg-yellow-100 text-yellow-800 text-xs flex-shrink-0 border-yellow-300">

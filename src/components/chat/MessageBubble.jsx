@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Trash2, Download, Check, CheckCheck, Video, FileText, ExternalLink, Pencil, X, Send } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { timeAgo } from "@/lib/timeAgo";
 import { motion } from "framer-motion";
 import ClickableImage from "../ClickableImage";
 import ProjectMentionCard from "./ProjectMentionCard";
@@ -366,18 +366,7 @@ export default function MessageBubble({
           <div className="flex items-center justify-between mt-1 px-2">
             <div className="flex items-center space-x-2">
               <p className="text-xs text-gray-400">
-                {(() => {
-                  try {
-                    const messageDate = new Date(message.created_date);
-                    const now = new Date();
-                    if (messageDate <= now) {
-                      return formatDistanceToNow(messageDate, { addSuffix: true });
-                    }
-                    return 'Just now';
-                  } catch (e) {
-                    return '';
-                  }
-                })()}
+                {timeAgo(message.created_date)}
               </p>
               {isOwn && (
                 <div className="flex items-center">

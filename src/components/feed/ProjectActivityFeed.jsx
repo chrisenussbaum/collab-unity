@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { ActivityLog } from "@/entities/all";
 import { getCachedUserProfiles } from "@/lib/userProfileCache";
-import { formatDistanceToNow } from "date-fns";
+import { timeAgo } from "@/lib/timeAgo";
 import HorizontalScrollContainer from "../HorizontalScrollContainer";
 
 // Retry wrapper for rate-limited (HTTP 429) calls — mirrors ActivityTab so
@@ -151,7 +151,7 @@ export default function ProjectActivityFeed({ project }) {
                   </p>
                   <div className="flex items-center justify-between mt-2">
                     <p className="text-xs text-gray-500">
-                      {formatDistanceToNow(new Date(activity.created_date), { addSuffix: true })}
+                      {timeAgo(activity.created_date)}
                     </p>
                     <ActionIcon className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   </div>

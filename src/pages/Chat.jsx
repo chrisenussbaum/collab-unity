@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, Send, Search, Plus, Users, Trash2, Smile, MoreVertical, Settings, ArrowLeft, ArrowDown } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import { timeAgo } from "@/lib/timeAgo";
 import {
   Dialog,
   DialogContent,
@@ -1258,19 +1258,7 @@ export default function Chat({ currentUser, authIsLoading }) {
                               </p>
                               {conv.last_message_time && (
                                 <p className="text-xs text-gray-400 mt-1">
-                                  {(() => {
-                                    try {
-                                      const messageDate = new Date(conv.last_message_time);
-                                      const now = new Date();
-                                      // Only format if the date is valid and not in the future
-                                      if (messageDate <= now) {
-                                        return formatDistanceToNow(messageDate, { addSuffix: true });
-                                      }
-                                      return 'Just now';
-                                    } catch (e) {
-                                      return '';
-                                    }
-                                  })()}
+                                  {timeAgo(conv.last_message_time)}
                                 </p>
                               )}
                             </div>

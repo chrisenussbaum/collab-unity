@@ -31,7 +31,7 @@ import {
   UserMinus,
   UserX
 } from 'lucide-react';
-import { formatDistanceToNow } from "date-fns";
+import { timeAgo } from "@/lib/timeAgo";
 
 const withRetry = async (apiCall, maxRetries = 4, baseDelay = 3000) => {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -379,7 +379,7 @@ export default function NotificationBell() {
                     <p className="text-sm font-medium text-gray-800 leading-tight">{notification.title}</p>
                     <p className="text-xs text-gray-600 line-clamp-2 mt-0.5">{notification.message}</p>
                     <p className="text-xs text-gray-400 mt-1">
-                      {formatDistanceToNow(new Date(notification.created_date), { addSuffix: true })}
+                      {timeAgo(notification.created_date)}
                     </p>
                   </div>
                   {!notification.read && <div className="w-2 h-2 bg-purple-500 rounded-full self-center flex-shrink-0"></div>}

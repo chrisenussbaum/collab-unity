@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, ChevronLeft, ChevronRight, MoreVertical, Trash2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { timeAgo } from "@/lib/timeAgo";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
@@ -115,7 +115,7 @@ export default function UpdateViewer({ userGroup, allUserGroups, onClose, onNavi
           )}
           <div>
             <p className="text-gray-900 text-sm font-medium">{userGroup.user_name}</p>
-            <p className="text-gray-500 text-xs">{formatDistanceToNow(new Date(currentUpdate.created_date))} ago</p>
+            <p className="text-gray-500 text-xs">{timeAgo(currentUpdate.created_date)}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">

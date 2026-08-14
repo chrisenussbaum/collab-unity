@@ -17,7 +17,7 @@ import {
   Lightbulb,
   ArrowRight,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { timeAgo } from "@/lib/timeAgo";
 import { toast } from "sonner";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 import FeedComments from "@/components/FeedComments";
@@ -157,7 +157,7 @@ export default function DemoItem({
                 <span className="font-semibold text-sm text-gray-900 truncate">{handle}</span>
                 <span className="text-xs text-gray-400">•</span>
                 <span className="text-xs text-gray-500">
-                  {formatDistanceToNow(new Date(demo.created_date))} ago
+                  {timeAgo(demo.created_date)}
                 </span>
               </div>
               {owner?.full_name && owner?.username && (

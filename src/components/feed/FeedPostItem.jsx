@@ -17,7 +17,7 @@ import {
   MoreVertical, X, ArrowRight, BarChart3, HelpCircle,
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
-import { formatDistanceToNow } from "date-fns";
+import { timeAgo } from "@/lib/timeAgo";
 import { toast } from "sonner";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 import HorizontalScrollContainer from "@/components/HorizontalScrollContainer";
@@ -181,7 +181,7 @@ export default function FeedPostItem({ post, owner, currentUser, feedPostApplaud
                     {owner?.full_name || 'Anonymous User'}
                   </Link>
                   <span className="text-xs sm:text-sm text-gray-400">•</span>
-                  <span className="text-xs sm:text-sm text-gray-500">{formatDistanceToNow(new Date(post.created_date))} ago</span>
+                  <span className="text-xs sm:text-sm text-gray-500">{timeAgo(post.created_date)}</span>
                 </div>
               </div>
             </div>
