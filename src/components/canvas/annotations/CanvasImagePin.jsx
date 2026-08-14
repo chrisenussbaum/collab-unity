@@ -1,10 +1,15 @@
 import React from "react";
 
 // A draggable image pinned to the canvas.
-export default function CanvasImagePin({ anno, zoom, interactive, selected, onSelect, onChange, onDelete }) {
+export default function CanvasImagePin({ anno, zoom, interactive, erasable, selected, onSelect, onChange, onDelete }) {
   const data = anno.data || {};
 
   const startDrag = (e) => {
+    if (erasable) {
+      e.stopPropagation();
+      onDelete && onDelete(anno.id);
+      return;
+    }
     if (!interactive) return;
     e.stopPropagation();
     onSelect && onSelect(anno.id);
@@ -29,7 +34,8 @@ export default function CanvasImagePin({ anno, zoom, interactive, selected, onSe
         width: anno.width,
         height: anno.height,
         zIndex: anno.z,
-        pointerEvents: interactive ? "auto" : "none",
+        pointerEvents: interactive || erasable ? "auto" : "none",
+        cursor: erasable ? "pointer" : "default",
       }}
       onPointerDown={startDrag}
     >

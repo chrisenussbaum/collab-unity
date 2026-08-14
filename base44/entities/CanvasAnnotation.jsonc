@@ -11,14 +11,15 @@
       "enum": [
         "draw",
         "sticky",
-        "image"
+        "image",
+        "video"
       ],
-      "description": "Annotation type: freehand draw, sticky note, or image pin"
+      "description": "Annotation type: freehand draw, sticky note, image pin, or video pin"
     },
     "data": {
       "type": "object",
       "additionalProperties": true,
-      "description": "Payload: draw {points:[[x,y]...], color, strokeWidth, bbox:{width,height}}; sticky {text, color, fontSize}; image {src, borderColor, borderWidth}"
+      "description": "Payload: draw {points:[[x,y]...], color, strokeWidth, bbox:{width,height}}; sticky {text, color, fontSize}; image {src, borderColor, borderWidth}; video {src, thumbnail_url, borderColor, borderWidth}"
     },
     "x": {
       "type": "number",

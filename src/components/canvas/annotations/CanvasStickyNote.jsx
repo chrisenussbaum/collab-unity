@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 const COLORS = ["#FEF3C7", "#FECACA", "#BBF7D0", "#BFDBFE", "#E9D5FF", "#FFFFFF"];
 
 // A draggable, editable sticky-note card.
-export default function CanvasStickyNote({ anno, zoom, interactive, selected, onSelect, onChange, onDelete }) {
+export default function CanvasStickyNote({ anno, zoom, interactive, erasable, selected, onSelect, onChange, onDelete }) {
   const data = anno.data || {};
   const [text, setText] = useState(data.text || "");
   const [color, setColor] = useState(data.color || "#FEF3C7");
@@ -16,6 +16,11 @@ export default function CanvasStickyNote({ anno, zoom, interactive, selected, on
   const commit = (patch) => onChange(anno.id, { data: { ...data, ...patch } });
 
   const startDrag = (e) => {
+    if (erasable) {
+      e.stopPropagation();
+      onDelete && onDelete(anno.id);
+      return;
+    }
     if (!interactive) return;
     e.stopPropagation();
     onSelect && onSelect(anno.id);
@@ -41,7 +46,8 @@ export default function CanvasStickyNote({ anno, zoom, interactive, selected, on
         height: anno.height,
         background: color,
         zIndex: anno.z,
-        pointerEvents: interactive ? "auto" : "none",
+        pointerEvents: interactive || erasable ? "auto" : "none",
+        cursor: erasable ? "pointer" : "default",
       }}
       onPointerDown={startDrag}
     >

@@ -1,7 +1,7 @@
 import React from "react";
 import {
   MousePointer2, Hand, ZoomIn, ZoomOut, Maximize, Plus, LayoutGrid,
-  Pencil, StickyNote, Image as ImageIcon,
+  Pencil, StickyNote, Image as ImageIcon, Eraser,
 } from "lucide-react";
 
 const DRAW_COLORS = ["#18A0FB", "#111827", "#EF4444", "#22C55E", "#F59E0B", "#8B5CF6"];
@@ -55,6 +55,7 @@ export default function CanvasToolbar({
             <button onClick={() => setTool("draw")} className={btn(tool === "draw")} title="Draw (D)"><Pencil className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
             <button onClick={() => setTool("sticky")} className={btn(tool === "sticky")} title="Sticky note (S)"><StickyNote className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
             <button onClick={() => setTool("image")} className={btn(tool === "image")} title="Image (I)"><ImageIcon className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
+            <button onClick={() => setTool("erase")} className={btn(tool === "erase")} title="Eraser (E)"><Eraser className="w-3.5 h-3.5 md:w-4 md:h-4" /></button>
             <div className="w-px h-4 md:h-5 bg-gray-200 mx-1" />
             <button
               onClick={() => setAddOpen(!addOpen)}

@@ -1,7 +1,7 @@
 import React from "react";
 
 // A persisted freehand ink stroke. Points are stored relative to (x, y).
-export default function CanvasDrawing({ anno, interactive, selected, onSelect, onDelete }) {
+export default function CanvasDrawing({ anno, interactive, erasable, selected, onSelect, onDelete }) {
   const data = anno.data || {};
   const points = Array.isArray(data.points) ? data.points : [];
   const color = data.color || "#18A0FB";
@@ -15,9 +15,15 @@ export default function CanvasDrawing({ anno, interactive, selected, onSelect, o
         width: Math.max(anno.width, 1),
         height: Math.max(anno.height, 1),
         zIndex: anno.z,
-        pointerEvents: interactive ? "auto" : "none",
+        pointerEvents: interactive || erasable ? "auto" : "none",
+        cursor: erasable ? "pointer" : "default",
       }}
       onPointerDown={(e) => {
+        if (erasable) {
+          e.stopPropagation();
+          onDelete && onDelete(anno.id);
+          return;
+        }
         if (!interactive) return;
         e.stopPropagation();
         onSelect && onSelect(anno.id);

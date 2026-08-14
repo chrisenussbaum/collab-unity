@@ -2,16 +2,20 @@ import React from "react";
 import CanvasDrawing from "./CanvasDrawing";
 import CanvasStickyNote from "./CanvasStickyNote";
 import CanvasImagePin from "./CanvasImagePin";
+import CanvasVideoPin from "./CanvasVideoPin";
 
 // Renders all persisted annotations inside the transformed canvas container.
-// Annotations are only interactive in the Select (move) tool so the creation
-// overlay can own pointer events in draw/sticky/image modes.
+// - Select (move) tool: annotations are draggable / editable.
+// - Erase tool: clicking any annotation deletes it.
+// - Other tools: annotations are non-interactive so the creation overlay owns
+//   pointer events.
 export default function CanvasAnnotationItems({
   annotations, tool, zoom, readOnly,
   selectedAnnoId, onSelect, onUpdate, onDelete,
 }) {
   if (readOnly) return null;
   const interactive = tool === "move";
+  const erasable = tool === "erase";
   return (
     <>
       {annotations.map((a) => {
@@ -22,6 +26,7 @@ export default function CanvasAnnotationItems({
               key={a.id}
               anno={a}
               interactive={interactive}
+              erasable={erasable}
               selected={sel}
               onSelect={onSelect}
               onDelete={onDelete}
@@ -35,6 +40,7 @@ export default function CanvasAnnotationItems({
               anno={a}
               zoom={zoom}
               interactive={interactive}
+              erasable={erasable}
               selected={sel}
               onSelect={onSelect}
               onChange={onUpdate}
@@ -49,6 +55,22 @@ export default function CanvasAnnotationItems({
               anno={a}
               zoom={zoom}
               interactive={interactive}
+              erasable={erasable}
+              selected={sel}
+              onSelect={onSelect}
+              onChange={onUpdate}
+              onDelete={onDelete}
+            />
+          );
+        }
+        if (a.type === "video") {
+          return (
+            <CanvasVideoPin
+              key={a.id}
+              anno={a}
+              zoom={zoom}
+              interactive={interactive}
+              erasable={erasable}
               selected={sel}
               onSelect={onSelect}
               onChange={onUpdate}
