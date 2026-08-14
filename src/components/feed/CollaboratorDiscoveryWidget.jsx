@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, MessageCircle, Sparkles, ChevronRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { getDiscoveryProfiles } from "@/lib/discoveryCache";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 
 export default function CollaboratorDiscoveryWidget({ currentUser }) {
@@ -15,19 +16,22 @@ export default function CollaboratorDiscoveryWidget({ currentUser }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let cancelled = false;
     const fetchUsers = async () => {
       try {
-        const { data } = await base44.functions.invoke("getPublicUserProfilesForDiscovery");
+        const data = await getDiscoveryProfiles();
+        if (cancelled) return;
         const filtered = (data || []).filter((u) => u.email !== currentUser?.email);
         const shuffled = filtered.sort(() => Math.random() - 0.5);
         setUsers(shuffled.slice(0, 2));
       } catch (e) {
         console.error("Error fetching collaborator profiles:", e);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
     fetchUsers();
+    return () => { cancelled = true; };
   }, [currentUser]);
 
   const handleChat = async (user) => {

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
-import { getPublicUserProfilesForDiscovery } from "@/functions/getPublicUserProfilesForDiscovery";
+import { getDiscoveryProfiles } from "@/lib/discoveryCache";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import UserProfileCard from "@/components/feed/UserProfileCard";
@@ -29,22 +29,9 @@ export default function FeedSidebar({ currentUser }) {
       return;
     }
     let cancelled = false;
-    const fetchWithRetry = async (fn, retries = 3) => {
-      for (let i = 0; i < retries; i++) {
-        try {
-          return await fn();
-        } catch (e) {
-          if (i < retries - 1) {
-            await new Promise((r) => setTimeout(r, 800 * (i + 1)));
-            continue;
-          }
-          throw e;
-        }
-      }
-    };
     const fetchUsers = async () => {
       try {
-        const { data: allUsers } = await fetchWithRetry(() => getPublicUserProfilesForDiscovery());
+        const allUsers = await getDiscoveryProfiles();
         if (cancelled) return;
         const filtered = (allUsers || []).filter(
           (u) => u.email !== currentUser.email && u.id !== currentUser.id
