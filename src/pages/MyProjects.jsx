@@ -18,12 +18,8 @@ import {
   MapPin,
   Building2,
   Tag,
-  Eye,
-  EyeOff,
   Search,
   Trash2,
-  Archive,
-  ArchiveRestore,
   Send
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,12 +45,10 @@ export default function MyProjects({ currentUser, authIsLoading }) {
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("public");
+  const [activeTab, setActiveTab] = useState("projects");
   const [projectToDelete, setProjectToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [collaboratorProfiles, setCollaboratorProfiles] = useState({});
-  const [archivingId, setArchivingId] = useState(null);
-  const [visibilityId, setVisibilityId] = useState(null);
   const [milestonesMap, setMilestonesMap] = useState({});
 
   const queryClient = useQueryClient();
@@ -159,40 +153,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
     }
   };
 
-  const handleArchiveToggle = async (project, archive) => {
-    setArchivingId(project.id);
-    try {
-      await base44.entities.Project.update(project.id, {
-        is_archived: archive,
-        archived_at: archive ? new Date().toISOString() : null,
-      });
-      queryClient.invalidateQueries(['my-projects']);
-      toast.success(archive ? "Project archived." : "Project restored to active.");
-    } catch (error) {
-      toast.error("Failed to update project. Please try again.");
-    } finally {
-      setArchivingId(null);
-    }
-  };
-
-  const handleVisibilityToggle = async (project) => {
-    const makePublic = project.is_visible_on_feed === false;
-    setVisibilityId(project.id);
-    try {
-      await base44.entities.Project.update(project.id, { is_visible_on_feed: makePublic });
-      queryClient.invalidateQueries(['my-projects']);
-      toast.success(makePublic ? "Project is now public." : "Project is now private.");
-    } catch (error) {
-      toast.error("Failed to update project. Please try again.");
-    } finally {
-      setVisibilityId(null);
-    }
-  };
-
-  // Filter projects based on search query and active tab
-  const activeProjects = projects.filter(p => !p.is_archived);
-  const archivedProjects = projects.filter(p => p.is_archived);
-
+  // Filter projects based on search query
   const matchesSearch = (project) =>
     searchQuery === "" ||
     project.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -204,18 +165,8 @@ export default function MyProjects({ currentUser, authIsLoading }) {
       skill.toLowerCase().includes(searchQuery.toLowerCase())
     ));
 
-  const filteredProjects = (() => {
-    if (activeTab === "archived") return archivedProjects.filter(matchesSearch);
-    const pool = activeProjects;
-    return pool.filter(p => {
-      const tabMatch = activeTab === "public" ? p.is_visible_on_feed !== false : p.is_visible_on_feed === false;
-      return tabMatch && matchesSearch(p);
-    });
-  })();
-
-  const publicProjectsCount = activeProjects.filter(p => p.is_visible_on_feed !== false).length;
-  const privateProjectsCount = activeProjects.filter(p => p.is_visible_on_feed === false).length;
-  const archivedProjectsCount = archivedProjects.length;
+  const filteredProjects = projects.filter(matchesSearch);
+  const projectsCount = projects.length;
 
   const handleDeleteProject = async () => {
     if (!projectToDelete) return;
@@ -282,23 +233,13 @@ export default function MyProjects({ currentUser, authIsLoading }) {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-6">
-              <TabsTrigger value="public" className="flex items-center gap-1.5">
-                <Eye className="w-4 h-4" />
-                <span className="hidden sm:inline">Public</span>
-                <Badge variant="secondary" className="ml-1">{publicProjectsCount}</Badge>
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="projects" className="flex items-center gap-1.5">
+                <Lightbulb className="w-4 h-4" />
+                <span className="hidden sm:inline">Projects</span>
+                <Badge variant="secondary" className="ml-1">{projectsCount}</Badge>
               </TabsTrigger>
-              <TabsTrigger value="private" className="flex items-center gap-1.5">
-                <EyeOff className="w-4 h-4" />
-                <span className="hidden sm:inline">Private</span>
-                <Badge variant="secondary" className="ml-1">{privateProjectsCount}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="archived" className="flex items-center gap-1.5">
-                <Archive className="w-4 h-4" />
-                <span className="hidden sm:inline">Archived</span>
-                <Badge variant="secondary" className="ml-1">{archivedProjectsCount}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="my_applications" className="flex items-center gap-1.5">
+              <TabsTrigger value="applications" className="flex items-center gap-1.5">
                 <Send className="w-4 h-4" />
                 <span className="hidden sm:inline">Applications</span>
               </TabsTrigger>
@@ -306,22 +247,8 @@ export default function MyProjects({ currentUser, authIsLoading }) {
           </Tabs>
         </motion.div>
 
-        {activeTab === "my_applications" ? (
+        {activeTab === "applications" ? (
           <ApplicationsTab currentUser={currentUser} />
-        ) : activeTab === "archived" && archivedProjectsCount === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-16"
-          >
-            <div className="w-24 h-24 bg-gradient-to-br from-amber-50 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Archive className="w-12 h-12 text-amber-500" />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">No archived projects</h2>
-            <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
-              Archive completed projects to keep your active workspace clutter-free. Use the archive button on any project card.
-            </p>
-          </motion.div>
         ) : projects.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -355,13 +282,13 @@ export default function MyProjects({ currentUser, authIsLoading }) {
             <p className="text-gray-600">
               {searchQuery 
                 ? "Try adjusting your search terms" 
-                : `You don't have any ${activeTab} projects yet`}
+                : "You don't have any projects yet"}
             </p>
-            {!searchQuery && activeTab === "public" && (
+            {!searchQuery && (
               <Link to={createPageUrl("CreateProject")} className="inline-block mt-4">
                 <Button className="cu-button">
                   <Plus className="w-5 h-5 mr-2" />
-                  Create Public Project
+                  Create Project
                 </Button>
               </Link>
             )}
@@ -417,34 +344,6 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    handleVisibilityToggle(project);
-                                  }}
-                                  disabled={visibilityId === project.id}
-                                  className={`h-8 w-8 ${project.is_visible_on_feed === false ? 'text-gray-400 hover:text-green-600 hover:bg-green-50' : 'text-gray-400 hover:text-purple-600 hover:bg-purple-50'}`}
-                                  title={project.is_visible_on_feed === false ? "Make public" : "Make private"}
-                                >
-                                  {project.is_visible_on_feed === false ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleArchiveToggle(project, !project.is_archived);
-                                  }}
-                                  disabled={archivingId === project.id}
-                                  className={`h-8 w-8 ${project.is_archived ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-50' : 'text-gray-400 hover:text-amber-500 hover:bg-amber-50'}`}
-                                  title={project.is_archived ? "Restore project" : "Archive project"}
-                                >
-                                  {project.is_archived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
                                     setProjectToDelete(project);
                                   }}
                                   className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
@@ -457,17 +356,6 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                             {isCollaborator && (
                               <Badge className="bg-blue-100 text-blue-800 text-xs">
                                 Collaborator
-                              </Badge>
-                            )}
-                            {project.is_visible_on_feed === false ? (
-                              <Badge variant="outline" className="text-xs border-gray-300 text-gray-600 flex items-center gap-1">
-                                <EyeOff className="w-3 h-3" />
-                                Private
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-xs border-green-300 text-green-600 flex items-center gap-1">
-                                <Eye className="w-3 h-3" />
-                                Public
                               </Badge>
                             )}
                           </div>
@@ -493,12 +381,6 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                           <Badge className="text-xs bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 border border-purple-200">
                             {project.project_type}
                           </Badge>
-                          {project.is_archived && (
-                            <Badge className="text-xs bg-amber-100 text-amber-700 border border-amber-200 flex items-center gap-1">
-                              <Archive className="w-3 h-3" />
-                              Archived
-                            </Badge>
-                          )}
                         </div>
                       </CardHeader>
 
