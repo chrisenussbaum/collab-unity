@@ -31,7 +31,6 @@ import OptimizedImage from "@/components/OptimizedImage";
 import OptimizedAvatar from "@/components/OptimizedAvatar";
 import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
 import MilestoneProgress from "@/components/myprojects/MilestoneProgress";
-import WhileYouWereAway from "@/components/myprojects/WhileYouWereAway";
 import ApplicationsTab from "@/components/myprojects/ApplicationsTab";
 
 const formatEnumLabel = (str) => {
@@ -385,7 +384,6 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                       </CardHeader>
 
                       <CardContent className="pt-0">
-                        <WhileYouWereAway projectId={project.id} />
                         <Link to={createPageUrl(`ProjectDetail?id=${project.id}`)}>
                           <p className="text-sm text-gray-600 line-clamp-3 mb-4 leading-relaxed">
                             {project.description}
