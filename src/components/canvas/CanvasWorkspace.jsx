@@ -620,9 +620,11 @@ export default function CanvasWorkspace({
             data-canvas-bg="true"
             className="absolute inset-0"
             style={{
-              backgroundImage: "radial-gradient(#d4d4d4 1px, transparent 1px)",
-              backgroundSize: `${20 * zoom}px ${20 * zoom}px`,
-              backgroundPosition: `${pan.x}px ${pan.y}px`,
+              backgroundColor: "#F7F6FB",
+              backgroundImage:
+                "radial-gradient(circle, rgba(91,71,219,0.09) 1px, transparent 1.6px), radial-gradient(circle, rgba(124,106,232,0.05) 1.4px, transparent 2.4px)",
+              backgroundSize: `${24 * zoom}px ${24 * zoom}px, ${96 * zoom}px ${96 * zoom}px`,
+              backgroundPosition: `${pan.x}px ${pan.y}px, ${pan.x}px ${pan.y}px`,
             }}
           />
           <div
