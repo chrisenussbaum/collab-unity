@@ -54,6 +54,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [collaboratorProfiles, setCollaboratorProfiles] = useState({});
   const [archivingId, setArchivingId] = useState(null);
+  const [visibilityId, setVisibilityId] = useState(null);
   const [milestonesMap, setMilestonesMap] = useState({});
 
   const queryClient = useQueryClient();
@@ -171,6 +172,20 @@ export default function MyProjects({ currentUser, authIsLoading }) {
       toast.error("Failed to update project. Please try again.");
     } finally {
       setArchivingId(null);
+    }
+  };
+
+  const handleVisibilityToggle = async (project) => {
+    const makePublic = project.is_visible_on_feed === false;
+    setVisibilityId(project.id);
+    try {
+      await base44.entities.Project.update(project.id, { is_visible_on_feed: makePublic });
+      queryClient.invalidateQueries(['my-projects']);
+      toast.success(makePublic ? "Project is now public." : "Project is now private.");
+    } catch (error) {
+      toast.error("Failed to update project. Please try again.");
+    } finally {
+      setVisibilityId(null);
     }
   };
 
@@ -396,6 +411,20 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                                 <Badge className="bg-purple-100 text-purple-800 text-xs">
                                   Owner
                                 </Badge>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleVisibilityToggle(project);
+                                  }}
+                                  disabled={visibilityId === project.id}
+                                  className={`h-8 w-8 ${project.is_visible_on_feed === false ? 'text-gray-400 hover:text-green-600 hover:bg-green-50' : 'text-gray-400 hover:text-purple-600 hover:bg-purple-50'}`}
+                                  title={project.is_visible_on_feed === false ? "Make public" : "Make private"}
+                                >
+                                  {project.is_visible_on_feed === false ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </Button>
                                 <Button
                                   variant="ghost"
                                   size="icon"
