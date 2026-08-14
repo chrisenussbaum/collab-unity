@@ -780,7 +780,7 @@ export default function CanvasWorkspace({
               {isOwner ? "View and edit your project information." : "Project information."}
             </DialogDescription>
           </DialogHeader>
-          <ProjectDetailsFrame project={project} canEdit={isOwner} ownerProfile={projectOwnerProfile} onUpdate={onProjectUpdate} />
+          <ProjectDetailsFrame project={project} canEdit={isOwner} ownerProfile={projectOwnerProfile} />
         </DialogContent>
       </Dialog>
 
