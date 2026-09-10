@@ -83,6 +83,7 @@ export default function CanvasWorkspace({
   const projectIdRef = useRef(null);
   const didInit = useRef(false);
   const autoFitDone = useRef(false);
+  const cancelFlingRef = useRef(null);
 
   useEffect(() => { stateRef.current = { zoom, pan }; }, [zoom, pan]);
   useEffect(() => { fullscreenRef.current = fullscreenId; }, [fullscreenId]);
@@ -275,14 +276,60 @@ export default function CanvasWorkspace({
   }, [layout]);
 
   // Touch gestures: two fingers = pinch-zoom AND two-finger pan (simultaneous,
-  // in any direction); single-finger drag on empty canvas = pan.
+  // in any direction). A single-finger drag pans the canvas from ANYWHERE —
+  // background or frames alike — so users aren't stranded when they zoom in and
+  // the frames fill the screen; the pan only engages after a short drag distance
+  // so taps and clicks inside frames keep working. Swipes that start where a
+  // frame's content can genuinely scroll scroll that content instead.
   useEffect(() => {
     const el = viewportRef.current;
     if (!el) return;
     const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
     const mid = (a, b) => ({ x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 });
     const findTouch = (touches, id) => { for (let i = 0; i < touches.length; i++) { if (touches[i].identifier === id) return touches[i]; } return null; };
+    // px of travel before a single-finger touch is treated as a pan instead of a tap
+    const PAN_SLOP = 10;
+    // Elements whose touch behavior the canvas must not hijack
+    const INTERACTIVE_SELECTOR = 'button, a, input, textarea, select, option, label, iframe, video, audio, [role="button"], [role="slider"], [role="switch"], [contenteditable="true"], [data-canvas-interactive]';
     let g = null;
+
+    // ── Momentum (fling) ── a moving pan or frame-content swipe keeps gliding
+    // with iOS-style friction after the finger lifts, like Figma. Any new touch
+    // grabs control back immediately.
+    let fling = null;
+    const cancelFling = () => { if (fling) { cancelAnimationFrame(fling.raf); fling = null; } };
+    cancelFlingRef.current = cancelFling;
+    const pushSample = (t) => {
+      const now = performance.now();
+      g.samples.push({ t: now, x: t.clientX, y: t.clientY });
+      while (g.samples.length > 6 || (g.samples.length > 2 && now - g.samples[0].t > 120)) g.samples.shift();
+    };
+    const velocity = () => {
+      const s = g && g.samples;
+      if (!s || s.length < 2) return null;
+      const dt = s[s.length - 1].t - s[0].t;
+      if (dt <= 0) return null;
+      return { x: (s[s.length - 1].x - s[0].x) / dt, y: (s[s.length - 1].y - s[0].y) / dt };
+    };
+    const startFling = (vx, vy, scrollEl) => {
+      cancelFling();
+      let last = performance.now();
+      const step = (now) => {
+        const dt = Math.min(now - last, 32);
+        last = now;
+        const decay = Math.exp(-dt / 325); // iOS scroll-view time constant
+        vx *= decay; vy *= decay;
+        if (Math.hypot(vx, vy) < 0.01) { fling = null; return; }
+        if (scrollEl) {
+          scrollEl.scrollTop -= vy * dt;
+          scrollEl.scrollLeft -= vx * dt;
+        } else {
+          setPan((p) => ({ x: p.x + vx * dt, y: p.y + vy * dt }));
+        }
+        fling.raf = requestAnimationFrame(step);
+      };
+      fling = { raf: requestAnimationFrame(step) };
+    };
 
     const beginTwo = (e) => {
       const rect = el.getBoundingClientRect();
@@ -301,32 +348,52 @@ export default function CanvasWorkspace({
       };
     };
 
-    const beginPan = (e) => {
+    const beginPan = (e, alreadyDragging) => {
       const t = e.touches[0];
-      g = { mode: "pan", sx: t.clientX, sy: t.clientY, startPan: { ...stateRef.current.pan } };
+      g = { mode: "pan", sx: t.clientX, sy: t.clientY, startPan: { ...stateRef.current.pan }, active: !!alreadyDragging, samples: [] };
     };
 
     // Single-finger swipe that scrolls a frame's content (vertical + horizontal)
     const beginScroll = (e, scroller) => {
       const t = e.touches[0];
-      g = { mode: "scroll", el: scroller, sx: t.clientX, sy: t.clientY, top: scroller.scrollTop, left: scroller.scrollLeft };
+      g = { mode: "scroll", el: scroller, sx: t.clientX, sy: t.clientY, top: scroller.scrollTop, left: scroller.scrollLeft, samples: [] };
+    };
+
+    // Nearest ancestor of the touched element (inside the canvas) that can
+    // actually scroll right now. Returns null when the touched region has
+    // nothing to scroll, so the drag pans the canvas instead of feeling frozen.
+    const findScroller = (target) => {
+      let node = target;
+      while (node && node !== el) {
+        if (node.nodeType === 1) {
+          const style = window.getComputedStyle(node);
+          const scrollable = style.overflowY === "auto" || style.overflowY === "scroll" ||
+            style.overflowX === "auto" || style.overflowX === "scroll";
+          if (scrollable && (node.scrollHeight > node.clientHeight + 1 || node.scrollWidth > node.clientWidth + 1)) return node;
+        }
+        node = node.parentElement;
+      }
+      return null;
     };
 
     const onStart = (e) => {
+      cancelFling(); // any new touch grabs control from a running fling
       if (fullscreenRef.current) return; // let full-screen content scroll/swipe natively
       if (e.touches.length >= 2) {
         // Keep an existing pinch stable if a stray third finger grazes the screen
         if (g && g.mode === "two" && findTouch(e.touches, g.idA) && findTouch(e.touches, g.idB)) return;
         beginTwo(e);
       } else if (e.touches.length === 1) {
-        const scroller = e.target && typeof e.target.closest === 'function' && e.target.closest('[data-canvas-scroll="true"]');
-        if (scroller) {
-          beginScroll(e, scroller);
-        } else if (e.target.dataset && e.target.dataset.canvasBg === "true") {
-          beginPan(e);
-        } else {
-          g = null;
-        }
+        const t = e.target;
+        if (!t || typeof t.closest !== "function") { g = null; return; }
+        // Drawing/annotation surfaces own their touches
+        if (t.closest('[data-canvas-interactive]')) { g = null; return; }
+        const scroller = findScroller(t);
+        if (scroller) { beginScroll(e, scroller); return; }
+        // Buttons, links, inputs etc. keep their native touch behavior
+        if (t.closest(INTERACTIVE_SELECTOR)) { g = null; return; }
+        // Background and frame bodies: pan once the drag passes the slop
+        beginPan(e);
       } else {
         g = null;
       }
@@ -349,22 +416,44 @@ export default function CanvasWorkspace({
         setPan({ x: baseX + (curMid.clientX - g.startMidClientX), y: baseY + (curMid.clientY - g.startMidClientY) });
         setZoom(nz);
       } else if (g.mode === "pan" && e.touches.length >= 1) {
-        e.preventDefault();
         const t = e.touches[0];
+        if (!g.active) {
+          // Still within the slop — treat as a tap and don't steal it yet
+          if (Math.hypot(t.clientX - g.sx, t.clientY - g.sy) < PAN_SLOP) return;
+          g.active = true;
+        }
+        pushSample(t);
+        e.preventDefault();
         setPan({ x: g.startPan.x + (t.clientX - g.sx), y: g.startPan.y + (t.clientY - g.sy) });
       } else if (g.mode === "scroll" && e.touches.length >= 1) {
         e.preventDefault();
         const t = e.touches[0];
+        pushSample(t);
         g.el.scrollTop = g.top - (t.clientY - g.sy);
         g.el.scrollLeft = g.left - (t.clientX - g.sx);
       }
     };
 
     const onEnd = (e) => {
-      if (e.touches.length === 0) { g = null; return; }
+      if (e.touches.length === 0) {
+        // Release a moving pan or frame-content swipe with momentum
+        if (g && (g.mode === "pan" ? g.active : g.mode === "scroll")) {
+          const v = velocity();
+          if (v && Math.hypot(v.x, v.y) > 0.15) startFling(v.x, v.y, g.mode === "scroll" ? g.el : null);
+        }
+        g = null;
+        return;
+      }
       if (g && g.mode === "two") {
-        // only end the pinch if one of the two tracked fingers is gone
-        if (!findTouch(e.touches, g.idA) || !findTouch(e.touches, g.idB)) g = null;
+        const a = findTouch(e.touches, g.idA);
+        const b = findTouch(e.touches, g.idB);
+        if (a && b) return; // both pinch fingers still down (a stray finger lifted) — keep pinching
+        // One pinch finger lifted but the other is still down — hand the
+        // remaining finger a pan so the canvas keeps following it instead of
+        // freezing mid-gesture.
+        const t = a || b;
+        if (t) beginPan({ touches: [t] }, true);
+        else g = null;
       }
     };
 
@@ -373,6 +462,8 @@ export default function CanvasWorkspace({
     el.addEventListener("touchend", onEnd);
     el.addEventListener("touchcancel", onEnd);
     return () => {
+      cancelFling();
+      cancelFlingRef.current = null;
       el.removeEventListener("touchstart", onStart);
       el.removeEventListener("touchmove", onMove);
       el.removeEventListener("touchend", onEnd);
@@ -400,6 +491,7 @@ export default function CanvasWorkspace({
   const zoomIn = () => setZoom((z) => clamp(z * 1.2, 0.2, 2));
   const zoomOut = () => setZoom((z) => clamp(z / 1.2, 0.2, 2));
   const zoomFit = () => {
+    cancelFlingRef.current?.();
     if (!layout || !viewportRef.current) return;
     const rect = viewportRef.current.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
@@ -656,16 +748,18 @@ export default function CanvasWorkspace({
                 />
               );
             })}
-            <CanvasAnnotationItems
-              annotations={annotations}
-              tool={tool}
-              zoom={zoom}
-              readOnly={readOnly}
-              selectedAnnoId={selectedAnnoId}
-              onSelect={setSelectedAnnoId}
-              onUpdate={updateAnno}
-              onDelete={deleteAnno}
-            />
+            <div data-canvas-interactive="true">
+              <CanvasAnnotationItems
+                annotations={annotations}
+                tool={tool}
+                zoom={zoom}
+                readOnly={readOnly}
+                selectedAnnoId={selectedAnnoId}
+                onSelect={setSelectedAnnoId}
+                onUpdate={updateAnno}
+                onDelete={deleteAnno}
+              />
+            </div>
           </div>
 
           <CanvasAnnotationsOverlay

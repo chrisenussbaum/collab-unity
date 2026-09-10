@@ -41,18 +41,21 @@ export default function CanvasFrame({
     return () => ro.disconnect();
   }, [frame.collapsed, fitToContent]);
 
-  const onHeaderMouseDown = (e) => {
+  // Pointer events (not mouse events) so the frame can also be dragged by
+  // touch on phones/tablets — Figma-style direct manipulation.
+  const onHeaderPointerDown = (e) => {
     if (e.button !== 0) return;
     e.stopPropagation();
+    if (e.target.closest && e.target.closest("button")) return; // header buttons keep their taps
     onSelect();
     const startX = e.clientX, startY = e.clientY;
     const origX = frame.x, origY = frame.y;
     const move = (ev) => {
       onChange({ x: origX + (ev.clientX - startX) / zoom, y: origY + (ev.clientY - startY) / zoom });
     };
-    const up = () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
+    const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
   };
 
   const onResizeStart = (e, edges) => {
@@ -77,24 +80,30 @@ export default function CanvasFrame({
       onChange({ x, y, w, h });
     };
     const up = () => {
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", up);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
       suppressFit.current = 0; // allow auto-fit to snap to content now that dragging stopped
       requestAnimationFrame(fitToContent);
     };
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
   };
 
+  // Figma-style: on touch screens, enlarge the resize handles so they're easy
+  // to grab with a finger (pointer events make them work for touch).
+  const isCoarse = typeof window !== "undefined" && (navigator.maxTouchPoints || 0) > 0 && window.matchMedia?.("(pointer: coarse)").matches;
+  const corner = isCoarse ? "w-6 h-6" : "w-3 h-3";
+  const edgeH = isCoarse ? "h-3" : "h-1.5";
+  const edgeW = isCoarse ? "w-3" : "w-1.5";
   const handles = [
-    { key: "nw", cls: "top-0 left-0 w-3 h-3 cursor-nwse-resize", edges: { n: true, w: true } },
-    { key: "ne", cls: "top-0 right-0 w-3 h-3 cursor-nesw-resize", edges: { n: true, e: true } },
-    { key: "sw", cls: "bottom-0 left-0 w-3 h-3 cursor-nesw-resize", edges: { s: true, w: true } },
-    { key: "se", cls: "bottom-0 right-0 w-3 h-3 cursor-nwse-resize", edges: { s: true, e: true } },
-    { key: "n", cls: "top-0 left-3 right-3 h-1.5 cursor-ns-resize", edges: { n: true } },
-    { key: "s", cls: "bottom-0 left-3 right-3 h-1.5 cursor-ns-resize", edges: { s: true } },
-    { key: "w", cls: "left-0 top-3 bottom-3 w-1.5 cursor-ew-resize", edges: { w: true } },
-    { key: "e", cls: "right-0 top-3 bottom-3 w-1.5 cursor-ew-resize", edges: { e: true } },
+    { key: "nw", cls: `top-0 left-0 ${corner} cursor-nwse-resize`, edges: { n: true, w: true } },
+    { key: "ne", cls: `top-0 right-0 ${corner} cursor-nesw-resize`, edges: { n: true, e: true } },
+    { key: "sw", cls: `bottom-0 left-0 ${corner} cursor-nesw-resize`, edges: { s: true, w: true } },
+    { key: "se", cls: `bottom-0 right-0 ${corner} cursor-nwse-resize`, edges: { s: true, e: true } },
+    { key: "n", cls: `top-0 left-3 right-3 ${edgeH} cursor-ns-resize`, edges: { n: true } },
+    { key: "s", cls: `bottom-0 left-3 right-3 ${edgeH} cursor-ns-resize`, edges: { s: true } },
+    { key: "w", cls: `left-0 top-3 bottom-3 ${edgeW} cursor-ew-resize`, edges: { w: true } },
+    { key: "e", cls: `right-0 top-3 bottom-3 ${edgeW} cursor-ew-resize`, edges: { e: true } },
   ];
 
   return (
@@ -113,8 +122,9 @@ export default function CanvasFrame({
       onMouseDown={(e) => e.stopPropagation()}
     >
       <div
+        data-canvas-interactive="true"
         className="h-9 flex items-center gap-2 px-2.5 border-b border-gray-100 cursor-grab active:cursor-grabbing flex-shrink-0"
-        onMouseDown={onHeaderMouseDown}
+        onPointerDown={onHeaderPointerDown}
       >
         <Icon className="w-3.5 h-3.5 text-[#18A0FB] flex-shrink-0" />
         <span className="text-xs font-medium text-gray-700 truncate flex-1">{def.title}</span>
@@ -157,7 +167,8 @@ export default function CanvasFrame({
       {!frame.collapsed && handles.map((h) => (
         <div
           key={h.key}
-          onMouseDown={(e) => onResizeStart(e, h.edges)}
+          data-canvas-interactive="true"
+          onPointerDown={(e) => onResizeStart(e, h.edges)}
           className={`absolute ${h.cls}`}
           style={{ zIndex: 5 }}
         />

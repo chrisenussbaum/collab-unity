@@ -132,6 +132,7 @@ export default function CanvasAnnotationsOverlay({
 
   return (
     <div
+      data-canvas-interactive="true"
       className="absolute inset-0 z-10"
       style={{
         pointerEvents: "auto",
