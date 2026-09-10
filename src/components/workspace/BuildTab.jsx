@@ -560,10 +560,11 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
   // Load persisted chat history, then auto-analyze if no history exists
   useEffect(() => {
     if (!project?.id) return;
-    base44.entities.ProjectChatMessage.filter({ project_id: project.id }, "created_date", 100)
+    base44.entities.ProjectChatMessage.filter({ project_id: project.id }, "-created_date", 100)
       .then(records => {
       if (records?.length > 0) {
-        const loaded = records.map(r => ({
+        // Newest-first fetch (capped at 100) — reverse back to chronological order for display
+        const loaded = [...records].reverse().map(r => ({
           id: r.id,
           role: r.role,
           content: r.content,
@@ -1102,8 +1103,7 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
 
   const clearChat = async () => {
     try {
-      const existing = await base44.entities.ProjectChatMessage.filter({ project_id: project.id });
-      await Promise.all(existing.map(r => base44.entities.ProjectChatMessage.delete(r.id)));
+      await base44.entities.ProjectChatMessage.deleteMany({ project_id: project.id });
     } catch {}
     setMessages([WELCOME_MESSAGE(project?.title, tasks?.length || 0, milestones?.length || 0, assets)]);
     setShowClearConfirm(false);
