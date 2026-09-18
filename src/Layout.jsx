@@ -87,7 +87,6 @@ export default function Layout({ children, currentPageName }) {
     createPageUrl("PrivacyPolicy"),
     createPageUrl("AboutUs"),
     createPageUrl("FeatureRequest"),
-    createPageUrl("Testimonials"),
     createPageUrl("UserProfile"),
     createPageUrl("ProjectDetail")
   ];
