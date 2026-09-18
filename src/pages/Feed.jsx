@@ -40,7 +40,6 @@ import OptimizedAvatar from "@/components/OptimizedAvatar";
 import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
 import FeedPostSkeleton from "@/components/skeletons/FeedPostSkeleton";
 import FeedPostItem from "@/components/feed/FeedPostItem";
-import UpdatesBar from "@/components/updates/UpdatesBar";
 import FeedRecommendations from "@/components/feed/FeedRecommendations";
 import ContentDiscoveryWidget from "@/components/feed/ContentDiscoveryWidget";
 import CollaboratorDiscoveryWidget from "@/components/feed/CollaboratorDiscoveryWidget";
@@ -941,7 +940,6 @@ export default function Feed({ currentUser, authIsLoading }) {
         {/* Mobile layout */}
         <div className="block md:hidden">
           <div className="cu-content-grid pt-4">
-            <UpdatesBar currentUser={currentUser} />
             {currentUser && (
               <>
                 <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -981,7 +979,6 @@ export default function Feed({ currentUser, authIsLoading }) {
           <div className="max-w-6xl mx-auto flex gap-6 justify-center">
             {/* Main feed column */}
             <div className="flex-1 max-w-2xl">
-              <UpdatesBar currentUser={currentUser} />
               {currentUser && (
                 <>
                   <Button onClick={() => setShowCreatePostDialog(true)} className="cu-button w-full cu-gradient mb-4"><Plus className="w-5 h-5 mr-2" />Post</Button>
