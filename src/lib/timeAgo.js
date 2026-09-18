@@ -29,18 +29,21 @@ export function timeAgo(dateInput) {
   const hr = min / 60;
   if (hr < 24) {
     const hours = Math.floor(hr);
-    const mins = Math.round((hr - hours) * 60);
+    const mins = Math.floor((hr - hours) * 60);
     return mins > 0 ? `${hours}h ${mins}m ago` : `${hours}h ago`;
   }
 
   const days = hr / 24;
   if (days < 7) {
     const d = Math.floor(days);
-    const hours = Math.round((days - d) * 24);
+    const hours = Math.floor((days - d) * 24);
     return hours > 0 ? `${d}d ${hours}h ago` : `${d}d ago`;
   }
 
-  if (days < 30) return `${Math.round(days)}d ago`;
-
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  // Beyond a week, show the exact calendar date the item was created
+  // (instead of rounded day counts like "29d ago").
+  const sameYear = date.getFullYear() === new Date(now).getFullYear();
+  return date.toLocaleDateString(undefined, sameYear
+    ? { month: "short", day: "numeric" }
+    : { month: "short", day: "numeric", year: "numeric" });
 }
