@@ -23,7 +23,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
-import { formatDistanceToNow } from "date-fns";
+import { timeAgo } from "@/lib/timeAgo";
 import { base44 } from "@/api/base44Client";
 import FeedComments from "../components/FeedComments";
 import CreatePostDialog from "../components/CreatePostDialog";
@@ -284,7 +284,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
                       <span className="text-xs sm:text-sm text-gray-600 group-hover:text-purple-600 transition-colors">{owner.full_name || 'Anonymous User'}</span>
                     </Link>
                     <span className="text-xs sm:text-sm text-gray-400">•</span>
-                    <span className="text-xs sm:text-sm text-gray-500">{formatDistanceToNow(new Date(project.created_date))} ago</span>
+                    <span className="text-xs sm:text-sm text-gray-500">{timeAgo(project.created_date)}</span>
                   </div>
                 </div>
               </div>

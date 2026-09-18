@@ -125,7 +125,7 @@ export default function DemoItem({
   const profileUrl = owner?.username
     ? createPageUrl(`UserProfile?username=${owner.username}`)
     : createPageUrl(`UserProfile?email=${owner?.email}`);
-  const handle = owner?.username ? `@${owner.username}` : owner?.full_name || (demo.created_by ? demo.created_by.split("@")[0] : "User");
+  const displayName = owner?.full_name || (demo.created_by ? demo.created_by.split("@")[0] : "User");
   const longCaption = (demo.caption || "").length > 120;
 
   return (
@@ -147,22 +147,19 @@ export default function DemoItem({
           <Link to={profileUrl} className="flex items-center gap-3 min-w-0">
             <OptimizedAvatar
               src={owner?.profile_image}
-              alt={handle}
-              fallback={handle[0] || "U"}
+              alt={displayName}
+              fallback={displayName[0] || "U"}
               size="default"
               className="w-9 h-9 border-2 border-gray-100 shadow-sm"
             />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-sm text-gray-900 truncate">{handle}</span>
+                <span className="font-semibold text-sm text-gray-900 truncate">{displayName}</span>
                 <span className="text-xs text-gray-400">•</span>
                 <span className="text-xs text-gray-500">
                   {timeAgo(demo.created_date)}
                 </span>
               </div>
-              {owner?.full_name && owner?.username && (
-                <span className="text-xs text-gray-500 truncate block">{owner.full_name}</span>
-              )}
             </div>
           </Link>
           {isOwner && (
@@ -231,7 +228,7 @@ export default function DemoItem({
         <div className="px-3 sm:px-4 pb-3">
           <p className="text-sm text-gray-800 leading-relaxed">
             <Link to={profileUrl} className="font-semibold mr-1.5 hover:text-purple-600">
-              {handle}
+              {displayName}
             </Link>
             <span className={expanded ? "" : "line-clamp-2"}>
               {renderContentWithMentions(demo.caption || "")}
