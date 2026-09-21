@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Demo, DemoApplaud } from "@/entities/all";
 import { Button } from "@/components/ui/button";
-import { Video, Plus, Loader2, Search, Lightbulb } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Video, Plus, Loader2, Search } from "lucide-react";
 import { getCachedUserProfiles } from "@/lib/userProfileCache";
 import DemoItem from "@/components/demos/DemoItem";
 import CreateDemoDialog from "@/components/CreateDemoDialog";
@@ -101,45 +102,41 @@ export default function Demos({ currentUser, authIsLoading }) {
   return (
     <div className="min-h-screen">
       <div className="cu-container cu-page">
-        <div className="max-w-2xl mx-auto space-y-3">
+        <div className="max-w-2xl mx-auto">
           {currentUser && (
             <Button
               onClick={() => setShowCreate(true)}
-              className="w-full h-12 text-base font-semibold rounded-xl"
-              style={{ background: "var(--cu-primary)" }}
+              className="cu-button w-full cu-gradient mb-4"
             >
-              <Plus className="w-5 h-5 mr-1.5" /> Post
+              <Plus className="w-5 h-5 mr-2" />Post
             </Button>
           )}
 
-          <Link
-            to={createPageUrl("CreateProject")}
-            className="block rounded-2xl p-5 text-white shadow-sm transition-transform hover:scale-[1.01]"
-            style={{ background: "var(--cu-primary)" }}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <h2 className="text-xl font-bold leading-tight flex items-center gap-2">
-                  <Lightbulb className="w-5 h-5" /> Got an idea?
-                </h2>
-                <p className="text-sm text-white/90 mt-0.5">
-                  Create a project and find collaborators
-                </p>
-              </div>
-              <div className="flex-shrink-0 w-11 h-11 rounded-full bg-white/20 flex items-center justify-center">
-                <Plus className="w-6 h-6 text-white" />
+          <Link to={createPageUrl("CreateProject")} className="block mb-4">
+            <div className="cu-gradient rounded-xl p-4 sm:p-5 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-base sm:text-lg mb-1">Got an idea?</h3>
+                  <p className="text-purple-100 text-xs sm:text-sm">Create a project and find collaborators</p>
+                </div>
+                <div className="flex-shrink-0 ml-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                    <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </div>
+                </div>
               </div>
             </div>
           </Link>
 
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
+          <div className="relative mb-3">
+            <Input
+              type="text"
+              placeholder="Search posts and projects..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search posts and projects..."
-              className="w-full h-11 pl-9 pr-3 rounded-lg bg-white border border-gray-200 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:border-purple-400"
+              className="pl-10 bg-white"
             />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           </div>
 
           <div className="pt-1">
