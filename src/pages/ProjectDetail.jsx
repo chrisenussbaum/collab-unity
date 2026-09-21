@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import MobileCanvasGate from "@/components/canvas/MobileCanvasGate";
+import MobileProjectHub from "@/components/canvas/MobileProjectHub";
+import useIsMobileViewport from "@/hooks/useIsMobileViewport";
 import { Project, User, Notification, Comment, Issue, Task, AssetVersion, ProjectTemplate, ProjectApplication, ProjectInvitation } from "@/entities/all";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -180,6 +181,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
   const [pendingInvitation, setPendingInvitation] = useState(null);
   const [showShareCard, setShowShareCard] = useState(false);
   const [isRespondingToInvite, setIsRespondingToInvite] = useState(false);
+  const isMobileViewport = useIsMobileViewport();
    
   // Function to check if current user can contribute to this project
   const canContribute = useCallback((project, user, userApplication) => {
@@ -871,7 +873,15 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
           data={{ project, owner: projectUsers.find(u => u.email === project?.created_by) }}
           shareUrl={`${getShareBaseUrl()}${createPageUrl(`ProjectDetail?id=${project.id}`)}`}
         />
-        <MobileCanvasGate projectTitle={project.title}>
+        {isMobileViewport ? (
+          <MobileProjectHub
+            project={project}
+            currentUser={currentUser}
+            projectUsers={projectUsers}
+            isOwner={isOwner}
+            isCollaborator={isExplicitCollaborator || isOwner}
+          />
+        ) : (
           <CanvasWorkspace
             project={project}
             currentUser={currentUser}
@@ -885,7 +895,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
             onBack={() => navigate(createPageUrl("Discover"))}
             initialApplicationId={applicationId}
           />
-        </MobileCanvasGate>
+        )}
       </>
     );
   }
@@ -1019,7 +1029,17 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         </motion.div>
       )}
 
-      <MobileCanvasGate projectTitle={project.title}>
+      {isMobileViewport ? (
+        <MobileProjectHub
+          project={project}
+          currentUser={currentUser}
+          projectUsers={projectUsers}
+          isOwner={false}
+          isCollaborator={false}
+          canApply={canApply}
+          onApply={() => setShowApplyModal(true)}
+        />
+      ) : (
         <CanvasWorkspace
           project={project}
           currentUser={currentUser}
@@ -1035,7 +1055,7 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
           canApply={canApply}
           onApply={() => setShowApplyModal(true)}
         />
-      </MobileCanvasGate>
+      )}
     </>
   );
         }
