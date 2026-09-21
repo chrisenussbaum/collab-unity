@@ -91,7 +91,7 @@ export default function CollaboratorCard({ user, currentUser }) {
         </div>
       )}
 
-      {currentUser && currentUser.email !== user.email && (
+      {currentUser && (
         <Button
           size="sm"
           variant="outline"
