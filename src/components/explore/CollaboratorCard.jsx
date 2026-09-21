@@ -91,18 +91,16 @@ export default function CollaboratorCard({ user, currentUser }) {
         </div>
       )}
 
-      {currentUser && (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleChat}
-          disabled={isStartingChat}
-          className="mt-3 w-full h-8 text-xs border-pink-200 text-pink-600 hover:bg-pink-50 hover:text-pink-700"
-        >
-          <MessageCircle className="w-3.5 h-3.5 mr-1" />
-          {isStartingChat ? "Starting..." : "Chat"}
-        </Button>
-      )}
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={handleChat}
+        disabled={isStartingChat}
+        className="mt-3 w-full h-8 text-xs border-pink-200 text-pink-600 hover:bg-pink-50 hover:text-pink-700"
+      >
+        <MessageCircle className="w-3.5 h-3.5 mr-1" />
+        {isStartingChat ? "Starting..." : "Chat"}
+      </Button>
     </div>
   );
 }
