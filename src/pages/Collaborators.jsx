@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Users, Search } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { getDiscoveryProfiles } from "@/lib/discoveryCache";
 import { Input } from "@/components/ui/input";
 import CollaboratorCard from "@/components/explore/CollaboratorCard";
 
@@ -10,14 +10,26 @@ export default function Collaborators({ currentUser }) {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
-        const res = await base44.functions.invoke("getPublicUserProfilesForDiscovery");
-        const data = Array.isArray(res) ? res : (res?.data || []);
-        setUsers(Array.isArray(data) ? data : []);
-      } catch { setUsers([]); }
-      setLoading(false);
+        // Shared discovery cache: dedupes concurrent callers (feed widgets fire
+        // the same request) and falls back to stale data when rate-limited.
+        let data;
+        try {
+          data = await getDiscoveryProfiles();
+        } catch {
+          // Transient rate limit — retry once before giving up.
+          await new Promise(r => setTimeout(r, 2500));
+          data = await getDiscoveryProfiles();
+        }
+        if (!cancelled) setUsers(Array.isArray(data) ? data : []);
+      } catch {
+        if (!cancelled) setUsers([]);
+      }
+      if (!cancelled) setLoading(false);
     })();
+    return () => { cancelled = true; };
   }, []);
 
   const filtered = users.filter(u => {
@@ -58,8 +70,8 @@ export default function Collaborators({ currentUser }) {
         ) : filtered.length === 0 ? (
           <div className="text-center py-16 text-gray-400">No collaborators found.</div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-            {filtered.map(u => <CollaboratorCard key={u.id} user={u} />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filtered.map(u => <CollaboratorCard key={u.id} user={u} currentUser={currentUser} />)}
           </div>
         )}
       </div>
