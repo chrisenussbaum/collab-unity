@@ -12,6 +12,7 @@ import { CheckSquare, Plus, Edit, Trash2, Calendar, User, AlertCircle, Circle, C
 import { Checkbox } from "@/components/ui/checkbox";
 import { Task, Notification, ActivityLog } from "@/entities/all";
 import { base44 } from "@/api/base44Client";
+import { MAX_OPEN_TASKS, TASK_LIMIT_MESSAGE, openTasksCount } from "@/lib/workspaceLimits";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -253,6 +254,11 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
     
     if (!formData.title?.trim()) {
       toast.error("Please enter a task title");
+      return;
+    }
+
+    if (!editingTask && openTasksCount(tasks) >= MAX_OPEN_TASKS) {
+      toast.error(TASK_LIMIT_MESSAGE);
       return;
     }
 

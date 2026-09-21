@@ -11,6 +11,7 @@ import { Flag, Plus, Edit, Trash2, CheckCircle, Circle, Clock, Calendar as Calen
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
+import { MAX_OPEN_MILESTONES, MILESTONE_LIMIT_MESSAGE, openMilestonesCount } from "@/lib/workspaceLimits";
 import MilestoneTaskGeneratorDialog from "./MilestoneTaskGeneratorDialog";
 
 export default function MilestonesTab({ project, currentUser, isCollaborator, isProjectOwner, projectUsers, tasks, onTasksCreated }) {
@@ -55,6 +56,11 @@ export default function MilestonesTab({ project, currentUser, isCollaborator, is
     e.preventDefault();
     if (!hasWriteAccess) {
       toast.error("You don't have permission to create milestones.");
+      return;
+    }
+
+    if (!editingMilestone && openMilestonesCount(milestones) >= MAX_OPEN_MILESTONES) {
+      toast.error(MILESTONE_LIMIT_MESSAGE);
       return;
     }
 

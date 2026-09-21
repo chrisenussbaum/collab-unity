@@ -32,6 +32,14 @@ import RichLinkPreview from "./RichLinkPreview";
 import ToolSuggestionCards from "./ToolSuggestionCards";
 import { toast } from "sonner";
 import { differenceInDays, format, isPast, isValid, parseISO } from "date-fns";
+import {
+  MAX_OPEN_TASKS,
+  MAX_OPEN_MILESTONES,
+  TASK_LIMIT_MESSAGE,
+  MILESTONE_LIMIT_MESSAGE,
+  openTasksCount,
+  openMilestonesCount,
+} from "@/lib/workspaceLimits";
 
 // ─── Exported utility (used by DashboardWidgets) ───────────────────────────
 
@@ -438,13 +446,21 @@ async function executeAction(action, project, currentUser, onProjectUpdate) {
 }
 
 // Execute multiple AI actions, batching task/milestone creation for performance
-async function executeActionsBatch(actions, project, currentUser, onProjectUpdate) {
+async function executeActionsBatch(actions, project, currentUser, onProjectUpdate, tasks, milestones) {
   if (!project?.id || !currentUser) return { actionTexts: [], suggestedTools: [] };
   const actionTexts = [];
   const suggestedTools = [];
 
+  // Per-project caps on open items
+  const remainingTaskSlots = Math.max(0, MAX_OPEN_TASKS - openTasksCount(tasks));
+  const remainingMilestoneSlots = Math.max(0, MAX_OPEN_MILESTONES - openMilestonesCount(milestones));
+
   // Batch create_task actions via bulkCreate
-  const taskActions = actions.filter(a => a.type === "create_task");
+  const allTaskActions = actions.filter(a => a.type === "create_task");
+  const taskActions = allTaskActions.slice(0, remainingTaskSlots);
+  if (allTaskActions.length > taskActions.length) {
+    actionTexts.push(`⚠️ Open-task limit (${MAX_OPEN_TASKS}) reached — ${allTaskActions.length - taskActions.length} task(s) not created. Finish or remove some tasks first.`);
+  }
   if (taskActions.length > 0) {
     const taskData = taskActions.map(action => {
       let taskTitle = (action.title || "").trim();
@@ -476,7 +492,11 @@ async function executeActionsBatch(actions, project, currentUser, onProjectUpdat
   }
 
   // Batch create_milestone actions via bulkCreate
-  const milestoneActions = actions.filter(a => a.type === "create_milestone");
+  const allMilestoneActions = actions.filter(a => a.type === "create_milestone");
+  const milestoneActions = allMilestoneActions.slice(0, remainingMilestoneSlots);
+  if (allMilestoneActions.length > milestoneActions.length) {
+    actionTexts.push(`⚠️ Open-milestone limit (${MAX_OPEN_MILESTONES}) reached — ${allMilestoneActions.length - milestoneActions.length} milestone(s) not created. Complete or remove some milestones first.`);
+  }
   if (milestoneActions.length > 0) {
     const milestoneData = milestoneActions.map(action => ({
       project_id: project.id,
@@ -754,6 +774,11 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
       await addAndPersist({ role: "assistant", content: "⚠️ You need edit access to create tasks." });
       return;
     }
+    if (openTasksCount(tasks) >= MAX_OPEN_TASKS) {
+      toast.error(TASK_LIMIT_MESSAGE);
+      await addAndPersist({ role: "assistant", content: `⚠️ ${TASK_LIMIT_MESSAGE}` });
+      return;
+    }
     const title = taskTitle.trim() || "New Task";
     await base44.entities.Task.create({ project_id: project.id, title, status: "todo", priority: "medium" });
     toast.success(`Task "${title}" created!`);
@@ -764,6 +789,11 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
   const handleSlashMilestone = async (milestoneName) => {
     if (!project?.id || !currentUser || !canEdit) {
       await addAndPersist({ role: "assistant", content: "⚠️ You need edit access to create milestones." });
+      return;
+    }
+    if (openMilestonesCount(milestones) >= MAX_OPEN_MILESTONES) {
+      toast.error(MILESTONE_LIMIT_MESSAGE);
+      await addAndPersist({ role: "assistant", content: `⚠️ ${MILESTONE_LIMIT_MESSAGE}` });
       return;
     }
     const name = milestoneName.trim() || "New Milestone";
@@ -907,7 +937,7 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
           const actionTexts = [];
           const suggestedTools = [];
           if (canEdit && actions.length > 0) {
-            const batchResult = await executeActionsBatch(actions, project, currentUser, onProjectUpdate);
+            const batchResult = await executeActionsBatch(actions, project, currentUser, onProjectUpdate, tasks, milestones);
             actionTexts.push(...batchResult.actionTexts);
             suggestedTools.push(...batchResult.suggestedTools);
             if (onTasksChanged) onTasksChanged();
@@ -1012,7 +1042,7 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
       const suggestedTools = [];
       const navTarget = parsed?.navigate_to;
       if (canEdit && actions.length > 0) {
-        const batchResult = await executeActionsBatch(actions, project, currentUser, onProjectUpdate);
+        const batchResult = await executeActionsBatch(actions, project, currentUser, onProjectUpdate, tasks, milestones);
         actionTexts.push(...batchResult.actionTexts);
         suggestedTools.push(...batchResult.suggestedTools);
         if (onTasksChanged) onTasksChanged();

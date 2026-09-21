@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
+import { MAX_OPEN_TASKS, TASK_LIMIT_MESSAGE, openTasksCount } from "@/lib/workspaceLimits";
 
 const PRIORITY_COLORS = {
   urgent: "bg-red-100 text-red-700 border-red-200",
@@ -186,9 +187,20 @@ Generate tasks that:
 
   const handleSave = async () => {
     if (generatedTasks.length === 0) return;
+    const remainingSlots = Math.max(0, MAX_OPEN_TASKS - openTasksCount(existingTasks));
+    if (remainingSlots === 0) {
+      toast.error(TASK_LIMIT_MESSAGE);
+      return;
+    }
+    const saveableTasks = generatedTasks.slice(0, remainingSlots);
+    if (saveableTasks.length < generatedTasks.length) {
+      toast.info(
+        `Open-task limit: only saving ${saveableTasks.length} of ${generatedTasks.length} tasks.`
+      );
+    }
     setIsSaving(true);
     try {
-      const tasksToCreate = generatedTasks.map((t) => ({
+      const tasksToCreate = saveableTasks.map((t) => ({
         project_id: project.id,
         milestone_id: milestone.id,
         title: t.title,
@@ -215,6 +227,9 @@ Generate tasks that:
   };
 
   if (!milestone) return null;
+
+  const remainingSlots = Math.max(0, MAX_OPEN_TASKS - openTasksCount(existingTasks));
+  const saveableCount = Math.min(generatedTasks.length, remainingSlots);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -383,8 +398,13 @@ Generate tasks that:
         <DialogFooter className="border-t pt-4 flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-gray-500">
             <CheckSquare className="w-3.5 h-3.5" />
-            {generatedTasks.length} task
-            {generatedTasks.length !== 1 ? "s" : ""} ready to save
+            {saveableCount} task
+            {saveableCount !== 1 ? "s" : ""} ready to save
+            {saveableCount < generatedTasks.length && (
+              <span className="text-amber-600">
+                — open-task limit ({MAX_OPEN_TASKS}) reached
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -407,8 +427,8 @@ Generate tasks that:
               ) : (
                 <>
                   <CheckSquare className="w-3.5 h-3.5 mr-1.5" />
-                  Save {generatedTasks.length} Task
-                  {generatedTasks.length !== 1 ? "s" : ""}
+                  Save {saveableCount} Task
+                  {saveableCount !== 1 ? "s" : ""}
                 </>
               )}
             </Button>
