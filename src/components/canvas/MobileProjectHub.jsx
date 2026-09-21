@@ -96,17 +96,30 @@ export default function MobileProjectHub({
       </Dialog>
 
       {/* Project header */}
-      <div className="mb-4">
-        <h1 className="text-xl font-bold text-gray-900 leading-tight">
-          {project.title}
-        </h1>
-        <div className="flex items-center gap-2 mt-1.5">
-          <Badge className="bg-purple-600 text-white">
-            {STATUS_LABELS[project.status] || project.status}
-          </Badge>
-          <span className="text-xs text-gray-500">
-            by {projectOwnerName}
+      <div className="mb-4 flex items-center gap-3">
+        {project.logo_url ? (
+          <img
+            src={project.logo_url}
+            alt={project.title}
+            className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm flex-shrink-0"
+          />
+        ) : (
+          <span className="w-10 h-10 rounded-full cu-gradient text-white text-sm font-bold flex items-center justify-center flex-shrink-0">
+            {(project.title || "P").slice(0, 2).toUpperCase()}
           </span>
+        )}
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-gray-900 leading-tight truncate">
+            {project.title}
+          </h1>
+          <div className="flex items-center gap-2 mt-1">
+            <Badge className="bg-purple-600 text-white">
+              {STATUS_LABELS[project.status] || project.status}
+            </Badge>
+            <span className="text-xs text-gray-500">
+              by {projectOwnerName}
+            </span>
+          </div>
         </div>
       </div>
 

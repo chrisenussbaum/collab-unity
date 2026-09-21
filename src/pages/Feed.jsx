@@ -117,7 +117,7 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
   const statusConfig = {
     seeking_collaborators: { color: "border-orange-500", icon: <Users className="w-3 h-3 mr-1 text-orange-500" />, label: "Seeking Collaborators" },
     in_progress: { color: "border-blue-500", icon: <Clock className="w-3 h-3 mr-1 text-blue-500" />, label: "In Progress" },
-    completed: { color: "border-green-500", icon: <CheckCircle className="w-3 h-3 mr-1 text-green-500" />, label: "Project Completed" },
+    completed: { color: "border-green-500", icon: <CheckCircle className="w-3 h-3 mr-1 text-green-500" />, label: "Completed" },
   };
   const config = statusConfig[project.status] || {};
 
@@ -279,10 +279,14 @@ const ProjectPost = ({ project, owner, currentUser, projectApplauds = [], onProj
                     </div>
                   </Link>
                   <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1.5">
+                    {config.label && (
+                      <Badge className="bg-purple-600 text-white border-transparent">{config.label}</Badge>
+                    )}
+                    <span className="text-xs sm:text-sm text-gray-500">by</span>
                     <Link to={createPageUrl(owner.username ? `UserProfile?username=${owner.username}` : `UserProfile?email=${owner.email}`)} className="flex items-center space-x-1.5 group">
-                      <OptimizedAvatar src={owner.profile_image} alt={owner.full_name || 'Owner'} fallback={owner.full_name?.[0] || 'U'} size="xs" className="w-5 h-5 border-2 border-white shadow-sm" />
-                      <span className="text-xs sm:text-sm text-gray-600 group-hover:text-purple-600 transition-colors">{owner.full_name || 'Anonymous User'}</span>
-                    </Link>
+                       <OptimizedAvatar src={owner.profile_image} alt={owner.full_name || 'Owner'} fallback={owner.full_name?.[0] || 'U'} size="xs" className="w-5 h-5 border-2 border-white shadow-sm" />
+                       <span className="text-xs sm:text-sm text-gray-600 group-hover:text-purple-600 transition-colors">{owner.full_name || 'Anonymous User'}</span>
+                     </Link>
                     <span className="text-xs sm:text-sm text-gray-400">•</span>
                     <span className="text-xs sm:text-sm text-gray-500">{timeAgo(project.created_date)}</span>
                   </div>

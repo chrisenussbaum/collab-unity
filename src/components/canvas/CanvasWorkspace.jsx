@@ -599,7 +599,13 @@ export default function CanvasWorkspace({
           <button onClick={onBack} className="p-1.5 rounded hover:bg-gray-100 text-gray-600" title="Back to Feed">
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <img src={LOGO_URL} alt="Collab Unity" className="w-6 h-6 rounded" />
+          {project?.logo_url ? (
+            <img src={project.logo_url} alt={project?.title} className="w-6 h-6 rounded object-cover" />
+          ) : (
+            <span className="w-6 h-6 rounded bg-purple-600 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+              {(project?.title || "P").slice(0, 2).toUpperCase()}
+            </span>
+          )}
           <span className="text-sm font-medium text-gray-800 truncate max-w-[120px] md:max-w-[260px]">{project?.title}</span>
           <span className="hidden md:inline text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{readOnly ? "Viewer" : isOwner ? "Owner" : "Collaborator"}</span>
         </div>
