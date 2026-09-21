@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import MobileCanvasGate from "@/components/canvas/MobileCanvasGate";
 import { Project, User, Notification, Comment, Issue, Task, AssetVersion, ProjectTemplate, ProjectApplication, ProjectInvitation } from "@/entities/all";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -870,19 +871,21 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
           data={{ project, owner: projectUsers.find(u => u.email === project?.created_by) }}
           shareUrl={`${getShareBaseUrl()}${createPageUrl(`ProjectDetail?id=${project.id}`)}`}
         />
-        <CanvasWorkspace
-          project={project}
-          currentUser={currentUser}
-          projectUsers={projectUsers}
-          projectOwnerProfile={projectUsers.find(u => u.email === project.created_by)}
-          isOwner={isOwner}
-          isCollaborator={isExplicitCollaborator || isOwner}
-          onProjectUpdate={handleProjectUpdate}
-          onUpdateSocialLinks={handleUpdateSocialLinks}
-          onShare={() => setShowShareCard(true)}
-          onBack={() => navigate(createPageUrl("Discover"))}
-          initialApplicationId={applicationId}
-        />
+        <MobileCanvasGate projectTitle={project.title}>
+          <CanvasWorkspace
+            project={project}
+            currentUser={currentUser}
+            projectUsers={projectUsers}
+            projectOwnerProfile={projectUsers.find(u => u.email === project.created_by)}
+            isOwner={isOwner}
+            isCollaborator={isExplicitCollaborator || isOwner}
+            onProjectUpdate={handleProjectUpdate}
+            onUpdateSocialLinks={handleUpdateSocialLinks}
+            onShare={() => setShowShareCard(true)}
+            onBack={() => navigate(createPageUrl("Discover"))}
+            initialApplicationId={applicationId}
+          />
+        </MobileCanvasGate>
       </>
     );
   }
@@ -1016,21 +1019,23 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
         </motion.div>
       )}
 
-      <CanvasWorkspace
-        project={project}
-        currentUser={currentUser}
-        projectUsers={projectUsers}
-        projectOwnerProfile={projectOwnerProfile}
-        isOwner={false}
-        isCollaborator={false}
-        onProjectUpdate={handleProjectUpdate}
-        onUpdateSocialLinks={handleUpdateSocialLinks}
-        onShare={() => setShowShareCard(true)}
-        onBack={() => navigate(createPageUrl("Discover"))}
-        readOnly
-        canApply={canApply}
-        onApply={() => setShowApplyModal(true)}
-      />
+      <MobileCanvasGate projectTitle={project.title}>
+        <CanvasWorkspace
+          project={project}
+          currentUser={currentUser}
+          projectUsers={projectUsers}
+          projectOwnerProfile={projectOwnerProfile}
+          isOwner={false}
+          isCollaborator={false}
+          onProjectUpdate={handleProjectUpdate}
+          onUpdateSocialLinks={handleUpdateSocialLinks}
+          onShare={() => setShowShareCard(true)}
+          onBack={() => navigate(createPageUrl("Discover"))}
+          readOnly
+          canApply={canApply}
+          onApply={() => setShowApplyModal(true)}
+        />
+      </MobileCanvasGate>
     </>
   );
         }
