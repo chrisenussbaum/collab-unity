@@ -257,12 +257,15 @@ export default function Leaderboard({ currentUser }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <p className="text-sm text-gray-500 mb-4">
+              Points reward finishing, not starting — completing projects, milestones, and tasks earns far more than creating them.
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div className="flex items-start">
                 <Star className="w-5 h-5 text-purple-600 mr-2 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold">Create a Project</p>
-                  <p className="text-gray-600">+100 points</p>
+                  <p className="font-semibold">Complete a Project</p>
+                  <p className="text-gray-600">+200 points</p>
                 </div>
               </div>
               <div className="flex items-start">
@@ -282,6 +285,20 @@ export default function Leaderboard({ currentUser }) {
               <div className="flex items-start">
                 <Star className="w-5 h-5 text-purple-600 mr-2 flex-shrink-0 mt-0.5" />
                 <div>
+                  <p className="font-semibold">Complete a Milestone</p>
+                  <p className="text-gray-600">+30 points</p>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <Star className="w-5 h-5 text-purple-600 mr-2 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Create a Project</p>
+                  <p className="text-gray-600">+25 points</p>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <Star className="w-5 h-5 text-purple-600 mr-2 flex-shrink-0 mt-0.5" />
+                <div>
                   <p className="font-semibold">Receive Review</p>
                   <p className="text-gray-600">+20 points</p>
                 </div>
@@ -291,6 +308,13 @@ export default function Leaderboard({ currentUser }) {
                 <div>
                   <p className="font-semibold">Write Review</p>
                   <p className="text-gray-600">+15 points</p>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <Star className="w-5 h-5 text-purple-600 mr-2 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Complete a Task</p>
+                  <p className="text-gray-600">+10 points</p>
                 </div>
               </div>
               <div className="flex items-start">
