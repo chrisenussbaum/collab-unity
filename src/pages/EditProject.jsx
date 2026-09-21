@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Plus, X, UploadCloud, Lightbulb, Trash2, Link as LinkIcon, DollarSign } from "lucide-react";
 import ArrayInputWithSearch from "../components/ArrayInputWithSearch";
+import { base44 } from "@/api/base44Client";
 
 const PROJECT_CLASSIFICATIONS = [
   { value: "educational", label: "Educational" },
@@ -199,7 +200,48 @@ export default function EditProject({ currentUser, authIsLoading }) {
       const oldStatus = project.status;
       const newStatus = formData.status;
 
-      await Project.update(projectId, formData);
+      const completing = newStatus === 'completed' && oldStatus !== 'completed';
+      const reopening = oldStatus === 'completed' && newStatus !== 'completed';
+
+      // Completing a project goes through the server: it verifies at least one
+      // finished milestone, frees an active slot, and awards the completion bonus.
+      if (completing) {
+        try {
+          await base44.functions.invoke('completeProject', { project_id: projectId });
+        } catch (error) {
+          const errCode = String(error?.response?.data?.error || error?.data?.error || error?.message || '');
+          if (errCode.includes('no_completed_milestones')) {
+            toast.error("Before marking this project completed, finish at least one milestone first.");
+          } else {
+            toast.error("Could not mark this project as completed. Please try again.");
+          }
+          return;
+        }
+      }
+
+      // Reopening a completed project needs a free active slot
+      if (reopening) {
+        try {
+          const slotRes = await base44.functions.invoke('getProjectSlots', {});
+          const slotData = slotRes?.data ?? slotRes;
+          if (slotData && slotData.freeSlots !== undefined && slotData.freeSlots <= 0) {
+            toast.error("All your active project slots are in use. Complete another project before reopening this one.");
+            return;
+          }
+        } catch (error) {
+          console.warn("Could not verify project slots:", error);
+        }
+      }
+
+      const updatePayload = { ...formData };
+      if (completing) delete updatePayload.status; // already set server-side
+
+      await Project.update(projectId, updatePayload);
+
+      // Editing a stale project counts as activity — quietly revive it
+      if (project.is_stale || project.stale_hidden) {
+        base44.functions.invoke('touchProjectActivity', { project_id: projectId }).catch(() => {});
+      }
 
       // If status changed, notify all collaborators except the current user
       if (statusChanged && project.collaborator_emails && project.collaborator_emails.length > 0) {

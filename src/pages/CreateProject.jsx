@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Project, User, AssetVersion } from "@/entities/all";
 import { UploadFile } from "@/integrations/Core";
@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Loader2, PenLine, Image, Video, Wrench, DollarSign, FileUp, ArrowRight } from "lucide-react";
+import { Plus, X, Upload, Lightbulb, File as FileIcon, Trash2, UploadCloud, Link as LinkIcon, Loader2, PenLine, Image, Video, Wrench, DollarSign, FileUp, ArrowRight, Flag, CheckCircle, Users } from "lucide-react";
 import ProjectFileImport from "@/components/ProjectFileImport";
 import { motion, AnimatePresence } from "framer-motion";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
@@ -20,6 +20,7 @@ import ArrayInputWithSearch from "@/components/ArrayInputWithSearch";
 import { generateProjectSuggestions } from "@/functions/generateProjectSuggestions";
 import { base44 } from "@/api/base44Client";
 import CreateProjectAssistant from "@/components/CreateProjectAssistant";
+import ProjectSlotMeter from "@/components/ProjectSlotMeter";
 import { validateVideo, isImageFile, isVideoFile, optimizeImage, formatFileSize } from "@/components/mediaOptimization";
 
 const PROJECT_CLASSIFICATIONS = [
@@ -54,6 +55,8 @@ export default function CreateProject() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [projectIdea, setProjectIdea] = useState("");
   const [isAIAssisted, setIsAIAssisted] = useState(false);
+  const [slotInfo, setSlotInfo] = useState(null);
+  const [slotsChecked, setSlotsChecked] = useState(false);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -76,6 +79,8 @@ export default function CreateProject() {
     venmo_link: "",
     cashapp_link: "",
     importedFileUrls: [], // files uploaded during import flow
+    first_milestone_title: "",
+    first_milestone_target_date: "",
   });
 
   const [newLink, setNewLink] = useState("");
@@ -90,6 +95,19 @@ export default function CreateProject() {
   useEffect(() => {
     User.me().then(setCurrentUser).catch(() => navigate(createPageUrl("Discover")));
   }, [navigate]);
+
+  // Load the user's level-based active project slots
+  useEffect(() => {
+    if (!currentUser) return;
+    let cancelled = false;
+    base44.functions.invoke('getProjectSlots', {})
+      .then((res) => {
+        if (!cancelled) setSlotInfo(res?.data ?? res);
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setSlotsChecked(true); });
+    return () => { cancelled = true; };
+  }, [currentUser]);
 
   // Handle template data from URL params
   useEffect(() => {
@@ -160,6 +178,8 @@ export default function CreateProject() {
       paypal_link: "",
       venmo_link: "",
       cashapp_link: "",
+      first_milestone_title: "",
+      first_milestone_target_date: "",
     });
     setCurrentStep(1);
   };
@@ -519,6 +539,7 @@ export default function CreateProject() {
       if (formData.area_of_interest.trim().length > 20) newErrors.area_of_interest = "Area of interest must be 20 characters or less.";
       if (formData.skills_needed.length === 0) newErrors.skills_needed = "At least one skill is required.";
       if (formData.tools_needed.length === 0) newErrors.tools_needed = "At least one tool is required.";
+      if (!formData.first_milestone_title?.trim()) newErrors.first_milestone_title = "Define your first milestone before publishing.";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -540,10 +561,41 @@ export default function CreateProject() {
 
       // Strip fields not belonging to the Project entity
       delete projectData.importedFileUrls;
+      delete projectData.first_milestone_title;
+      delete projectData.first_milestone_target_date;
       if (!projectData.template_id) delete projectData.template_id;
       if (!projectData.project_instructions) delete projectData.project_instructions;
 
+      // Server-verified slot check right before creating
+      try {
+        const slotRes = await base44.functions.invoke('getProjectSlots', {});
+        const slotData = slotRes?.data ?? slotRes;
+        if (slotData && slotData.freeSlots !== undefined && slotData.freeSlots <= 0) {
+          setSlotInfo(slotData);
+          toast.error("All your active project slots are in use. Complete a project to free a slot.");
+          return;
+        }
+      } catch (slotError) {
+        console.warn("Could not verify project slots before creating:", slotError);
+      }
+
       const newProject = await Project.create(projectData);
+
+      // Create the required first milestone so every project starts with a concrete next step
+      try {
+        await base44.entities.ProjectMilestone.create({
+          project_id: newProject.id,
+          title: formData.first_milestone_title.trim(),
+          description: "First milestone defined when the project was created.",
+          target_date: formData.first_milestone_target_date
+            ? new Date(formData.first_milestone_target_date + "T12:00:00").toISOString()
+            : null,
+          status: "not_started",
+          order_index: 0
+        });
+      } catch (milestoneError) {
+        console.error("Error creating first milestone:", milestoneError);
+      }
 
       // Save imported files as assets in the project's Assets tab
       if (formData.importedFileUrls?.length > 0) {
@@ -613,6 +665,58 @@ export default function CreateProject() {
     setErrors({});
   };
   
+  // Slot cap reached — show the blocked screen instead of the creation flow
+  if (slotsChecked && slotInfo && slotInfo.freeSlots === 0) {
+    return (
+      <div className="w-full min-h-[calc(100svh-8rem)] flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8">
+        <Card className="w-full max-w-xl cu-card">
+          <CardContent className="p-6 sm:p-8 text-center">
+            <div className="w-14 h-14 rounded-2xl cu-gradient flex items-center justify-center mx-auto mb-5">
+              <Lightbulb className="w-7 h-7 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              All {slotInfo.capacity} active project slots are in use
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 mb-6 max-w-md mx-auto leading-relaxed">
+              Collab Unity gives every creator a small number of active slots so projects get finished —
+              not forgotten. Free a slot by marking one of your projects completed, or bring your energy
+              to someone else's project (collaborating is unlimited).
+            </p>
+            <div className="text-left bg-gray-50 rounded-xl border border-gray-100 divide-y divide-gray-100 mb-6">
+              {slotInfo.activeProjects.map((p) => (
+                <Link
+                  key={p.id}
+                  to={createPageUrl(`ProjectDetail?id=${p.id}`)}
+                  className="flex items-center justify-between px-4 py-3 hover:bg-purple-50 transition-colors"
+                >
+                  <span className="text-sm font-medium text-gray-800 truncate">{p.title}</span>
+                  <span className="text-xs text-purple-600 flex-shrink-0 ml-3">Open →</span>
+                </Link>
+              ))}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link to={createPageUrl("MyProjects")} className="flex-1">
+                <Button className="cu-button w-full">
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Go to My Projects
+                </Button>
+              </Link>
+              <Link to={createPageUrl("Collaborators")} className="flex-1">
+                <Button variant="outline" className="w-full">
+                  <Users className="w-4 h-4 mr-2" />
+                  Explore Collaborations
+                </Button>
+              </Link>
+            </div>
+            <p className="text-xs text-gray-400 mt-5">
+              Tip: completing milestones earns points — and finishing projects levels you up to unlock more slots.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <>
       <input
@@ -645,6 +749,12 @@ export default function CreateProject() {
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">What are you working on?</h1>
                 <p className="text-gray-500 mt-2 text-base sm:text-lg">Describe your idea and we'll help you bring it to life.</p>
               </div>
+
+              {slotInfo && (
+                <div className="mb-6">
+                  <ProjectSlotMeter slotInfo={slotInfo} />
+                </div>
+              )}
 
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <Textarea
@@ -987,6 +1097,36 @@ export default function CreateProject() {
                     type="tools"
                   />
                   {errors.tools_needed && <p className="text-sm text-red-500 -mt-6">{errors.tools_needed}</p>}
+
+                  <div className="space-y-3 pt-6 border-t">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <Flag className="w-4 h-4" />
+                      First Milestone *
+                    </Label>
+                    <p className="text-xs text-gray-500">
+                      What's the first concrete step for this project? You'll see it on your milestones board —
+                      finishing it earns points.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Input
+                          placeholder="e.g., Complete the project landing page"
+                          value={formData.first_milestone_title}
+                          onChange={(e) => handleInputChange("first_milestone_title", e.target.value)}
+                          className={errors.first_milestone_title ? 'border-red-500' : ''}
+                        />
+                        {errors.first_milestone_title && <p className="text-sm text-red-500">{errors.first_milestone_title}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Input
+                          type="date"
+                          value={formData.first_milestone_target_date}
+                          onChange={(e) => handleInputChange("first_milestone_target_date", e.target.value)}
+                        />
+                        <p className="text-xs text-gray-400">Target date (optional)</p>
+                      </div>
+                    </div>
+                  </div>
                 </motion.div>
               )}
 

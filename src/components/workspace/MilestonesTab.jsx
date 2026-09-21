@@ -114,6 +114,16 @@ export default function MilestonesTab({ project, currentUser, isCollaborator, is
 
     try {
       await base44.entities.ProjectMilestone.update(milestoneId, { status: newStatus });
+      if (newStatus === 'completed') {
+        try {
+          await base44.functions.invoke('awardPoints', {
+            action: 'milestone_completed',
+            user_email: currentUser.email
+          });
+        } catch (error) {
+          console.error("Error awarding milestone completion points:", error);
+        }
+      }
       loadMilestones();
     } catch (error) {
       console.error("Error updating milestone status:", error);

@@ -79,7 +79,8 @@ const notificationIcons = {
   project_thought_created: Lightbulb,
   project_ideation_updated: PencilLine,
   project_member_left: UserMinus,
-  project_member_removed: UserX
+  project_member_removed: UserX,
+  project_stale_nudge: AlertCircle
 };
 
 export default function NotificationBell() {

@@ -518,10 +518,14 @@ export default function Feed({ currentUser, authIsLoading }) {
   const { data: cachedFeedData, isLoading: isQueryLoading } = useQuery({
     queryKey: ['feed-projects', currentUser?.email],
     queryFn: async () => {
-      const [visibleProjectsData, initialFeedPostsData] = await Promise.all([
+      const [allProjectsData, initialFeedPostsData] = await Promise.all([
         withRetry(() => Project.filter({}, "-created_date")),
         withRetry(() => FeedPost.filter({ is_visible: true }, "-created_date")),
       ]);
+
+      // Long-dormant stale projects are hidden from the public feed
+      // (they stay accessible to their owner and collaborators via direct link)
+      const visibleProjectsData = allProjectsData.filter(p => !p.stale_hidden);
 
       const allOwnerEmails = [...new Set([
         ...visibleProjectsData.map(p => p.created_by),

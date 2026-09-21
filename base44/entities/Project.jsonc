@@ -322,6 +322,21 @@
         }
       },
       "description": "Metadata about who last edited the shared scratchpad"
+    },
+    "last_activity_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the project last had real collaborator activity (maintained by the staleness sweep and revival flow)"
+    },
+    "is_stale": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the project has had no activity for 14+ days (shows a 'needs attention' flag to its members)"
+    },
+    "stale_hidden": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the project has been inactive for 45+ days and is hidden from the public feed (still accessible to members by direct link)"
     }
   },
   "required": [

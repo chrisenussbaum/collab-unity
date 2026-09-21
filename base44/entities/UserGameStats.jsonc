@@ -47,6 +47,21 @@
       "default": 0,
       "description": "Number of projects collaborated on"
     },
+    "projects_completed": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of projects the user owned and marked completed"
+    },
+    "milestones_completed": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of project milestones the user completed"
+    },
+    "tasks_completed": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of project tasks the user completed"
+    },
     "endorsements_given": {
       "type": "number",
       "default": 0,
@@ -55,17 +70,17 @@
     "endorsements_received": {
       "type": "number",
       "default": 0,
-      "description": "Number of endorsements received"
+      "description": "Number of endorsements received from others"
     },
     "reviews_given": {
       "type": "number",
       "default": 0,
-      "description": "Number of reviews given"
+      "description": "Number of reviews given to others"
     },
     "reviews_received": {
       "type": "number",
       "default": 0,
-      "description": "Number of reviews received"
+      "description": "Number of reviews received from others"
     },
     "description": {
       "type": "string",

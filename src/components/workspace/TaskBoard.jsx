@@ -411,6 +411,18 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
         }
       }
 
+      // Award engagement points for completing a task
+      if (justCompleted) {
+        try {
+          await base44.functions.invoke('awardPoints', {
+            action: 'task_completed',
+            user_email: currentUser.email
+          });
+        } catch (error) {
+          console.error("Error awarding task completion points:", error);
+        }
+      }
+
       // toast.success("Task status updated"); // Removed success toast
       await fetchTasks();
     } catch (error) {
@@ -453,7 +465,18 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
   const handleBulkStatusChange = async (newStatus) => {
     setIsBulkProcessing(true);
     try {
+      const completedIds = newStatus === 'done' ? [...selectedIds] : [];
       await Promise.all([...selectedIds].map(id => Task.update(id, { status: newStatus })));
+      for (const id of completedIds) {
+        try {
+          await base44.functions.invoke('awardPoints', {
+            action: 'task_completed',
+            user_email: currentUser.email
+          });
+        } catch (error) {
+          console.error("Error awarding task completion points:", error);
+        }
+      }
       setSelectedIds(new Set());
       await fetchTasks();
     } catch (error) {

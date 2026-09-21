@@ -19,12 +19,19 @@ export const BADGES = {
     color: "from-purple-500 to-pink-500",
     description: "Created your first project"
   },
-  five_projects: {
-    id: "five_projects",
-    name: "Serial Creator",
+  first_completion: {
+    id: "first_completion",
+    name: "Finisher",
     icon: Target,
     color: "from-indigo-500 to-purple-500",
-    description: "Created 5 projects"
+    description: "Completed your first project"
+  },
+  five_completions: {
+    id: "five_completions",
+    name: "Project Legend",
+    icon: Crown,
+    color: "from-emerald-500 to-teal-500",
+    description: "Completed 5 projects"
   },
   first_collaboration: {
     id: "first_collaboration",

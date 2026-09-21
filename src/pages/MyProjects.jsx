@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Plus,
   Lightbulb,
+  AlertCircle,
   Users,
   CheckCircle,
   Clock,
@@ -32,6 +33,7 @@ import OptimizedAvatar from "@/components/OptimizedAvatar";
 import ProjectCardSkeleton from "@/components/skeletons/ProjectCardSkeleton";
 import MilestoneProgress from "@/components/myprojects/MilestoneProgress";
 import ApplicationsTab from "@/components/myprojects/ApplicationsTab";
+import ProjectSlotMeter from "@/components/ProjectSlotMeter";
 
 const formatEnumLabel = (str) => {
   if (!str) return '';
@@ -49,6 +51,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [collaboratorProfiles, setCollaboratorProfiles] = useState({});
   const [milestonesMap, setMilestonesMap] = useState({});
+  const [slotInfo, setSlotInfo] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -134,6 +137,16 @@ export default function MyProjects({ currentUser, authIsLoading }) {
     setIsLoading(isQueryLoading);
   }, [isQueryLoading]);
 
+  // Load the user's level-based active project slots
+  useEffect(() => {
+    if (!currentUser) return;
+    let cancelled = false;
+    base44.functions.invoke('getProjectSlots', {})
+      .then((res) => { if (!cancelled) setSlotInfo(res?.data ?? res); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [currentUser?.email]);
+
   const statusConfig = {
     seeking_collaborators: {
       color: "border-orange-500",
@@ -166,6 +179,16 @@ export default function MyProjects({ currentUser, authIsLoading }) {
 
   const filteredProjects = projects.filter(matchesSearch);
   const projectsCount = projects.length;
+
+  // Most-neglected first: stale projects surface at the top, completed sink to the bottom
+  const sortedProjects = [...filteredProjects].sort((a, b) => {
+    const aDone = a.status === 'completed' ? 1 : 0;
+    const bDone = b.status === 'completed' ? 1 : 0;
+    if (aDone !== bDone) return aDone - bDone;
+    const aDate = new Date(a.last_activity_at || a.created_date).getTime();
+    const bDate = new Date(b.last_activity_at || b.created_date).getTime();
+    return aDate - bDate;
+  });
 
   const handleDeleteProject = async () => {
     if (!projectToDelete) return;
@@ -218,6 +241,13 @@ export default function MyProjects({ currentUser, authIsLoading }) {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 sm:mb-8"
         >
+          {/* Active Project Slots Meter */}
+          {activeTab === "projects" && slotInfo && (
+            <div className="mb-6">
+              <ProjectSlotMeter slotInfo={slotInfo} />
+            </div>
+          )}
+
           {/* Search Bar - Above tabs */}
           <div className="relative mb-6">
             <Input
@@ -295,7 +325,7 @@ export default function MyProjects({ currentUser, authIsLoading }) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             <AnimatePresence>
-              {filteredProjects.map((project, index) => {
+              {sortedProjects.map((project, index) => {
                 const config = statusConfig[project.status] || statusConfig.in_progress;
                 const isProjectOwner = currentUser && project.created_by === currentUser.email;
                 const isCollaborator = currentUser && project.collaborator_emails?.includes(currentUser.email) && !isProjectOwner;
@@ -380,6 +410,12 @@ export default function MyProjects({ currentUser, authIsLoading }) {
                           <Badge className="text-xs bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 border border-purple-200">
                             {project.project_type}
                           </Badge>
+                          {project.is_stale && (
+                            <Badge className="text-xs bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              Needs attention
+                            </Badge>
+                          )}
                         </div>
                       </CardHeader>
 

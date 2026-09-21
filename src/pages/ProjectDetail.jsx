@@ -659,6 +659,20 @@ export default function ProjectDetail({ currentUser: propCurrentUser, authIsLoad
     };
   }, [projectId, handleProjectUpdate]);
 
+  // Revive a stale project when an owner/collaborator opens its workspace
+  useEffect(() => {
+    if (!project || !currentUser) return;
+    if (!project.is_stale && !project.stale_hidden) return;
+    const isMember = project.created_by === currentUser.email ||
+      project.collaborator_emails?.includes(currentUser.email);
+    if (!isMember) return;
+    base44.functions.invoke('touchProjectActivity', { project_id: project.id })
+      .then(() => {
+        setProject(prev => prev ? { ...prev, is_stale: false, stale_hidden: false } : prev);
+      })
+      .catch((error) => console.warn("Could not revive project:", error));
+  }, [project?.id, project?.is_stale, project?.stale_hidden, currentUser]);
+
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
