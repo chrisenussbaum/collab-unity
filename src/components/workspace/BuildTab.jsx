@@ -267,7 +267,7 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `- Only create items that are genuinely new and actionable from the latest user request.`,
     `- When unsure whether something already exists, ask the user before creating.`,
     `\n== ACTION EXECUTION (IMPORTANT) ==`,
-    `By default, do NOT create tasks, milestones, or notes. Be advisory: discuss, suggest, and recommend. Only put create_task / create_milestone / save_note objects in the "actions" array when the user EXPLICITLY asks you to create/add/make a task, milestone, or note (e.g. "create a task", "add a milestone", "make a plan with tasks", "save this note").`,
+    `By default, do NOT create tasks, milestones, notes, or links. Be advisory: discuss, suggest, and recommend. Only put create_task / create_milestone / save_note / save_link objects in the "actions" array when the user EXPLICITLY asks you to create/add/make a task, milestone, note, or link (e.g. "create a task", "add a milestone", "make a plan with tasks", "save this note", "add this to assets").`,
     `If the user is just discussing, brainstorming, asking for advice, research, or a status update, return an EMPTY "actions" array and just answer in "message".`,
     `When you DO create items, the only way they get created is via the "actions" array — describing them in "message" without populating "actions" creates nothing.`,
     `Example — user says "Create a task to design the logo and a milestone for Phase 1":`,
@@ -284,10 +284,11 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `    {"type": "create_task", "title": "Short task title (no colon, no description in title)", "description": "Detailed description of what needs to be done", "priority": "medium|high|low|urgent", "assigned_to": "email@example.com or null", "due_date": "YYYY-MM-DD or null"},`,
     `    {"type": "create_milestone", "title": "Milestone name", "description": "...", "target_date": "YYYY-MM-DD or null"},`,
     `    {"type": "save_note", "title": "Note title", "content": "Note content"},`,
+    `    {"type": "save_link", "title": "Resource title", "url": "https://full-url-including-https://", "description": "Optional note"},`,
     `    {"type": "suggest_tool", "name": "Tool name", "url": "https://...", "icon": "emoji"}`,
     `  ]`,
     `}`,
-    `- "actions" must be EMPTY unless the user explicitly asked you to create/add a task, milestone, or note. Do NOT auto-generate actions for advice, plans, research, or status updates.`,
+    `- "actions" must be EMPTY unless the user explicitly asked you to create/add a task, milestone, note, or link. Do NOT auto-generate actions for advice, plans, research, or status updates.`,
     `- "navigate_to" should be null unless you want to redirect the user to a specific tab after your response`,
     `- Only include actions the user EXPLICITLY asked for — never create items the user didn't request`,
     `- For create_task: "title" must be SHORT (3-6 words max, no colons). Put details in "description". NEVER format title as "Name: description text"`,
@@ -295,6 +296,7 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `\n== RESOURCE & LINK HANDLING (CRITICAL) ==`,
     `When the user asks for videos, articles, research papers, tutorials, or ANY content that involves a URL:`,
     `1. ALWAYS include every resource as a markdown link directly in the "message" field — e.g. [Real Title](https://example.com/resource). These render as visual preview cards with screenshots in the chat. Links in your message are automatically saved to the Assets tab — you do NOT need a save_link action, and you do NOT need to say "links have been saved to Assets" because the system adds a confirmation footer automatically.`,
+    `EXCEPTION: when the USER pastes or provides a URL and asks to save/add it (e.g. "add this to assets"), ALWAYS return a save_link action with the full URL (prepend https:// if the user omitted it). Do NOT merely claim it was added — the link is only saved via the action.`,
     `2. QUALITY OVER QUANTITY: Suggest only the 1-2 BEST resources — the most highly-rated, widely-used, and directly relevant to the user's request. Do NOT list 4+ resources. One excellent resource beats four mediocre ones.`,
     `3. CRITICAL — VIDEOS & TUTORIALS: NEVER link directly to a specific video URL (youtube.com/watch?v=, vimeo.com/, tiktok.com/, etc.). You CANNOT reliably verify that a specific video exists, and linking to a non-existent video is a critical failure. Instead, ALWAYS provide a Google Search Videos link that lets the user find real, live videos themselves. Format: [Search "calf strain exercises" videos](https://www.google.com/search?q=calf+strain+exercises&tbm=vid) — use + instead of spaces in the query. This renders as a preview card in the chat and guarantees the user gets real, multi-platform video results that actually exist.`,
     `4. For NON-VIDEO resources (articles, docs, research papers, official sites): you MAY link directly, but ONLY to URLs you have VERIFIED via web search to currently exist and be accessible. Do NOT link to paywalled, deleted, or region-locked content. If you cannot verify a specific article URL, provide a Google Search link instead: https://www.google.com/search?q=YOUR+QUERY`,
@@ -415,13 +417,22 @@ async function executeAction(action, project, currentUser, onProjectUpdate) {
   }
 
   if (action.type === "save_link") {
-    const title = action.title || action.url || "Resource";
+    // Normalize — models/users often omit the protocol when pasting bare URLs
+    let rawUrl = (action.url || "").trim();
+    if (rawUrl && !/^https?:\/\//i.test(rawUrl)) rawUrl = `https://${rawUrl}`;
+    if (!rawUrl) return { text: "⚠️ Could not save the link — no URL provided." };
+    const title = action.title || rawUrl || "Resource";
+    // Never duplicate: if this exact URL is already saved, say so instead of saving again
+    const existingByUrl = await AssetVersion.filter({ project_id: project.id, file_url: rawUrl });
+    if (existingByUrl?.length > 0) {
+      return { text: `ℹ️ Already in Assets: **${title}**` };
+    }
     const existing = await AssetVersion.filter({ project_id: project.id, asset_name: title });
     const versionNumber = existing?.length > 0 ? Math.max(...existing.map(a => a.version_number || 1)) + 1 : 1;
     await AssetVersion.create({
       project_id: project.id,
       asset_name: title,
-      file_url: action.url,
+      file_url: rawUrl,
       file_name: title,
       file_type: "text/uri-list",
       version_number: versionNumber,
@@ -997,12 +1008,12 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
             navigate_to: { type: "string", description: "Tab to navigate to: tasks, milestones, assets, ideation, notes, tools, activity, or null" },
             actions: {
               type: "array",
-              description: "Only populate this when the user EXPLICITLY asks to create/add a task, milestone, or note. Otherwise return an empty array.",
+              description: "Only populate this when the user EXPLICITLY asks to create/add a task, milestone, note, or link/resource. Otherwise return an empty array.",
               items: {
                 type: "object",
                 properties: {
-                  type: { type: "string", enum: ["create_task", "create_milestone", "save_note", "suggest_tool"] },
-                  title: { type: "string", description: "Short title (3-6 words)" },
+                  type: { type: "string", enum: ["create_task", "create_milestone", "save_note", "save_link", "suggest_tool"] },
+                  title: { type: "string", description: "Short title (3-6 words); for save_link use the resource's name" },
                   description: { type: "string", description: "Detailed description" },
                   priority: { type: "string", enum: ["low", "medium", "high", "urgent"] },
                   assigned_to: { type: "string", description: "Email of assignee or null" },
@@ -1010,7 +1021,7 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
                   target_date: { type: "string", description: "YYYY-MM-DD for milestones or null" },
                   content: { type: "string", description: "Content for save_note" },
                   name: { type: "string", description: "Tool name for suggest_tool" },
-                  url: { type: "string", description: "Tool URL for suggest_tool" },
+                  url: { type: "string", description: "Full URL for save_link or suggest_tool — always include https://" },
                   icon: { type: "string", description: "Emoji icon for suggest_tool" },
                 },
                 required: ["type"],
