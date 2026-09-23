@@ -111,6 +111,16 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
     fetchAssets();
   }, [fetchAssets]);
 
+  // Live-refresh when assets are created elsewhere (e.g. AI chat saving a link)
+  useEffect(() => {
+    if (!project?.id) return;
+    const handler = (e) => {
+      if (!e.detail?.projectId || e.detail.projectId === project.id) fetchAssets();
+    };
+    window.addEventListener("assetsUpdated", handler);
+    return () => window.removeEventListener("assetsUpdated", handler);
+  }, [project?.id, fetchAssets]);
+
   const resetForm = useCallback(() => {
     setFormData({
       asset_name: "",

@@ -105,6 +105,18 @@ export default function CanvasWorkspace({
     refreshTasks(); refreshMilestones(); refreshAssets();
   }, [project?.id, refreshTasks, refreshMilestones, refreshAssets]);
 
+  // Refresh the canvas-wide asset list whenever an asset is created elsewhere
+  // (e.g. the AI chat saving a link or uploaded file) so frames and the chat's
+  // project context stay in sync.
+  useEffect(() => {
+    if (!project?.id) return;
+    const handler = (e) => {
+      if (!e.detail?.projectId || e.detail.projectId === project.id) refreshAssets();
+    };
+    window.addEventListener("assetsUpdated", handler);
+    return () => window.removeEventListener("assetsUpdated", handler);
+  }, [project?.id, refreshAssets]);
+
   // Owner-only: pending applications count for the Workspaces sidebar badge
   useEffect(() => {
     if (!project?.id || !isOwner) { setPendingApplicationsCount(0); return; }

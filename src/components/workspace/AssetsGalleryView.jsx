@@ -22,8 +22,8 @@ const getPreviewType = (asset) => {
   if (mime === "application/pdf" || ext === "pdf") return "pdf";
   if (mime.startsWith("video/") || ["mp4","webm","ogg","mov"].includes(ext)) return "video";
   if (mime.startsWith("audio/") || ["mp3","wav","ogg","m4a"].includes(ext)) return "audio";
-  if (["txt","md","csv","json","xml","html","css","js","ts","jsx","tsx","py","sh"].includes(ext)) return "text";
   if (asset.resource_type === "link") return "link";
+  if (["txt","md","csv","json","xml","html","css","js","ts","jsx","tsx","py","sh"].includes(ext)) return "text";
   return "other";
 };
 

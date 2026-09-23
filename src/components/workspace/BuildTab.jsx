@@ -221,7 +221,6 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `- Assets (files, images, documents, and links)`,
     `- Project Tools (tools and platforms the team is using)`,
     `- Thoughts & Notes (quick notes and saved ideas)`,
-    `- Build Links (GitHub, Figma, deployment links, etc.)`,
     `- Activity (recent project activity log)`,
     `\n== CURRENT PROJECT PHASE: ${phase.toUpperCase()} ==`,
     phaseGuidance[phase],
@@ -258,7 +257,6 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `- If tasks are overdue → urgently flag this and suggest action`,
     `- If milestones are missing → suggest creating them to structure the work`,
     `- If no tools are added → suggest relevant tools based on the project type and industry`,
-    `- If no build links → suggest adding key links like GitHub, Figma, deployment URLs`,
     `- If thoughts/notes exist → reference them when relevant`,
     `- Reference actual collaborator names when suggesting task assignments`,
     `- Always end with one clear next-step question or suggestion to keep momentum`,
@@ -281,7 +279,7 @@ function buildSystemPrompt(project, tasks, milestones, assets, projectUsers, ext
     `You MUST respond with valid JSON (no markdown code blocks, just raw JSON):`,
     `{`,
     `  "message": "Your conversational response here (use markdown for formatting)",`,
-    `  "navigate_to": "tasks|milestones|assets|ideation|notes|tools|links|activity|null",`,
+    `  "navigate_to": "tasks|milestones|assets|ideation|notes|tools|activity|null",`,
     `  "actions": [`,
     `    {"type": "create_task", "title": "Short task title (no colon, no description in title)", "description": "Detailed description of what needs to be done", "priority": "medium|high|low|urgent", "assigned_to": "email@example.com or null", "due_date": "YYYY-MM-DD or null"},`,
     `    {"type": "create_milestone", "title": "Milestone name", "description": "...", "target_date": "YYYY-MM-DD or null"},`,
@@ -435,6 +433,7 @@ async function executeAction(action, project, currentUser, onProjectUpdate) {
       resource_type: "link",
     });
     if (onProjectUpdate) onProjectUpdate();
+    window.dispatchEvent(new CustomEvent("assetsUpdated", { detail: { projectId: project.id } }));
     return { text: `🔗 Saved to Assets: **${title}**` };
   }
 
@@ -673,7 +672,8 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
     setUploadingFile(file.name);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      const existingVersions = (assets || []).filter(a => a.asset_name === file.name);
+      // Query the DB (not the possibly-stale assets prop) so version numbers stay accurate
+      const existingVersions = await AssetVersion.filter({ project_id: project.id, asset_name: file.name });
       const versionNumber = existingVersions.length > 0
         ? Math.max(...existingVersions.map(a => a.version_number || 1)) + 1
         : 1;
@@ -692,16 +692,19 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
         tags: [],
         resource_type: "file",
       });
+      window.dispatchEvent(new CustomEvent("assetsUpdated", { detail: { projectId: project.id } }));
       setMessages(prev => [...prev, {
         role: "assistant",
         content: `✅ **${file.name}** has been saved to your project Assets (v${versionNumber}). You can find it in the Assets section below.`,
       }]);
+      return { file_url };
     } catch (e) {
       setMessages(prev => [...prev, {
         role: "assistant",
         content: `❌ Failed to upload **${file.name}**. Please try again.`,
         isError: true,
       }]);
+      return null;
     } finally {
       setUploadingFile(null);
     }
@@ -991,7 +994,7 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
           type: "object",
           properties: {
             message: { type: "string", description: "Your conversational response to the user" },
-            navigate_to: { type: "string", description: "Tab to navigate to: tasks, milestones, assets, ideation, notes, tools, links, activity, or null" },
+            navigate_to: { type: "string", description: "Tab to navigate to: tasks, milestones, assets, ideation, notes, tools, activity, or null" },
             actions: {
               type: "array",
               description: "Only populate this when the user EXPLICITLY asks to create/add a task, milestone, or note. Otherwise return an empty array.",
@@ -1010,7 +1013,7 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
                   url: { type: "string", description: "Tool URL for suggest_tool" },
                   icon: { type: "string", description: "Emoji icon for suggest_tool" },
                 },
-                required: ["type", "title"],
+                required: ["type"],
               },
             },
           },
@@ -1049,26 +1052,31 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
         if (onMilestonesChanged) onMilestonesChanged();
       }
 
-      // Auto-extract markdown links from the message and save them as assets
+      // Auto-extract markdown links from the message and save them as assets.
+      // Only for users with edit access, deduped against the live DB list so
+      // the same URL is never saved twice.
       const linkRegex = /\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
       let linkMatch;
-      const savedUrls = new Set((assets || []).map(a => a.file_url));
-      for (const action of actions) {
-        if (action.type === "save_link" && action.url) savedUrls.add(action.url);
-      }
-      while ((linkMatch = linkRegex.exec(message)) !== null) {
-        const linkTitle = linkMatch[1];
-        const linkUrl = linkMatch[2];
-        if (savedUrls.has(linkUrl)) continue;
-        savedUrls.add(linkUrl);
+      const savedUrls = new Set();
+      if (canEdit) {
         try {
-          const linkResult = await executeAction(
-            { type: "save_link", title: linkTitle, url: linkUrl, description: "Saved from AI chat", category: "Resources" },
-            project, currentUser, onProjectUpdate
-          );
-          if (linkResult?.text) actionTexts.push(linkResult.text);
-        } catch (e) {
-          console.error("Failed to auto-save link:", linkUrl, e);
+          const existingAssets = await AssetVersion.filter({ project_id: project.id });
+          (existingAssets || []).forEach(a => a.file_url && savedUrls.add(a.file_url));
+        } catch {}
+        while ((linkMatch = linkRegex.exec(message)) !== null) {
+          const linkTitle = linkMatch[1];
+          const linkUrl = linkMatch[2];
+          if (savedUrls.has(linkUrl)) continue;
+          savedUrls.add(linkUrl);
+          try {
+            const linkResult = await executeAction(
+              { type: "save_link", title: linkTitle, url: linkUrl, description: "Saved from AI chat", category: "Resources" },
+              project, currentUser, onProjectUpdate
+            );
+            if (linkResult?.text) actionTexts.push(linkResult.text);
+          } catch (e) {
+            console.error("Failed to auto-save link:", linkUrl, e);
+          }
         }
       }
 
@@ -1161,12 +1169,12 @@ export function AIChat({ project, tasks, milestones, assets, currentUser, canEdi
       setMessages(prev => [...prev, userMsg]);
       await persistMessage(userMsg);
       setInput("");
-      await uploadFileToAssets(files[0]);
-      // If user added context, also run AI analysis
+      const uploaded = await uploadFileToAssets(files[0]);
+      // If user added context, also run AI analysis on the same upload (no duplicate upload)
       if (userText) {
         setAnalyzingFiles(true);
         try {
-          const { file_url } = await base44.integrations.Core.UploadFile({ file: files[0] });
+          const file_url = uploaded?.file_url || (await base44.integrations.Core.UploadFile({ file: files[0] })).file_url;
           const systemPrompt = buildSystemPrompt(project, tasks, milestones, assets, projectUsers, { buildLinks, thoughts, activityLogs, chatHistory: messages.filter(m => !m.isWelcome) });
           const analysisPrompt = `${systemPrompt}\n\nThe user uploaded a file "${files[0].name}" and said: "${userText}"\n\nRespond conversationally to their message and the file context. If the file is an image or doc, provide relevant feedback. Respond with valid JSON only.`;
           const raw = await base44.integrations.Core.InvokeLLM({ prompt: analysisPrompt, file_urls: [file_url], model: "claude_sonnet_4_6" });
