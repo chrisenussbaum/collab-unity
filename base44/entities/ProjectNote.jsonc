@@ -1,0 +1,33 @@
+{
+  "name": "ProjectNote",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project this note belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Note title"
+    },
+    "content": {
+      "type": "string",
+      "description": "Note body text"
+    },
+    "created_by_email": {
+      "type": "string",
+      "description": "Email of the user who created the note"
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Name of the user who created the note"
+    },
+    "updated_by_name": {
+      "type": "string",
+      "description": "Name of the user who last edited the note"
+    }
+  },
+  "required": [
+    "project_id"
+  ]
+}

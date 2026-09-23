@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { base44 } from "@/api/base44Client";
-import { Loader2, Check, RefreshCw, Users, Save, ChevronDown, ChevronRight, StickyNote } from 'lucide-react';
+import { Loader2, Plus, ChevronLeft, Trash2, StickyNote, Check } from 'lucide-react';
 
 const MAX_LEN = 10000;
+const AUTOSAVE_DELAY = 1200;
 
-// Retry helper matching IdeationNotes — handles 429 rate-limits with backoff.
+// Retry helper — handles 429 rate-limits with backoff.
 const withRetry = async (apiCall, maxRetries = 5, baseDelay = 2000) => {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -31,235 +32,344 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString();
 };
 
+const stripHtml = (html = '') => html
+  .replace(/<br\s*\/?>/gi, '\n')
+  .replace(/<\/(p|div|li|h[1-6]|tr)>/gi, '\n')
+  .replace(/<[^>]*>/g, '')
+  .trim();
+
 export default function SharedScratchpad({ project, currentUser, isCollaborator }) {
-  const [content, setContent] = useState(project?.scratchpad_content || '');
+  const [notes, setNotes] = useState(null); // null = still loading
+  const [selectedId, setSelectedId] = useState(null);
+  const [draft, setDraft] = useState(null); // { title, content } of the open note
   const [isSaving, setIsSaving] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isStale, setIsStale] = useState(false);
-  const [lastSavedBy, setLastSavedBy] = useState(
-    project?.scratchpad_metadata?.last_saved_by_name || project?.scratchpad_metadata?.last_saved_by || null
-  );
-  const [lastSavedAt, setLastSavedAt] = useState(project?.scratchpad_metadata?.last_saved_at || null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-  // Read-only notes carried over from the retired Thoughts & Ideation surfaces,
-  // so nothing collaborators wrote there is lost after the canvas consolidation.
-  const [thoughts, setThoughts] = useState([]);
-  const [showImported, setShowImported] = useState(() => !project?.scratchpad_content);
-  const ideationHtml = project?.project_ideation || '';
-  const ideationHasText = ideationHtml.replace(/<[^>]*>/g, '').trim().length > 0;
-  const importedCount = thoughts.length + (ideationHasText ? 1 : 0);
+  const projectIdRef = useRef(project?.id);
+  const draftRef = useRef(draft);         // latest local edits for the open note
+  const baselineRef = useRef(null);       // last synced remote state of the open note
+  const saveDraftRef = useRef(null);
 
+  useEffect(() => { projectIdRef.current = project?.id; }, [project?.id]);
+  useEffect(() => { draftRef.current = draft; }, [draft]);
+
+  // ── Load notes + one-time import of legacy note content ────────────────────
   useEffect(() => {
     if (!project?.id) return;
     let cancelled = false;
-    base44.entities.Thought.filter({ project_id: project.id })
-      .then((r) => { if (!cancelled) setThoughts(Array.isArray(r) ? r : []); })
-      .catch(() => {});
+    setNotes(null);
+    setSelectedId(null);
+    setDraft(null);
+    draftRef.current = null;
+    baselineRef.current = null;
+
+    (async () => {
+      try {
+        let fetched = await withRetry(() =>
+          base44.entities.ProjectNote.filter({ project_id: project.id }, '-updated_date', 100)
+        );
+        fetched = Array.isArray(fetched) ? fetched : [];
+
+        // One-time import: turn the retired shared scratchpad / thoughts / ideation
+        // content into real individual notes. The flag is set on the project first so
+        // two viewers loading at the same time don't duplicate the import.
+        if (fetched.length === 0 && !project.scratchpad_metadata?.notes_migrated) {
+          const scratch = (project.scratchpad_content || '').trim();
+          const ideation = stripHtml(project.project_ideation || '');
+          let thoughts = [];
+          try {
+            const r = await base44.entities.Thought.filter({ project_id: project.id });
+            thoughts = Array.isArray(r) ? r : [];
+          } catch (e) { /* legacy thoughts are optional */ }
+
+          const legacy = [];
+          if (scratch) legacy.push({ project_id: project.id, title: 'Quick notes', content: scratch });
+          if (ideation) legacy.push({ project_id: project.id, title: 'Planning & ideation', content: ideation });
+          thoughts.forEach((t) => legacy.push({
+            project_id: project.id,
+            title: t.title || 'Note',
+            content: t.content || '',
+          }));
+
+          try {
+            await base44.entities.Project.update(project.id, {
+              scratchpad_metadata: { ...(project.scratchpad_metadata || {}), notes_migrated: true },
+            });
+          } catch (e) { /* non-fatal: import won't repeat once notes exist */ }
+
+          if (legacy.length > 0) {
+            const created = await base44.entities.ProjectNote.bulkCreate(legacy);
+            if (Array.isArray(created) && created.length > 0) fetched = created;
+          }
+        }
+
+        if (!cancelled) setNotes(fetched);
+      } catch (e) {
+        console.error('Notes load error:', e);
+        if (!cancelled) setNotes([]);
+      }
+    })();
+
     return () => { cancelled = true; };
   }, [project?.id]);
 
-  const contentRef = useRef(content);
-  const initialContentRef = useRef(content);
-  const isMountedRef = useRef(true);
-  const savingRef = useRef(false);
-  const projectIdRef = useRef(project?.id);
-  const userEmailRef = useRef(currentUser?.email);
-
-  useEffect(() => { isMountedRef.current = true; return () => { isMountedRef.current = false; }; }, []);
-  useEffect(() => { projectIdRef.current = project?.id; }, [project?.id]);
-  useEffect(() => { userEmailRef.current = currentUser?.email; }, [currentUser?.email]);
-
-  // Initialize / re-sync when the project changes.
+  // ── Real-time sync: collaborators' note changes appear live ─────────────────
   useEffect(() => {
-    const initial = project?.scratchpad_content || '';
-    setContent(initial);
-    contentRef.current = initial;
-    initialContentRef.current = initial;
-    setHasUnsavedChanges(false);
-    setIsStale(false);
-    setLastSavedBy(project?.scratchpad_metadata?.last_saved_by_name || project?.scratchpad_metadata?.last_saved_by || null);
-    setLastSavedAt(project?.scratchpad_metadata?.last_saved_at || null);
-  }, [project?.id]);
-
-  // Real-time sync: other collaborators' edits appear live. Skipped while a
-  // local save is in flight so it never clobbers the saving/saved state.
-  useEffect(() => {
-    if (!project?.id) return;
-    const unsubscribe = base44.entities.Project.subscribe((event) => {
-      if (event.type !== 'update') return;
-      const data = event.data;
-      if (!data || data.id !== projectIdRef.current) return;
-      if (savingRef.current) return;
-      const remoteBy = data.scratchpad_metadata?.last_saved_by;
-      if (remoteBy && remoteBy === userEmailRef.current) return;
-
-      const remoteContent = data.scratchpad_content || '';
-      const byName = data.scratchpad_metadata?.last_saved_by_name || data.scratchpad_metadata?.last_saved_by || null;
-      const at = data.scratchpad_metadata?.last_saved_at || null;
-
-      // Local user has unsaved edits — flag stale instead of overwriting.
-      if (contentRef.current !== initialContentRef.current) {
-        setIsStale(true);
-        setLastSavedBy(byName);
-        setLastSavedAt(at);
-        return;
-      }
-      if (remoteContent !== contentRef.current) {
-        setContent(remoteContent);
-        contentRef.current = remoteContent;
-        initialContentRef.current = remoteContent;
-        setHasUnsavedChanges(false);
-      }
-      setIsStale(false);
-      setLastSavedBy(byName);
-      setLastSavedAt(at);
+    const unsubscribe = base44.entities.ProjectNote.subscribe((event) => {
+      const d = event.data;
+      if (!d || d.project_id !== projectIdRef.current) return;
+      setNotes((prev) => {
+        if (!prev) return prev;
+        if (event.type === 'create' && !prev.some((n) => n.id === d.id)) return [d, ...prev];
+        if (event.type === 'update') return prev.map((n) => (n.id === d.id ? { ...n, ...d } : n));
+        if (event.type === 'delete') return prev.filter((n) => n.id !== d.id);
+        return prev;
+      });
     });
     return () => { if (typeof unsubscribe === 'function') unsubscribe(); };
-  }, [project?.id]);
+  }, []);
 
-  const handleChange = (e) => {
-    let val = e.target.value;
-    if (val.length > MAX_LEN) val = val.slice(0, MAX_LEN);
-    setContent(val);
-    contentRef.current = val;
-    setHasUnsavedChanges(val !== initialContentRef.current);
-  };
+  const selected = notes?.find((n) => n.id === selectedId) || null;
+  const isDirty = !!selected
+    && !!draft
+    && (draft.title !== baselineRef.current?.title || draft.content !== baselineRef.current?.content);
 
-  const handleSave = async () => {
-    if (!isCollaborator || savingRef.current) return;
-    savingRef.current = true;
+  // Keep the open note in sync with remote edits when there are no local changes.
+  useEffect(() => {
+    if (!selected || !draft) return;
+    const remote = { title: selected.title || '', content: selected.content || '' };
+    const dirty = draft.title !== baselineRef.current?.title
+      || draft.content !== baselineRef.current?.content;
+    if (!dirty && (remote.title !== draft.title || remote.content !== draft.content)) {
+      draftRef.current = remote;
+      baselineRef.current = remote;
+      setDraft(remote);
+    }
+  }, [selected]);
+
+  // ── Save the open note ──────────────────────────────────────────────────────
+  const saveDraft = useCallback(async () => {
+    const noteId = selectedId;
+    const d = draftRef.current;
+    if (!noteId || !d || !isCollaborator) return;
+    if (d.title === baselineRef.current?.title && d.content === baselineRef.current?.content) return;
     setIsSaving(true);
     try {
-      const metadata = {
-        last_saved_by: userEmailRef.current,
-        last_saved_by_name: currentUser?.full_name || userEmailRef.current,
-        last_saved_at: new Date().toISOString(),
-      };
-      await withRetry(() => base44.entities.Project.update(projectIdRef.current, {
-        scratchpad_content: contentRef.current,
-        scratchpad_metadata: metadata,
+      await withRetry(() => base44.entities.ProjectNote.update(noteId, {
+        title: d.title,
+        content: d.content,
+        updated_by_name: currentUser?.full_name || currentUser?.email,
       }));
-      initialContentRef.current = contentRef.current;
-      setHasUnsavedChanges(false);
-      setIsStale(false);
-      setLastSavedBy(metadata.last_saved_by_name);
-      setLastSavedAt(metadata.last_saved_at);
+      baselineRef.current = { ...d };
+      setNotes((prev) => prev
+        ? prev.map((n) => (n.id === noteId ? { ...n, title: d.title, content: d.content } : n))
+        : prev);
     } catch (e) {
-      console.error("SharedScratchpad save error:", e);
+      console.error('Note save error:', e);
     } finally {
-      if (isMountedRef.current) {
-        setIsSaving(false);
-        savingRef.current = false;
-      }
+      setIsSaving(false);
     }
+  }, [selectedId, isCollaborator, currentUser]);
+
+  useEffect(() => { saveDraftRef.current = saveDraft; }, [saveDraft]);
+  useEffect(() => () => { saveDraftRef.current?.(); }, []);
+
+  // Debounced autosave — like Apple Notes, edits save on their own.
+  useEffect(() => {
+    if (!selected || !draft || !isCollaborator || !isDirty) return;
+    const t = setTimeout(() => { saveDraft(); }, AUTOSAVE_DELAY);
+    return () => clearTimeout(t);
+  }, [draft, selected, isCollaborator, isDirty, saveDraft]);
+
+  const openNote = (note) => {
+    saveDraftRef.current?.();
+    setSelectedId(note.id);
+    const d = { title: note.title || '', content: note.content || '' };
+    draftRef.current = d;
+    baselineRef.current = d;
+    setDraft(d);
   };
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
+  const closeNote = () => {
+    saveDraftRef.current?.();
+    setSelectedId(null);
+    setDraft(null);
+    draftRef.current = null;
+    baselineRef.current = null;
+  };
+
+  const setDraftField = (field, value) => {
+    setDraft((prev) => {
+      const next = { ...(prev || { title: '', content: '' }), [field]: value };
+      draftRef.current = next;
+      return next;
+    });
+  };
+
+  const createNote = async () => {
+    if (!isCollaborator) return;
     try {
-      const results = await withRetry(() => base44.entities.Project.filter({ id: projectIdRef.current }));
-      const fresh = results?.[0];
-      if (fresh && isMountedRef.current) {
-        const freshContent = fresh.scratchpad_content || '';
-        setContent(freshContent);
-        contentRef.current = freshContent;
-        initialContentRef.current = freshContent;
-        setHasUnsavedChanges(false);
-        setIsStale(false);
-        if (fresh.scratchpad_metadata) {
-          setLastSavedBy(fresh.scratchpad_metadata.last_saved_by_name || fresh.scratchpad_metadata.last_saved_by);
-          setLastSavedAt(fresh.scratchpad_metadata.last_saved_at);
-        }
-      }
+      saveDraftRef.current?.();
+      const created = await base44.entities.ProjectNote.create({
+        project_id: project.id,
+        title: '',
+        content: '',
+        created_by_email: currentUser?.email,
+        created_by_name: currentUser?.full_name || currentUser?.email,
+      });
+      setNotes((prev) => (prev ? [created, ...prev] : [created]));
+      openNote(created);
     } catch (e) {
-      console.error("SharedScratchpad refresh error:", e);
-    } finally {
-      if (isMountedRef.current) setIsRefreshing(false);
+      console.error('Create note error:', e);
     }
   };
 
+  const deleteNote = async (id) => {
+    if (!isCollaborator) return;
+    if (confirmDeleteId !== id) {
+      setConfirmDeleteId(id);
+      setTimeout(() => setConfirmDeleteId((cur) => (cur === id ? null : cur)), 2500);
+      return;
+    }
+    setConfirmDeleteId(null);
+    try {
+      await base44.entities.ProjectNote.delete(id);
+      if (selectedId === id) closeNote();
+      setNotes((prev) => (prev ? prev.filter((n) => n.id !== id) : prev));
+    } catch (e) {
+      console.error('Delete note error:', e);
+    }
+  };
+
+  // ── Loading ─────────────────────────────────────────────────────────────────
+  if (!notes) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="w-5 h-5 animate-spin text-purple-500" />
+      </div>
+    );
+  }
+
+  // ── Editor (one open note) ──────────────────────────────────────────────────
+  if (selected) {
+    return (
+      <div className="flex flex-col h-full min-h-0 gap-2">
+        <div className="flex items-center justify-between gap-2 px-1">
+          <button
+            onClick={closeNote}
+            className="flex items-center gap-1 text-xs font-medium text-purple-600 hover:text-purple-700"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" /> Notes
+          </button>
+          <div className="flex items-center gap-2">
+            {isSaving ? (
+              <span className="flex items-center gap-1 text-xs text-gray-400">
+                <Loader2 className="w-3 h-3 animate-spin" /> Saving…
+              </span>
+            ) : isDirty ? (
+              <span className="text-xs text-amber-600">Unsaved</span>
+            ) : (
+              <span className="flex items-center gap-1 text-xs text-gray-400">
+                <Check className="w-3 h-3 text-green-500" /> Saved
+              </span>
+            )}
+            {isCollaborator && (
+              <button
+                onClick={() => deleteNote(selected.id)}
+                className={confirmDeleteId === selected.id
+                  ? 'flex items-center gap-1 text-xs font-semibold text-red-600'
+                  : 'text-gray-400 hover:text-red-500'}
+                title="Delete note"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {confirmDeleteId === selected.id && 'Confirm'}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <input
+          value={draft?.title || ''}
+          readOnly={!isCollaborator}
+          onChange={(e) => setDraftField('title', e.target.value)}
+          placeholder="Title"
+          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-300/60 focus:border-purple-300"
+        />
+        <textarea
+          value={draft?.content || ''}
+          readOnly={!isCollaborator}
+          onChange={(e) => setDraftField('content', e.target.value.slice(0, MAX_LEN))}
+          placeholder="Start writing…"
+          className="flex-1 min-h-0 w-full resize-none rounded-lg border border-gray-200 bg-amber-50/30 p-3 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-300/60 focus:border-purple-300 leading-relaxed"
+        />
+
+        <div className="flex items-center justify-between px-1 text-[11px] text-gray-400">
+          <span>Edited {formatDate(selected.updated_date)}</span>
+          <span>Everyone on the project sees edits live</span>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Note list ───────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-full min-h-0 gap-2">
-      <div className="flex items-center justify-between gap-2 px-1">
-        <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600">
-          <Users className="w-3.5 h-3.5 text-purple-500" />
-          <span>Shared · everyone sees edits live</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-xs">
-          {isStale ? (
-            <button onClick={handleRefresh} className="flex items-center gap-1 text-amber-600 hover:text-amber-700" title="Pull latest">
-              <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span>Newer version</span>
-            </button>
-          ) : hasUnsavedChanges ? (
-            <span className="text-amber-600">Unsaved changes</span>
-          ) : (
-            <span className="flex items-center gap-1 text-gray-400">
-              <Check className="w-3 h-3 text-green-500" />
-              Saved
-            </span>
-          )}
-          {isCollaborator && hasUnsavedChanges && !isStale && (
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center gap-1 rounded-md bg-purple-600 px-2 py-0.5 text-white hover:bg-purple-700 disabled:opacity-60"
-            >
-              {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-              {isSaving ? 'Saving…' : 'Save'}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {importedCount > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-gray-50/70 overflow-hidden flex-shrink-0">
+      <div className="flex items-center justify-between px-1">
+        <span className="text-xs font-medium text-gray-600">
+          {notes.length} note{notes.length === 1 ? '' : 's'}
+        </span>
+        {isCollaborator && (
           <button
-            onClick={() => setShowImported((v) => !v)}
-            className="w-full flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100"
+            onClick={createNote}
+            className="flex items-center gap-1 rounded-md bg-purple-600 px-2 py-1 text-xs font-medium text-white hover:bg-purple-700"
           >
-            {showImported ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-            <StickyNote className="w-3.5 h-3.5 text-purple-500" />
-            <span>Imported from earlier notes</span>
-            <span className="text-gray-400">· {importedCount}</span>
+            <Plus className="w-3.5 h-3.5" /> New Note
           </button>
-          {showImported && (
-            <div className="px-2.5 pb-2.5 space-y-2 max-h-52 overflow-y-auto">
-              {ideationHasText && (
-                <div className="rounded-md bg-white border border-gray-200 p-2.5">
-                  <p className="text-xs font-semibold text-gray-700 mb-1">Planning &amp; ideation</p>
-                  <div
-                    className="text-xs text-gray-600 leading-relaxed [&_p]:m-0 [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4"
-                    dangerouslySetInnerHTML={{ __html: ideationHtml }}
-                  />
-                </div>
-              )}
-              {thoughts.map((t) => (
-                <div key={t.id} className="rounded-md bg-white border border-gray-200 p-2.5">
-                  <p className="text-xs font-semibold text-gray-700">{t.title}</p>
-                  {t.content && <p className="text-xs text-gray-600 whitespace-pre-wrap mt-1">{t.content}</p>}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      <textarea
-        value={content}
-        onChange={handleChange}
-        readOnly={!isCollaborator}
-        placeholder={isCollaborator ? "Quick notes, reminders, links… everyone on this project sees what you type here." : "No scratchpad content yet."}
-        className="flex-1 min-h-0 w-full resize-none rounded-lg border border-gray-200 bg-amber-50/30 p-3 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-300/60 focus:border-purple-300 leading-relaxed font-mono"
-      />
-
-      <div className="flex items-center justify-between px-1 text-[11px] text-gray-400">
-        <span>{content.length.toLocaleString()} / {MAX_LEN.toLocaleString()}</span>
-        {lastSavedBy && lastSavedAt && (
-          <span>Last edit by {lastSavedBy.split('@')[0]} · {formatDate(lastSavedAt)}</span>
         )}
       </div>
+
+      {notes.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-2 text-gray-400">
+          <StickyNote className="w-8 h-8 text-purple-300" />
+          <p className="text-xs">
+            {isCollaborator ? 'No notes yet — create your first note.' : 'No notes yet.'}
+          </p>
+        </div>
+      ) : (
+        <div className="flex-1 min-h-0 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
+          {notes.map((n) => (
+            <div key={n.id} className="flex items-center">
+              <button
+                onClick={() => openNote(n)}
+                className="flex-1 min-w-0 text-left px-3 py-2.5 hover:bg-purple-50/50"
+              >
+                <p className="text-sm font-medium text-gray-800 truncate">
+                  {n.title || 'Untitled'}
+                </p>
+                <p className="text-xs text-gray-400 truncate">
+                  {(n.content || 'No additional text').replace(/\s+/g, ' ').slice(0, 80)}
+                </p>
+              </button>
+              <div className="pr-2.5 flex items-center gap-2 flex-shrink-0">
+                <span className="text-[11px] text-gray-400">{formatDate(n.updated_date)}</span>
+                {isCollaborator && (
+                  <button
+                    onClick={() => deleteNote(n.id)}
+                    className={confirmDeleteId === n.id
+                      ? 'text-red-600'
+                      : 'text-gray-300 hover:text-red-500'}
+                    title="Delete note"
+                  >
+                    {confirmDeleteId === n.id
+                      ? <span className="text-[10px] font-semibold">Confirm</span>
+                      : <Trash2 className="w-3.5 h-3.5" />}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
