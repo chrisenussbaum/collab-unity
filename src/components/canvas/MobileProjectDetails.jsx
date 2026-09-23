@@ -189,9 +189,6 @@ export default function MobileProjectDetails({ project, projectUsers, canApply, 
           )}
           {socials.length > 0 && (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-                Follow
-              </h3>
               <div className="flex flex-wrap gap-2">
                 {socials.map((s) => (
                   <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer">
