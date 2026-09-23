@@ -1,41 +1,42 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import OptimizedAvatar from "../OptimizedAvatar";
-import { Link } from "react-router-dom";
-import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, Eye, Trophy, Heart, Bug, ShieldCheck, LogOut, Music, Users, Briefcase, Info, DollarSign, Link2, Pencil, MessageCircle, UserPlus } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Share2, ChevronLeft, ZoomIn, ZoomOut, Maximize, Minimize2, Layers, MessageCircle, UserPlus } from "lucide-react";
 import { buildFrameDefs } from "./canvasFrameRegistry";
 import CanvasFrame from "./CanvasFrame";
-import ProjectDetailsFrame from "./ProjectDetailsFrame";
-import ProjectFundingCard from "../ProjectFundingCard";
-import SocialsPanel from "../SocialsPanel";
-import MicrolinkPreview from "../MicrolinkPreview";
 import ProjectChatPanel from "./ProjectChatPanel";
 import CanvasLayers from "./CanvasLayers";
 import ReadOnlyProjectBanner from "./ReadOnlyProjectBanner";
 import CanvasToolbar from "./CanvasToolbar";
-import { useCanvasAnnotations } from "./annotations/useCanvasAnnotations";
-import CanvasAnnotationItems from "./annotations/CanvasAnnotationItems";
-import CanvasAnnotationsOverlay from "./annotations/CanvasAnnotationsOverlay";
 import CanvasPresenceStack from "./CanvasPresenceStack";
-import { useMusicPlayer } from "../music/MusicPlayerContext";
-import ProjectApplicationsManager from "../ProjectApplicationsManager";
-import ProjectMembershipManager from "../ProjectMembershipManager";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import ProjectSettingsDialog from "./ProjectSettingsDialog";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/689d7b3bdca9ca6bab2aeef8/6c745687e_collab-unity-logo.jpg";
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
+// Calm default: Tasks + Assistant side by side, Assets below Tasks.
+// Every other frame starts hidden, one click away in the Workspaces panel.
+const DEFAULT_OPEN = [
+  { id: "tasks", x: 0, y: 0 },
+  { id: "assistant", x: 640, y: 0 },
+  { id: "assets", x: 0, y: 620 },
+];
+
 function defaultLayout(defs) {
-  const cols = 3, colW = 560, gapX = 40, gapY = 40;
-  const colY = [0, 0, 0];
   const layout = {};
+  let hiddenX = 1300;
   defs.forEach((d, i) => {
-    const c = i % cols;
-    layout[d.id] = { x: c * (colW + gapX), y: colY[c], w: d.w, h: d.h, collapsed: false, hidden: false, z: i };
-    colY[c] += d.h + gapY;
+    const p = DEFAULT_OPEN.find((o) => o.id === d.id);
+    layout[d.id] = {
+      x: p ? p.x : hiddenX,
+      y: p ? p.y : 0,
+      w: d.w,
+      h: d.id === "assistant" ? 800 : d.h,
+      collapsed: false,
+      hidden: !p,
+      z: i,
+    };
+    if (!p) hiddenX += d.w + 48;
   });
   return layout;
 }
@@ -52,22 +53,12 @@ export default function CanvasWorkspace({
   const [zoom, setZoom] = useState(0.7);
   const [pan, setPan] = useState({ x: 40, y: 40 });
   const [selectedId, setSelectedId] = useState(null);
-  const [tool, setTool] = useState("move");
   const [addOpen, setAddOpen] = useState(false);
   const [fullscreenId, setFullscreenId] = useState(null);
   const [layersOpen, setLayersOpen] = useState(() => (typeof window !== "undefined" ? window.innerWidth >= 1024 : true));
-  const music = useMusicPlayer();
-  const [showApplicationsDialog, setShowApplicationsDialog] = useState(false);
-  const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [showProjectDetailsDialog, setShowProjectDetailsDialog] = useState(false);
-  const [showFundingDialog, setShowFundingDialog] = useState(false);
-  const [showSocialDialog, setShowSocialDialog] = useState(false);
-  const [showShowcaseDialog, setShowShowcaseDialog] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
-  const [drawColor, setDrawColor] = useState("#18A0FB");
-  const [selectedAnnoId, setSelectedAnnoId] = useState(null);
-  const { annotations, createAnno, updateAnno, deleteAnno } = useCanvasAnnotations(project?.id, currentUser, readOnly);
 
   useEffect(() => {
     if (!fullscreenId) return;
@@ -129,15 +120,15 @@ export default function CanvasWorkspace({
     };
     fetchPending();
     return () => { cancelled = true; };
-  }, [project?.id, isOwner, showApplicationsDialog]);
+  }, [project?.id, isOwner, showSettings]);
 
-  // Deep-link from an application notification: auto-open the Applications panel
+  // Deep-link from an application notification: auto-open Project Settings
   useEffect(() => {
-    if (initialApplicationId && isOwner) setShowApplicationsDialog(true);
+    if (initialApplicationId && isOwner) setShowSettings(true);
   }, [initialApplicationId, isOwner]);
 
   const navigateToFrame = useCallback((target) => {
-    const map = { tasks: "tasks", milestones: "milestones", assets: "assets", ideation: "ideation", notes: "notes", tools: "tools", links: "links", activity: "activity" };
+    const map = { tasks: "tasks", milestones: "milestones", assets: "assets", notes: "notes", highlights: "highlights", assistant: "assistant" };
     setSelectedId(map[target] || target);
   }, []);
 
@@ -158,7 +149,11 @@ export default function CanvasWorkspace({
     if (didInit.current || !defs.length) return;
     didInit.current = true;
     const saved = project?.canvas_layout;
-    if (saved && typeof saved === "object" && Object.keys(saved).length > 0) {
+    // A saved layout from the old 11-frame canvas is stale — reset to the calm
+    // default rather than carrying over frames that no longer exist.
+    const savedIds = saved && typeof saved === "object" ? Object.keys(saved) : [];
+    const hasStaleIds = savedIds.some((id) => !defs.some((d) => d.id === id));
+    if (savedIds.length > 0 && !hasStaleIds) {
       const merged = {};
       // Place any frames new since the layout was last saved to the right of
       // existing content so they don't overlap on first load.
@@ -585,13 +580,6 @@ export default function CanvasWorkspace({
     setFrameNonce((n) => n + 1);
   }, [fullscreenId]);
 
-  const handleLogout = async () => {
-    try { localStorage.clear(); sessionStorage.clear(); } catch {}
-    const welcomeUrl = `${window.location.origin}${createPageUrl("Welcome")}`;
-    try { await base44.auth.logout(welcomeUrl); } catch {}
-    window.location.href = welcomeUrl;
-  };
-
   const hiddenFrames = defs.filter((d) => layout?.[d.id]?.hidden);
   const onAddFrame = (id) => { updateFrame(id, { hidden: false }); setAddOpen(false); };
 
@@ -636,12 +624,6 @@ export default function CanvasWorkspace({
             </Button>
           )}
           {!readOnly && (
-            <button onClick={() => music.toggle("project")} className={`relative p-1.5 rounded hover:bg-gray-100 text-gray-600 ${music.visible ? "bg-purple-50 text-purple-600" : ""}`} title="CU Radio">
-              <Music className="w-4 h-4" />
-              {music.visible && <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-purple-600 rounded-full" />}
-            </button>
-          )}
-          {!readOnly && (
             <button onClick={() => setLayersOpen((v) => !v)} className={`p-1.5 rounded hover:bg-gray-100 text-gray-600 ${layersOpen ? "bg-gray-100 text-[#18A0FB]" : ""}`} title="Workspaces">
               <Layers className="w-4 h-4" />
             </button>
@@ -652,49 +634,7 @@ export default function CanvasWorkspace({
             <button onClick={zoomIn} className="p-1.5 hover:bg-gray-200 text-gray-600"><ZoomIn className="w-3.5 h-3.5" /></button>
             <button onClick={zoomFit} className="p-1.5 hover:bg-gray-200 border-l border-gray-200 text-gray-600" title="Zoom to fit"><Maximize className="w-3.5 h-3.5" /></button>
           </div>
-          {/* Share button moved next to the comment button */}
           <CanvasPresenceStack project={project} currentUser={currentUser} projectUsers={projectUsers} projectOwnerProfile={projectOwnerProfile} />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="rounded-full focus:outline-none">
-                <OptimizedAvatar src={currentUser?.profile_image} alt={currentUser?.full_name || "User"} fallback={currentUser?.full_name?.[0] || "U"} size="xs" className="w-7 h-7" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem asChild>
-                <Link to={createPageUrl(`UserProfile?username=${currentUser?.username}`)} className="flex items-center cursor-pointer">
-                  <Eye className="w-4 h-4 mr-2" /> View Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to={createPageUrl("Leaderboard")} className="flex items-center cursor-pointer">
-                  <Trophy className="w-4 h-4 mr-2" /> Leaderboard
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to={createPageUrl("SupportCU")} className="flex items-center cursor-pointer">
-                  <Heart className="w-4 h-4 mr-2" /> Support CU
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to={createPageUrl("ReportBug")} className="flex items-center cursor-pointer">
-                  <Bug className="w-4 h-4 mr-2" /> Report Bug
-                </Link>
-              </DropdownMenuItem>
-              {currentUser?.role === "admin" && (
-                <DropdownMenuItem asChild>
-                  <Link to={createPageUrl("AdminReview")} className="flex items-center cursor-pointer">
-                    <ShieldCheck className="w-4 h-4 mr-2" /> Admin Review
-                  </Link>
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700">
-                <LogOut className="w-4 h-4 mr-2" /> Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
 
@@ -708,14 +648,8 @@ export default function CanvasWorkspace({
             onSelect={setSelectedId}
             onToggleHide={(id) => updateFrame(id, { hidden: !layout[id].hidden })}
             isOwner={isOwner}
-            projectId={project?.id}
             pendingApplicationsCount={pendingApplicationsCount}
-            onOpenApplications={() => setShowApplicationsDialog(true)}
-            onOpenInvite={() => setShowInviteDialog(true)}
-            onOpenProjectDetails={() => setShowProjectDetailsDialog(true)}
-            onOpenFunding={() => setShowFundingDialog(true)}
-            onOpenSocial={() => setShowSocialDialog(true)}
-            onOpenShowcase={() => setShowShowcaseDialog(true)}
+            onOpenSettings={() => setShowSettings(true)}
           />
         </div>
 
@@ -724,7 +658,7 @@ export default function CanvasWorkspace({
           ref={viewportRef}
           className="flex-1 relative overflow-hidden"
           onMouseDown={onCanvasMouseDown}
-          style={{ cursor: tool === "hand" ? "grab" : tool === "draw" ? "crosshair" : tool === "erase" ? "pointer" : "default", touchAction: "none" }}
+          style={{ touchAction: "none" }}
         >
           <div
             data-canvas-bg="true"
@@ -766,28 +700,8 @@ export default function CanvasWorkspace({
                 />
               );
             })}
-            <div data-canvas-interactive="true">
-              <CanvasAnnotationItems
-                annotations={annotations}
-                tool={tool}
-                zoom={zoom}
-                readOnly={readOnly}
-                selectedAnnoId={selectedAnnoId}
-                onSelect={setSelectedAnnoId}
-                onUpdate={updateAnno}
-                onDelete={deleteAnno}
-              />
-            </div>
           </div>
 
-          <CanvasAnnotationsOverlay
-            tool={tool}
-            pan={pan}
-            zoom={zoom}
-            viewportRef={viewportRef}
-            drawColor={drawColor}
-            onCreate={createAnno}
-          />
           {readOnly && (
             <ReadOnlyProjectBanner
               project={project}
@@ -834,14 +748,8 @@ export default function CanvasWorkspace({
               onSelect={(id) => { setSelectedId(id); setLayersOpen(false); }}
               onToggleHide={(id) => updateFrame(id, { hidden: !layout[id].hidden })}
               isOwner={isOwner}
-              projectId={project?.id}
               pendingApplicationsCount={pendingApplicationsCount}
-              onOpenApplications={() => { setShowApplicationsDialog(true); setLayersOpen(false); }}
-              onOpenInvite={() => { setShowInviteDialog(true); setLayersOpen(false); }}
-              onOpenProjectDetails={() => { setShowProjectDetailsDialog(true); setLayersOpen(false); }}
-              onOpenFunding={() => { setShowFundingDialog(true); setLayersOpen(false); }}
-              onOpenSocial={() => { setShowSocialDialog(true); setLayersOpen(false); }}
-              onOpenShowcase={() => { setShowShowcaseDialog(true); setLayersOpen(false); }}
+              onOpenSettings={() => { setShowSettings(true); setLayersOpen(false); }}
             />
           </div>
         </div>
@@ -849,8 +757,6 @@ export default function CanvasWorkspace({
 
       {/* Bottom toolbar (Add/Organize hidden in read-only preview mode) */}
       <CanvasToolbar
-        tool={tool}
-        setTool={setTool}
         zoom={zoom}
         onZoomIn={zoomIn}
         onZoomOut={zoomOut}
@@ -861,8 +767,6 @@ export default function CanvasWorkspace({
         onAddFrame={onAddFrame}
         onOrganize={organizeFrames}
         readOnly={readOnly}
-        drawColor={drawColor}
-        setDrawColor={setDrawColor}
       />
 
       {(isOwner || isCollaborator) && (
@@ -875,109 +779,19 @@ export default function CanvasWorkspace({
         />
       )}
 
-      {isOwner && (
-        <Dialog open={showApplicationsDialog} onOpenChange={setShowApplicationsDialog}>
-          <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-[#18A0FB]" /> Applications
-              </DialogTitle>
-              <DialogDescription>Review users who applied to join your project and accept or decline them.</DialogDescription>
-            </DialogHeader>
-            <ProjectApplicationsManager project={project} onProjectUpdate={onProjectUpdate} alwaysShow />
-          </DialogContent>
-        </Dialog>
-      )}
-
-      <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-[#18A0FB]" /> Team &amp; Invite
-            </DialogTitle>
-            <DialogDescription>Invite collaborators to join your project and manage existing members.</DialogDescription>
-          </DialogHeader>
-          <ProjectMembershipManager
-            project={project}
-            currentUser={currentUser}
-            projectUsers={projectUsers}
-            isOwner={isOwner}
-            isExplicitCollaborator={isCollaborator}
-            onUpdate={onProjectUpdate}
-          />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showProjectDetailsDialog} onOpenChange={setShowProjectDetailsDialog}>
-        <DialogContent className="sm:max-w-[480px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Info className="w-5 h-5 text-[#18A0FB]" /> Project Details
-            </DialogTitle>
-            <DialogDescription>
-              {isOwner ? "View and edit your project information." : "Project information."}
-            </DialogDescription>
-          </DialogHeader>
-          <ProjectDetailsFrame project={project} canEdit={isOwner} ownerProfile={projectOwnerProfile} />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showFundingDialog} onOpenChange={setShowFundingDialog}>
-        <DialogContent className="sm:max-w-[420px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-[#18A0FB]" /> Funding
-            </DialogTitle>
-            <DialogDescription>{isOwner ? "Manage your project funding links." : "Project funding links."}</DialogDescription>
-          </DialogHeader>
-          <ProjectFundingCard project={project} projectOwner={projectOwnerProfile} canEdit={isOwner} onUpdate={onProjectUpdate} />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showSocialDialog} onOpenChange={setShowSocialDialog}>
-        <DialogContent className="sm:max-w-[420px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Heart className="w-5 h-5 text-[#18A0FB]" /> Social Media
-            </DialogTitle>
-            <DialogDescription>{isOwner ? "Add social media links to promote this project." : "Project social media links."}</DialogDescription>
-          </DialogHeader>
-          <SocialsPanel
-            socialLinks={project?.social_links || {}}
-            onUpdate={onUpdateSocialLinks}
-            canEdit={isOwner}
-            title="Social Media"
-            emptyMessage="Add social media links to promote this project"
-          />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showShowcaseDialog} onOpenChange={setShowShowcaseDialog}>
-        <DialogContent className="sm:max-w-[520px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Link2 className="w-5 h-5 text-[#18A0FB]" /> Showcase Links
-            </DialogTitle>
-            <DialogDescription>{isOwner ? "Showcase links are managed on the Edit Project page." : "Project showcase links."}</DialogDescription>
-          </DialogHeader>
-          <div className="p-1 space-y-3">
-            {project?.project_urls?.length ? (
-              project.project_urls.map((l, i) => {
-                const url = typeof l === "object" ? l.url : l;
-                const title = typeof l === "object" ? l.title : "";
-                return <MicrolinkPreview key={i} url={url} title={title || ""} className="w-full" />;
-              })
-            ) : (
-              <p className="text-sm text-gray-400">No showcase links yet. Add them via Edit Project.</p>
-            )}
-            {isOwner && (
-              <Link to={createPageUrl(`EditProject?id=${project?.id}`)} className="inline-flex items-center gap-1 text-xs text-[#18A0FB] hover:underline pt-1">
-                <Pencil className="w-3 h-3" /> Edit showcase links
-              </Link>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ProjectSettingsDialog
+        open={showSettings}
+        onOpenChange={setShowSettings}
+        project={project}
+        currentUser={currentUser}
+        projectUsers={projectUsers}
+        projectOwnerProfile={projectOwnerProfile}
+        isOwner={isOwner}
+        isCollaborator={isCollaborator}
+        pendingApplicationsCount={pendingApplicationsCount}
+        onProjectUpdate={onProjectUpdate}
+        onUpdateSocialLinks={onUpdateSocialLinks}
+      />
     </div>
   );
 }

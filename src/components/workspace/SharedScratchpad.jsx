@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from "@/api/base44Client";
-import { Loader2, Check, RefreshCw, Users, Save } from 'lucide-react';
+import { Loader2, Check, RefreshCw, Users, Save, ChevronDown, ChevronRight, StickyNote } from 'lucide-react';
 
 const MAX_LEN = 10000;
 
@@ -41,6 +41,23 @@ export default function SharedScratchpad({ project, currentUser, isCollaborator 
     project?.scratchpad_metadata?.last_saved_by_name || project?.scratchpad_metadata?.last_saved_by || null
   );
   const [lastSavedAt, setLastSavedAt] = useState(project?.scratchpad_metadata?.last_saved_at || null);
+
+  // Read-only notes carried over from the retired Thoughts & Ideation surfaces,
+  // so nothing collaborators wrote there is lost after the canvas consolidation.
+  const [thoughts, setThoughts] = useState([]);
+  const [showImported, setShowImported] = useState(() => !project?.scratchpad_content);
+  const ideationHtml = project?.project_ideation || '';
+  const ideationHasText = ideationHtml.replace(/<[^>]*>/g, '').trim().length > 0;
+  const importedCount = thoughts.length + (ideationHasText ? 1 : 0);
+
+  useEffect(() => {
+    if (!project?.id) return;
+    let cancelled = false;
+    base44.entities.Thought.filter({ project_id: project.id })
+      .then((r) => { if (!cancelled) setThoughts(Array.isArray(r) ? r : []); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [project?.id]);
 
   const contentRef = useRef(content);
   const initialContentRef = useRef(content);
@@ -195,6 +212,39 @@ export default function SharedScratchpad({ project, currentUser, isCollaborator 
           )}
         </div>
       </div>
+
+      {importedCount > 0 && (
+        <div className="rounded-lg border border-gray-200 bg-gray-50/70 overflow-hidden flex-shrink-0">
+          <button
+            onClick={() => setShowImported((v) => !v)}
+            className="w-full flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100"
+          >
+            {showImported ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+            <StickyNote className="w-3.5 h-3.5 text-purple-500" />
+            <span>Imported from earlier notes</span>
+            <span className="text-gray-400">· {importedCount}</span>
+          </button>
+          {showImported && (
+            <div className="px-2.5 pb-2.5 space-y-2 max-h-52 overflow-y-auto">
+              {ideationHasText && (
+                <div className="rounded-md bg-white border border-gray-200 p-2.5">
+                  <p className="text-xs font-semibold text-gray-700 mb-1">Planning &amp; ideation</p>
+                  <div
+                    className="text-xs text-gray-600 leading-relaxed [&_p]:m-0 [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4"
+                    dangerouslySetInnerHTML={{ __html: ideationHtml }}
+                  />
+                </div>
+              )}
+              {thoughts.map((t) => (
+                <div key={t.id} className="rounded-md bg-white border border-gray-200 p-2.5">
+                  <p className="text-xs font-semibold text-gray-700">{t.title}</p>
+                  {t.content && <p className="text-xs text-gray-600 whitespace-pre-wrap mt-1">{t.content}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <textarea
         value={content}

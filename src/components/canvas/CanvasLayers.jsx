@@ -1,12 +1,9 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
-import { Eye, EyeOff, Users, Briefcase, Pencil, Info, DollarSign, Heart, Link2 } from "lucide-react";
+import { Eye, EyeOff, Settings } from "lucide-react";
 
 export default function CanvasLayers({
   defs, layout, selectedId, onSelect, onToggleHide,
-  isOwner, projectId, pendingApplicationsCount = 0, onOpenApplications, onOpenInvite, onOpenProjectDetails,
-  onOpenFunding, onOpenSocial, onOpenShowcase,
+  isOwner, pendingApplicationsCount = 0, onOpenSettings,
 }) {
   // Front-most first (defs order is back-to-front; reverse for display)
   const ordered = [...defs].reverse();
@@ -50,54 +47,16 @@ export default function CanvasLayers({
       <div className="border-t border-gray-100 mt-2" />
       <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">Manage</div>
       <div
-        onClick={onOpenProjectDetails}
+        onClick={onOpenSettings}
         className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-50"
       >
-        <Info className="w-3.5 h-3.5 flex-shrink-0" />
-        <span className="truncate flex-1">Project Details</span>
-      </div>
-      <div onClick={onOpenFunding} className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-50">
-        <DollarSign className="w-3.5 h-3.5 flex-shrink-0" />
-        <span className="truncate flex-1">Funding</span>
-      </div>
-      <div onClick={onOpenSocial} className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-50">
-        <Heart className="w-3.5 h-3.5 flex-shrink-0" />
-        <span className="truncate flex-1">Social Media</span>
-      </div>
-      <div onClick={onOpenShowcase} className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-50">
-        <Link2 className="w-3.5 h-3.5 flex-shrink-0" />
-        <span className="truncate flex-1">Showcase Links</span>
-      </div>
-      {isOwner && (
-        <Link
-          to={createPageUrl(`EditProject?id=${projectId}`)}
-          className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-50"
-        >
-          <Pencil className="w-3.5 h-3.5 flex-shrink-0" />
-          <span className="truncate flex-1">Edit Project</span>
-        </Link>
-      )}
-      {isOwner && (
-        <div
-          onClick={onOpenApplications}
-          className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-50"
-        >
-          <Briefcase className="w-3.5 h-3.5 flex-shrink-0" />
-          <span className="truncate flex-1">Applications</span>
-          {pendingApplicationsCount > 0 && (
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-500 text-white">
-              {pendingApplicationsCount}
-            </span>
-          )}
-        </div>
-      )}
-      {/* Team & Invite is available to all collaborators (owners + members, who can leave) */}
-      <div
-        onClick={onOpenInvite}
-        className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer text-gray-600 hover:bg-gray-50"
-      >
-        <Users className="w-3.5 h-3.5 flex-shrink-0" />
-        <span className="truncate flex-1">Team &amp; Invite</span>
+        <Settings className="w-3.5 h-3.5 flex-shrink-0" />
+        <span className="truncate flex-1">Project Settings</span>
+        {isOwner && pendingApplicationsCount > 0 && (
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-500 text-white">
+            {pendingApplicationsCount}
+          </span>
+        )}
       </div>
     </div>
   );

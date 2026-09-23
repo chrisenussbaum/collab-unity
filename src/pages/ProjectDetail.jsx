@@ -48,10 +48,8 @@ import {
   Loader2
 } from "lucide-react";
 import { toast } from "sonner";
-import WorkspaceTabs from "@/components/workspace/WorkspaceTabs";
 import CanvasWorkspace from "@/components/canvas/CanvasWorkspace";
 import ProjectHighlights from "../components/project/ProjectHighlights";
-import ProjectAnalyticsDashboard from "../components/project/ProjectAnalyticsDashboard";
 import ClickableImage from "../components/ClickableImage";
 
 import { formatDistanceToNow } from "date-fns";

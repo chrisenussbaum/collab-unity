@@ -1,20 +1,17 @@
 import React from "react";
 import {
-  Sparkles, Lightbulb, Flag, CheckSquare, FileStack, Wrench,
-  BookOpen, Activity, Image as ImageIcon, BarChart3, StickyNote
+  Sparkles, CheckSquare, Flag, FileStack, Image as ImageIcon, StickyNote
 } from "lucide-react";
 import TaskBoard from "../workspace/TaskBoard";
 import MilestonesTab from "../workspace/MilestonesTab";
 import AssetsTab from "../workspace/AssetsTab";
-import ActivityTab from "../workspace/ActivityTab";
-import ThoughtsTab from "../workspace/ThoughtsTab";
-import IdeationHub from "../workspace/ideation/IdeationHub";
-import ToolsHub from "../workspace/ToolsHub";
 import { AIChat } from "../workspace/BuildTab";
 import ProjectHighlights from "../project/ProjectHighlights";
-import ProjectAnalyticsDashboard from "../project/ProjectAnalyticsDashboard";
 import SharedScratchpad from "../workspace/SharedScratchpad";
 
+// The canvas holds only the day-to-day work product: plan, build, capture.
+// Project management surfaces (details, funding, social, showcase, team)
+// live off-canvas in the consolidated Project Settings dialog.
 export function buildFrameDefs(props) {
   const {
     project, currentUser, projectUsers,
@@ -32,6 +29,15 @@ export function buildFrameDefs(props) {
 
   return [
     {
+      id: "tasks", title: "Tasks", icon: CheckSquare, w: 560, h: 520,
+      render: () => (
+        <TaskBoard
+          project={project} currentUser={currentUser} collaborators={projectUsers}
+          isCollaborator={isCollaborator} isProjectOwner={isOwner} projectOwnerName={projectOwnerName}
+        />
+      ),
+    },
+    {
       id: "assistant", title: "Project Assistant", icon: Sparkles, w: 540, h: 580, fill: true,
       render: () => (
         <AIChat
@@ -44,10 +50,10 @@ export function buildFrameDefs(props) {
       ),
     },
     {
-      id: "tasks", title: "Tasks", icon: CheckSquare, w: 560, h: 520,
+      id: "assets", title: "Assets", icon: FileStack, w: 520, h: 420,
       render: () => (
-        <TaskBoard
-          project={project} currentUser={currentUser} collaborators={projectUsers}
+        <AssetsTab
+          project={project} currentUser={currentUser}
           isCollaborator={isCollaborator} isProjectOwner={isOwner} projectOwnerName={projectOwnerName}
         />
       ),
@@ -72,63 +78,10 @@ export function buildFrameDefs(props) {
       ),
     },
     {
-      id: "analytics", title: "Analytics", icon: BarChart3, w: 460, h: 420,
-      render: () => (
-        <ProjectAnalyticsDashboard
-          project={project} currentUser={currentUser} isCollaborator={canEdit}
-        />
-      ),
-    },
-    {
-      id: "ideation", title: "Planning & Ideation", icon: Lightbulb, w: 480, h: 460,
-      render: () => (
-        <IdeationHub
-          project={project} currentUser={currentUser}
-          isCollaborator={isCollaborator} isProjectOwner={isOwner} projectOwnerName={projectOwnerName}
-        />
-      ),
-    },
-    {
-      id: "assets", title: "Assets", icon: FileStack, w: 520, h: 420,
-      render: () => (
-        <AssetsTab
-          project={project} currentUser={currentUser}
-          isCollaborator={isCollaborator} isProjectOwner={isOwner} projectOwnerName={projectOwnerName}
-        />
-      ),
-    },
-    {
-      id: "tools", title: "Project Tools", icon: Wrench, w: 420, h: 360,
-      render: () => (
-        <ToolsHub
-          project={project} onProjectUpdate={onProjectUpdate}
-          isCollaborator={isCollaborator} isProjectOwner={isOwner} projectOwnerName={projectOwnerName}
-        />
-      ),
-    },
-    {
-      id: "notes", title: "Thoughts & Notes", icon: BookOpen, w: 420, h: 380,
-      render: () => (
-        <ThoughtsTab
-          project={project} currentUser={currentUser}
-          isCollaborator={isCollaborator} isProjectOwner={isOwner} projectOwnerName={projectOwnerName}
-        />
-      ),
-    },
-    {
-      id: "activity", title: "Activity", icon: Activity, w: 420, h: 400,
-      render: () => (
-        <ActivityTab
-          project={project} currentUser={currentUser}
-          isCollaborator={isCollaborator} isProjectOwner={isOwner} projectOwnerName={projectOwnerName}
-        />
-      ),
-    },
-    {
-      id: "scratchpad", title: "Shared Scratchpad", icon: StickyNote, w: 420, h: 380, fill: true,
+      id: "notes", title: "Notes", icon: StickyNote, w: 440, h: 420, fill: true,
       render: () => (
         <SharedScratchpad
-          project={project} currentUser={currentUser} isCollaborator={isCollaborator || isOwner}
+          project={project} currentUser={currentUser} isCollaborator={canEdit}
         />
       ),
     },

@@ -1,12 +1,12 @@
 import React, { useRef, useEffect, useCallback } from "react";
-import { Trash2, EyeOff, ChevronDown, ChevronRight, Maximize2 } from "lucide-react";
+import { EyeOff, ChevronDown, ChevronRight, Maximize2 } from "lucide-react";
 
 const MIN_W = 280;
 const MIN_H = 220;
 const HEADER_H = 36;
 
 export default function CanvasFrame({
-  def, frame, zoom, selected, onSelect, onChange, onDelete,
+  def, frame, zoom, selected, onSelect, onChange,
   onToggleCollapse, onToggleHide, onToggleFullscreen, blurred,
 }) {
   const Icon = def.icon;
@@ -148,13 +148,6 @@ export default function CanvasFrame({
           title="Hide"
         >
           <EyeOff className="w-3.5 h-3.5" />
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500"
-          title="Hide from canvas"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
       {!frame.collapsed && (
