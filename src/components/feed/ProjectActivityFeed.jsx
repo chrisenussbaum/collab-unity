@@ -82,10 +82,14 @@ export default function ProjectActivityFeed({ project }) {
           ActivityLog.filter({ project_id: project.id }, "-created_date", 10)
         );
 
-        // Filter out project highlight activities (asset_uploaded with entity_type: highlight)
+        // Filter out low-signal activity types: highlight uploads, item deletions,
+        // and project-revival visits — none of these are useful on the public feed.
         const safeActivities = Array.isArray(projectActivities)
           ? projectActivities.filter(activity =>
-              !(activity.action_type === 'asset_uploaded' && activity.entity_type === 'highlight')
+              !(activity.action_type === 'asset_uploaded' && activity.entity_type === 'highlight') &&
+              activity.action_type !== 'asset_deleted' &&
+              activity.action_type !== 'task_deleted' &&
+              !(activity.action_type === 'project_updated' && (activity.action_description || '').includes('revived'))
             )
           : [];
         setActivities(safeActivities);

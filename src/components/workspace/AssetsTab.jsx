@@ -390,17 +390,6 @@ export default function AssetsTab({ project, currentUser, isCollaborator, isProj
     try {
       await AssetVersion.delete(deletingAsset.id);
 
-      await ActivityLog.create({
-        project_id: project.id,
-        user_email: currentUser.email,
-        user_name: currentUser.full_name || currentUser.email,
-        action_type: 'asset_deleted',
-        action_description: `deleted asset: ${deletingAsset.asset_name} (v${deletingAsset.version_number})`,
-        entity_type: 'asset',
-        entity_id: deletingAsset.id,
-        metadata: { asset_name: deletingAsset.asset_name, version_number: deletingAsset.version_number }
-      });
-
       setDeletingAsset(null); // Close the dialog
       fetchAssets();
 

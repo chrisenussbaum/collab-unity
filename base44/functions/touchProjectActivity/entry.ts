@@ -4,7 +4,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
  * Marks a stale project as active again (owner or collaborator only).
  *
  * Called when a member opens the project workspace or edits the project:
- * clears the stale flags, refreshes last_activity_at, and logs the revival.
+ * clears the stale flags and refreshes last_activity_at.
  * No-ops when the project isn't stale.
  */
 
@@ -49,20 +49,6 @@ Deno.serve(async (req) => {
       stale_hidden: false,
       last_activity_at: now
     });
-
-    try {
-      await base44.asServiceRole.entities.ActivityLog.create({
-        project_id,
-        user_email: user.email,
-        user_name: user.full_name || user.email,
-        action_type: 'project_updated',
-        action_description: 'Revisited the project workspace — project revived',
-        entity_type: 'project',
-        entity_id: project_id
-      });
-    } catch (e) {
-      console.warn('Could not log revival activity:', e);
-    }
 
     return Response.json({ success: true, revived: true });
 

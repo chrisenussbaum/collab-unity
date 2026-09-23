@@ -327,16 +327,6 @@ export default function TaskBoard({ project, currentUser, collaborators, isColla
 
     try {
       await Task.delete(task.id);
-      
-      await ActivityLog.create({
-        project_id: project.id,
-        user_email: currentUser.email,
-        user_name: currentUser.full_name || currentUser.email,
-        action_type: "task_deleted",
-        action_description: `Deleted task: ${task.title}`,
-        entity_type: "task",
-        entity_id: task.id
-      });
 
       // toast.success("Task deleted"); // Removed success toast
       await fetchTasks();
